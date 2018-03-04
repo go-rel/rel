@@ -36,7 +36,57 @@ type Condition struct {
 	Inner  []Condition
 }
 
+func (c Condition) None() bool {
+	return (c.Type == ConditionAnd ||
+		c.Type == ConditionOr ||
+		c.Type == ConditionXor ||
+		c.Type == ConditionNot) &&
+		len(c.Inner) == 0
+}
+
+func (c Condition) And(condition ...Condition) Condition {
+	if c.None() && len(condition) == 1 {
+		return condition[0]
+	} else if c.Type == ConditionAnd {
+		c.Inner = append(c.Inner, condition...)
+		return c
+	}
+
+	inner := append([]Condition{c}, condition...)
+	return And(inner...)
+}
+
+func (c Condition) Or(condition ...Condition) Condition {
+	if c.None() && len(condition) == 1 {
+		return condition[0]
+	} else if c.Type == ConditionOr || c.None() {
+		c.Type = ConditionOr
+		c.Inner = append(c.Inner, condition...)
+		return c
+	}
+
+	inner := append([]Condition{c}, condition...)
+	return Or(inner...)
+}
+
+func (c Condition) Xor(condition ...Condition) Condition {
+	if c.None() && len(condition) == 1 {
+		return condition[0]
+	} else if c.Type == ConditionXor || c.None() {
+		c.Type = ConditionXor
+		c.Inner = append(c.Inner, condition...)
+		return c
+	}
+
+	inner := append([]Condition{c}, condition...)
+	return Xor(inner...)
+}
+
 func And(inner ...Condition) Condition {
+	if len(inner) == 1 {
+		return inner[0]
+	}
+
 	return Condition{
 		Type:  ConditionAnd,
 		Inner: inner,
@@ -44,6 +94,10 @@ func And(inner ...Condition) Condition {
 }
 
 func Or(inner ...Condition) Condition {
+	if len(inner) == 1 {
+		return inner[0]
+	}
+
 	return Condition{
 		Type:  ConditionOr,
 		Inner: inner,
@@ -51,6 +105,10 @@ func Or(inner ...Condition) Condition {
 }
 
 func Xor(inner ...Condition) Condition {
+	if len(inner) == 1 {
+		return inner[0]
+	}
+
 	return Condition{
 		Type:  ConditionXor,
 		Inner: inner,
@@ -58,6 +116,30 @@ func Xor(inner ...Condition) Condition {
 }
 
 func Not(inner ...Condition) Condition {
+	if len(inner) == 1 {
+		c := inner[0]
+		switch c.Type {
+		case ConditionEq:
+			c.Type = ConditionNe
+		case ConditionLt:
+			c.Type = ConditionGte
+		case ConditionLte:
+			c.Type = ConditionGt
+		case ConditionGt:
+			c.Type = ConditionLte
+		case ConditionGte:
+			c.Type = ConditionLt
+		case ConditionNil:
+			c.Type = ConditionNotNil
+		case ConditionIn:
+			c.Type = ConditionNin
+		case ConditionLike:
+			c.Type = ConditionNotLike
+		}
+
+		return c
+	}
+
 	return Condition{
 		Type:  ConditionNot,
 		Inner: inner,
@@ -160,9 +242,9 @@ func NotLike(col string, expr string) Condition {
 
 func Fragment(col string, expr string, val interface{}) Condition {
 	return Condition{
-		Type:   ConditionFrag,
+		Type:   ConditionFragment,
 		Column: col,
-		Value:  pattern,
+		Value:  val,
 		Expr:   expr,
 	}
 }

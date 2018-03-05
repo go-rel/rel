@@ -9,7 +9,7 @@ type Query struct {
 	HavingCondition Condition
 	OrderQuery      []OrderQuery
 	OffsetResult    int
-	LimitResult      int
+	LimitResult     int
 }
 
 type JoinQuery struct {
@@ -57,7 +57,7 @@ func (q Query) Where(condition ...Condition) Query {
 
 // OrWhere behaves exactly the same as where except it combines with any previous expression by using an OR
 func (q Query) OrWhere(condition ...Condition) Query {
-	q.Condition = q.Condition.Or(condition...)
+	q.Condition = q.Condition.Or(And(condition...))
 	return q
 }
 
@@ -72,7 +72,7 @@ func (q Query) Having(condition ...Condition) Query {
 }
 
 func (q Query) OrHaving(condition ...Condition) Query {
-	q.HavingCondition = q.HavingCondition.Or(condition...)
+	q.HavingCondition = q.HavingCondition.Or(And(condition...))
 	return q
 }
 

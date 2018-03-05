@@ -9,7 +9,7 @@ type Query struct {
 	HavingCondition Condition
 	OrderQuery      []OrderQuery
 	OffsetResult    int
-	LimitResut      int
+	LimitResult      int
 }
 
 type JoinQuery struct {
@@ -87,7 +87,7 @@ func (q Query) Offset(offset int) Query {
 }
 
 func (q Query) Limit(limit int) Query {
-	q.LimitResut = limit
+	q.LimitResult = limit
 	return q
 }
 
@@ -103,4 +103,12 @@ func Desc(field string) OrderQuery {
 		Field: field,
 		Order: -1,
 	}
+}
+
+func (o OrderQuery) Asc() bool {
+	return o.Order >= 0
+}
+
+func (o OrderQuery) Desc() bool {
+	return o.Order < 0
 }

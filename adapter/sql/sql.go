@@ -64,7 +64,7 @@ func (q QueryBuilder) Condition(c query.Condition) (string, []interface{}) {
 		}
 
 		if length > 1 {
-			qstring += "("
+			qstring += ")"
 		}
 
 		return qstring, args
@@ -78,7 +78,8 @@ func (q QueryBuilder) Condition(c query.Condition) (string, []interface{}) {
 	case query.ConditionXor:
 		return build("XOR", c.Inner)
 	case query.ConditionNot:
-		return build("NOT", c.Inner)
+		qs, args := build("AND", c.Inner)
+		return "NOT " + qs, args
 	case query.ConditionEq:
 		return c.Column + " = ?", c.Args
 	case query.ConditionNe:

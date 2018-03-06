@@ -121,23 +121,29 @@ func Not(inner ...Condition) Condition {
 		switch c.Type {
 		case ConditionEq:
 			c.Type = ConditionNe
+			return c
 		case ConditionLt:
 			c.Type = ConditionGte
+			return c
 		case ConditionLte:
 			c.Type = ConditionGt
+			return c
 		case ConditionGt:
 			c.Type = ConditionLte
+			return c
 		case ConditionGte:
 			c.Type = ConditionLt
+			return c
 		case ConditionNil:
 			c.Type = ConditionNotNil
+			return c
 		case ConditionIn:
 			c.Type = ConditionNin
+			return c
 		case ConditionLike:
 			c.Type = ConditionNotLike
+			return c
 		}
-
-		return c
 	}
 
 	return Condition{

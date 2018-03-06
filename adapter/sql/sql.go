@@ -19,16 +19,18 @@ func (q QueryBuilder) Join(join []query.JoinQuery) string {
 	return ""
 }
 
-func (q QueryBuilder) Where(condition query.Condition) string {
-	return ""
+func (q QueryBuilder) Where(condition query.Condition) (string, []interface{}) {
+	qs, args := q.Condition(condition)
+	return "WHERE " + qs, args
 }
 
 func (q QueryBuilder) GroupBy(fields ...string) string {
 	return "GROUP BY " + strings.Join(fields, ", ")
 }
 
-func (q QueryBuilder) Having(condition query.Condition) string {
-	return ""
+func (q QueryBuilder) Having(condition query.Condition) (string, []interface{}) {
+	qs, args := q.Condition(condition)
+	return "HAVING " + qs, args
 }
 
 func (q QueryBuilder) OrderBy(OrderBy []query.OrderQuery) string {

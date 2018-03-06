@@ -7,6 +7,19 @@ import (
 	"testing"
 )
 
+func TestSelect(t *testing.T) {
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "SELECT *", builder.Select("*"))
+	assert.Equal(t, "SELECT id, name", builder.Select("id", "name"))
+}
+
+func TestFrom(t *testing.T) {
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "FROM users", builder.From("users"))
+}
+
 func TestCondition(t *testing.T) {
 	tests := []struct {
 		QueryString string

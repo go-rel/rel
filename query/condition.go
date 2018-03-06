@@ -31,7 +31,7 @@ const (
 type Condition struct {
 	Type   ConditionType
 	Column string
-	Value  interface{}
+	Args   []interface{}
 	Expr   string
 	Inner  []Condition
 }
@@ -146,51 +146,51 @@ func Not(inner ...Condition) Condition {
 	}
 }
 
-func Eq(col string, val interface{}) Condition {
+func Eq(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionEq,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
-func Ne(col string, val interface{}) Condition {
+func Ne(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionNe,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
-func Lt(col string, val interface{}) Condition {
+func Lt(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionLt,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
-func Lte(col string, val interface{}) Condition {
+func Lte(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionLte,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
-func Gt(col string, val interface{}) Condition {
+func Gt(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionGt,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
-func Gte(col string, val interface{}) Condition {
+func Gte(col string, args interface{}) Condition {
 	return Condition{
 		Type:   ConditionGte,
 		Column: col,
-		Value:  val,
+		Args:   []interface{}{args},
 	}
 }
 
@@ -208,19 +208,19 @@ func NotNil(col string) Condition {
 	}
 }
 
-func In(col string, val interface{}) Condition {
+func In(col string, args ...interface{}) Condition {
 	return Condition{
 		Type:   ConditionIn,
 		Column: col,
-		Value:  val,
+		Args:   args,
 	}
 }
 
-func Nin(col string, val interface{}) Condition {
+func Nin(col string, args ...interface{}) Condition {
 	return Condition{
 		Type:   ConditionNin,
 		Column: col,
-		Value:  val,
+		Args:   args,
 	}
 }
 
@@ -240,11 +240,11 @@ func NotLike(col string, expr string) Condition {
 	}
 }
 
-func Fragment(col string, expr string, val interface{}) Condition {
+func Fragment(col string, expr string, args ...interface{}) Condition {
 	return Condition{
 		Type:   ConditionFragment,
 		Column: col,
-		Value:  val,
+		Args:   args,
 		Expr:   expr,
 	}
 }

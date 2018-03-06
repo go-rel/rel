@@ -474,7 +474,7 @@ func TestEq(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionEq,
 		Column: "field",
-		Value:  "value",
+		Args:   []interface{}{"value"},
 	}, Eq("field", "value"))
 }
 
@@ -482,7 +482,7 @@ func TestNe(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionNe,
 		Column: "field",
-		Value:  "value",
+		Args:   []interface{}{"value"},
 	}, Ne("field", "value"))
 }
 
@@ -490,7 +490,7 @@ func TestLt(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionLt,
 		Column: "field",
-		Value:  10,
+		Args:   []interface{}{10},
 	}, Lt("field", 10))
 }
 
@@ -498,7 +498,7 @@ func TestLte(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionLte,
 		Column: "field",
-		Value:  10,
+		Args:   []interface{}{10},
 	}, Lte("field", 10))
 }
 
@@ -506,7 +506,7 @@ func TestGt(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionGt,
 		Column: "field",
-		Value:  10,
+		Args:   []interface{}{10},
 	}, Gt("field", 10))
 }
 
@@ -514,7 +514,7 @@ func TestGte(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionGte,
 		Column: "field",
-		Value:  10,
+		Args:   []interface{}{10},
 	}, Gte("field", 10))
 }
 
@@ -536,16 +536,16 @@ func TestIn(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionIn,
 		Column: "field",
-		Value:  []string{"value"},
-	}, In("field", []string{"value"}))
+		Args:   []interface{}{"value1", "value2"},
+	}, In("field", "value1", "value2"))
 }
 
 func TestNin(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionNin,
 		Column: "field",
-		Value:  []string{"value"},
-	}, Nin("field", []string{"value"}))
+		Args:   []interface{}{"value1", "value2"},
+	}, Nin("field", "value1", "value2"))
 }
 
 func TestLike(t *testing.T) {
@@ -568,7 +568,7 @@ func TestFragment(t *testing.T) {
 	assert.Equal(t, Condition{
 		Type:   ConditionFragment,
 		Column: "field",
-		Value:  "value",
+		Args:   []interface{}{"value"},
 		Expr:   "expr",
 	}, Fragment("field", "expr", "value"))
 }

@@ -25,6 +25,10 @@ func (q QueryBuilder) Join(join []query.JoinQuery) string {
 }
 
 func (q QueryBuilder) Where(condition query.Condition) (string, []interface{}) {
+	if condition.None() {
+		return "", nil
+	}
+
 	qs, args := q.Condition(condition)
 	return "WHERE " + qs, args
 }
@@ -34,6 +38,10 @@ func (q QueryBuilder) GroupBy(fields ...string) string {
 }
 
 func (q QueryBuilder) Having(condition query.Condition) (string, []interface{}) {
+	if condition.None() {
+		return "", nil
+	}
+
 	qs, args := q.Condition(condition)
 	return "HAVING " + qs, args
 }

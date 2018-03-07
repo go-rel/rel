@@ -28,7 +28,37 @@ func TestJoin(t *testing.T) {
 }
 
 func TestWhere(t *testing.T) {
-	t.Skip("PENDING")
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Condition   Condition
+	}{
+		{
+			"",
+			nil,
+			And(),
+		},
+		{
+			"WHERE field = ?",
+			[]interface{}{"value"},
+			Eq("field", "value"),
+		},
+		{
+			"WHERE (field1 = ? AND field2 = ?)",
+			[]interface{}{"value1", "value2"},
+			And(Eq("field1", "value1"), Eq("field2", "value2")),
+		},
+	}
+
+	builder := sql.QueryBuilder{}
+
+	for _, tt := range tests {
+		t.Run(tt.QueryString, func(t *testing.T) {
+			qs, args := builder.Where(tt.Condition)
+			assert.Equal(t, tt.QueryString, qs)
+			assert.Equal(t, tt.Args, args)
+		})
+	}
 }
 
 func TestGroupBy(t *testing.T) {
@@ -36,7 +66,37 @@ func TestGroupBy(t *testing.T) {
 }
 
 func TestHaving(t *testing.T) {
-	t.Skip("PENDING")
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Condition   Condition
+	}{
+		{
+			"",
+			nil,
+			And(),
+		},
+		{
+			"HAVING field = ?",
+			[]interface{}{"value"},
+			Eq("field", "value"),
+		},
+		{
+			"HAVING (field1 = ? AND field2 = ?)",
+			[]interface{}{"value1", "value2"},
+			And(Eq("field1", "value1"), Eq("field2", "value2")),
+		},
+	}
+
+	builder := sql.QueryBuilder{}
+
+	for _, tt := range tests {
+		t.Run(tt.QueryString, func(t *testing.T) {
+			qs, args := builder.Having(tt.Condition)
+			assert.Equal(t, tt.QueryString, qs)
+			assert.Equal(t, tt.Args, args)
+		})
+	}
 }
 
 func TestOrderBy(t *testing.T) {

@@ -23,6 +23,40 @@ func TestFrom(t *testing.T) {
 	assert.Equal(t, "FROM users", builder.From("users"))
 }
 
+func TestJoin(t *testing.T) {
+	t.Skip("PENDING")
+}
+
+func TestWhere(t *testing.T) {
+	t.Skip("PENDING")
+}
+
+func TestGroupBy(t *testing.T) {
+	t.Skip("PENDING")
+}
+
+func TestHaving(t *testing.T) {
+	t.Skip("PENDING")
+}
+
+func TestOrderBy(t *testing.T) {
+	t.Skip("PENDING")
+}
+
+func TestOffset(t *testing.T) {
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "", builder.Offset(0))
+	assert.Equal(t, "OFFSET 10", builder.Offset(10))
+}
+
+func TestLimit(t *testing.T) {
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "", builder.Limit(0))
+	assert.Equal(t, "LIMIT 10", builder.Limit(10))
+}
+
 func TestCondition(t *testing.T) {
 	tests := []struct {
 		QueryString string

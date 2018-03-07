@@ -2,6 +2,7 @@ package sql
 
 import (
 	"github.com/Fs02/grimoire/query"
+	"strconv"
 	"strings"
 )
 
@@ -42,11 +43,19 @@ func (q QueryBuilder) OrderBy(OrderBy []query.OrderQuery) string {
 }
 
 func (q QueryBuilder) Offset(n int) string {
-	return "OFFSET " + string(n)
+	if n > 0 {
+		return "OFFSET " + strconv.Itoa(n)
+	}
+
+	return ""
 }
 
 func (q QueryBuilder) Limit(n int) string {
-	return "LIMIT " + string(n)
+	if n > 0 {
+		return "LIMIT " + strconv.Itoa(n)
+	}
+
+	return ""
 }
 
 func (q QueryBuilder) Condition(c query.Condition) (string, []interface{}) {

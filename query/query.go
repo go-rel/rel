@@ -3,6 +3,7 @@ package query
 type Query struct {
 	Collection      string
 	Fields          []string
+	AsDistict       bool
 	JoinQuery       []JoinQuery
 	Condition       Condition
 	GroupFields     []string
@@ -32,6 +33,11 @@ func From(collection string) Query {
 
 func (q Query) Select(fields ...string) Query {
 	q.Fields = fields
+	return q
+}
+
+func (q Query) Distinct() Query {
+	q.AsDistict = true
 	return q
 }
 

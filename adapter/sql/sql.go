@@ -7,7 +7,11 @@ import (
 
 type QueryBuilder struct{}
 
-func (q QueryBuilder) Select(fields ...string) string {
+func (q QueryBuilder) Select(distinct bool, fields ...string) string {
+	if distinct {
+		return "SELECT DISTINCT " + strings.Join(fields, ", ")
+	}
+
 	return "SELECT " + strings.Join(fields, ", ")
 }
 

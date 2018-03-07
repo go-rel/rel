@@ -10,8 +10,11 @@ import (
 func TestSelect(t *testing.T) {
 	builder := sql.QueryBuilder{}
 
-	assert.Equal(t, "SELECT *", builder.Select("*"))
-	assert.Equal(t, "SELECT id, name", builder.Select("id", "name"))
+	assert.Equal(t, "SELECT *", builder.Select(false, "*"))
+	assert.Equal(t, "SELECT id, name", builder.Select(false, "id", "name"))
+
+	assert.Equal(t, "SELECT DISTINCT *", builder.Select(true, "*"))
+	assert.Equal(t, "SELECT DISTINCT id, name", builder.Select(true, "id", "name"))
 }
 
 func TestFrom(t *testing.T) {

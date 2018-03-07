@@ -34,7 +34,11 @@ func (q QueryBuilder) Where(condition query.Condition) (string, []interface{}) {
 }
 
 func (q QueryBuilder) GroupBy(fields ...string) string {
-	return "GROUP BY " + strings.Join(fields, ", ")
+	if len(fields) > 0 {
+		return "GROUP BY " + strings.Join(fields, ", ")
+	}
+
+	return ""
 }
 
 func (q QueryBuilder) Having(condition query.Condition) (string, []interface{}) {
@@ -46,8 +50,26 @@ func (q QueryBuilder) Having(condition query.Condition) (string, []interface{}) 
 	return "HAVING " + qs, args
 }
 
-func (q QueryBuilder) OrderBy(OrderBy []query.OrderQuery) string {
-	return ""
+func (q QueryBuilder) OrderBy(orders ...query.OrderQuery) string {
+	length := len(orders)
+	if length == 0 {
+		return ""
+	}
+
+	qs := "ORDER BY "
+	for i, o := range orders {
+		if o.Asc() {
+			qs += o.Field + " ASC"
+		} else {
+			qs += o.Field + " DESC"
+		}
+
+		if i < length-1 {
+			qs += ", "
+		}
+	}
+
+	return qs
 }
 
 func (q QueryBuilder) Offset(n int) string {

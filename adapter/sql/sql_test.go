@@ -62,7 +62,11 @@ func TestWhere(t *testing.T) {
 }
 
 func TestGroupBy(t *testing.T) {
-	t.Skip("PENDING")
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "", builder.GroupBy())
+	assert.Equal(t, "GROUP BY city", builder.GroupBy("city"))
+	assert.Equal(t, "GROUP BY city, nation", builder.GroupBy("city", "nation"))
 }
 
 func TestHaving(t *testing.T) {
@@ -100,7 +104,11 @@ func TestHaving(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	t.Skip("PENDING")
+	builder := sql.QueryBuilder{}
+
+	assert.Equal(t, "", builder.OrderBy())
+	assert.Equal(t, "ORDER BY name ASC", builder.OrderBy(Asc("name")))
+	assert.Equal(t, "ORDER BY name ASC, created_at DESC", builder.OrderBy(Asc("name"), Desc("created_at")))
 }
 
 func TestOffset(t *testing.T) {

@@ -28,12 +28,29 @@ const (
 	ConditionFragment
 )
 
+// column
+type I string
+
+type Operand struct {
+	Column I
+	Values []interface{}
+}
+
+func NewOperand(o ...interface{}) Operand {
+	if len(o) == 1 {
+		if c, ok := o[0].(I); ok {
+			return Operand{Column: c}
+		}
+	}
+
+	return Operand{Values: o}
+}
+
 type Condition struct {
-	Type   ConditionType
-	Column string
-	Args   []interface{}
-	Expr   string
-	Inner  []Condition
+	Type  ConditionType
+	Left  Operand
+	Right Operand
+	Inner []Condition
 }
 
 func (c Condition) None() bool {
@@ -152,105 +169,104 @@ func Not(inner ...Condition) Condition {
 	}
 }
 
-func Eq(col string, args interface{}) Condition {
+func Eq(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionEq,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionEq,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Ne(col string, args interface{}) Condition {
+func Ne(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionNe,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionNe,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Lt(col string, args interface{}) Condition {
+func Lt(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionLt,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionLt,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Lte(col string, args interface{}) Condition {
+func Lte(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionLte,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionLte,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Gt(col string, args interface{}) Condition {
+func Gt(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionGt,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionGt,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Gte(col string, args interface{}) Condition {
+func Gte(left, right interface{}) Condition {
 	return Condition{
-		Type:   ConditionGte,
-		Column: col,
-		Args:   []interface{}{args},
+		Type:  ConditionGte,
+		Left:  NewOperand(left),
+		Right: NewOperand(right),
 	}
 }
 
-func Nil(col string) Condition {
+func Nil(col I) Condition {
 	return Condition{
-		Type:   ConditionNil,
-		Column: col,
+		Type: ConditionNil,
+		Left: NewOperand(col),
 	}
 }
 
-func NotNil(col string) Condition {
+func NotNil(col I) Condition {
 	return Condition{
-		Type:   ConditionNotNil,
-		Column: col,
+		Type: ConditionNotNil,
+		Left: NewOperand(col),
 	}
 }
 
-func In(col string, args ...interface{}) Condition {
+func In(col I, values ...interface{}) Condition {
 	return Condition{
-		Type:   ConditionIn,
-		Column: col,
-		Args:   args,
+		Type:  ConditionIn,
+		Left:  NewOperand(col),
+		Right: NewOperand(values...),
 	}
 }
 
-func Nin(col string, args ...interface{}) Condition {
+func Nin(col I, values ...interface{}) Condition {
 	return Condition{
-		Type:   ConditionNin,
-		Column: col,
-		Args:   args,
+		Type:  ConditionNin,
+		Left:  NewOperand(col),
+		Right: NewOperand(values...),
 	}
 }
 
-func Like(col string, expr string) Condition {
+func Like(col I, pattern string) Condition {
 	return Condition{
-		Type:   ConditionLike,
-		Column: col,
-		Expr:   expr,
+		Type:  ConditionLike,
+		Left:  NewOperand(col),
+		Right: NewOperand(pattern),
 	}
 }
 
-func NotLike(col string, expr string) Condition {
+func NotLike(col I, pattern string) Condition {
 	return Condition{
-		Type:   ConditionNotLike,
-		Column: col,
-		Expr:   expr,
+		Type:  ConditionNotLike,
+		Left:  NewOperand(col),
+		Right: NewOperand(pattern),
 	}
 }
 
-func Fragment(col string, expr string, args ...interface{}) Condition {
+func Fragment(expr I, values ...interface{}) Condition {
 	return Condition{
-		Type:   ConditionFragment,
-		Column: col,
-		Args:   args,
-		Expr:   expr,
+		Type:  ConditionFragment,
+		Left:  NewOperand(expr),
+		Right: NewOperand(values...),
 	}
 }

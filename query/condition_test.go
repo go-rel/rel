@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-var cond1 = Eq("id", 1)
-var cond2 = Ne("name", "foo")
-var cond3 = Gt("score", 80)
-var cond4 = Lt("avg", 10)
+var cond1 = Eq(I("id"), 1)
+var cond2 = Ne(I("name"), "foo")
+var cond3 = Gt(I("score"), 80)
+var cond4 = Lt(I("avg"), 10)
 
 func TestConditionNone(t *testing.T) {
 	assert.True(t, Condition{}.None())
@@ -472,103 +472,102 @@ func TestNot(t *testing.T) {
 
 func TestEq(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionEq,
-		Column: "field",
-		Args:   []interface{}{"value"},
-	}, Eq("field", "value"))
+		Type:  ConditionEq,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"value"}},
+	}, Eq(I("field"), "value"))
 }
 
 func TestNe(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionNe,
-		Column: "field",
-		Args:   []interface{}{"value"},
-	}, Ne("field", "value"))
+		Type:  ConditionNe,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"value"}},
+	}, Ne(I("field"), "value"))
 }
 
 func TestLt(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionLt,
-		Column: "field",
-		Args:   []interface{}{10},
-	}, Lt("field", 10))
+		Type:  ConditionLt,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{10}},
+	}, Lt(I("field"), 10))
 }
 
 func TestLte(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionLte,
-		Column: "field",
-		Args:   []interface{}{10},
-	}, Lte("field", 10))
+		Type:  ConditionLte,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{10}},
+	}, Lte(I("field"), 10))
 }
 
 func TestGt(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionGt,
-		Column: "field",
-		Args:   []interface{}{10},
-	}, Gt("field", 10))
+		Type:  ConditionGt,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{10}},
+	}, Gt(I("field"), 10))
 }
 
 func TestGte(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionGte,
-		Column: "field",
-		Args:   []interface{}{10},
-	}, Gte("field", 10))
+		Type:  ConditionGte,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{10}},
+	}, Gte(I("field"), 10))
 }
 
 func TestNil(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionNil,
-		Column: "field",
-	}, Nil("field"))
+		Type: ConditionNil,
+		Left: Operand{Column: I("field")},
+	}, Nil(I("field")))
 }
 
 func TestNotNil(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionNotNil,
-		Column: "field",
-	}, NotNil("field"))
+		Type: ConditionNotNil,
+		Left: Operand{Column: I("field")},
+	}, NotNil(I("field")))
 }
 
 func TestIn(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionIn,
-		Column: "field",
-		Args:   []interface{}{"value1", "value2"},
-	}, In("field", "value1", "value2"))
+		Type:  ConditionIn,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"value1", "value2"}},
+	}, In(I("field"), "value1", "value2"))
 }
 
 func TestNin(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionNin,
-		Column: "field",
-		Args:   []interface{}{"value1", "value2"},
-	}, Nin("field", "value1", "value2"))
+		Type:  ConditionNin,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"value1", "value2"}},
+	}, Nin(I("field"), "value1", "value2"))
 }
 
 func TestLike(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionLike,
-		Column: "field",
-		Expr:   "%expr%",
-	}, Like("field", "%expr%"))
+		Type:  ConditionLike,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"%expr%"}},
+	}, Like(I("field"), "%expr%"))
 }
 
 func TestNotLike(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionNotLike,
-		Column: "field",
-		Expr:   "%expr%",
-	}, NotLike("field", "%expr%"))
+		Type:  ConditionNotLike,
+		Left:  Operand{Column: I("field")},
+		Right: Operand{Values: []interface{}{"%expr%"}},
+	}, NotLike(I("field"), "%expr%"))
 }
 
 func TestFragment(t *testing.T) {
 	assert.Equal(t, Condition{
-		Type:   ConditionFragment,
-		Column: "field",
-		Args:   []interface{}{"value"},
-		Expr:   "expr",
-	}, Fragment("field", "expr", "value"))
+		Type:  ConditionFragment,
+		Left:  Operand{Column: I("expr")},
+		Right: Operand{Values: []interface{}{"value"}},
+	}, Fragment(I("expr"), "value"))
 }

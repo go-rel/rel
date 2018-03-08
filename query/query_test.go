@@ -135,8 +135,8 @@ func TestOrWhere(t *testing.T) {
 	}
 }
 
-func TestGroupBy(t *testing.T) {
-	assert.Equal(t, From("users").GroupBy("active", "plan"), Query{
+func TestGroup(t *testing.T) {
+	assert.Equal(t, From("users").Group("active", "plan"), Query{
 		Collection:  "users",
 		Fields:      []string{"*"},
 		GroupFields: []string{"active", "plan"},
@@ -268,7 +268,7 @@ func TestLimit(t *testing.T) {
 func TestAsc(t *testing.T) {
 	asc := Asc("id")
 
-	assert.Equal(t, asc, OrderQuery{
+	assert.Equal(t, asc, OrderClause{
 		Field: "id",
 		Order: 1,
 	})
@@ -278,7 +278,7 @@ func TestAsc(t *testing.T) {
 func TestDesc(t *testing.T) {
 	desc := Desc("id")
 
-	assert.Equal(t, desc, OrderQuery{
+	assert.Equal(t, desc, OrderClause{
 		Field: "id",
 		Order: -1,
 	})

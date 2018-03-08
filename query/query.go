@@ -4,22 +4,22 @@ type Query struct {
 	Collection      string
 	Fields          []string
 	AsDistict       bool
-	JoinQuery       []JoinQuery
+	JoinClause      []JoinClause
 	Condition       Condition
 	GroupFields     []string
 	HavingCondition Condition
-	OrderQuery      []OrderQuery
+	OrderClause     []OrderClause
 	OffsetResult    int
 	LimitResult     int
 }
 
-type JoinQuery struct {
+type JoinClause struct {
 	Mode       string
 	Collection string
 	Condition  Condition
 }
 
-type OrderQuery struct {
+type OrderClause struct {
 	Field string
 	Order int
 }
@@ -46,7 +46,7 @@ func (q Query) Join(collection string, condition ...Condition) Query {
 }
 
 func (q Query) JoinWith(mode string, collection string, condition ...Condition) Query {
-	q.JoinQuery = append(q.JoinQuery, JoinQuery{
+	q.JoinClause = append(q.JoinClause, JoinClause{
 		Mode:       mode,
 		Collection: collection,
 		Condition:  And(condition...),
@@ -67,7 +67,7 @@ func (q Query) OrWhere(condition ...Condition) Query {
 	return q
 }
 
-func (q Query) GroupBy(fields ...string) Query {
+func (q Query) Group(fields ...string) Query {
 	q.GroupFields = fields
 	return q
 }
@@ -82,8 +82,8 @@ func (q Query) OrHaving(condition ...Condition) Query {
 	return q
 }
 
-func (q Query) OrderBy(order ...OrderQuery) Query {
-	q.OrderQuery = append(q.OrderQuery, order...)
+func (q Query) Order(order ...OrderClause) Query {
+	q.OrderClause = append(q.OrderClause, order...)
 	return q
 }
 
@@ -97,24 +97,24 @@ func (q Query) Limit(limit int) Query {
 	return q
 }
 
-func Asc(field string) OrderQuery {
-	return OrderQuery{
+func Asc(field string) OrderClause {
+	return OrderClause{
 		Field: field,
 		Order: 1,
 	}
 }
 
-func Desc(field string) OrderQuery {
-	return OrderQuery{
+func Desc(field string) OrderClause {
+	return OrderClause{
 		Field: field,
 		Order: -1,
 	}
 }
 
-func (o OrderQuery) Asc() bool {
+func (o OrderClause) Asc() bool {
 	return o.Order >= 0
 }
 
-func (o OrderQuery) Desc() bool {
+func (o OrderClause) Desc() bool {
 	return o.Order < 0
 }

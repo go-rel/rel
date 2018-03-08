@@ -20,7 +20,7 @@ func (q QueryBuilder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (q QueryBuilder) Join(join []query.JoinQuery) string {
+func (q QueryBuilder) Join(join []query.JoinClause) string {
 	return ""
 }
 
@@ -50,7 +50,7 @@ func (q QueryBuilder) Having(condition query.Condition) (string, []interface{}) 
 	return "HAVING " + qs, args
 }
 
-func (q QueryBuilder) OrderBy(orders ...query.OrderQuery) string {
+func (q QueryBuilder) OrderBy(orders ...query.OrderClause) string {
 	length := len(orders)
 	if length == 0 {
 		return ""

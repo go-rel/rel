@@ -20,8 +20,24 @@ func (q QueryBuilder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (q QueryBuilder) Join(join []query.JoinClause) string {
-	return ""
+func (q QueryBuilder) Join(join []query.JoinClause) (string, []interface{}) {
+	if len(join) == 0 {
+		return "", nil
+	}
+
+	var qs string
+	var args []interface{}
+	for i, j := range join {
+		cs, jargs := q.Condition(j.Condition)
+		qs += j.Mode + " ON " + cs
+		args = append(args, jargs...)
+
+		if i < len(join)-1 {
+			qs += " "
+		}
+	}
+
+	return qs, args
 }
 
 func (q QueryBuilder) Where(condition query.Condition) (string, []interface{}) {

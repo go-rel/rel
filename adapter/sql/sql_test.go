@@ -24,7 +24,43 @@ func TestFrom(t *testing.T) {
 }
 
 func TestJoin(t *testing.T) {
-	t.Skip("PENDING")
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		JoinClause  []JoinClause
+	}{
+		{
+			"",
+			nil,
+			nil,
+		},
+		{
+			"JOIN users ON user.id=trxs.user_id",
+			nil,
+			From("trxs").Join("users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+		},
+		{
+			"INNER JOIN users ON user.id=trxs.user_id",
+			nil,
+			From("trxs").JoinWith("INNER JOIN", "users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+		},
+		{
+			"JOIN users ON user.id=trxs.user_id JOIN payments ON payments.id=trxs.payment_id",
+			nil,
+			From("trxs").Join("users", Eq(I("user.id"), I("trxs.user_id"))).
+				Join("payments", Eq(I("payments.id"), I("trxs.payment_id"))).JoinClause,
+		},
+	}
+
+	builder := sql.QueryBuilder{}
+
+	for _, tt := range tests {
+		t.Run(tt.QueryString, func(t *testing.T) {
+			qs, args := builder.Join(tt.JoinClause...)
+			assert.Equal(t, tt.QueryString, qs)
+			assert.Equal(t, tt.Args, args)
+		})
+	}
 }
 
 func TestWhere(t *testing.T) {

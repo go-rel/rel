@@ -20,7 +20,7 @@ func (q QueryBuilder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (q QueryBuilder) Join(join []query.JoinClause) (string, []interface{}) {
+func (q QueryBuilder) Join(join ...query.JoinClause) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -29,7 +29,7 @@ func (q QueryBuilder) Join(join []query.JoinClause) (string, []interface{}) {
 	var args []interface{}
 	for i, j := range join {
 		cs, jargs := q.Condition(j.Condition)
-		qs += j.Mode + " ON " + cs
+		qs += j.Mode + " " + j.Collection + " ON " + cs
 		args = append(args, jargs...)
 
 		if i < len(join)-1 {

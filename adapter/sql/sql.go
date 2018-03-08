@@ -89,69 +89,86 @@ func (q QueryBuilder) Limit(n int) string {
 }
 
 func (q QueryBuilder) Condition(c query.Condition) (string, []interface{}) {
-	build := func(op string, inner []query.Condition) (string, []interface{}) {
-		length := len(inner)
-		var qstring string
-		var args []interface{}
-
-		if length > 1 {
-			qstring += "("
-		}
-
-		for i, c := range inner {
-			cQstring, cArgs := q.Condition(c)
-			qstring += cQstring
-			args = append(args, cArgs...)
-
-			if i < length-1 {
-				qstring += " " + op + " "
-			}
-		}
-
-		if length > 1 {
-			qstring += ")"
-		}
-
-		return qstring, args
-	}
-
 	switch c.Type {
 	case query.ConditionAnd:
-		return build("AND", c.Inner)
+		return q.build("AND", c.Inner)
 	case query.ConditionOr:
-		return build("OR", c.Inner)
+		return q.build("OR", c.Inner)
 	case query.ConditionXor:
-		return build("XOR", c.Inner)
+		return q.build("XOR", c.Inner)
 	case query.ConditionNot:
-		qs, args := build("AND", c.Inner)
+		qs, args := q.build("AND", c.Inner)
 		return "NOT " + qs, args
 	case query.ConditionEq:
-		return c.Column + " = ?", c.Args
+		return q.buildComparison("=", c.Left, c.Right)
 	case query.ConditionNe:
-		return c.Column + " <> ?", c.Args
+		return q.buildComparison("<>", c.Left, c.Right)
 	case query.ConditionLt:
-		return c.Column + " < ?", c.Args
+		return q.buildComparison("<", c.Left, c.Right)
 	case query.ConditionLte:
-		return c.Column + " <= ?", c.Args
+		return q.buildComparison("<=", c.Left, c.Right)
 	case query.ConditionGt:
-		return c.Column + " > ?", c.Args
+		return q.buildComparison(">", c.Left, c.Right)
 	case query.ConditionGte:
-		return c.Column + " >= ?", c.Args
+		return q.buildComparison(">=", c.Left, c.Right)
 	case query.ConditionNil:
-		return c.Column + " IS NULL", c.Args
+		return string(c.Left.Column) + " IS NULL", c.Right.Values
 	case query.ConditionNotNil:
-		return c.Column + " IS NOT NULL", c.Args
+		return string(c.Left.Column) + " IS NOT NULL", c.Right.Values
 	case query.ConditionIn:
-		return c.Column + " IN (?" + strings.Repeat(",?", len(c.Args)-1) + ")", c.Args
+		return string(c.Left.Column) + " IN (?" + strings.Repeat(",?", len(c.Right.Values)-1) + ")", c.Right.Values
 	case query.ConditionNin:
-		return c.Column + " NOT IN (?" + strings.Repeat(",?", len(c.Args)-1) + ")", c.Args
+		return string(c.Left.Column) + " NOT IN (?" + strings.Repeat(",?", len(c.Right.Values)-1) + ")", c.Right.Values
 	case query.ConditionLike:
-		return c.Column + " LIKE \"" + c.Expr + "\"", c.Args
+		return string(c.Left.Column) + " LIKE ?", c.Right.Values
 	case query.ConditionNotLike:
-		return c.Column + " NOT LIKE \"" + c.Expr + "\"", c.Args
+		return string(c.Left.Column) + " NOT LIKE ?", c.Right.Values
 	case query.ConditionFragment:
-		return c.Expr, c.Args
+		return string(c.Left.Column), c.Right.Values
 	}
 
 	return "", []interface{}{}
+}
+
+func (q QueryBuilder) build(op string, inner []query.Condition) (string, []interface{}) {
+	length := len(inner)
+	var qstring string
+	var args []interface{}
+
+	if length > 1 {
+		qstring += "("
+	}
+
+	for i, c := range inner {
+		cQstring, cArgs := q.Condition(c)
+		qstring += cQstring
+		args = append(args, cArgs...)
+
+		if i < length-1 {
+			qstring += " " + op + " "
+		}
+	}
+
+	if length > 1 {
+		qstring += ")"
+	}
+
+	return qstring, args
+}
+
+func (q QueryBuilder) buildComparison(op string, left, right query.Operand) (string, []interface{}) {
+	var cs string
+	if left.Column != "" {
+		cs = string(left.Column) + op
+	} else {
+		cs = "?" + op
+	}
+
+	if right.Column != "" {
+		cs += string(right.Column)
+	} else {
+		cs += "?"
+	}
+
+	return cs, append(left.Values, right.Values...)
 }

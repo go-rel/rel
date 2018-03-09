@@ -1,28 +1,56 @@
-package sql
+package mysql
 
 import (
 	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/query"
-	"strings"
 )
 
-type Sql struct{}
+type Adapter struct{}
 
-func (s Sql) All(q query.Query) (string, []interface{}) {
+func (a Adapter) All(q query.Query) (string, []interface{}) {
 	builder := sql.Builder{}
 
-	selects := builder.Select(q.AsDistinct, q.Fields...)
-	from := builder.From(q.Collection)
-	join, joinArgs := builder.Join(q.JoinClause...)
-	where, whereArgs := builder.Where(q.Condition)
-	group := builder.GroupBy(q.GroupFields...)
-	having, havingArgs := builder.Having(q.HavingCondition)
-	order := builder.OrderBy(q.OrderClause...)
-	offset := builder.Offset(q.OffsetResult)
-	limit := builder.Limit(q.LimitResult)
+	var str string
+	var args []interface{}
 
-	args := append(joinArgs, whereArgs...)
-	args = append(args, havingArgs...)
+	if s := builder.Select(q.AsDistinct, q.Fields...); s != "" {
+		str += s
+	}
 
-	return strings.Join([]string{selects, from, join, where, group, having, order, offset, limit}, " "), args
+	if s := builder.From(q.Collection); s != "" {
+		str += " " + s
+	}
+
+	if s, arg := builder.Join(q.JoinClause...); s != "" {
+		str += " " + s
+		args = append(args, arg...)
+	}
+
+	if s, arg := builder.Where(q.Condition); s != "" {
+		str += " " + s
+		args = append(args, arg...)
+	}
+
+	if s := builder.GroupBy(q.GroupFields...); s != "" {
+		str += " " + s
+	}
+
+	if s, arg := builder.Having(q.HavingCondition); s != "" {
+		str += " " + s
+		args = append(args, arg...)
+	}
+
+	if s := builder.OrderBy(q.OrderClause...); s != "" {
+		str += " " + s
+	}
+
+	if s := builder.Offset(q.OffsetResult); s != "" {
+		str += " " + s
+	}
+
+	if s := builder.Limit(q.LimitResult); s != "" {
+		str += " " + s
+	}
+
+	return str + ";", args
 }

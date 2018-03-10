@@ -1,14 +1,13 @@
-package sql_test
+package sqlutil
 
 import (
-	"github.com/Fs02/grimoire/adapter/sql"
 	. "github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestSelect(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "SELECT *", builder.Select(false, "*"))
 	assert.Equal(t, "SELECT id, name", builder.Select(false, "id", "name"))
@@ -18,7 +17,7 @@ func TestSelect(t *testing.T) {
 }
 
 func TestFrom(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "FROM users", builder.From("users"))
 }
@@ -52,7 +51,7 @@ func TestJoin(t *testing.T) {
 		},
 	}
 
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
@@ -86,7 +85,7 @@ func TestWhere(t *testing.T) {
 		},
 	}
 
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
@@ -98,7 +97,7 @@ func TestWhere(t *testing.T) {
 }
 
 func TestGroupBy(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "", builder.GroupBy())
 	assert.Equal(t, "GROUP BY city", builder.GroupBy("city"))
@@ -128,7 +127,7 @@ func TestHaving(t *testing.T) {
 		},
 	}
 
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
@@ -140,7 +139,7 @@ func TestHaving(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "", builder.OrderBy())
 	assert.Equal(t, "ORDER BY name ASC", builder.OrderBy(Asc("name")))
@@ -148,14 +147,14 @@ func TestOrderBy(t *testing.T) {
 }
 
 func TestOffset(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "", builder.Offset(0))
 	assert.Equal(t, "OFFSET 10", builder.Offset(10))
 }
 
 func TestLimit(t *testing.T) {
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	assert.Equal(t, "", builder.Limit(0))
 	assert.Equal(t, "LIMIT 10", builder.Limit(10))
@@ -389,7 +388,7 @@ func TestCondition(t *testing.T) {
 		},
 	}
 
-	builder := sql.Builder{}
+	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {

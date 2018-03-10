@@ -1,7 +1,7 @@
-package sql
+package sqlutil
 
 import (
-	dsql "database/sql"
+	"database/sql"
 	"reflect"
 	"unicode"
 )
@@ -13,7 +13,7 @@ type Rows interface {
 	Next() bool
 }
 
-var typeScanner = reflect.TypeOf((*dsql.Scanner)(nil)).Elem()
+var typeScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 
 func Scan(value interface{}, rows Rows) error {
 	columns, err := rows.Columns()
@@ -76,7 +76,7 @@ func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interf
 		if id, exist := index[col]; exist {
 			ptr = append(ptr, rv.Field(id).Addr().Interface())
 		} else {
-			ptr = append(ptr, &dsql.RawBytes{})
+			ptr = append(ptr, &sql.RawBytes{})
 		}
 	}
 

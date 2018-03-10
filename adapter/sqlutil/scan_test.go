@@ -1,4 +1,4 @@
-package sql
+package sqlutil
 
 import (
 	"github.com/stretchr/testify/assert"

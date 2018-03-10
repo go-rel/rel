@@ -1,17 +1,91 @@
 package sql
 
 import (
+	dsql "database/sql"
 	"reflect"
 	"unicode"
 )
 
+// minimum rows interface for test purpose
+type Rows interface {
+	Scan(dest ...interface{}) error
+	Columns() ([]string, error)
+	Next() bool
+}
+
+var typeScanner = reflect.TypeOf((*dsql.Scanner)(nil)).Elem()
+
+func Scan(value interface{}, rows Rows) error {
+	columns, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+
+	rv := reflect.ValueOf(value)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		panic("value must be pointer")
+	}
+
+	rv = rv.Elem()
+	var index map[string]int
+	isScanner := rv.Addr().Type().Implements(typeScanner)
+	isSlice := rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 && !isScanner
+
+	if !isScanner {
+		if isSlice {
+			index = fieldIndex(rv.Type().Elem())
+		} else {
+			index = fieldIndex(rv.Type())
+		}
+	}
+
+	for rows.Next() {
+		var elem reflect.Value
+		if isSlice {
+			elem = reflect.New(rv.Type().Elem()).Elem()
+		} else {
+			elem = rv
+		}
+
+		var ptr []interface{}
+		if isScanner {
+			ptr = []interface{}{elem.Addr().Interface()}
+		} else {
+			ptr = fieldPtr(elem, index, columns)
+		}
+
+		err = rows.Scan(ptr...)
+		if err != nil {
+			return err
+		}
+
+		if isSlice {
+			rv.Set(reflect.Append(rv, elem))
+		} else {
+			break
+		}
+	}
+
+	return nil
+}
+
+func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interface{} {
+	var ptr []interface{}
+
+	for _, col := range columns {
+		if id, exist := index[col]; exist {
+			ptr = append(ptr, rv.Field(id).Addr().Interface())
+		} else {
+			ptr = append(ptr, &dsql.RawBytes{})
+		}
+	}
+
+	return ptr
+}
+
 var tag = "db"
 
 func fieldIndex(rt reflect.Type) map[string]int {
-	if rt.Kind() != reflect.Struct {
-		panic("must be a struct")
-	}
-
 	fields := make(map[string]int)
 	for i := 0; i < rt.NumField(); i++ {
 		f := rt.Field(i)

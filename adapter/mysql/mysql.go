@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
@@ -25,49 +26,59 @@ func (adapter *Adapter) Close(string) error {
 func (adapter Adapter) All(q query.Query) (string, []interface{}) {
 	builder := sqlutil.Builder{}
 
-	var str string
+	var buffer bytes.Buffer
 	var args []interface{}
 
 	if s := builder.Select(q.AsDistinct, q.Fields...); s != "" {
-		str += s
+		buffer.WriteString(s)
 	}
 
 	if s := builder.From(q.Collection); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 	}
 
 	if s, arg := builder.Join(q.JoinClause...); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
 	if s, arg := builder.Where(q.Condition); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
 	if s := builder.GroupBy(q.GroupFields...); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 	}
 
 	if s, arg := builder.Having(q.HavingCondition); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
 	if s := builder.OrderBy(q.OrderClause...); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 	}
 
 	if s := builder.Offset(q.OffsetResult); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 	}
 
 	if s := builder.Limit(q.LimitResult); s != "" {
-		str += " " + s
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
 	}
 
-	return str + ";", args
+	buffer.WriteString(";")
+
+	return buffer.String(), args
 }
 
 func (adapter Adapter) Query(qs string, args []interface{}) ([]interface{}, error) {

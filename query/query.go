@@ -3,7 +3,7 @@ package query
 type Query struct {
 	Collection      string
 	Fields          []string
-	AsDistict       bool
+	AsDistinct      bool
 	JoinClause      []JoinClause
 	Condition       Condition
 	GroupFields     []string
@@ -37,7 +37,7 @@ func (q Query) Select(fields ...string) Query {
 }
 
 func (q Query) Distinct() Query {
-	q.AsDistict = true
+	q.AsDistinct = true
 	return q
 }
 

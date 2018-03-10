@@ -8,7 +8,7 @@ import (
 
 type Builder struct{}
 
-func (b Builder) Select(distinct bool, fields ...string) string {
+func (builder Builder) Select(distinct bool, fields ...string) string {
 	if distinct {
 		return "SELECT DISTINCT " + strings.Join(fields, ", ")
 	}
@@ -16,11 +16,11 @@ func (b Builder) Select(distinct bool, fields ...string) string {
 	return "SELECT " + strings.Join(fields, ", ")
 }
 
-func (b Builder) From(collection string) string {
+func (builder Builder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (b Builder) Join(join ...query.JoinClause) (string, []interface{}) {
+func (builder Builder) Join(join ...query.JoinClause) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -28,7 +28,7 @@ func (b Builder) Join(join ...query.JoinClause) (string, []interface{}) {
 	var qs string
 	var args []interface{}
 	for i, j := range join {
-		cs, jargs := b.Condition(j.Condition)
+		cs, jargs := builder.Condition(j.Condition)
 		qs += j.Mode + " " + j.Collection + " ON " + cs
 		args = append(args, jargs...)
 
@@ -40,16 +40,16 @@ func (b Builder) Join(join ...query.JoinClause) (string, []interface{}) {
 	return qs, args
 }
 
-func (b Builder) Where(condition query.Condition) (string, []interface{}) {
+func (builder Builder) Where(condition query.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
 
-	qs, args := b.Condition(condition)
+	qs, args := builder.Condition(condition)
 	return "WHERE " + qs, args
 }
 
-func (b Builder) GroupBy(fields ...string) string {
+func (builder Builder) GroupBy(fields ...string) string {
 	if len(fields) > 0 {
 		return "GROUP BY " + strings.Join(fields, ", ")
 	}
@@ -57,16 +57,16 @@ func (b Builder) GroupBy(fields ...string) string {
 	return ""
 }
 
-func (b Builder) Having(condition query.Condition) (string, []interface{}) {
+func (builder Builder) Having(condition query.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
 
-	qs, args := b.Condition(condition)
+	qs, args := builder.Condition(condition)
 	return "HAVING " + qs, args
 }
 
-func (b Builder) OrderBy(orders ...query.OrderClause) string {
+func (builder Builder) OrderBy(orders ...query.OrderClause) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -88,7 +88,7 @@ func (b Builder) OrderBy(orders ...query.OrderClause) string {
 	return qs
 }
 
-func (b Builder) Offset(n int) string {
+func (builder Builder) Offset(n int) string {
 	if n > 0 {
 		return "OFFSET " + strconv.Itoa(n)
 	}
@@ -96,7 +96,7 @@ func (b Builder) Offset(n int) string {
 	return ""
 }
 
-func (b Builder) Limit(n int) string {
+func (builder Builder) Limit(n int) string {
 	if n > 0 {
 		return "LIMIT " + strconv.Itoa(n)
 	}
@@ -104,29 +104,29 @@ func (b Builder) Limit(n int) string {
 	return ""
 }
 
-func (b Builder) Condition(c query.Condition) (string, []interface{}) {
+func (builder Builder) Condition(c query.Condition) (string, []interface{}) {
 	switch c.Type {
 	case query.ConditionAnd:
-		return b.build("AND", c.Inner)
+		return builder.build("AND", c.Inner)
 	case query.ConditionOr:
-		return b.build("OR", c.Inner)
+		return builder.build("OR", c.Inner)
 	case query.ConditionXor:
-		return b.build("XOR", c.Inner)
+		return builder.build("XOR", c.Inner)
 	case query.ConditionNot:
-		qs, args := b.build("AND", c.Inner)
+		qs, args := builder.build("AND", c.Inner)
 		return "NOT " + qs, args
 	case query.ConditionEq:
-		return b.buildComparison("=", c.Left, c.Right)
+		return builder.buildComparison("=", c.Left, c.Right)
 	case query.ConditionNe:
-		return b.buildComparison("<>", c.Left, c.Right)
+		return builder.buildComparison("<>", c.Left, c.Right)
 	case query.ConditionLt:
-		return b.buildComparison("<", c.Left, c.Right)
+		return builder.buildComparison("<", c.Left, c.Right)
 	case query.ConditionLte:
-		return b.buildComparison("<=", c.Left, c.Right)
+		return builder.buildComparison("<=", c.Left, c.Right)
 	case query.ConditionGt:
-		return b.buildComparison(">", c.Left, c.Right)
+		return builder.buildComparison(">", c.Left, c.Right)
 	case query.ConditionGte:
-		return b.buildComparison(">=", c.Left, c.Right)
+		return builder.buildComparison(">=", c.Left, c.Right)
 	case query.ConditionNil:
 		return string(c.Left.Column) + " IS NULL", c.Right.Values
 	case query.ConditionNotNil:
@@ -146,7 +146,7 @@ func (b Builder) Condition(c query.Condition) (string, []interface{}) {
 	return "", []interface{}{}
 }
 
-func (b Builder) build(op string, inner []query.Condition) (string, []interface{}) {
+func (builder Builder) build(op string, inner []query.Condition) (string, []interface{}) {
 	length := len(inner)
 	var qstring string
 	var args []interface{}
@@ -156,7 +156,7 @@ func (b Builder) build(op string, inner []query.Condition) (string, []interface{
 	}
 
 	for i, c := range inner {
-		cQstring, cArgs := b.Condition(c)
+		cQstring, cArgs := builder.Condition(c)
 		qstring += cQstring
 		args = append(args, cArgs...)
 
@@ -172,7 +172,7 @@ func (b Builder) build(op string, inner []query.Condition) (string, []interface{
 	return qstring, args
 }
 
-func (b Builder) buildComparison(op string, left, right query.Operand) (string, []interface{}) {
+func (builder Builder) buildComparison(op string, left, right query.Operand) (string, []interface{}) {
 	var cs string
 	if left.Column != "" {
 		cs = string(left.Column) + op

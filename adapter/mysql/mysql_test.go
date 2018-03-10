@@ -1,7 +1,6 @@
-package mysql_test
+package mysql
 
 import (
-	"github.com/Fs02/grimoire/adapter/mysql"
 	. "github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -55,7 +54,7 @@ func TestAll(t *testing.T) {
 		},
 	}
 
-	adapter := mysql.Adapter{}
+	adapter := Adapter{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
@@ -64,4 +63,12 @@ func TestAll(t *testing.T) {
 			assert.Equal(t, tt.Args, args)
 		})
 	}
+}
+
+func TestQuery(t *testing.T) {
+	adapter := Adapter{}
+	adapter.Open("root@(127.0.0.1:3306)/papyrus_test")
+	qs, args := adapter.All(From("transactions AS t").Join("corporate_users AS c", Eq(I("t.corporate_id"), I("c.id"))).Select("t.*"))
+	println(qs)
+	adapter.Query(qs, args)
 }

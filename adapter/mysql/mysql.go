@@ -1,14 +1,29 @@
 package mysql
 
 import (
-	"github.com/Fs02/grimoire/adapter/sql"
+	"database/sql"
+	"fmt"
+	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/query"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type Adapter struct{}
+type Adapter struct {
+	db *sql.DB
+}
 
-func (a Adapter) All(q query.Query) (string, []interface{}) {
-	builder := sql.Builder{}
+func (adapter *Adapter) Open(dsn string) error {
+	var err error
+	adapter.db, err = sql.Open("mysql", dsn)
+	return err
+}
+
+func (adapter *Adapter) Close(string) error {
+	return adapter.db.Close()
+}
+
+func (adapter Adapter) All(q query.Query) (string, []interface{}) {
+	builder := sqlutil.Builder{}
 
 	var str string
 	var args []interface{}
@@ -53,4 +68,21 @@ func (a Adapter) All(q query.Query) (string, []interface{}) {
 	}
 
 	return str + ";", args
+}
+
+func (adapter Adapter) Query(qs string, args []interface{}) ([]interface{}, error) {
+	rows, err := adapter.db.Query(qs, args...)
+	if err != nil {
+		println(err.Error())
+	}
+
+	defer rows.Close()
+	cols, err := rows.Columns()
+	if err != nil {
+		println(err.Error())
+	}
+
+	fmt.Printf("%+v\n", cols)
+
+	return nil, nil
 }

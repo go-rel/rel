@@ -72,11 +72,12 @@ func Scan(value interface{}, rows Rows) error {
 func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interface{} {
 	var ptr []interface{}
 
+	dummy := sql.RawBytes{}
 	for _, col := range columns {
 		if id, exist := index[col]; exist {
 			ptr = append(ptr, rv.Field(id).Addr().Interface())
 		} else {
-			ptr = append(ptr, &sql.RawBytes{})
+			ptr = append(ptr, &dummy)
 		}
 	}
 

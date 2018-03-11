@@ -1,10 +1,19 @@
 package mysql
 
 import (
+	"fmt"
 	. "github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+type User struct {
+	ID            uint
+	State         string
+	PaymentMethod string
+	// CreatedAt time.Time
+	// UpdatedAt time.Time
+}
 
 func TestAll(t *testing.T) {
 	tests := []struct {
@@ -68,7 +77,12 @@ func TestAll(t *testing.T) {
 func TestQuery(t *testing.T) {
 	adapter := Adapter{}
 	adapter.Open("root@(127.0.0.1:3306)/papyrus_test")
-	qs, args := adapter.All(From("transactions AS t").Join("corporate_users AS c", Eq(I("t.corporate_id"), I("c.id"))).Select("t.*"))
+	defer adapter.Close()
+	qs, args := adapter.All(From("transactions AS t").Join("corporate_users AS c", Eq(I("t.corporate_id"), I("c.id"))))
 	println(qs)
-	adapter.Query(qs, args)
+
+	users := []User{}
+	err := adapter.Query(&users, qs, args)
+	assert.Nil(t, err)
+	fmt.Printf("%v", users)
 }

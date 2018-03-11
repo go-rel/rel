@@ -3,7 +3,6 @@ package mysql
 import (
 	"bytes"
 	"database/sql"
-	"fmt"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/query"
 	_ "github.com/go-sql-driver/mysql"
@@ -19,7 +18,7 @@ func (adapter *Adapter) Open(dsn string) error {
 	return err
 }
 
-func (adapter *Adapter) Close(string) error {
+func (adapter *Adapter) Close() error {
 	return adapter.db.Close()
 }
 
@@ -81,19 +80,13 @@ func (adapter Adapter) All(q query.Query) (string, []interface{}) {
 	return buffer.String(), args
 }
 
-func (adapter Adapter) Query(qs string, args []interface{}) ([]interface{}, error) {
+func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
 	rows, err := adapter.db.Query(qs, args...)
 	if err != nil {
 		println(err.Error())
+		return err
 	}
 
 	defer rows.Close()
-	cols, err := rows.Columns()
-	if err != nil {
-		println(err.Error())
-	}
-
-	fmt.Printf("%+v\n", cols)
-
-	return nil, nil
+	return sqlutil.Scan(out, rows)
 }

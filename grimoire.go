@@ -28,7 +28,7 @@ type Adapter interface {
 	Close() error
 
 	All(query.Query) (string, []interface{})
-	// Insert(*struct, changeset) (string, []interface{})
+	Insert(*Changeset) (string, []interface{})
 	// Update(*struct, changeset) (string, []interface{})
 	// UpdateAll(*struct, changeset, condition) (string, []interface{})
 	// Delete(*struct) (string, []interface{})
@@ -43,7 +43,8 @@ type Adapter interface {
 	Query(interface{}, string, []interface{}) error
 
 	// Query exec query string with it's arguments
-	Exec(string, []interface{}) error
+	// returns last inserted id, rows affected and error
+	Exec(string, []interface{}) (int64, int64, error)
 }
 
 type Repo struct {

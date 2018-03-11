@@ -3,9 +3,11 @@ package mysql
 import (
 	"bytes"
 	"database/sql"
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/query"
 	_ "github.com/go-sql-driver/mysql"
+	"strings"
 )
 
 type Adapter struct {
@@ -80,6 +82,35 @@ func (adapter Adapter) All(q query.Query) (string, []interface{}) {
 	return buffer.String(), args
 }
 
+func (adapter Adapter) Insert(ch *grimoire.Changeset) (string, []interface{}) {
+	length := len(ch.Changes)
+
+	var buffer bytes.Buffer
+	var args = make([]interface{}, length)
+
+	// "INSERT INTO users(name) VALUES(?)"
+	buffer.WriteString("INSERT INTO ")
+	buffer.WriteString(ch.Collection)
+	buffer.WriteString(" (")
+
+	curr := 0
+	for field, value := range ch.Changes {
+		if curr < length-1 {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString(field)
+		args = append(args, value)
+
+		curr++
+	}
+	buffer.WriteString(") VALUES ")
+	buffer.WriteString("(?")
+	buffer.WriteString(strings.Repeat(",?", length))
+	buffer.WriteString(");")
+
+	return buffer.String(), args
+}
+
 func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
 	rows, err := adapter.db.Query(qs, args...)
 	if err != nil {
@@ -89,4 +120,23 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 
 	defer rows.Close()
 	return sqlutil.Scan(out, rows)
+}
+
+func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {
+	res, err := adapter.db.Exec(qs, args...)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	rowCount, err := res.RowsAffected()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return lastId, rowCount, nil
 }

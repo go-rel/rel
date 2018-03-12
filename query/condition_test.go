@@ -1,9 +1,10 @@
 package query_test
 
 import (
+	"testing"
+
 	. "github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var cond1 = Eq(I("id"), 1)

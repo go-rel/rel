@@ -1,9 +1,10 @@
 package sqlutil
 
 import (
+	"testing"
+
 	. "github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSelect(t *testing.T) {

@@ -1,12 +1,146 @@
 package sqlutil
 
 import (
-	"github.com/Fs02/grimoire/query"
+	"bytes"
 	"strconv"
 	"strings"
+
+	"github.com/Fs02/grimoire/query"
 )
 
 type Builder struct{}
+
+func (builder Builder) All(q query.Query) (string, []interface{}) {
+	var buffer bytes.Buffer
+	var args []interface{}
+
+	if s := builder.Select(q.AsDistinct, q.Fields...); s != "" {
+		buffer.WriteString(s)
+	}
+
+	if s := builder.From(q.Collection); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	if s, arg := builder.Join(q.JoinClause...); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	if s, arg := builder.Where(q.Condition); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	if s := builder.GroupBy(q.GroupFields...); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	if s, arg := builder.Having(q.HavingCondition); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	if s := builder.OrderBy(q.OrderClause...); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	if s := builder.Offset(q.OffsetResult); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	if s := builder.Limit(q.LimitResult); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	buffer.WriteString(";")
+
+	return buffer.String(), args
+}
+
+func (builder Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
+	length := len(changes)
+
+	var buffer bytes.Buffer
+	var args = make([]interface{}, length)
+
+	buffer.WriteString("INSERT INTO ")
+	buffer.WriteString(collection)
+	buffer.WriteString(" (")
+
+	curr := 0
+	for field, value := range changes {
+		if curr < length-1 {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString(field)
+		args = append(args, value)
+
+		curr++
+	}
+	buffer.WriteString(") VALUES ")
+	buffer.WriteString("(?")
+	buffer.WriteString(strings.Repeat(",?", length))
+	buffer.WriteString(");")
+
+	return buffer.String(), args
+}
+
+func (builder Builder) Update(collection string, changes map[string]interface{}, cond query.Condition) (string, []interface{}) {
+	length := len(changes)
+
+	var buffer bytes.Buffer
+	var args = make([]interface{}, length)
+
+	buffer.WriteString("UPDATE ")
+	buffer.WriteString(collection)
+	buffer.WriteString(" SET ")
+
+	curr := 0
+	for field, value := range changes {
+		if curr < length-1 {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString(field)
+		buffer.WriteString("=?")
+		args = append(args, value)
+
+		curr++
+	}
+
+	if s, arg := builder.Where(cond); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	return buffer.String(), args
+}
+
+func (builder Builder) Delete(collection string, cond query.Condition) (string, []interface{}) {
+	var buffer bytes.Buffer
+	var args []interface{}
+
+	buffer.WriteString("DELETE FROM ")
+	buffer.WriteString(collection)
+	buffer.WriteString(" ")
+
+	if s, arg := builder.Where(cond); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	return buffer.String(), args
+}
 
 func (builder Builder) Select(distinct bool, fields ...string) string {
 	if distinct {

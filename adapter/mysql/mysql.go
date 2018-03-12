@@ -88,7 +88,6 @@ func (adapter Adapter) Insert(ch *grimoire.Changeset) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args = make([]interface{}, length)
 
-	// "INSERT INTO users(name) VALUES(?)"
 	buffer.WriteString("INSERT INTO ")
 	buffer.WriteString(ch.Collection)
 	buffer.WriteString(" (")
@@ -107,6 +106,58 @@ func (adapter Adapter) Insert(ch *grimoire.Changeset) (string, []interface{}) {
 	buffer.WriteString("(?")
 	buffer.WriteString(strings.Repeat(",?", length))
 	buffer.WriteString(");")
+
+	return buffer.String(), args
+}
+
+func (adapter Adapter) Update(ch *grimoire.Changeset, cond query.Condition) (string, []interface{}) {
+	builder := sqlutil.Builder{}
+	length := len(ch.Changes)
+
+	var buffer bytes.Buffer
+	var args = make([]interface{}, length)
+
+	buffer.WriteString("UPDATE ")
+	buffer.WriteString(ch.Collection)
+	buffer.WriteString(" SET ")
+
+	curr := 0
+	for field, value := range ch.Changes {
+		if curr < length-1 {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString(field)
+		buffer.WriteString("=?")
+		args = append(args, value)
+
+		curr++
+	}
+
+	if s, arg := builder.Where(cond); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	return buffer.String(), args
+}
+
+func (adapter Adapter) Delete(query.Condition) (string, []interface{}) {
+	builder := sqlutil.Builder{}
+	length := len(ch.Changes)
+
+	var buffer bytes.Buffer
+	var args = make([]interface{}, length)
+
+	buffer.WriteString("DELETE FROM ")
+	buffer.WriteString(ch.Collection)
+	buffer.WriteString(" ")
+
+	if s, arg := builder.Where(cond); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
 
 	return buffer.String(), args
 }

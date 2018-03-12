@@ -29,10 +29,8 @@ type Adapter interface {
 
 	All(query.Query) (string, []interface{})
 	Insert(*Changeset) (string, []interface{})
-	// Update(*struct, changeset) (string, []interface{})
-	// UpdateAll(*struct, changeset, condition) (string, []interface{})
-	// Delete(*struct) (string, []interface{})
-	// DeleteAll(*struct, condition) (string, []interface{})
+	Update(*Changeset, query.Condition) (string, []interface{})
+	Delete(query.Condition) (string, []interface{})
 
 	// Begin() (*Repo, error)
 	// Commit() (*Repo, error)

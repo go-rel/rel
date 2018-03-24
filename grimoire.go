@@ -1,55 +1,82 @@
 package grimoire
 
-import (
-	"github.com/Fs02/grimoire/query"
-)
+// type Query struct {
+// 	Collection      string
+// 	Fields          []string
+// 	AsDistinct      bool
+// 	JoinClause      []JoinClause
+// 	Condition       Condition
+// 	GroupFields     []string
+// 	HavingCondition Condition
+// 	OrderClause     []OrderClause
+// 	OffsetResult    int
+// 	LimitResult     int
+// }
 
-// Begin() (*Repo, error)
-// Commit() (*Repo, error)
-// Rollback() (*Repo, error)
-// CommitOrRollback() (*Repo, error)
+// type JoinClause struct {
+// 	Mode       string
+// 	Collection string
+// 	Condition  Condition
+// }
 
-// All(*structs, query) error
-// One(*struct, query) error
-// Insert(*struct, changeset) error
-// Update(*struct, changeset) error
-// UpdateAll(*struct, changeset, condition) error
-// Delete(*struct) error
-// DeleteAll(*struct, condition) error
+// type OrderClause struct {
+// 	Field string
+// 	Order int
+// }
 
-// res := struct{id int; name string}{}
-// Repo.All(&res, query)
+// type Repo struct {
+// 	adapter *Adapter
+// 	query Query
+// }
 
-// Adapter abstraction
-// accepts struct and query or changeset
-// returns query string and arguments
-type Adapter interface {
-	Open(string) error
-	Close() error
+// func (repo Repo) From(collection string) Repo {
+// 	repo.query = Query{
+// 		Collection: collection,
+// 		Fields:     []string{"*"},
+// 	}
 
-	All(query.Query) (string, []interface{})
-	Insert(*Changeset) (string, []interface{})
-	Update(*Changeset, query.Condition) (string, []interface{})
-	Delete(query.Condition) (string, []interface{})
+// 	return repo
+// }
 
-	// Begin() (*Repo, error)
-	// Commit() (*Repo, error)
-	// Rollback() (*Repo, error)
 
-	// Query exec query string with it's arguments
-	// reurns results and an error if any
-	Query(interface{}, string, []interface{}) error
+// func (r Repo) All(entities interface{}, q query.Query) error {
+// 	qs, args := r.adapter.All(q)
+// 	return r.adapter.Query(entities, qs, args)
+// }
 
-	// Query exec query string with it's arguments
-	// returns last inserted id, rows affected and error
-	Exec(string, []interface{}) (int64, int64, error)
-}
+// func (r Repo) Insert(entity interface{}, ch *Changeset) error {
+// 	qs, args := r.adapter.Insert(ch)
+// 	id, _, err := r.adapter.Exec(qs, args)
+// 	if err != nil {
+// 		return err
+// 	}
 
-type Repo struct {
-	adapter Adapter
-}
+// 	q := From(ch.Collection).Where(Eq(I("id"), id))
+// 	qs, args = r.adapter.All(q)
+// 	return r.adapter.Query(entities, qs, args)
+// }
 
-func (r Repo) All(entities interface{}, q query.Query) error {
-	qs, args := r.adapter.All(q)
-	return r.adapter.Query(entities, qs, args)
-}
+// func (r Repo) Preload(field string, q query.Query) error {
+// 	return nil
+// }
+
+// db := grimoire.New("mysql://blabla")
+// db.From("books").Find(&book, 1)
+// db.From("books").All(&books)
+// db.From("books").Where("1 > ?", 2).All(&books)
+// db.From("books").Where("1 > ?", 2).UpdateAll(&books)
+// db.From("books").Join("").Where("1 > ?", 2).All(&books)
+
+
+// err := db.From("books").Find(1).One(&book) // automatically limit 1
+// err := db.From("books").Find(1).All(&book)
+// err, count := db.From("books").Find(1).Count() // sql adapter automatically select count(*)
+
+// err := db.From("books").Insert(&book, changes)
+// err := db.From("books").Find(1).Update(&book, changes)
+// err := db.From("books").Find(1).Replace(&book)
+// err := db.From("books").Find(1).Delete()
+
+// err := db.From("books").Find(1).Preload("Users", db.From("users")).All(&book)
+
+// Find(interface{}) // is short hand, automatically where(id = ?, value)

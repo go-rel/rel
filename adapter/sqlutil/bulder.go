@@ -5,12 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/c"
 )
 
 type Builder struct{}
 
-func (builder Builder) All(q query.Query) (string, []interface{}) {
+func (builder Builder) Find(q grimoire.Query) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
 
@@ -94,7 +95,7 @@ func (builder Builder) Insert(collection string, changes map[string]interface{})
 	return buffer.String(), args
 }
 
-func (builder Builder) Update(collection string, changes map[string]interface{}, cond query.Condition) (string, []interface{}) {
+func (builder Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
 	length := len(changes)
 
 	var buffer bytes.Buffer
@@ -125,7 +126,7 @@ func (builder Builder) Update(collection string, changes map[string]interface{},
 	return buffer.String(), args
 }
 
-func (builder Builder) Delete(collection string, cond query.Condition) (string, []interface{}) {
+func (builder Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
 
@@ -154,7 +155,7 @@ func (builder Builder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (builder Builder) Join(join ...query.JoinClause) (string, []interface{}) {
+func (builder Builder) Join(join ...grimoire.JoinClause) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -174,7 +175,7 @@ func (builder Builder) Join(join ...query.JoinClause) (string, []interface{}) {
 	return qs, args
 }
 
-func (builder Builder) Where(condition query.Condition) (string, []interface{}) {
+func (builder Builder) Where(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
@@ -191,7 +192,7 @@ func (builder Builder) GroupBy(fields ...string) string {
 	return ""
 }
 
-func (builder Builder) Having(condition query.Condition) (string, []interface{}) {
+func (builder Builder) Having(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
@@ -200,7 +201,7 @@ func (builder Builder) Having(condition query.Condition) (string, []interface{})
 	return "HAVING " + qs, args
 }
 
-func (builder Builder) OrderBy(orders ...query.OrderClause) string {
+func (builder Builder) OrderBy(orders ...grimoire.OrderClause) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -238,49 +239,49 @@ func (builder Builder) Limit(n int) string {
 	return ""
 }
 
-func (builder Builder) Condition(c query.Condition) (string, []interface{}) {
-	switch c.Type {
-	case query.ConditionAnd:
-		return builder.build("AND", c.Inner)
-	case query.ConditionOr:
-		return builder.build("OR", c.Inner)
-	case query.ConditionXor:
-		return builder.build("XOR", c.Inner)
-	case query.ConditionNot:
-		qs, args := builder.build("AND", c.Inner)
+func (builder Builder) Condition(cond c.Condition) (string, []interface{}) {
+	switch cond.Type {
+	case c.ConditionAnd:
+		return builder.build("AND", cond.Inner)
+	case c.ConditionOr:
+		return builder.build("OR", cond.Inner)
+	case c.ConditionXor:
+		return builder.build("XOR", cond.Inner)
+	case c.ConditionNot:
+		qs, args := builder.build("AND", cond.Inner)
 		return "NOT " + qs, args
-	case query.ConditionEq:
-		return builder.buildComparison("=", c.Left, c.Right)
-	case query.ConditionNe:
-		return builder.buildComparison("<>", c.Left, c.Right)
-	case query.ConditionLt:
-		return builder.buildComparison("<", c.Left, c.Right)
-	case query.ConditionLte:
-		return builder.buildComparison("<=", c.Left, c.Right)
-	case query.ConditionGt:
-		return builder.buildComparison(">", c.Left, c.Right)
-	case query.ConditionGte:
-		return builder.buildComparison(">=", c.Left, c.Right)
-	case query.ConditionNil:
-		return string(c.Left.Column) + " IS NULL", c.Right.Values
-	case query.ConditionNotNil:
-		return string(c.Left.Column) + " IS NOT NULL", c.Right.Values
-	case query.ConditionIn:
-		return string(c.Left.Column) + " IN (?" + strings.Repeat(",?", len(c.Right.Values)-1) + ")", c.Right.Values
-	case query.ConditionNin:
-		return string(c.Left.Column) + " NOT IN (?" + strings.Repeat(",?", len(c.Right.Values)-1) + ")", c.Right.Values
-	case query.ConditionLike:
-		return string(c.Left.Column) + " LIKE ?", c.Right.Values
-	case query.ConditionNotLike:
-		return string(c.Left.Column) + " NOT LIKE ?", c.Right.Values
-	case query.ConditionFragment:
-		return string(c.Left.Column), c.Right.Values
+	case c.ConditionEq:
+		return builder.buildComparison("=", cond.Left, cond.Right)
+	case c.ConditionNe:
+		return builder.buildComparison("<>", cond.Left, cond.Right)
+	case c.ConditionLt:
+		return builder.buildComparison("<", cond.Left, cond.Right)
+	case c.ConditionLte:
+		return builder.buildComparison("<=", cond.Left, cond.Right)
+	case c.ConditionGt:
+		return builder.buildComparison(">", cond.Left, cond.Right)
+	case c.ConditionGte:
+		return builder.buildComparison(">=", cond.Left, cond.Right)
+	case c.ConditionNil:
+		return string(cond.Left.Column) + " IS NULL", cond.Right.Values
+	case c.ConditionNotNil:
+		return string(cond.Left.Column) + " IS NOT NULL", cond.Right.Values
+	case c.ConditionIn:
+		return string(cond.Left.Column) + " IN (?" + strings.Repeat(",?", len(cond.Right.Values)-1) + ")", cond.Right.Values
+	case c.ConditionNin:
+		return string(cond.Left.Column) + " NOT IN (?" + strings.Repeat(",?", len(cond.Right.Values)-1) + ")", cond.Right.Values
+	case c.ConditionLike:
+		return string(cond.Left.Column) + " LIKE ?", cond.Right.Values
+	case c.ConditionNotLike:
+		return string(cond.Left.Column) + " NOT LIKE ?", cond.Right.Values
+	case c.ConditionFragment:
+		return string(cond.Left.Column), cond.Right.Values
 	}
 
 	return "", []interface{}{}
 }
 
-func (builder Builder) build(op string, inner []query.Condition) (string, []interface{}) {
+func (builder Builder) build(op string, inner []c.Condition) (string, []interface{}) {
 	length := len(inner)
 	var qstring string
 	var args []interface{}
@@ -306,7 +307,7 @@ func (builder Builder) build(op string, inner []query.Condition) (string, []inte
 	return qstring, args
 }
 
-func (builder Builder) buildComparison(op string, left, right query.Operand) (string, []interface{}) {
+func (builder Builder) buildComparison(op string, left, right c.Operand) (string, []interface{}) {
 	var cs string
 	if left.Column != "" {
 		cs = string(left.Column) + op

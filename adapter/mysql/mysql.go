@@ -4,14 +4,17 @@ import (
 	"database/sql"
 
 	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
-	"github.com/Fs02/grimoire/query"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Adapter struct {
 	db *sql.DB
+	builder sqlutil.Builder
 }
+
+var _ grimoire.Adapter = (*Adapter)(nil)
 
 func (adapter *Adapter) Open(dsn string) error {
 	var err error
@@ -23,16 +26,20 @@ func (adapter *Adapter) Close() error {
 	return adapter.db.Close()
 }
 
-func (adapter Adapter) All(q query.Query) (string, []interface{}) {
-	return sqlutil.Builder{}.All(q)
+func (adapter Adapter) Find(query grimoire.Query) (string, []interface{}) {
+	return adapter.builder.Find(query)
 }
 
-func (adapter Adapter) Insert(ch *grimoire.Changeset) (string, []interface{}) {
-	return sqlutil.Builder{}.Insert(ch.Collection, ch.Changes)
+func (adapter Adapter) Insert(query grimoire.Query, ch changeset.Changeset) (string, []interface{}) {
+	return adapter.builder.Insert(query.Collection, ch.Changes())
 }
 
-func (adapter Adapter) Update(ch *grimoire.Changeset, cond query.Condition) (string, []interface{}) {
-	return sqlutil.Builder{}.Update(ch.Collection, ch.Changes, cond)
+func (adapter Adapter) Update(query grimoire.Query, ch changeset.Changeset) (string, []interface{}) {
+	return adapter.builder.Update(query.Collection, ch.Changes(), query.Condition)
+}
+
+func (adapter Adapter) Delete(query grimoire.Query) (string, []interface{}) {
+	return adapter.builder.Delete(query.Collection, query.Condition)
 }
 
 func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {

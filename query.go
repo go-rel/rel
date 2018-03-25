@@ -120,12 +120,12 @@ func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
 	return query.All(doc)
 }
 
-// func (query Query) Replace(doc interface{}) error {
-// 	return nil
-// }
-
 func (query Query) Delete(doc interface{}) error {
 	qs, args := query.repo.adapter.Delete(query)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	return err
 }
+
+// func (query Query) Replace(doc interface{}) error {
+// 	return nil
+// }

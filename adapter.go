@@ -16,9 +16,9 @@ type Adapter interface {
 	Update(Query, changeset.Changeset) (string, []interface{})
 	Delete(Query) (string, []interface{})
 
-	// Begin() (*Repo, error)
-	// Commit() (*Repo, error)
-	// Rollback() (*Repo, error)
+	Begin() error
+	Commit() error
+	Rollback() error
 
 	// Query exec query string with it's arguments
 	// reurns results and an error if any

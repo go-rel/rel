@@ -78,3 +78,12 @@ package grimoire
 // err := db.From("books").Find(1).Preload("Users", db.From("users")).All(&book)
 
 // Find(interface{}) // is short hand, automatically where(id = ?, value)
+
+// err := repo.Transaction(func(r Repo) {
+// 	err := r.From("blablabla").Find("blablabla")
+//	if err != nil {
+//		return err
+//	}
+// 	r.Update("blablabla").Find("blablabla")
+//	return nil
+// })

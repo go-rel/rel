@@ -38,7 +38,6 @@ package grimoire
 // 	return repo
 // }
 
-
 // func (r Repo) All(entities interface{}, q query.Query) error {
 // 	qs, args := r.adapter.All(q)
 // 	return r.adapter.Query(entities, qs, args)
@@ -66,7 +65,6 @@ package grimoire
 // db.From("books").Where("1 > ?", 2).All(&books)
 // db.From("books").Where("1 > ?", 2).UpdateAll(&books)
 // db.From("books").Join("").Where("1 > ?", 2).All(&books)
-
 
 // err := db.From("books").Find(1).One(&book) // automatically limit 1
 // err := db.From("books").Find(1).All(&book)

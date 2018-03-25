@@ -155,7 +155,7 @@ func (builder Builder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (builder Builder) Join(join ...grimoire.JoinClause) (string, []interface{}) {
+func (builder Builder) Join(join ...c.Join) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -201,7 +201,7 @@ func (builder Builder) Having(condition c.Condition) (string, []interface{}) {
 	return "HAVING " + qs, args
 }
 
-func (builder Builder) OrderBy(orders ...grimoire.OrderClause) string {
+func (builder Builder) OrderBy(orders ...c.Order) string {
 	length := len(orders)
 	if length == 0 {
 		return ""

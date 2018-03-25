@@ -1,9 +1,8 @@
-package c_test
+package c
 
 import (
 	"testing"
 
-	. "github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
 

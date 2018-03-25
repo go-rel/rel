@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire"
+	. "github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,12 @@ func TestQuery(t *testing.T) {
 	adapter := Adapter{}
 	adapter.Open("root@(127.0.0.1:3306)/papyrus_test")
 	defer adapter.Close()
-	qs, args := adapter.All(From("transactions AS t").Join("corporate_users AS c", Eq(I("t.corporate_id"), I("c.id"))).Limit(2))
+	qs, args := adapter.Find(grimoire.Query{
+		Collection: "transactions AS t",
+		Fields:     []string{"*"},
+	}.Join("corporate_users AS c", Eq(I("t.corporate_id"), I("c.id"))).
+		Limit(2))
+
 	println(qs)
 
 	users := []User{}

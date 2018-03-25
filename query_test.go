@@ -1,26 +1,28 @@
-package query_test
+package grimoire
 
 import (
 	"testing"
 
-	. "github.com/Fs02/grimoire/query"
+	. "github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
 
+var repo = Repo{}
+
 func TestFrom(t *testing.T) {
-	assert.Equal(t, From("users"), Query{
+	assert.Equal(t, repo.From("users"), Query{
 		Collection: "users",
 		Fields:     []string{"*"},
 	})
 }
 
 func TestSelect(t *testing.T) {
-	assert.Equal(t, From("users").Select("*"), Query{
+	assert.Equal(t, repo.From("users").Select("*"), Query{
 		Collection: "users",
 		Fields:     []string{"*"},
 	})
 
-	assert.Equal(t, From("users").Select("id", "name", "email"), Query{
+	assert.Equal(t, repo.From("users").Select("id", "name", "email"), Query{
 		Collection: "users",
 		Fields:     []string{"id", "name", "email"},
 	})
@@ -42,7 +44,7 @@ func TestWhere(t *testing.T) {
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -51,7 +53,7 @@ func TestWhere(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -60,7 +62,7 @@ func TestWhere(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")).Where(Ne("active", false)),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")).Where(Ne("active", false)),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -84,7 +86,7 @@ func TestOrWhere(t *testing.T) {
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").OrWhere(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").OrWhere(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -93,7 +95,7 @@ func TestOrWhere(t *testing.T) {
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
-			From("users").Where(Eq("id", 1)).OrWhere(Nil("deleted_at")),
+			repo.From("users").Where(Eq("id", 1)).OrWhere(Nil("deleted_at")),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -102,7 +104,7 @@ func TestOrWhere(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false)),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false)),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -111,7 +113,7 @@ func TestOrWhere(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false), Gte("score", 80)),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false), Gte("score", 80)),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -120,7 +122,7 @@ func TestOrWhere(t *testing.T) {
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
-			From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false), Gte("score", 80)).Where(Lt("price", 10000)),
+			repo.From("users").Where(Eq("id", 1), Nil("deleted_at")).OrWhere(Ne("active", false), Gte("score", 80)).Where(Lt("price", 10000)),
 			Query{
 				Collection: "users",
 				Fields:     []string{"*"},
@@ -137,7 +139,7 @@ func TestOrWhere(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
-	assert.Equal(t, From("users").Group("active", "plan"), Query{
+	assert.Equal(t, repo.From("users").Group("active", "plan"), Query{
 		Collection:  "users",
 		Fields:      []string{"*"},
 		GroupFields: []string{"active", "plan"},
@@ -152,7 +154,7 @@ func TestHaving(t *testing.T) {
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -161,7 +163,7 @@ func TestHaving(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -170,7 +172,7 @@ func TestHaving(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")).Having(Ne("active", false)),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")).Having(Ne("active", false)),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -194,7 +196,7 @@ func TestOrHaving(t *testing.T) {
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			From("users").OrHaving(Eq("id", 1), Nil("deleted_at")),
+			repo.From("users").OrHaving(Eq("id", 1), Nil("deleted_at")),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -203,7 +205,7 @@ func TestOrHaving(t *testing.T) {
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
-			From("users").Having(Eq("id", 1)).OrHaving(Nil("deleted_at")),
+			repo.From("users").Having(Eq("id", 1)).OrHaving(Nil("deleted_at")),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -212,7 +214,7 @@ func TestOrHaving(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false)),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false)),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -221,7 +223,7 @@ func TestOrHaving(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false), Gte("score", 80)),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false), Gte("score", 80)),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -230,7 +232,7 @@ func TestOrHaving(t *testing.T) {
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
-			From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false), Gte("score", 80)).Having(Lt("price", 10000)),
+			repo.From("users").Having(Eq("id", 1), Nil("deleted_at")).OrHaving(Ne("active", false), Gte("score", 80)).Having(Lt("price", 10000)),
 			Query{
 				Collection:      "users",
 				Fields:          []string{"*"},
@@ -251,7 +253,7 @@ func TestOrderBy(t *testing.T) {
 }
 
 func TestOffset(t *testing.T) {
-	assert.Equal(t, From("users").Offset(10), Query{
+	assert.Equal(t, repo.From("users").Offset(10), Query{
 		Collection:   "users",
 		Fields:       []string{"*"},
 		OffsetResult: 10,
@@ -259,29 +261,9 @@ func TestOffset(t *testing.T) {
 }
 
 func TestLimit(t *testing.T) {
-	assert.Equal(t, From("users").Limit(10), Query{
+	assert.Equal(t, repo.From("users").Limit(10), Query{
 		Collection:  "users",
 		Fields:      []string{"*"},
 		LimitResult: 10,
 	})
-}
-
-func TestAsc(t *testing.T) {
-	asc := Asc("id")
-
-	assert.Equal(t, asc, OrderClause{
-		Field: "id",
-		Order: 1,
-	})
-	assert.True(t, asc.Asc())
-}
-
-func TestDesc(t *testing.T) {
-	desc := Desc("id")
-
-	assert.Equal(t, desc, OrderClause{
-		Field: "id",
-		Order: -1,
-	})
-	assert.True(t, desc.Desc())
 }

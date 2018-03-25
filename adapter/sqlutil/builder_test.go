@@ -3,63 +3,69 @@ package sqlutil
 import (
 	"testing"
 
-	. "github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire"
+	. "github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
 
+var builder = Builder{}
+
 func TestAll(t *testing.T) {
+	users := grimoire.Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+	}
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       Query
+		Query       grimoire.Query
 	}{
 		{
 			"SELECT * FROM users;",
 			nil,
-			From("users"),
+			users,
 		},
 		{
 			"SELECT id, name FROM users;",
 			nil,
-			From("users").Select("id", "name"),
+			users.Select("id", "name"),
 		},
 		{
 			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id;",
 			nil,
-			From("users").Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
+			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
 		},
 		{
 			"SELECT * FROM users WHERE id=?;",
 			[]interface{}{10},
-			From("users").Where(Eq(I("id"), 10)),
+			users.Where(Eq(I("id"), 10)),
 		},
 		{
 			"SELECT DISTINCT * FROM users GROUP BY type;",
 			nil,
-			From("users").Distinct().Group("type"),
+			users.Distinct().Group("type"),
 		},
 		{
 			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id HAVING price>?;",
 			[]interface{}{1000},
-			From("users").Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))).Having(Gt(I("price"), 1000)),
+			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))).Having(Gt(I("price"), 1000)),
 		},
 		{
 			"SELECT * FROM users ORDER BY created_at ASC;",
 			nil,
-			From("users").Order(Asc("created_at")),
+			users.Order(Asc("created_at")),
 		},
 		{
 			"SELECT * FROM users OFFSET 10 LIMIT 10;",
 			nil,
-			From("users").Offset(10).Limit(10),
+			users.Offset(10).Limit(10),
 		},
 	}
 
-	builder := Builder{}
-
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := builder.All(tt.Query)
+			qs, args := builder.Find(tt.Query)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
@@ -67,8 +73,6 @@ func TestAll(t *testing.T) {
 }
 
 func TestSelect(t *testing.T) {
-	builder := Builder{}
-
 	assert.Equal(t, "SELECT *", builder.Select(false, "*"))
 	assert.Equal(t, "SELECT id, name", builder.Select(false, "id", "name"))
 
@@ -77,8 +81,6 @@ func TestSelect(t *testing.T) {
 }
 
 func TestFrom(t *testing.T) {
-	builder := Builder{}
-
 	assert.Equal(t, "FROM users", builder.From("users"))
 }
 
@@ -86,7 +88,7 @@ func TestJoin(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		JoinClause  []JoinClause
+		JoinClause  []Join
 	}{
 		{
 			"",
@@ -96,22 +98,20 @@ func TestJoin(t *testing.T) {
 		{
 			"JOIN users ON user.id=trxs.user_id",
 			nil,
-			From("trxs").Join("users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+			grimoire.Query{Collection: "trxs"}.Join("users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
 		},
 		{
 			"INNER JOIN users ON user.id=trxs.user_id",
 			nil,
-			From("trxs").JoinWith("INNER JOIN", "users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+			grimoire.Query{Collection: "trxs"}.JoinWith("INNER JOIN", "users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
 		},
 		{
 			"JOIN users ON user.id=trxs.user_id JOIN payments ON payments.id=trxs.payment_id",
 			nil,
-			From("trxs").Join("users", Eq(I("user.id"), I("trxs.user_id"))).
+			grimoire.Query{Collection: "trxs"}.Join("users", Eq(I("user.id"), I("trxs.user_id"))).
 				Join("payments", Eq(I("payments.id"), I("trxs.payment_id"))).JoinClause,
 		},
 	}
-
-	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
@@ -145,8 +145,6 @@ func TestWhere(t *testing.T) {
 		},
 	}
 
-	builder := Builder{}
-
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
 			qs, args := builder.Where(tt.Condition)
@@ -157,7 +155,6 @@ func TestWhere(t *testing.T) {
 }
 
 func TestGroupBy(t *testing.T) {
-	builder := Builder{}
 
 	assert.Equal(t, "", builder.GroupBy())
 	assert.Equal(t, "GROUP BY city", builder.GroupBy("city"))
@@ -187,8 +184,6 @@ func TestHaving(t *testing.T) {
 		},
 	}
 
-	builder := Builder{}
-
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
 			qs, args := builder.Having(tt.Condition)
@@ -199,23 +194,17 @@ func TestHaving(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	builder := Builder{}
-
 	assert.Equal(t, "", builder.OrderBy())
 	assert.Equal(t, "ORDER BY name ASC", builder.OrderBy(Asc("name")))
 	assert.Equal(t, "ORDER BY name ASC, created_at DESC", builder.OrderBy(Asc("name"), Desc("created_at")))
 }
 
 func TestOffset(t *testing.T) {
-	builder := Builder{}
-
 	assert.Equal(t, "", builder.Offset(0))
 	assert.Equal(t, "OFFSET 10", builder.Offset(10))
 }
 
 func TestLimit(t *testing.T) {
-	builder := Builder{}
-
 	assert.Equal(t, "", builder.Limit(0))
 	assert.Equal(t, "LIMIT 10", builder.Limit(10))
 }
@@ -447,8 +436,6 @@ func TestCondition(t *testing.T) {
 			And(Like(I("field1"), "%value1%"), NotLike(I(I("field2")), "%value2%")),
 		},
 	}
-
-	builder := Builder{}
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {

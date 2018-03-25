@@ -4,13 +4,13 @@ import (
 	"database/sql"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/changeset"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Adapter struct {
-	db *sql.DB
+	db      *sql.DB
 	builder sqlutil.Builder
 }
 

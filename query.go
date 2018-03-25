@@ -6,23 +6,17 @@ import (
 )
 
 type Query struct {
-	repo			*Repo
+	repo            *Repo
 	Collection      string
 	Fields          []string
 	AsDistinct      bool
-	JoinClause      []JoinClause
+	JoinClause      []c.Join
 	Condition       c.Condition
 	GroupFields     []string
 	HavingCondition c.Condition
-	OrderClause     []OrderClause
+	OrderClause     []c.Order
 	OffsetResult    int
 	LimitResult     int
-}
-
-type JoinClause struct {
-	Mode       string
-	Collection string
-	Condition  c.Condition
 }
 
 func (query Query) Select(fields ...string) Query {
@@ -40,7 +34,7 @@ func (query Query) Join(collection string, condition ...c.Condition) Query {
 }
 
 func (query Query) JoinWith(mode string, collection string, condition ...c.Condition) Query {
-	query.JoinClause = append(query.JoinClause, JoinClause{
+	query.JoinClause = append(query.JoinClause, c.Join{
 		Mode:       mode,
 		Collection: collection,
 		Condition:  c.And(condition...),
@@ -76,7 +70,7 @@ func (query Query) OrHaving(condition ...c.Condition) Query {
 	return query
 }
 
-func (query Query) Order(order ...OrderClause) Query {
+func (query Query) Order(order ...c.Order) Query {
 	query.OrderClause = append(query.OrderClause, order...)
 	return query
 }
@@ -134,31 +128,4 @@ func (query Query) Delete(doc interface{}) error {
 	qs, args := query.repo.adapter.Delete(query)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	return err
-}
-
-type OrderClause struct {
-	Field string
-	Order int
-}
-
-func Asc(field string) OrderClause {
-	return OrderClause{
-		Field: field,
-		Order: 1,
-	}
-}
-
-func Desc(field string) OrderClause {
-	return OrderClause{
-		Field: field,
-		Order: -1,
-	}
-}
-
-func (o OrderClause) Asc() bool {
-	return o.Order >= 0
-}
-
-func (o OrderClause) Desc() bool {
-	return o.Order < 0
 }

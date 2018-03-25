@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/Fs02/grimoire"
@@ -11,6 +12,7 @@ import (
 
 type Adapter struct {
 	db      *sql.DB
+	tx      *sql.Tx
 	builder sqlutil.Builder
 }
 
@@ -42,8 +44,42 @@ func (adapter Adapter) Delete(query grimoire.Query) (string, []interface{}) {
 	return adapter.builder.Delete(query.Collection, query.Condition)
 }
 
+func (adapter Adapter) Begin() error {
+	tx, err := adapter.db.BeginTx(context.Background(), nil)
+	adapter.tx = tx
+	return err
+}
+
+func (adapter Adapter) Commit() error {
+	if adapter.tx == nil {
+		return nil
+	}
+
+	err := adapter.tx.Commit()
+	adapter.tx = nil
+	return err
+}
+
+func (adapter Adapter) Rollback() error {
+	if adapter.tx == nil {
+		return nil
+	}
+
+	err := adapter.tx.Rollback()
+	adapter.tx = nil
+	return err
+}
+
 func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
-	rows, err := adapter.db.Query(qs, args...)
+	var rows *sql.Rows
+	var err error
+
+	if adapter.tx != nil {
+		rows, err = adapter.tx.Query(qs, args...)
+	} else {
+		rows, err = adapter.db.Query(qs, args...)
+	}
+
 	if err != nil {
 		println(err.Error())
 		return err
@@ -54,7 +90,15 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 }
 
 func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {
-	res, err := adapter.db.Exec(qs, args...)
+	var res sql.Result
+	var err error
+
+	if adapter.tx != nil {
+		res, err = adapter.tx.Exec(qs, args...)
+	} else {
+		res, err = adapter.db.Exec(qs, args...)
+	}
+
 	if err != nil {
 		return 0, 0, err
 	}

@@ -93,7 +93,8 @@ func (query Query) Find(id interface{}) Query {
 
 func (query Query) One(doc interface{}) error {
 	query.LimitResult = 1
-	return query.All(doc)
+	qs, args := query.repo.adapter.Find(query)
+	return query.repo.adapter.Query(doc, qs, args)
 }
 
 func (query Query) MustOne(doc interface{}) {
@@ -102,7 +103,14 @@ func (query Query) MustOne(doc interface{}) {
 
 func (query Query) All(doc interface{}) error {
 	qs, args := query.repo.adapter.Find(query)
-	return query.repo.adapter.Query(doc, qs, args)
+	err := query.repo.adapter.Query(doc, qs, args)
+
+	// ignore not found error
+	if err.NotFoundError() {
+		return nil
+	}
+
+	return err
 }
 
 func (query Query) MustAll(doc interface{}) {

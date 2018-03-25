@@ -7,6 +7,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/errors"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -70,7 +71,7 @@ func (adapter Adapter) Rollback() error {
 	return err
 }
 
-func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
+func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) errors.Error {
 	var rows *sql.Rows
 	var err error
 
@@ -81,12 +82,16 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 	}
 
 	if err != nil {
-		println(err.Error())
-		return err
+		return errors.UnexpectedError(err.Error())
 	}
 
 	defer rows.Close()
-	return sqlutil.Scan(out, rows)
+	err = sqlutil.Scan(out, rows)
+	if err == sql.ErrNoRows {
+		return errors.NotFoundError(err.Error())
+	}
+
+	return errors.UnexpectedError(err.Error())
 }
 
 func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {

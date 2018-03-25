@@ -1,7 +1,11 @@
 package changeset
 
+import (
+	"github.com/Fs02/grimoire/errors"
+)
+
 type Changeset struct {
-	errors  Errors
+	errors  errors.Errors
 	changes map[string]interface{}
 }
 

@@ -1,8 +1,11 @@
 package grimoire
 
+import (
+	"github.com/Fs02/grimoire/errors"
+)
+
 type Repo struct {
-	adapter       Adapter
-	inTransaction bool
+	adapter Adapter
 }
 
 func New(adapter Adapter) Repo {
@@ -28,20 +31,25 @@ func (repo Repo) Transaction(fn func(Repo) error) error {
 		return err
 	}
 
-	repo.inTransaction = true
+	func() {
+		defer func() {
+			if p := recover(); p != nil {
+				repo.adapter.Rollback()
 
-	defer func() {
-		if p := recover(); p != nil {
-			repo.adapter.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			repo.adapter.Rollback()
-		} else {
-			err = repo.adapter.Commit()
-		}
-		repo.inTransaction = false
+				if e, ok := p.(errors.Error); ok && !e.UnexpectedError() {
+					err = e
+				} else {
+					panic(p) // re-throw panic after Rollback
+				}
+			} else if err != nil {
+				repo.adapter.Rollback()
+			} else {
+				err = repo.adapter.Commit()
+			}
+		}()
+
+		err = fn(repo)
 	}()
 
-	err = fn(repo)
 	return err
 }

@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 )
@@ -95,9 +96,17 @@ func (query Query) One(doc interface{}) error {
 	return query.All(doc)
 }
 
+func (query Query) MustOne(doc interface{}) {
+	paranoid.Panic(query.One(doc))
+}
+
 func (query Query) All(doc interface{}) error {
 	qs, args := query.repo.adapter.Find(query)
 	return query.repo.adapter.Query(doc, qs, args)
+}
+
+func (query Query) MustAll(doc interface{}) {
+	paranoid.Panic(query.All(doc))
 }
 
 func (query Query) Insert(doc interface{}, ch changeset.Changeset) error {
@@ -110,6 +119,10 @@ func (query Query) Insert(doc interface{}, ch changeset.Changeset) error {
 	return query.Find(id).One(doc)
 }
 
+func (query Query) MustInsert(doc interface{}, ch changeset.Changeset) {
+	paranoid.Panic(query.Insert(doc, ch))
+}
+
 func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
 	qs, args := query.repo.adapter.Update(query, ch)
 	_, _, err := query.repo.adapter.Exec(qs, args)
@@ -120,10 +133,18 @@ func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
 	return query.All(doc)
 }
 
-func (query Query) Delete(doc interface{}) error {
+func (query Query) MustUpdate(doc interface{}, ch changeset.Changeset) {
+	paranoid.Panic(query.Update(doc, ch))
+}
+
+func (query Query) Delete() error {
 	qs, args := query.repo.adapter.Delete(query)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	return err
+}
+
+func (query Query) MustDelete() {
+	paranoid.Panic(query.Delete())
 }
 
 // func (query Query) Replace(doc interface{}) error {

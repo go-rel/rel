@@ -1,6 +1,8 @@
 package grimoire
 
 import (
+	"strings"
+
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
@@ -36,11 +38,22 @@ func (query Query) Join(collection string, condition ...c.Condition) Query {
 }
 
 func (query Query) JoinWith(mode string, collection string, condition ...c.Condition) Query {
-	query.JoinClause = append(query.JoinClause, c.Join{
-		Mode:       mode,
-		Collection: collection,
-		Condition:  c.And(condition...),
-	})
+	if len(condition) == 0 {
+		query.JoinClause = append(query.JoinClause, c.Join{
+			Mode:       mode,
+			Collection: collection,
+			Condition: c.And(c.Eq(
+				c.I(query.Collection+"."+strings.TrimSuffix(collection, "s")+"_id"),
+				c.I(collection+".id"),
+			)),
+		})
+	} else {
+		query.JoinClause = append(query.JoinClause, c.Join{
+			Mode:       mode,
+			Collection: collection,
+			Condition:  c.And(condition...),
+		})
+	}
 
 	return query
 }

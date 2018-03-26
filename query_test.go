@@ -7,15 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var repo = Repo{}
-
-func TestFrom(t *testing.T) {
-	assert.Equal(t, repo.From("users"), Query{
-		Collection: "users",
-		Fields:     []string{"*"},
-	})
-}
-
 func TestSelect(t *testing.T) {
 	assert.Equal(t, repo.From("users").Select("*"), Query{
 		Collection: "users",
@@ -28,8 +19,47 @@ func TestSelect(t *testing.T) {
 	})
 }
 
+func TestDistinct(t *testing.T) {
+	assert.Equal(t, repo.From("users").Distinct(), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		AsDistinct: true,
+	})
+}
+
 func TestJoin(t *testing.T) {
-	t.Skip("PENDING")
+	assert.Equal(t, repo.From("users").Join("transactions"), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		JoinClause: []Join{
+			Join{
+				Mode:       "JOIN",
+				Collection: "transactions",
+				Condition: And(Eq(
+					I("users.transaction_id"),
+					I("transactions.id"),
+				)),
+			},
+		},
+	})
+
+	assert.Equal(t, repo.From("users").Join("transactions", Eq(
+		I("users.transaction_id"),
+		I("transactions.id"),
+	)), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		JoinClause: []Join{
+			Join{
+				Mode:       "JOIN",
+				Collection: "transactions",
+				Condition: And(Eq(
+					I("users.transaction_id"),
+					I("transactions.id"),
+				)),
+			},
+		},
+	})
 }
 
 func TestJoinWith(t *testing.T) {
@@ -249,7 +279,16 @@ func TestOrHaving(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	t.Skip("PENDING")
+	assert.Equal(t, repo.From("users").Order(Asc("id")), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		OrderClause: []Order{
+			Order{
+				Field: "id",
+				Order: 1,
+			},
+		},
+	})
 }
 
 func TestOffset(t *testing.T) {

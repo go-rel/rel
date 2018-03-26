@@ -467,7 +467,58 @@ func TestXor(t *testing.T) {
 }
 
 func TestNot(t *testing.T) {
-	t.Skip("PENDING")
+	tests := []struct {
+		Case     string
+		Input    ConditionType
+		Expected ConditionType
+	}{
+		{
+			`Not Eq`,
+			ConditionEq,
+			ConditionNe,
+		},
+		{
+			`Not Lt`,
+			ConditionLt,
+			ConditionGte,
+		},
+		{
+			`Not Lte`,
+			ConditionLte,
+			ConditionGt,
+		},
+		{
+			`Not Gt`,
+			ConditionGt,
+			ConditionLte,
+		},
+		{
+			`Not Gte`,
+			ConditionGte,
+			ConditionLt,
+		},
+		{
+			`Not Nil`,
+			ConditionNil,
+			ConditionNotNil,
+		},
+		{
+			`Not In`,
+			ConditionIn,
+			ConditionNin,
+		},
+		{
+			`Not Like`,
+			ConditionLike,
+			ConditionNotLike,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Case, func(t *testing.T) {
+			assert.Equal(t, tt.Expected, Not(Condition{Type: tt.Input}).Type)
+		})
+	}
 }
 
 func TestEq(t *testing.T) {

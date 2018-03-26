@@ -8,7 +8,7 @@ import (
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type Adapter struct {
@@ -58,7 +58,7 @@ func (adapter Adapter) Commit() error {
 
 	err := adapter.tx.Commit()
 	adapter.tx = nil
-	return err
+	return adapter.Error(err)
 }
 
 func (adapter Adapter) Rollback() error {
@@ -68,7 +68,7 @@ func (adapter Adapter) Rollback() error {
 
 	err := adapter.tx.Rollback()
 	adapter.tx = nil
-	return err
+	return adapter.Error(err)
 }
 
 func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
@@ -82,7 +82,7 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 	}
 
 	if err != nil {
-		return err
+		return adapter.Error(err)
 	}
 
 	defer rows.Close()
@@ -91,7 +91,7 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 		return errors.NotFoundError(err.Error())
 	}
 
-	return err
+	return adapter.Error(err)
 }
 
 func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {
@@ -105,18 +105,30 @@ func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error)
 	}
 
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, adapter.Error(err)
 	}
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, adapter.Error(err)
 	}
 
 	rowCount, err := res.RowsAffected()
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, adapter.Error(err)
 	}
 
 	return lastId, rowCount, nil
+}
+
+func (adapter Adapter) Error(err error) error {
+	if err == nil {
+		return nil
+	} else if err == sql.ErrNoRows {
+		return errors.NotFoundError(err.Error())
+	} else if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
+		return errors.DuplicateError(e.Message, "")
+	}
+
+	return err
 }

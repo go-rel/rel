@@ -278,7 +278,7 @@ func (builder Builder) Condition(cond c.Condition) (string, []interface{}) {
 		return string(cond.Left.Column), cond.Right.Values
 	}
 
-	return "", []interface{}{}
+	return "", nil
 }
 
 func (builder Builder) build(op string, inner []c.Condition) (string, []interface{}) {

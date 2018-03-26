@@ -435,6 +435,11 @@ func TestCondition(t *testing.T) {
 			[]interface{}{"%value1%", "%value2%"},
 			And(Like(I("field1"), "%value1%"), NotLike(I(I("field2")), "%value2%")),
 		},
+		{
+			"",
+			nil,
+			Condition{Type: ConditionType(9999)},
+		},
 	}
 
 	for _, tt := range tests {

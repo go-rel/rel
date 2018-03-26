@@ -78,6 +78,16 @@ func AssociationError(message string, field string) Error {
 	}
 }
 
+func Wrap(err error) error {
+	if err == nil {
+		return nil
+	} else if _, ok := err.(Error); ok {
+		return err
+	} else {
+		return UnexpectedError(err.Error())
+	}
+}
+
 type Errors []Error
 
 func (es Errors) Error() string {

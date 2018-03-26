@@ -4,6 +4,7 @@ import (
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/errors"
 )
 
 type Query struct {
@@ -94,7 +95,7 @@ func (query Query) Find(id interface{}) Query {
 func (query Query) One(doc interface{}) error {
 	query.LimitResult = 1
 	qs, args := query.repo.adapter.Find(query)
-	return query.repo.adapter.Query(doc, qs, args)
+	return errors.Wrap(query.repo.adapter.Query(doc, qs, args))
 }
 
 func (query Query) MustOne(doc interface{}) {
@@ -106,11 +107,11 @@ func (query Query) All(doc interface{}) error {
 	err := query.repo.adapter.Query(doc, qs, args)
 
 	// ignore not found error
-	if err.NotFoundError() {
+	if e, ok := err.(errors.Error); ok && e.NotFoundError() {
 		return nil
 	}
 
-	return err
+	return errors.Wrap(err)
 }
 
 func (query Query) MustAll(doc interface{}) {
@@ -121,10 +122,10 @@ func (query Query) Insert(doc interface{}, ch changeset.Changeset) error {
 	qs, args := query.repo.adapter.Insert(query, ch)
 	id, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 
-	return query.Find(id).One(doc)
+	return errors.Wrap(query.Find(id).One(doc))
 }
 
 func (query Query) MustInsert(doc interface{}, ch changeset.Changeset) {
@@ -135,10 +136,10 @@ func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
 	qs, args := query.repo.adapter.Update(query, ch)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 
-	return query.All(doc)
+	return errors.Wrap(query.All(doc))
 }
 
 func (query Query) MustUpdate(doc interface{}, ch changeset.Changeset) {
@@ -148,7 +149,7 @@ func (query Query) MustUpdate(doc interface{}, ch changeset.Changeset) {
 func (query Query) Delete() error {
 	qs, args := query.repo.adapter.Delete(query)
 	_, _, err := query.repo.adapter.Exec(qs, args)
-	return err
+	return errors.Wrap(err)
 }
 
 func (query Query) MustDelete() {

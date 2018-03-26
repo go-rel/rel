@@ -71,7 +71,7 @@ func (adapter Adapter) Rollback() error {
 	return err
 }
 
-func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) errors.Error {
+func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) error {
 	var rows *sql.Rows
 	var err error
 
@@ -82,7 +82,7 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 	}
 
 	if err != nil {
-		return errors.UnexpectedError(err.Error())
+		return err
 	}
 
 	defer rows.Close()
@@ -91,7 +91,7 @@ func (adapter Adapter) Query(out interface{}, qs string, args []interface{}) err
 		return errors.NotFoundError(err.Error())
 	}
 
-	return errors.UnexpectedError(err.Error())
+	return err
 }
 
 func (adapter Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {

@@ -306,3 +306,17 @@ func TestLimit(t *testing.T) {
 		LimitResult: 10,
 	})
 }
+
+func TestFind(t *testing.T) {
+	assert.Equal(t, repo.From("users").Find(1), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		Condition:  And(Eq(I("id"), 1)),
+	})
+
+	assert.Equal(t, repo.From("users").Find("abc123"), Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		Condition:  And(Eq(I("id"), "abc123")),
+	})
+}

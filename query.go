@@ -101,8 +101,7 @@ func (query Query) Limit(limit int) Query {
 }
 
 func (query Query) Find(id interface{}) Query {
-	query.Condition = query.Condition.And(c.Eq(c.I("id"), id))
-	return query
+	return query.Where(c.Eq(c.I("id"), id))
 }
 
 func (query Query) One(doc interface{}) error {

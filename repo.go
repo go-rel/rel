@@ -20,6 +20,7 @@ func (repo Repo) Close() error {
 
 func (repo Repo) From(collection string) Query {
 	return Query{
+		repo:       &repo,
 		Collection: collection,
 		Fields:     []string{"*"},
 	}

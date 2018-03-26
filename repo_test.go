@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct{}
-
 var repo = Repo{}
 
 func TestFrom(t *testing.T) {
 	assert.Equal(t, repo.From("users"), Query{
+		repo:       &repo,
 		Collection: "users",
 		Fields:     []string{"*"},
 	})

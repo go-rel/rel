@@ -104,15 +104,8 @@ func (adapter *Adapter) Exec(qs string, args []interface{}) (int64, int64, error
 		return 0, 0, adapter.Error(err)
 	}
 
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return 0, 0, adapter.Error(err)
-	}
-
-	rowCount, err := res.RowsAffected()
-	if err != nil {
-		return 0, 0, adapter.Error(err)
-	}
+	lastId, _ := res.LastInsertId()
+	rowCount, _ := res.RowsAffected()
 
 	return lastId, rowCount, nil
 }

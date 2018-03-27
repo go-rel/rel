@@ -3,6 +3,8 @@ package mysql
 import (
 	"testing"
 
+	"github.com/Fs02/grimoire/errors"
+	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,4 +42,20 @@ func TestTransactionRollbackError(t *testing.T) {
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Rollback())
+}
+
+func TestError(t *testing.T) {
+	adapter := new(Adapter)
+
+	// error nil
+	assert.Nil(t, adapter.Error(nil))
+
+	// 1062 error
+	rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
+	duperr := errors.DuplicateError(rawerr.Message, "")
+	assert.Equal(t, duperr, adapter.Error(rawerr))
+
+	// other errors
+	err := errors.UnexpectedError("error")
+	assert.Equal(t, err, adapter.Error(err))
 }

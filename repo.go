@@ -14,10 +14,6 @@ func New(adapter Adapter) Repo {
 	}
 }
 
-func (repo Repo) Close() error {
-	return repo.adapter.Close()
-}
-
 func (repo Repo) From(collection string) Query {
 	return Query{
 		repo:       &repo,

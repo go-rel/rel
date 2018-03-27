@@ -15,10 +15,10 @@ type Rows interface {
 
 var typeScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 
-func Scan(value interface{}, rows Rows) error {
+func Scan(value interface{}, rows Rows) (int64, error) {
 	columns, err := rows.Columns()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	rv := reflect.ValueOf(value)
@@ -26,6 +26,7 @@ func Scan(value interface{}, rows Rows) error {
 		panic("value must be pointer")
 	}
 
+	count := int64(0)
 	rv = rv.Elem()
 	var index map[string]int
 	isScanner := rv.Addr().Type().Implements(typeScanner)
@@ -56,8 +57,10 @@ func Scan(value interface{}, rows Rows) error {
 
 		err = rows.Scan(ptr...)
 		if err != nil {
-			return err
+			return 0, err
 		}
+
+		count += 1
 
 		if isSlice {
 			rv.Set(reflect.Append(rv, elem))
@@ -66,7 +69,7 @@ func Scan(value interface{}, rows Rows) error {
 		}
 	}
 
-	return nil
+	return count, nil
 }
 
 func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interface{} {

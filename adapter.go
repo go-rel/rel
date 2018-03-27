@@ -22,7 +22,7 @@ type Adapter interface {
 
 	// Query exec query string with it's arguments
 	// reurns results and an error if any
-	Query(interface{}, string, []interface{}) error
+	Query(interface{}, string, []interface{}) (int64, error)
 
 	// Query exec query string with it's arguments
 	// returns last inserted id, rows affected and error

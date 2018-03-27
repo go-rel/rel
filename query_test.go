@@ -358,10 +358,36 @@ func TestOne(t *testing.T) {
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
 	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(nil)
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
 
 	assert.Nil(t, query.One(&user))
 	assert.NotPanics(t, func() { query.MustOne(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestOneUnexpectedError(t *testing.T) {
+	user := User{}
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Limit(1)
+
+	mock.On("Find", query).Return("", []interface{}{}).
+		On("Query", &user, "", []interface{}{}).Return(int64(0), errors.UnexpectedError("error"))
+
+	assert.NotNil(t, query.One(&user))
+	assert.Panics(t, func() { query.MustOne(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestOneNoResultFound(t *testing.T) {
+	user := User{}
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Limit(1)
+
+	mock.On("Find", query).Return("", []interface{}{}).
+		On("Query", &user, "", []interface{}{}).Return(int64(0), nil)
+
+	assert.NotNil(t, query.One(&user))
+	assert.Panics(t, func() { query.MustOne(&user) })
 	mock.AssertExpectations(t)
 }
 
@@ -371,20 +397,7 @@ func TestAll(t *testing.T) {
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
 	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(nil)
-
-	assert.Nil(t, query.All(&user))
-	assert.NotPanics(t, func() { query.MustAll(&user) })
-	mock.AssertExpectations(t)
-}
-
-func TestAllIgnoreNotFoundError(t *testing.T) {
-	user := User{}
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users").Limit(1)
-
-	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(errors.NotFoundError("error"))
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
 
 	assert.Nil(t, query.All(&user))
 	assert.NotPanics(t, func() { query.MustAll(&user) })
@@ -400,7 +413,7 @@ func TestInsert(t *testing.T) {
 	mock.On("Insert", query, ch).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(nil)
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
 
 	assert.Nil(t, query.Insert(&user, ch))
 	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
@@ -430,7 +443,7 @@ func TestUpdate(t *testing.T) {
 	mock.On("Update", query, ch).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(nil)
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
 
 	assert.Nil(t, query.Update(&user, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })

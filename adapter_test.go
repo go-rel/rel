@@ -56,9 +56,9 @@ func (adapter TestAdapter) Rollback() error {
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Query(out interface{}, qs string, qargs []interface{}) error {
+func (adapter TestAdapter) Query(out interface{}, qs string, qargs []interface{}) (int64, error) {
 	args := adapter.Called(out, qs, qargs)
-	return args.Error(0)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (adapter TestAdapter) Exec(qs string, qargs []interface{}) (int64, int64, error) {

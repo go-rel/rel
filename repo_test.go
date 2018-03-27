@@ -9,6 +9,10 @@ import (
 
 var repo = Repo{}
 
+func TestNew(t *testing.T) {
+	assert.NotNil(t, New(new(TestAdapter)))
+}
+
 func TestFrom(t *testing.T) {
 	assert.Equal(t, repo.From("users"), Query{
 		repo:       &repo,

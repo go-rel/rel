@@ -68,8 +68,9 @@ func TestScan(t *testing.T) {
 	rows := createRows()
 
 	user := User{}
-	err := Scan(&user, &rows)
+	count, err := Scan(&user, &rows)
 	assert.Nil(t, err)
+	assert.Equal(t, int64(1), count)
 	assert.Equal(t, User{uint(10), "string", "string", "string"}, user)
 }
 
@@ -77,8 +78,9 @@ func TestScanSlice(t *testing.T) {
 	rows := createRows()
 
 	users := []User{}
-	err := Scan(&users, &rows)
+	count, err := Scan(&users, &rows)
 	assert.Nil(t, err)
+	assert.Equal(t, int64(1), count)
 	assert.Equal(t, 1, len(users))
 	assert.Equal(t, User{uint(10), "string", "string", "string"}, users[0])
 }

@@ -107,7 +107,15 @@ func (query Query) Find(id interface{}) Query {
 func (query Query) One(doc interface{}) error {
 	query.LimitResult = 1
 	qs, args := query.repo.adapter.Find(query)
-	return errors.Wrap(query.repo.adapter.Query(doc, qs, args))
+	count, err := query.repo.adapter.Query(doc, qs, args)
+
+	if err != nil {
+		return errors.Wrap(err)
+	} else if count == 0 {
+		return errors.NotFoundError("no result found")
+	} else {
+		return nil
+	}
 }
 
 func (query Query) MustOne(doc interface{}) {
@@ -116,13 +124,7 @@ func (query Query) MustOne(doc interface{}) {
 
 func (query Query) All(doc interface{}) error {
 	qs, args := query.repo.adapter.Find(query)
-	err := query.repo.adapter.Query(doc, qs, args)
-
-	// ignore not found error
-	if e, ok := err.(errors.Error); ok && e.NotFoundError() {
-		return nil
-	}
-
+	_, err := query.repo.adapter.Query(doc, qs, args)
 	return errors.Wrap(err)
 }
 

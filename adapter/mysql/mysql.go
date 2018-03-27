@@ -53,7 +53,7 @@ func (adapter *Adapter) Begin() error {
 
 func (adapter *Adapter) Commit() error {
 	if adapter.tx == nil {
-		return nil
+		return errors.UnexpectedError("not in transaction")
 	}
 
 	err := adapter.tx.Commit()
@@ -63,7 +63,7 @@ func (adapter *Adapter) Commit() error {
 
 func (adapter *Adapter) Rollback() error {
 	if adapter.tx == nil {
-		return nil
+		return errors.UnexpectedError("not in transaction")
 	}
 
 	err := adapter.tx.Rollback()

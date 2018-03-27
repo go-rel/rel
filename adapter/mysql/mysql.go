@@ -33,11 +33,11 @@ func (adapter *Adapter) Find(query grimoire.Query) (string, []interface{}) {
 	return adapter.builder.Find(query)
 }
 
-func (adapter *Adapter) Insert(query grimoire.Query, ch changeset.Changeset) (string, []interface{}) {
+func (adapter *Adapter) Insert(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
 	return adapter.builder.Insert(query.Collection, ch.Changes())
 }
 
-func (adapter *Adapter) Update(query grimoire.Query, ch changeset.Changeset) (string, []interface{}) {
+func (adapter *Adapter) Update(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
 	return adapter.builder.Update(query.Collection, ch.Changes(), query.Condition)
 }
 

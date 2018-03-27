@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
-	// . "github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +38,7 @@ func TestFind(t *testing.T) {
 	defer adapter.Close()
 
 	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
-	name := "foo"
+	name := "find"
 	createdAt := time.Now().Round(time.Second)
 	updatedAt := time.Now().Round(time.Second)
 
@@ -71,4 +71,78 @@ func TestFind(t *testing.T) {
 	// find user error not found
 	err = repo.From("users").Find(0).One(&user)
 	assert.True(t, err.(errors.Error).NotFoundError())
+}
+
+func TestInsert(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	defer adapter.Close()
+
+	name := "insert"
+	createdAt := time.Now().Round(time.Second)
+	updatedAt := time.Now().Round(time.Second)
+	ch := changeset.Cast(map[string]interface{}{
+		"name":       name,
+		"created_at": createdAt,
+		"updated_at": updatedAt,
+	}, "name", "created_at", "updated_at")
+
+	user := User{}
+	err := grimoire.New(adapter).From("users").Insert(&user, ch)
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, user.ID)
+	assert.Equal(t, name, user.Name)
+	assert.Equal(t, createdAt, user.CreatedAt)
+	assert.Equal(t, updatedAt, user.UpdatedAt)
+}
+
+func TestUpdate(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	defer adapter.Close()
+
+	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
+	name := "update"
+	createdAt := time.Now().Round(time.Second)
+	updatedAt := time.Now().Round(time.Second)
+
+	id, count, err := adapter.Exec(stmt, []interface{}{name, createdAt, updatedAt})
+	assert.Nil(t, err)
+	assert.True(t, id > 0)
+	assert.Equal(t, int64(1), count)
+
+	newName := "new update"
+	ch := changeset.Cast(map[string]interface{}{
+		"name": newName,
+	}, "name")
+	user := User{}
+	err = grimoire.New(adapter).From("users").Find(id).Update(&user, ch)
+	assert.Nil(t, err)
+	assert.Equal(t, id, user.ID)
+	assert.Equal(t, newName, user.Name)
+	assert.Equal(t, createdAt, user.CreatedAt)
+	assert.Equal(t, updatedAt, user.UpdatedAt)
+}
+
+func TestDelete(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	defer adapter.Close()
+
+	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
+	name := "delete"
+	createdAt := time.Now().Round(time.Second)
+	updatedAt := time.Now().Round(time.Second)
+
+	id, count, err := adapter.Exec(stmt, []interface{}{name, createdAt, updatedAt})
+	assert.Nil(t, err)
+	assert.True(t, id > 0)
+	assert.Equal(t, int64(1), count)
+
+	err = grimoire.New(adapter).From("users").Find(id).Delete()
+	assert.Nil(t, err)
+
+	user := User{}
+	err = grimoire.New(adapter).From("users").Find(id).One(&user)
+	assert.NotNil(t, err)
 }

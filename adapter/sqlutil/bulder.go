@@ -71,7 +71,7 @@ func (builder Builder) Insert(collection string, changes map[string]interface{})
 	length := len(changes)
 
 	var buffer bytes.Buffer
-	var args = make([]interface{}, length)
+	var args = make([]interface{}, 0, length)
 
 	buffer.WriteString("INSERT INTO ")
 	buffer.WriteString(collection)
@@ -79,17 +79,18 @@ func (builder Builder) Insert(collection string, changes map[string]interface{})
 
 	curr := 0
 	for field, value := range changes {
+		buffer.WriteString(field)
+		args = append(args, value)
+
 		if curr < length-1 {
 			buffer.WriteString(",")
 		}
-		buffer.WriteString(field)
-		args = append(args, value)
 
 		curr++
 	}
 	buffer.WriteString(") VALUES ")
 	buffer.WriteString("(?")
-	buffer.WriteString(strings.Repeat(",?", length))
+	buffer.WriteString(strings.Repeat(",?", length-1))
 	buffer.WriteString(");")
 
 	return buffer.String(), args
@@ -99,7 +100,7 @@ func (builder Builder) Update(collection string, changes map[string]interface{},
 	length := len(changes)
 
 	var buffer bytes.Buffer
-	var args = make([]interface{}, length)
+	var args = make([]interface{}, 0, length)
 
 	buffer.WriteString("UPDATE ")
 	buffer.WriteString(collection)

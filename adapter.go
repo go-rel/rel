@@ -12,8 +12,8 @@ type Adapter interface {
 	Close() error
 
 	Find(Query) (string, []interface{})
-	Insert(Query, changeset.Changeset) (string, []interface{})
-	Update(Query, changeset.Changeset) (string, []interface{})
+	Insert(Query, *changeset.Changeset) (string, []interface{})
+	Update(Query, *changeset.Changeset) (string, []interface{})
 	Delete(Query) (string, []interface{})
 
 	Begin() error

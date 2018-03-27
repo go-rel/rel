@@ -406,7 +406,7 @@ func TestAll(t *testing.T) {
 
 func TestInsert(t *testing.T) {
 	user := User{}
-	ch := changeset.Changeset{}
+	ch := &changeset.Changeset{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -422,7 +422,7 @@ func TestInsert(t *testing.T) {
 
 func TestInsertError(t *testing.T) {
 	user := User{}
-	ch := changeset.Changeset{}
+	ch := &changeset.Changeset{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -436,7 +436,7 @@ func TestInsertError(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	user := User{}
-	ch := changeset.Changeset{}
+	ch := &changeset.Changeset{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -452,7 +452,7 @@ func TestUpdate(t *testing.T) {
 
 func TestUpdateError(t *testing.T) {
 	user := User{}
-	ch := changeset.Changeset{}
+	ch := &changeset.Changeset{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 

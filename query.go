@@ -132,7 +132,7 @@ func (query Query) MustAll(doc interface{}) {
 	paranoid.Panic(query.All(doc))
 }
 
-func (query Query) Insert(doc interface{}, ch changeset.Changeset) error {
+func (query Query) Insert(doc interface{}, ch *changeset.Changeset) error {
 	qs, args := query.repo.adapter.Insert(query, ch)
 	id, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
@@ -142,11 +142,11 @@ func (query Query) Insert(doc interface{}, ch changeset.Changeset) error {
 	return errors.Wrap(query.Find(id).One(doc))
 }
 
-func (query Query) MustInsert(doc interface{}, ch changeset.Changeset) {
+func (query Query) MustInsert(doc interface{}, ch *changeset.Changeset) {
 	paranoid.Panic(query.Insert(doc, ch))
 }
 
-func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
+func (query Query) Update(doc interface{}, ch *changeset.Changeset) error {
 	qs, args := query.repo.adapter.Update(query, ch)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
@@ -156,7 +156,7 @@ func (query Query) Update(doc interface{}, ch changeset.Changeset) error {
 	return errors.Wrap(query.All(doc))
 }
 
-func (query Query) MustUpdate(doc interface{}, ch changeset.Changeset) {
+func (query Query) MustUpdate(doc interface{}, ch *changeset.Changeset) {
 	paranoid.Panic(query.Update(doc, ch))
 }
 

@@ -26,12 +26,12 @@ func (adapter TestAdapter) Find(query Query) (string, []interface{}) {
 	return args.String(0), args.Get(1).([]interface{})
 }
 
-func (adapter TestAdapter) Insert(query Query, ch changeset.Changeset) (string, []interface{}) {
+func (adapter TestAdapter) Insert(query Query, ch *changeset.Changeset) (string, []interface{}) {
 	args := adapter.Called(query, ch)
 	return args.String(0), args.Get(1).([]interface{})
 }
 
-func (adapter TestAdapter) Update(query Query, ch changeset.Changeset) (string, []interface{}) {
+func (adapter TestAdapter) Update(query Query, ch *changeset.Changeset) (string, []interface{}) {
 	args := adapter.Called(query, ch)
 	return args.String(0), args.Get(1).([]interface{})
 }

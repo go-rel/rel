@@ -116,13 +116,14 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 
 	curr := 0
 	for field, value := range changes {
-		if curr < length-1 {
-			buffer.WriteString(",")
-		}
 		buffer.WriteString(field)
 		buffer.WriteString("=")
 		buffer.WriteString(builder.ph())
 		args = append(args, value)
+
+		if curr < length-1 {
+			buffer.WriteString(",")
+		}
 
 		curr++
 	}
@@ -133,6 +134,8 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 		args = append(args, arg...)
 	}
 
+	buffer.WriteString(";")
+
 	return buffer.String(), args
 }
 
@@ -142,13 +145,14 @@ func (builder *Builder) Delete(collection string, cond c.Condition) (string, []i
 
 	buffer.WriteString("DELETE FROM ")
 	buffer.WriteString(collection)
-	buffer.WriteString(" ")
 
 	if s, arg := builder.Where(cond); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
+
+	buffer.WriteString(";")
 
 	return buffer.String(), args
 }

@@ -1,6 +1,7 @@
 package sqlutil
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Fs02/grimoire"
@@ -130,6 +131,84 @@ func TestFindOrdinal(t *testing.T) {
 			assert.Equal(t, tt.Args, args)
 		})
 	}
+}
+
+func TestInsert(t *testing.T) {
+	changes := map[string]interface{}{
+		"name": "foo",
+	}
+	args := []interface{}{"foo"}
+
+	qs, qargs := NewBuilder("?", false).Insert("users", changes)
+	assert.Equal(t, "INSERT INTO users (name) VALUES (?);", qs)
+	assert.Equal(t, args, qargs)
+
+	qs, qargs = NewBuilder("$", true).Insert("users", changes)
+	assert.Equal(t, "INSERT INTO users (name) VALUES ($1);", qs)
+	assert.Equal(t, args, qargs)
+
+	// test for multiple changes since map is randomly ordered
+	changes["age"] = 10
+	changes["agree"] = true
+	qs, _ = NewBuilder("?", false).Insert("users", changes)
+
+	assert.True(t, strings.HasPrefix(qs, "INSERT INTO users ("))
+	assert.True(t, strings.Contains(qs, "name"))
+	assert.True(t, strings.Contains(qs, "age"))
+	assert.True(t, strings.Contains(qs, "agree"))
+	assert.True(t, strings.HasSuffix(qs, ";"))
+}
+
+func TestUdate(t *testing.T) {
+	changes := map[string]interface{}{
+		"name": "foo",
+	}
+	args := []interface{}{"foo"}
+	cond := And()
+
+	qs, qargs := NewBuilder("?", false).Update("users", changes, cond)
+	assert.Equal(t, "UPDATE users SET name=?;", qs)
+	assert.Equal(t, args, qargs)
+
+	qs, qargs = NewBuilder("$", true).Update("users", changes, cond)
+	assert.Equal(t, "UPDATE users SET name=$1;", qs)
+	assert.Equal(t, args, qargs)
+
+	args = []interface{}{"foo", 1}
+	cond = Eq(I("id"), 1)
+
+	qs, qargs = NewBuilder("?", false).Update("users", changes, cond)
+	assert.Equal(t, "UPDATE users SET name=? WHERE id=?;", qs)
+	assert.Equal(t, args, qargs)
+
+	qs, qargs = NewBuilder("$", true).Update("users", changes, cond)
+	assert.Equal(t, "UPDATE users SET name=$1 WHERE id=$2;", qs)
+	assert.Equal(t, args, qargs)
+
+	// test for multiple changes since map is randomly ordered
+	changes["age"] = 10
+	changes["agree"] = true
+	qs, _ = NewBuilder("$", true).Update("users", changes, And())
+
+	assert.True(t, strings.HasPrefix(qs, "UPDATE users SET "))
+	assert.True(t, strings.Contains(qs, "name"))
+	assert.True(t, strings.Contains(qs, "age"))
+	assert.True(t, strings.Contains(qs, "agree"))
+	assert.True(t, strings.HasSuffix(qs, ";"))
+}
+
+func TestDelete(t *testing.T) {
+	qs, args := NewBuilder("?", false).Delete("users", And())
+	assert.Equal(t, "DELETE FROM users;", qs)
+	assert.Equal(t, []interface{}(nil), args)
+
+	qs, args = NewBuilder("?", false).Delete("users", Eq(I("id"), 1))
+	assert.Equal(t, "DELETE FROM users WHERE id=?;", qs)
+	assert.Equal(t, []interface{}{1}, args)
+
+	qs, args = NewBuilder("$", true).Delete("users", Eq(I("id"), 1))
+	assert.Equal(t, "DELETE FROM users WHERE id=$1;", qs)
+	assert.Equal(t, []interface{}{1}, args)
 }
 
 func TestSelect(t *testing.T) {

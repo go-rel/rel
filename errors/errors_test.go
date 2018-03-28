@@ -51,14 +51,6 @@ func TestDuplicateError(t *testing.T) {
 	assert.True(t, err.DuplicateError())
 }
 
-func TestAssociationError(t *testing.T) {
-	err := AssociationError("error", "field")
-
-	assert.Equal(t, "error", err.Error())
-	assert.Equal(t, "field", err.Field)
-	assert.True(t, err.AssociationError())
-}
-
 func TestWrap(t *testing.T) {
 	assert.Equal(t, nil, Wrap(nil))
 	assert.Equal(t, Error{}, Wrap(Error{}))

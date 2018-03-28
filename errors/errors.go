@@ -4,7 +4,6 @@ var UnexpectedErrorCode = 0
 var ChangesetErrorCode = 1
 var NotFoundErrorCode = 2
 var DuplicateErrorCode = 3
-var AssociationErrorCode = 4
 
 type Error struct {
 	Message string `json:"message"`
@@ -30,10 +29,6 @@ func (e Error) NotFoundError() bool {
 
 func (e Error) DuplicateError() bool {
 	return e.Code == DuplicateErrorCode
-}
-
-func (e Error) AssociationError() bool {
-	return e.Code == AssociationErrorCode
 }
 
 func New(message string, field string, code int) Error {
@@ -67,14 +62,6 @@ func DuplicateError(message string, field string) Error {
 		Message: message,
 		Field:   field,
 		Code:    DuplicateErrorCode,
-	}
-}
-
-func AssociationError(message string, field string) Error {
-	return Error{
-		Message: message,
-		Field:   field,
-		Code:    AssociationErrorCode,
 	}
 }
 

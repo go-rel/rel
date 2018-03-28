@@ -9,9 +9,13 @@ import (
 	"github.com/Fs02/grimoire/c"
 )
 
-type Builder struct{}
+type Builder struct {
+	Placeholder string
+	Ordinal     bool
+	count       int
+}
 
-func (builder Builder) Find(q grimoire.Query) (string, []interface{}) {
+func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
 
@@ -67,7 +71,7 @@ func (builder Builder) Find(q grimoire.Query) (string, []interface{}) {
 	return buffer.String(), args
 }
 
-func (builder Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
+func (builder *Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
 	length := len(changes)
 
 	var buffer bytes.Buffer
@@ -89,14 +93,18 @@ func (builder Builder) Insert(collection string, changes map[string]interface{})
 		curr++
 	}
 	buffer.WriteString(") VALUES ")
-	buffer.WriteString("(?")
-	buffer.WriteString(strings.Repeat(",?", length-1))
+	buffer.WriteString("(")
+	buffer.WriteString(builder.ph())
+	for i := 1; i <= length-1; i++ {
+		buffer.WriteString(",")
+		buffer.WriteString(builder.ph())
+	}
 	buffer.WriteString(");")
 
 	return buffer.String(), args
 }
 
-func (builder Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
+func (builder *Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
 	length := len(changes)
 
 	var buffer bytes.Buffer
@@ -112,7 +120,8 @@ func (builder Builder) Update(collection string, changes map[string]interface{},
 			buffer.WriteString(",")
 		}
 		buffer.WriteString(field)
-		buffer.WriteString("=?")
+		buffer.WriteString("=")
+		buffer.WriteString(builder.ph())
 		args = append(args, value)
 
 		curr++
@@ -127,7 +136,7 @@ func (builder Builder) Update(collection string, changes map[string]interface{},
 	return buffer.String(), args
 }
 
-func (builder Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
+func (builder *Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
 
@@ -144,7 +153,7 @@ func (builder Builder) Delete(collection string, cond c.Condition) (string, []in
 	return buffer.String(), args
 }
 
-func (builder Builder) Select(distinct bool, fields ...string) string {
+func (builder *Builder) Select(distinct bool, fields ...string) string {
 	if distinct {
 		return "SELECT DISTINCT " + strings.Join(fields, ", ")
 	}
@@ -152,11 +161,11 @@ func (builder Builder) Select(distinct bool, fields ...string) string {
 	return "SELECT " + strings.Join(fields, ", ")
 }
 
-func (builder Builder) From(collection string) string {
+func (builder *Builder) From(collection string) string {
 	return "FROM " + collection
 }
 
-func (builder Builder) Join(join ...c.Join) (string, []interface{}) {
+func (builder *Builder) Join(join ...c.Join) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -176,7 +185,7 @@ func (builder Builder) Join(join ...c.Join) (string, []interface{}) {
 	return qs, args
 }
 
-func (builder Builder) Where(condition c.Condition) (string, []interface{}) {
+func (builder *Builder) Where(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
@@ -185,7 +194,7 @@ func (builder Builder) Where(condition c.Condition) (string, []interface{}) {
 	return "WHERE " + qs, args
 }
 
-func (builder Builder) GroupBy(fields ...string) string {
+func (builder *Builder) GroupBy(fields ...string) string {
 	if len(fields) > 0 {
 		return "GROUP BY " + strings.Join(fields, ", ")
 	}
@@ -193,7 +202,7 @@ func (builder Builder) GroupBy(fields ...string) string {
 	return ""
 }
 
-func (builder Builder) Having(condition c.Condition) (string, []interface{}) {
+func (builder *Builder) Having(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
@@ -202,7 +211,7 @@ func (builder Builder) Having(condition c.Condition) (string, []interface{}) {
 	return "HAVING " + qs, args
 }
 
-func (builder Builder) OrderBy(orders ...c.Order) string {
+func (builder *Builder) OrderBy(orders ...c.Order) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -224,7 +233,7 @@ func (builder Builder) OrderBy(orders ...c.Order) string {
 	return qs
 }
 
-func (builder Builder) Offset(n int) string {
+func (builder *Builder) Offset(n int) string {
 	if n > 0 {
 		return "OFFSET " + strconv.Itoa(n)
 	}
@@ -232,7 +241,7 @@ func (builder Builder) Offset(n int) string {
 	return ""
 }
 
-func (builder Builder) Limit(n int) string {
+func (builder *Builder) Limit(n int) string {
 	if n > 0 {
 		return "LIMIT " + strconv.Itoa(n)
 	}
@@ -240,7 +249,7 @@ func (builder Builder) Limit(n int) string {
 	return ""
 }
 
-func (builder Builder) Condition(cond c.Condition) (string, []interface{}) {
+func (builder *Builder) Condition(cond c.Condition) (string, []interface{}) {
 	switch cond.Type {
 	case c.ConditionAnd:
 		return builder.build("AND", cond.Inner)
@@ -268,13 +277,33 @@ func (builder Builder) Condition(cond c.Condition) (string, []interface{}) {
 	case c.ConditionNotNil:
 		return string(cond.Left.Column) + " IS NOT NULL", cond.Right.Values
 	case c.ConditionIn:
-		return string(cond.Left.Column) + " IN (?" + strings.Repeat(",?", len(cond.Right.Values)-1) + ")", cond.Right.Values
+		var buffer bytes.Buffer
+		buffer.WriteString(string(cond.Left.Column))
+		buffer.WriteString(" IN (")
+		buffer.WriteString(builder.ph())
+		for i := 1; i <= len(cond.Right.Values)-1; i++ {
+			buffer.WriteString(",")
+			buffer.WriteString(builder.ph())
+		}
+		buffer.WriteString(")")
+
+		return buffer.String(), cond.Right.Values
 	case c.ConditionNin:
-		return string(cond.Left.Column) + " NOT IN (?" + strings.Repeat(",?", len(cond.Right.Values)-1) + ")", cond.Right.Values
+		var buffer bytes.Buffer
+		buffer.WriteString(string(cond.Left.Column))
+		buffer.WriteString(" NOT IN (")
+		buffer.WriteString(builder.ph())
+		for i := 1; i <= len(cond.Right.Values)-1; i++ {
+			buffer.WriteString(",")
+			buffer.WriteString(builder.ph())
+		}
+		buffer.WriteString(")")
+
+		return buffer.String(), cond.Right.Values
 	case c.ConditionLike:
-		return string(cond.Left.Column) + " LIKE ?", cond.Right.Values
+		return string(cond.Left.Column) + " LIKE " + builder.ph(), cond.Right.Values
 	case c.ConditionNotLike:
-		return string(cond.Left.Column) + " NOT LIKE ?", cond.Right.Values
+		return string(cond.Left.Column) + " NOT LIKE " + builder.ph(), cond.Right.Values
 	case c.ConditionFragment:
 		return string(cond.Left.Column), cond.Right.Values
 	}
@@ -282,7 +311,7 @@ func (builder Builder) Condition(cond c.Condition) (string, []interface{}) {
 	return "", nil
 }
 
-func (builder Builder) build(op string, inner []c.Condition) (string, []interface{}) {
+func (builder *Builder) build(op string, inner []c.Condition) (string, []interface{}) {
 	length := len(inner)
 	var qstring string
 	var args []interface{}
@@ -308,19 +337,35 @@ func (builder Builder) build(op string, inner []c.Condition) (string, []interfac
 	return qstring, args
 }
 
-func (builder Builder) buildComparison(op string, left, right c.Operand) (string, []interface{}) {
+func (builder *Builder) buildComparison(op string, left, right c.Operand) (string, []interface{}) {
 	var cs string
 	if left.Column != "" {
 		cs = string(left.Column) + op
 	} else {
-		cs = "?" + op
+		cs = builder.ph() + op
 	}
 
 	if right.Column != "" {
 		cs += string(right.Column)
 	} else {
-		cs += "?"
+		cs += builder.ph()
 	}
 
 	return cs, append(left.Values, right.Values...)
+}
+
+func (builder *Builder) ph() string {
+	if builder.Ordinal {
+		builder.count++
+		return builder.Placeholder + strconv.Itoa(builder.count)
+	}
+
+	return builder.Placeholder
+}
+
+func NewBuilder(placeholder string, ordinal bool) *Builder {
+	return &Builder{
+		Placeholder: placeholder,
+		Ordinal:     ordinal,
+	}
 }

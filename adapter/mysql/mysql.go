@@ -12,9 +12,8 @@ import (
 )
 
 type Adapter struct {
-	db      *sql.DB
-	tx      *sql.Tx
-	builder sqlutil.Builder
+	db *sql.DB
+	tx *sql.Tx
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
@@ -30,19 +29,19 @@ func (adapter *Adapter) Close() error {
 }
 
 func (adapter *Adapter) Find(query grimoire.Query) (string, []interface{}) {
-	return adapter.builder.Find(query)
+	return sqlutil.NewBuilder("?", false).Find(query)
 }
 
 func (adapter *Adapter) Insert(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
-	return adapter.builder.Insert(query.Collection, ch.Changes())
+	return sqlutil.NewBuilder("?", false).Insert(query.Collection, ch.Changes())
 }
 
 func (adapter *Adapter) Update(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
-	return adapter.builder.Update(query.Collection, ch.Changes(), query.Condition)
+	return sqlutil.NewBuilder("?", false).Update(query.Collection, ch.Changes(), query.Condition)
 }
 
 func (adapter *Adapter) Delete(query grimoire.Query) (string, []interface{}) {
-	return adapter.builder.Delete(query.Collection, query.Condition)
+	return sqlutil.NewBuilder("?", false).Delete(query.Collection, query.Condition)
 }
 
 func (adapter *Adapter) Begin() error {

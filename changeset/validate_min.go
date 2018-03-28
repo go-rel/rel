@@ -7,11 +7,16 @@ import (
 
 var ValidateMinErrorMessage = "{field} must be more than {min}"
 
-func ValidateMin(ch *Changeset, field string, min int) {
+func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
 		return
 	}
+
+	options := Options{
+		Message: ValidateMinErrorMessage,
+	}
+	options.Apply(opts)
 
 	invalid := false
 
@@ -50,6 +55,6 @@ func ValidateMin(ch *Changeset, field string, min int) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{min}", strconv.Itoa(min))
-		AddError(ch, field, r.Replace(ValidateMinErrorMessage))
+		AddError(ch, field, r.Replace(options.Message))
 	}
 }

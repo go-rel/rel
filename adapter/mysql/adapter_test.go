@@ -85,7 +85,7 @@ func TestRepoInsert(t *testing.T) {
 		"name":       name,
 		"created_at": createdAt,
 		"updated_at": updatedAt,
-	}, "name", "created_at", "updated_at")
+	}, []string{"name", "created_at", "updated_at"})
 
 	user := User{}
 	err := grimoire.New(adapter).From("users").Insert(&user, ch)
@@ -114,7 +114,7 @@ func TestRepoUpdate(t *testing.T) {
 	newName := "new update"
 	ch := changeset.Cast(map[string]interface{}{
 		"name": newName,
-	}, "name")
+	}, []string{"name"})
 	user := User{}
 	err = grimoire.New(adapter).From("users").Find(id).Update(&user, ch)
 	assert.Nil(t, err)

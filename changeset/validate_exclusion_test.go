@@ -3,6 +3,8 @@ package changeset
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateExclusion(t *testing.T) {
@@ -20,11 +22,8 @@ func TestValidateExclusion(t *testing.T) {
 				},
 			}
 
-			ValidateExclusion(ch, "field", 1, 2.0, "c")
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			ValidateExclusion(ch, "field", []interface{}{1, 2.0, "c"})
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -44,20 +43,15 @@ func TestValidateExclusionError(t *testing.T) {
 				},
 			}
 
-			ValidateExclusion(ch, "field", 1, 2.0, "c")
-
-			if ch.Errors().Error() != "field must not be any of [1 2 c]" {
-				t.Error(`Expected "field must not be any of [1 2 c]" but got`, ch.Errors().Error())
-			}
+			ValidateExclusion(ch, "field", []interface{}{1, 2.0, "c"})
+			assert.NotNil(t, ch.Errors())
+			assert.Equal(t, "field must not be any of [1 2 c]", ch.Errors().Error())
 		})
 	}
 }
 
 func TestValidateExclusionMissing(t *testing.T) {
 	ch := &Changeset{}
-	ValidateExclusion(ch, "field", 5)
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	ValidateExclusion(ch, "field", []interface{}{5})
+	assert.Nil(t, ch.Errors())
 }

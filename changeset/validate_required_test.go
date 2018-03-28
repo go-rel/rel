@@ -2,6 +2,8 @@ package changeset
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateRequired(t *testing.T) {
@@ -11,18 +13,13 @@ func TestValidateRequired(t *testing.T) {
 		},
 	}
 
-	ValidateRequired(ch, "field1")
-
-	if ch.Errors() != nil {
-		t.Error("Expected nil but got", ch.Errors())
-	}
+	ValidateRequired(ch, []string{"field1"})
+	assert.Nil(t, ch.Errors())
 }
 
 func TestValidateRequiredError(t *testing.T) {
 	ch := &Changeset{}
-	ValidateRequired(ch, "field1")
-
-	if ch.Errors().Error() != "field1 is required" {
-		t.Error(`Expected "field1 is required" but got`, ch.Errors().Error())
-	}
+	ValidateRequired(ch, []string{"field1"})
+	assert.NotNil(t, ch.Errors())
+	assert.Equal(t, "field1 is required", ch.Errors().Error())
 }

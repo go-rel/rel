@@ -2,6 +2,8 @@ package changeset
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSanitize(t *testing.T) {
@@ -11,10 +13,8 @@ func TestSanitize(t *testing.T) {
 		},
 	}
 
-	Sanitize(ch, "field")
+	Sanitize(ch, []string{"field"})
 
 	expected := `<a href="http://www.google.com" rel="nofollow">Google</a>`
-	if ch.changes["field"] != expected {
-		t.Error("Expected", expected, "but got", ch.changes["field"])
-	}
+	assert.Equal(t, expected, ch.changes["field"])
 }

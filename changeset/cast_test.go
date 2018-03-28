@@ -1,8 +1,9 @@
 package changeset
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCast(t *testing.T) {
@@ -19,9 +20,6 @@ func TestCast(t *testing.T) {
 		"field3": true,
 	}
 
-	ch := Cast(params, "field1", "field2", "field3")
-
-	if !reflect.DeepEqual(ch.Changes(), expected) {
-		t.Error("Expected", expected, "but got", ch.Changes())
-	}
+	ch := Cast(params, []string{"field1", "field2", "field3"})
+	assert.Equal(t, ch.Changes(), expected)
 }

@@ -3,6 +3,8 @@ package changeset
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateInclusion(t *testing.T) {
@@ -20,11 +22,8 @@ func TestValidateInclusion(t *testing.T) {
 				},
 			}
 
-			ValidateInclusion(ch, "field", 1, 2.0, "c")
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			ValidateInclusion(ch, "field", []interface{}{1, 2.0, "c"})
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -44,20 +43,15 @@ func TestValidateInclusionError(t *testing.T) {
 				},
 			}
 
-			ValidateInclusion(ch, "field", 2, 3.0, "d")
-
-			if ch.Errors().Error() != "field must be one of [2 3 d]" {
-				t.Error(`Expected "field must be one of [2 3 d]" but got`, ch.Errors().Error())
-			}
+			ValidateInclusion(ch, "field", []interface{}{2, 3.0, "d"})
+			assert.NotNil(t, ch.Errors())
+			assert.Equal(t, "field must be one of [2 3 d]", ch.Errors().Error())
 		})
 	}
 }
 
 func TestValidateInclusionMissing(t *testing.T) {
 	ch := &Changeset{}
-	ValidateInclusion(ch, "field", 5)
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	ValidateInclusion(ch, "field", []interface{}{5})
+	assert.Nil(t, ch.Errors())
 }

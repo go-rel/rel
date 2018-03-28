@@ -1,6 +1,6 @@
 package changeset
 
-func Cast(params map[string]interface{}, fields ...string) *Changeset {
+func Cast(params map[string]interface{}, fields []string, opts ...Option) *Changeset {
 	ch := &Changeset{}
 	ch.changes = make(map[string]interface{})
 

@@ -7,11 +7,16 @@ import (
 
 var ValidateMaxErrorMessage = "{field} must be less than {max}"
 
-func ValidateMax(ch *Changeset, field string, max int) {
+func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
 		return
 	}
+
+	options := Options{
+		Message: ValidateMaxErrorMessage,
+	}
+	options.Apply(opts)
 
 	invalid := false
 
@@ -50,6 +55,6 @@ func ValidateMax(ch *Changeset, field string, max int) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{max}", strconv.Itoa(max))
-		AddError(ch, field, r.Replace(ValidateMaxErrorMessage))
+		AddError(ch, field, r.Replace(options.Message))
 	}
 }

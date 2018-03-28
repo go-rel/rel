@@ -3,6 +3,8 @@ package changeset
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateMin(t *testing.T) {
@@ -33,10 +35,7 @@ func TestValidateMin(t *testing.T) {
 			}
 
 			ValidateMin(ch, "field", 5)
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -69,10 +68,8 @@ func TestValidateMinError(t *testing.T) {
 			}
 
 			ValidateMin(ch, "field", 15)
-
-			if ch.Errors().Error() != "field must be more than 15" {
-				t.Error(`Expected "field must be more than 15" but got`, ch.Errors().Error())
-			}
+			assert.NotNil(t, ch.Errors())
+			assert.Equal(t, "field must be more than 15", ch.Errors().Error())
 		})
 	}
 }
@@ -80,8 +77,5 @@ func TestValidateMinError(t *testing.T) {
 func TestValidateMinMissing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateMin(ch, "field", 5)
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	assert.Nil(t, ch.Errors())
 }

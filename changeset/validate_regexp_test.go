@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateRegexp(t *testing.T) {
@@ -25,10 +27,7 @@ func TestValidateRegexp(t *testing.T) {
 			}
 
 			ValidateRegexp(ch, "field", exp)
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -41,17 +40,12 @@ func TestValidateRegexpError(t *testing.T) {
 	}
 
 	ValidateRegexp(ch, "field", regexp.MustCompile(`boo.*`))
-
-	if ch.Errors().Error() != "field is invalid" {
-		t.Error(`Expected "field is invalid" but got`, ch.Errors().Error())
-	}
+	assert.NotNil(t, ch.Errors())
+	assert.Equal(t, "field's format is invalid", ch.Errors().Error())
 }
 
 func TestValidateRegexpMissing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateRegexp(ch, "field", regexp.MustCompile(`foo.*`))
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	assert.Nil(t, ch.Errors())
 }

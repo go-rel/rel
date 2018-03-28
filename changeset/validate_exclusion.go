@@ -7,11 +7,16 @@ import (
 
 var ValidateExclusionErrorMessage = "{field} must not be any of {values}"
 
-func ValidateExclusion(ch *Changeset, field string, values ...interface{}) {
+func ValidateExclusion(ch *Changeset, field string, values []interface{}, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
 		return
 	}
+
+	options := Options{
+		Message: ValidateExclusionErrorMessage,
+	}
+	options.Apply(opts)
 
 	invalid := false
 	for _, inval := range values {
@@ -23,6 +28,6 @@ func ValidateExclusion(ch *Changeset, field string, values ...interface{}) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{values}", fmt.Sprintf("%v", values))
-		AddError(ch, field, r.Replace(ValidateExclusionErrorMessage))
+		AddError(ch, field, r.Replace(options.Message))
 	}
 }

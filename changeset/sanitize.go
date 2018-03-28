@@ -6,7 +6,7 @@ import (
 
 var SanitizePolicy = bluemonday.UGCPolicy()
 
-func Sanitize(ch *Changeset, fields ...string) {
+func Sanitize(ch *Changeset, fields []string) {
 	for _, f := range fields {
 		if val, exist := ch.changes[f]; exist {
 			if str, ok := val.(string); ok {

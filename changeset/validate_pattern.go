@@ -5,18 +5,23 @@ import (
 	"strings"
 )
 
-var ValidatePatternErrorMessage = "{field} is invalid"
+var ValidatePatternErrorMessage = "{field}'s format is invalid"
 
-func ValidatePattern(ch *Changeset, field string, pattern string) {
+func ValidatePattern(ch *Changeset, field string, pattern string, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
 		return
 	}
 
+	options := Options{
+		Message: ValidatePatternErrorMessage,
+	}
+	options.Apply(opts)
+
 	if str, ok := val.(string); ok {
 		match, _ := regexp.MatchString(pattern, str)
 		if !match {
-			msg := strings.Replace(ValidatePatternErrorMessage, "{field}", field, 1)
+			msg := strings.Replace(options.Message, "{field}", field, 1)
 			AddError(ch, field, msg)
 		}
 		return

@@ -2,12 +2,11 @@ package changeset
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChangesetChanges(t *testing.T) {
 	ch := Changeset{}
-
-	if ch.Changes() != nil {
-		t.Error("Expected nil, but got", ch.Changes())
-	}
+	assert.Nil(t, ch.Changes())
 }

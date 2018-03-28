@@ -3,6 +3,8 @@ package changeset
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateRange(t *testing.T) {
@@ -33,10 +35,7 @@ func TestValidateRange(t *testing.T) {
 			}
 
 			ValidateRange(ch, "field", 5, 15)
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -69,10 +68,8 @@ func TestValidateRangeError(t *testing.T) {
 			}
 
 			ValidateRange(ch, "field", 15, 20)
-
-			if ch.Errors().Error() != "field must be between 15 and 20" {
-				t.Error(`Expected "field must be between 15 and 20" but got`, ch.Errors().Error())
-			}
+			assert.NotNil(t, ch.Errors())
+			assert.Equal(t, "field must be between 15 and 20", ch.Errors().Error())
 		})
 	}
 }
@@ -80,8 +77,5 @@ func TestValidateRangeError(t *testing.T) {
 func TestValidateRangeMissing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateRange(ch, "field", 5, 15)
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	assert.Nil(t, ch.Errors())
 }

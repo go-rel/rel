@@ -3,6 +3,8 @@ package changeset
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidatePattern(t *testing.T) {
@@ -22,10 +24,7 @@ func TestValidatePattern(t *testing.T) {
 			}
 
 			ValidatePattern(ch, "field", "foo.*")
-
-			if ch.Errors() != nil {
-				t.Error(`Expected nil but got`, ch.Errors())
-			}
+			assert.Nil(t, ch.Errors())
 		})
 	}
 }
@@ -38,17 +37,12 @@ func TestValidatePatternError(t *testing.T) {
 	}
 
 	ValidatePattern(ch, "field", "boo.*")
-
-	if ch.Errors().Error() != "field is invalid" {
-		t.Error(`Expected "field is invalid" but got`, ch.Errors().Error())
-	}
+	assert.NotNil(t, ch.Errors())
+	assert.Equal(t, "field's format is invalid", ch.Errors().Error())
 }
 
 func TestValidatePatternMissing(t *testing.T) {
 	ch := &Changeset{}
 	ValidatePattern(ch, "field", "foo.*")
-
-	if ch.Errors() != nil {
-		t.Error(`Expected nil but got`, ch.Errors())
-	}
+	assert.Nil(t, ch.Errors())
 }

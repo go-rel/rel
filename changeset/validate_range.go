@@ -7,11 +7,16 @@ import (
 
 var ValidateRangeErrorMessage = "{field} must be between {min} and {max}"
 
-func ValidateRange(ch *Changeset, field string, min int, max int) {
+func ValidateRange(ch *Changeset, field string, min int, max int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
 		return
 	}
+
+	options := Options{
+		Message: ValidateRangeErrorMessage,
+	}
+	options.Apply(opts)
 
 	invalid := false
 
@@ -50,6 +55,6 @@ func ValidateRange(ch *Changeset, field string, min int, max int) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{min}", strconv.Itoa(min), "{max}", strconv.Itoa(max))
-		AddError(ch, field, r.Replace(ValidateRangeErrorMessage))
+		AddError(ch, field, r.Replace(options.Message))
 	}
 }

@@ -6,11 +6,16 @@ import (
 
 var ValidateRequiredErrorMessage = "{field} is required"
 
-func ValidateRequired(ch *Changeset, fields ...string) {
+func ValidateRequired(ch *Changeset, fields []string, opts ...Option) {
+	options := Options{
+		Message: ValidateRequiredErrorMessage,
+	}
+	options.Apply(opts)
+
 	for _, f := range fields {
 		_, exist := ch.changes[f]
 		if !exist {
-			msg := strings.Replace(ValidateRequiredErrorMessage, "{field}", f, 1)
+			msg := strings.Replace(options.Message, "{field}", f, 1)
 			AddError(ch, f, msg)
 		}
 	}

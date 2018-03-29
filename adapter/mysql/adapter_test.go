@@ -11,12 +11,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// CREATE TABLE users (
-// 	id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-// 	name VARCHAR(30) NOT NULL,
-// 	created_at DATETIME,
-// 	updated_at DATETIME
-// );
+func init() {
+	adapter := new(Adapter)
+	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	defer adapter.Close()
+
+	adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
+	adapter.Exec(`CREATE TABLE users (
+		id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(30) NOT NULL,
+		created_at DATETIME,
+		updated_at DATETIME
+	);`, []interface{}{})
+}
+
 type User struct {
 	ID        int64
 	Name      string

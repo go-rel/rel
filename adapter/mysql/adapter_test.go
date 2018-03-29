@@ -86,16 +86,17 @@ func TestRepoInsert(t *testing.T) {
 	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	defer adapter.Close()
 
+	user := User{}
 	name := "insert"
 	createdAt := time.Now().Round(time.Second)
 	updatedAt := time.Now().Round(time.Second)
-	ch := changeset.Cast(map[string]interface{}{
+
+	ch := changeset.Cast(user, map[string]interface{}{
 		"name":       name,
 		"created_at": createdAt,
 		"updated_at": updatedAt,
 	}, []string{"name", "created_at", "updated_at"})
 
-	user := User{}
 	err := grimoire.New(adapter).From("users").Insert(&user, ch)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
@@ -119,11 +120,13 @@ func TestRepoUpdate(t *testing.T) {
 	assert.True(t, id > 0)
 	assert.Equal(t, int64(1), count)
 
+	user := User{}
 	newName := "new update"
-	ch := changeset.Cast(map[string]interface{}{
+
+	ch := changeset.Cast(user, map[string]interface{}{
 		"name": newName,
 	}, []string{"name"})
-	user := User{}
+
 	err = grimoire.New(adapter).From("users").Find(id).Update(&user, ch)
 	assert.Nil(t, err)
 	assert.Equal(t, id, user.ID)

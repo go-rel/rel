@@ -88,13 +88,11 @@ func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interf
 	return ptr
 }
 
-var tag = "db"
-
 func fieldIndex(rt reflect.Type) map[string]int {
 	fields := make(map[string]int)
 	for i := 0; i < rt.NumField(); i++ {
 		f := rt.Field(i)
-		if tag := f.Tag.Get(tag); tag != "" {
+		if tag := f.Tag.Get("db"); tag != "" {
 			if tag == "-" {
 				continue
 			}

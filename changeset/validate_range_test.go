@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateMax(t *testing.T) {
+func TestValidateRange(t *testing.T) {
 	tests := []interface{}{
 		"long text",
 		10,
@@ -34,17 +34,17 @@ func TestValidateMax(t *testing.T) {
 				},
 			}
 
-			ValidateMax(ch, "field", 15)
+			ValidateRange(ch, "field", 5, 15)
 			assert.Nil(t, ch.Errors())
 		})
 	}
 }
 
-func TestValidateMaxError(t *testing.T) {
+func TestValidateRangeError(t *testing.T) {
 	tests := []interface{}{
 		"long text",
-		10,
 		[]interface{}{"a", "b", "c", "d", "e", "f"},
+		10,
 		int8(10),
 		int16(10),
 		int32(10),
@@ -67,15 +67,15 @@ func TestValidateMaxError(t *testing.T) {
 				},
 			}
 
-			ValidateMax(ch, "field", 5)
+			ValidateRange(ch, "field", 15, 20)
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must be less than 5", ch.Errors().Error())
+			assert.Equal(t, "field must be between 15 and 20", ch.Errors().Error())
 		})
 	}
 }
 
-func TestValidateMaxMissing(t *testing.T) {
+func TestValidateRangeMissing(t *testing.T) {
 	ch := &Changeset{}
-	ValidateMax(ch, "field", 5)
+	ValidateRange(ch, "field", 5, 15)
 	assert.Nil(t, ch.Errors())
 }

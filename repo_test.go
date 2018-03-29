@@ -84,7 +84,6 @@ func TestTransactionPanicWithKnownErrorAndRollback(t *testing.T) {
 	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
 		// doing good things
 		panic(errors.NotFoundError("error"))
-		return nil
 	})
 
 	assert.Equal(t, errors.NotFoundError("error"), err)
@@ -100,7 +99,6 @@ func TestTransactionPanicAndRollback(t *testing.T) {
 		Repo{adapter: mock}.Transaction(func(r Repo) error {
 			// doing good things
 			panic(errors.UnexpectedError("error"))
-			return nil
 		})
 	})
 

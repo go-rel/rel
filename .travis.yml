@@ -1,0 +1,22 @@
+env:
+  global:
+    - CC_TEST_REPORTER_ID=42ba59b516289c90de75bec1e73dcf75e601d150b271e8762cee9efcb8d70282
+    - MYSQL_DATABASE=root@(127.0.0.1:3306)/grimoire_test
+language: go
+go:
+  - "1.10.x"
+services:
+  - mysql
+before_install:
+  - mysql -e 'CREATE DATABASE grimoire_test;'
+install:
+  - go get -u github.com/golang/dep/cmd/dep
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+script:
+  - dep ensure
+  - go test -coverprofile=c.out ./...
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

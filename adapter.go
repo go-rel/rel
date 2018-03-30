@@ -1,9 +1,5 @@
 package grimoire
 
-import (
-	"github.com/Fs02/grimoire/changeset"
-)
-
 // Adapter abstraction
 // accepts struct and query or changeset
 // returns query string and arguments
@@ -12,8 +8,8 @@ type Adapter interface {
 	Close() error
 
 	Find(Query) (string, []interface{})
-	Insert(Query, *changeset.Changeset) (string, []interface{})
-	Update(Query, *changeset.Changeset) (string, []interface{})
+	Insert(Query, map[string]interface{}) (string, []interface{})
+	Update(Query, map[string]interface{}) (string, []interface{})
 	Delete(Query) (string, []interface{})
 
 	Begin() error

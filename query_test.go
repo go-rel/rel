@@ -410,7 +410,7 @@ func TestInsert(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch).Return("", []interface{}{}).
+	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
 		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
@@ -425,7 +425,7 @@ func TestInsertNotReturning(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch).Return("", []interface{}{}).
+	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
 
 	assert.Nil(t, query.Insert(nil, ch))
@@ -439,7 +439,7 @@ func TestInsertError(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch).Return("", []interface{}{}).
+	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Insert(&user, ch))
@@ -453,7 +453,7 @@ func TestUpdate(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch).Return("", []interface{}{}).
+	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query).Return("", []interface{}{}).
 		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
@@ -468,7 +468,7 @@ func TestUpdateNotReturning(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch).Return("", []interface{}{}).
+	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
 
 	assert.Nil(t, query.Update(nil, ch))
@@ -482,7 +482,7 @@ func TestUpdateError(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch).Return("", []interface{}{}).
+	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Update(&user, ch))

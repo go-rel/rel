@@ -143,7 +143,7 @@ func (query Query) MustAll(doc interface{}) {
 }
 
 func (query Query) Insert(doc interface{}, ch *changeset.Changeset) error {
-	qs, args := query.repo.adapter.Insert(query, ch)
+	qs, args := query.repo.adapter.Insert(query, ch.Changes())
 	id, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
 		return errors.Wrap(err)
@@ -161,7 +161,7 @@ func (query Query) MustInsert(doc interface{}, ch *changeset.Changeset) {
 }
 
 func (query Query) Update(doc interface{}, ch *changeset.Changeset) error {
-	qs, args := query.repo.adapter.Update(query, ch)
+	qs, args := query.repo.adapter.Update(query, ch.Changes())
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
 		return errors.Wrap(err)

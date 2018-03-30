@@ -6,7 +6,6 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
-	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/go-sql-driver/mysql"
 )
@@ -32,12 +31,12 @@ func (adapter *Adapter) Find(query grimoire.Query) (string, []interface{}) {
 	return sqlutil.NewBuilder("?", false).Find(query)
 }
 
-func (adapter *Adapter) Insert(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Insert(query.Collection, ch.Changes())
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (string, []interface{}) {
+	return sqlutil.NewBuilder("?", false).Insert(query.Collection, changes)
 }
 
-func (adapter *Adapter) Update(query grimoire.Query, ch *changeset.Changeset) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Update(query.Collection, ch.Changes(), query.Condition)
+func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}) (string, []interface{}) {
+	return sqlutil.NewBuilder("?", false).Update(query.Collection, changes, query.Condition)
 }
 
 func (adapter *Adapter) Delete(query grimoire.Query) (string, []interface{}) {

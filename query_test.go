@@ -420,6 +420,19 @@ func TestInsert(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestInsertNotReturning(t *testing.T) {
+	ch := &changeset.Changeset{}
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	mock.On("Insert", query, ch).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+
+	assert.Nil(t, query.Insert(nil, ch))
+	assert.NotPanics(t, func() { query.MustInsert(nil, ch) })
+	mock.AssertExpectations(t)
+}
+
 func TestInsertError(t *testing.T) {
 	user := User{}
 	ch := &changeset.Changeset{}
@@ -447,6 +460,19 @@ func TestUpdate(t *testing.T) {
 
 	assert.Nil(t, query.Update(&user, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateNotReturning(t *testing.T) {
+	ch := &changeset.Changeset{}
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	mock.On("Update", query, ch).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+
+	assert.Nil(t, query.Update(nil, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(nil, ch) })
 	mock.AssertExpectations(t)
 }
 

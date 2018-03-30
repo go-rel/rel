@@ -139,7 +139,11 @@ func (query Query) Insert(doc interface{}, ch *changeset.Changeset) error {
 		return errors.Wrap(err)
 	}
 
-	return errors.Wrap(query.Find(id).One(doc))
+	if doc != nil {
+		return errors.Wrap(query.Find(id).One(doc))
+	}
+
+	return nil
 }
 
 func (query Query) MustInsert(doc interface{}, ch *changeset.Changeset) {
@@ -153,7 +157,11 @@ func (query Query) Update(doc interface{}, ch *changeset.Changeset) error {
 		return errors.Wrap(err)
 	}
 
-	return errors.Wrap(query.All(doc))
+	if doc != nil {
+		return errors.Wrap(query.All(doc))
+	}
+
+	return nil
 }
 
 func (query Query) MustUpdate(doc interface{}, ch *changeset.Changeset) {

@@ -456,6 +456,24 @@ func TestInsert(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestInsertMultiple(t *testing.T) {
+	ch1, user1 := createChangeset()
+	ch2, user2 := createChangeset()
+	users := []User{user1, user2}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	mock.On("Insert", query, ch1.Changes()).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query.Where(In(I("id"), int64(0), int64(0)))).Return("", []interface{}{}).
+		On("Query", &users, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Insert(&users, ch1, ch2))
+	assert.NotPanics(t, func() { query.MustInsert(&users, ch1, ch2) })
+	mock.AssertExpectations(t)
+}
+
 func TestInsertNotReturning(t *testing.T) {
 	ch, _ := createChangeset()
 	mock := new(TestAdapter)
@@ -466,6 +484,58 @@ func TestInsertNotReturning(t *testing.T) {
 
 	assert.Nil(t, query.Insert(nil, ch))
 	assert.NotPanics(t, func() { query.MustInsert(nil, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestInsertWithSet(t *testing.T) {
+	ch, user := createChangeset()
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"name": "name",
+		"age":  10,
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Insert(&user, ch))
+	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestInsertOnlySet(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+
+	assert.Nil(t, query.Insert(nil))
+	assert.NotPanics(t, func() { query.MustInsert(nil) })
+	mock.AssertExpectations(t)
+}
+
+func TestInsertOnlySetError(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
+
+	assert.NotNil(t, query.Insert(nil))
+	assert.Panics(t, func() { query.MustInsert(nil) })
 	mock.AssertExpectations(t)
 }
 
@@ -517,7 +587,7 @@ func TestUpdateWithSet(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
-func TestUpdateSetOnly(t *testing.T) {
+func TestUpdateOnlySet(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Set("age", 10)
 

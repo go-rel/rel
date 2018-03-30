@@ -145,19 +145,29 @@ func (query Query) MustAll(doc interface{}) {
 func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
 	var ids []interface{}
 
-	for _, ch := range chs {
-		changes := make(map[string]interface{})
+	if len(chs) > 0 {
+		for _, ch := range chs {
+			changes := make(map[string]interface{})
 
-		for k, v := range ch.Changes() {
-			changes[k] = v
+			for k, v := range ch.Changes() {
+				changes[k] = v
+			}
+
+			// apply query changes
+			for k, v := range query.Changes {
+				changes[k] = v
+			}
+
+			qs, args := query.repo.adapter.Insert(query, changes)
+			id, _, err := query.repo.adapter.Exec(qs, args)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			ids = append(ids, id)
 		}
-
-		// apply query changes
-		for k, v := range query.Changes {
-			changes[k] = v
-		}
-
-		qs, args := query.repo.adapter.Insert(query, changes)
+	} else {
+		qs, args := query.repo.adapter.Insert(query, query.Changes)
 		id, _, err := query.repo.adapter.Exec(qs, args)
 		if err != nil {
 			return errors.Wrap(err)

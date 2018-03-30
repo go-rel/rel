@@ -27,21 +27,32 @@ func TestCast(t *testing.T) {
 		"field3": true,
 	}
 
-	expectedSchema := map[string]Field{
-		"field1": Field{0, reflect.TypeOf(0)},
-		"field2": Field{"", reflect.TypeOf("")},
-		"field3": Field{false, reflect.TypeOf(false)},
+	expectedTypes := map[string]reflect.Type{
+		"field1": reflect.TypeOf(0),
+		"field2": reflect.TypeOf(""),
+		"field3": reflect.TypeOf(false),
+	}
+
+	expectedData := map[string]interface{}{
+		"field1": 0,
+		"field2": "",
+		"field3": false,
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedData, ch.data)
 
 	ch = Cast(&entity, params, []string{"field1", "field2", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedData, ch.data)
+
+	assert.NotNil(t, ch.Changes())
+	assert.NotNil(t, ch.Data())
 }
 
 func TestCastError(t *testing.T) {
@@ -68,6 +79,78 @@ func TestCastPanic(t *testing.T) {
 	})
 }
 
+var params = map[string]interface{}{
+	"field1":  true,
+	"field2":  2,
+	"field3":  3,
+	"field4":  4,
+	"field5":  5,
+	"field6":  6,
+	"field7":  7,
+	"field8":  8,
+	"field9":  9,
+	"field10": 10,
+	"field11": 11,
+	"field12": 12,
+	"field13": 13,
+	"field14": 14,
+	"field15": "15",
+}
+
+var expectedChanges = map[string]interface{}{
+	"field1":  true,
+	"field2":  2,
+	"field3":  3,
+	"field4":  4,
+	"field5":  5,
+	"field6":  6,
+	"field7":  7,
+	"field8":  8,
+	"field9":  9,
+	"field10": 10,
+	"field11": 11,
+	"field12": 12,
+	"field13": 13,
+	"field14": 14,
+	"field15": "15",
+}
+
+var expectedData = map[string]interface{}{
+	"field1":  false,
+	"field2":  0,
+	"field3":  int8(0),
+	"field4":  int16(0),
+	"field5":  int32(0),
+	"field6":  int64(0),
+	"field7":  uint(0),
+	"field8":  uint8(0),
+	"field9":  uint16(0),
+	"field10": uint32(0),
+	"field11": uint64(0),
+	"field12": uintptr(0),
+	"field13": float32(0),
+	"field14": float64(0),
+	"field15": "",
+}
+
+var expectedTypes = map[string]reflect.Type{
+	"field1":  reflect.TypeOf(false),
+	"field2":  reflect.TypeOf(0),
+	"field3":  reflect.TypeOf(int8(0)),
+	"field4":  reflect.TypeOf(int16(0)),
+	"field5":  reflect.TypeOf(int32(0)),
+	"field6":  reflect.TypeOf(int64(0)),
+	"field7":  reflect.TypeOf(uint(0)),
+	"field8":  reflect.TypeOf(uint8(0)),
+	"field9":  reflect.TypeOf(uint16(0)),
+	"field10": reflect.TypeOf(uint32(0)),
+	"field11": reflect.TypeOf(uint64(0)),
+	"field12": reflect.TypeOf(uintptr(0)),
+	"field13": reflect.TypeOf(float32(0)),
+	"field14": reflect.TypeOf(float64(0)),
+	"field15": reflect.TypeOf(""),
+}
+
 func TestCastBasic(t *testing.T) {
 	var entity struct {
 		Field1  bool
@@ -85,60 +168,6 @@ func TestCastBasic(t *testing.T) {
 		Field13 float32
 		Field14 float64
 		Field15 string
-	}
-
-	params := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedChanges := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{false, reflect.TypeOf(false)},
-		"field2":  Field{0, reflect.TypeOf(0)},
-		"field3":  Field{int8(0), reflect.TypeOf(int8(0))},
-		"field4":  Field{int16(0), reflect.TypeOf(int16(0))},
-		"field5":  Field{int32(0), reflect.TypeOf(int32(0))},
-		"field6":  Field{int64(0), reflect.TypeOf(int64(0))},
-		"field7":  Field{uint(0), reflect.TypeOf(uint(0))},
-		"field8":  Field{uint8(0), reflect.TypeOf(uint8(0))},
-		"field9":  Field{uint16(0), reflect.TypeOf(uint16(0))},
-		"field10": Field{uint32(0), reflect.TypeOf(uint32(0))},
-		"field11": Field{uint64(0), reflect.TypeOf(uint64(0))},
-		"field12": Field{uintptr(0), reflect.TypeOf(uintptr(0))},
-		"field13": Field{float32(0), reflect.TypeOf(float32(0))},
-		"field14": Field{float64(0), reflect.TypeOf(float64(0))},
-		"field15": Field{"", reflect.TypeOf("")},
 	}
 
 	ch := Cast(entity, params, []string{
@@ -161,7 +190,8 @@ func TestCastBasic(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedTypes, ch.types)
 }
 
 func TestCastBasicWithValue(t *testing.T) {
@@ -199,58 +229,22 @@ func TestCastBasicWithValue(t *testing.T) {
 		"1",
 	}
 
-	params := map[string]interface{}{
+	expectedData := map[string]interface{}{
 		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedChanges := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{true, reflect.TypeOf(false)},
-		"field2":  Field{1, reflect.TypeOf(0)},
-		"field3":  Field{int8(1), reflect.TypeOf(int8(0))},
-		"field4":  Field{int16(1), reflect.TypeOf(int16(0))},
-		"field5":  Field{int32(1), reflect.TypeOf(int32(0))},
-		"field6":  Field{int64(1), reflect.TypeOf(int64(0))},
-		"field7":  Field{uint(1), reflect.TypeOf(uint(0))},
-		"field8":  Field{uint8(1), reflect.TypeOf(uint8(0))},
-		"field9":  Field{uint16(1), reflect.TypeOf(uint16(0))},
-		"field10": Field{uint32(1), reflect.TypeOf(uint32(0))},
-		"field11": Field{uint64(1), reflect.TypeOf(uint64(0))},
-		"field12": Field{uintptr(1), reflect.TypeOf(uintptr(0))},
-		"field13": Field{float32(1), reflect.TypeOf(float32(0))},
-		"field14": Field{float64(1), reflect.TypeOf(float64(0))},
-		"field15": Field{"1", reflect.TypeOf("")},
+		"field2":  1,
+		"field3":  int8(1),
+		"field4":  int16(1),
+		"field5":  int32(1),
+		"field6":  int64(1),
+		"field7":  uint(1),
+		"field8":  uint8(1),
+		"field9":  uint16(1),
+		"field10": uint32(1),
+		"field11": uint64(1),
+		"field12": uintptr(1),
+		"field13": float32(1),
+		"field14": float64(1),
+		"field15": "1",
 	}
 
 	ch := Cast(entity, params, []string{
@@ -273,7 +267,8 @@ func TestCastBasicWithValue(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedTypes, ch.types)
 }
 
 func TestCastPtr(t *testing.T) {
@@ -295,60 +290,6 @@ func TestCastPtr(t *testing.T) {
 		Field15 *string
 	}
 
-	params := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedChanges := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{nil, reflect.TypeOf(false)},
-		"field2":  Field{nil, reflect.TypeOf(0)},
-		"field3":  Field{nil, reflect.TypeOf(int8(0))},
-		"field4":  Field{nil, reflect.TypeOf(int16(0))},
-		"field5":  Field{nil, reflect.TypeOf(int32(0))},
-		"field6":  Field{nil, reflect.TypeOf(int64(0))},
-		"field7":  Field{nil, reflect.TypeOf(uint(0))},
-		"field8":  Field{nil, reflect.TypeOf(uint8(0))},
-		"field9":  Field{nil, reflect.TypeOf(uint16(0))},
-		"field10": Field{nil, reflect.TypeOf(uint32(0))},
-		"field11": Field{nil, reflect.TypeOf(uint64(0))},
-		"field12": Field{nil, reflect.TypeOf(uintptr(0))},
-		"field13": Field{nil, reflect.TypeOf(float32(0))},
-		"field14": Field{nil, reflect.TypeOf(float64(0))},
-		"field15": Field{nil, reflect.TypeOf("")},
-	}
-
 	ch := Cast(entity, params, []string{
 		"field1",
 		"field2",
@@ -367,9 +308,12 @@ func TestCastPtr(t *testing.T) {
 		"field15",
 	})
 
+	expectedData := map[string]interface{}{}
+
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedTypes, ch.types)
 }
 
 func TestCastPtrWithValue(t *testing.T) {
@@ -388,7 +332,7 @@ func TestCastPtrWithValue(t *testing.T) {
 		vuintptr = uintptr(1)
 		vfloat32 = float32(1)
 		vfloat64 = float64(1)
-		vstring  = ""
+		vstring  = "1"
 	)
 	entity := struct {
 		Field1  *bool
@@ -424,58 +368,22 @@ func TestCastPtrWithValue(t *testing.T) {
 		&vstring,
 	}
 
-	params := map[string]interface{}{
+	expectedData := map[string]interface{}{
 		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedChanges := map[string]interface{}{
-		"field1":  true,
-		"field2":  2,
-		"field3":  3,
-		"field4":  4,
-		"field5":  5,
-		"field6":  6,
-		"field7":  7,
-		"field8":  8,
-		"field9":  9,
-		"field10": 10,
-		"field11": 11,
-		"field12": 12,
-		"field13": 13,
-		"field14": 14,
-		"field15": "15",
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{vbool, reflect.TypeOf(false)},
-		"field2":  Field{vint, reflect.TypeOf(0)},
-		"field3":  Field{vint8, reflect.TypeOf(int8(0))},
-		"field4":  Field{vint16, reflect.TypeOf(int16(0))},
-		"field5":  Field{vint32, reflect.TypeOf(int32(0))},
-		"field6":  Field{vint64, reflect.TypeOf(int64(0))},
-		"field7":  Field{vuint, reflect.TypeOf(uint(0))},
-		"field8":  Field{vuint8, reflect.TypeOf(uint8(0))},
-		"field9":  Field{vuint16, reflect.TypeOf(uint16(0))},
-		"field10": Field{vuint32, reflect.TypeOf(uint32(0))},
-		"field11": Field{vuint64, reflect.TypeOf(uint64(0))},
-		"field12": Field{vuintptr, reflect.TypeOf(uintptr(0))},
-		"field13": Field{vfloat32, reflect.TypeOf(float32(0))},
-		"field14": Field{vfloat64, reflect.TypeOf(float64(0))},
-		"field15": Field{vstring, reflect.TypeOf("")},
+		"field2":  1,
+		"field3":  int8(1),
+		"field4":  int16(1),
+		"field5":  int32(1),
+		"field6":  int64(1),
+		"field7":  uint(1),
+		"field8":  uint8(1),
+		"field9":  uint16(1),
+		"field10": uint32(1),
+		"field11": uint64(1),
+		"field12": uintptr(1),
+		"field13": float32(1),
+		"field14": float64(1),
+		"field15": "1",
 	}
 
 	ch := Cast(entity, params, []string{
@@ -498,7 +406,62 @@ func TestCastPtrWithValue(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedTypes, ch.types)
+}
+
+var sliceParams = map[string]interface{}{
+	"field1":  []bool{true},
+	"field2":  []int{2},
+	"field3":  []int8{3},
+	"field4":  []int16{4},
+	"field5":  []int32{5},
+	"field6":  []int64{6},
+	"field7":  []uint{7},
+	"field8":  []uint8{8},
+	"field9":  []uint16{9},
+	"field10": []uint32{10},
+	"field11": []uint64{11},
+	"field12": []uintptr{12},
+	"field13": []float32{13},
+	"field14": []float64{14},
+	"field15": []string{"15"},
+}
+
+var sliceExpectedChanges = map[string]interface{}{
+	"field1":  []bool{true},
+	"field2":  []int{2},
+	"field3":  []int8{3},
+	"field4":  []int16{4},
+	"field5":  []int32{5},
+	"field6":  []int64{6},
+	"field7":  []uint{7},
+	"field8":  []uint8{8},
+	"field9":  []uint16{9},
+	"field10": []uint32{10},
+	"field11": []uint64{11},
+	"field12": []uintptr{12},
+	"field13": []float32{13},
+	"field14": []float64{14},
+	"field15": []string{"15"},
+}
+
+var sliceExpectedTypes = map[string]reflect.Type{
+	"field1":  reflect.TypeOf([]bool{}),
+	"field2":  reflect.TypeOf([]int{}),
+	"field3":  reflect.TypeOf([]int8{}),
+	"field4":  reflect.TypeOf([]int16{}),
+	"field5":  reflect.TypeOf([]int32{}),
+	"field6":  reflect.TypeOf([]int64{}),
+	"field7":  reflect.TypeOf([]uint{}),
+	"field8":  reflect.TypeOf([]uint8{}),
+	"field9":  reflect.TypeOf([]uint16{}),
+	"field10": reflect.TypeOf([]uint32{}),
+	"field11": reflect.TypeOf([]uint64{}),
+	"field12": reflect.TypeOf([]uintptr{}),
+	"field13": reflect.TypeOf([]float32{}),
+	"field14": reflect.TypeOf([]float64{}),
+	"field15": reflect.TypeOf([]string{}),
 }
 
 func TestCastSlice(t *testing.T) {
@@ -520,61 +483,25 @@ func TestCastSlice(t *testing.T) {
 		Field15 []string
 	}
 
-	params := map[string]interface{}{
-		"field1":  []bool{true},
-		"field2":  []int{2},
-		"field3":  []int8{3},
-		"field4":  []int16{4},
-		"field5":  []int32{5},
-		"field6":  []int64{6},
-		"field7":  []uint{7},
-		"field8":  []uint8{8},
-		"field9":  []uint16{9},
-		"field10": []uint32{10},
-		"field11": []uint64{11},
-		"field12": []uintptr{12},
-		"field13": []float32{13},
-		"field14": []float64{14},
-		"field15": []string{"15"},
+	expectedData := map[string]interface{}{
+		"field1":  []bool(nil),
+		"field2":  []int(nil),
+		"field3":  []int8(nil),
+		"field4":  []int16(nil),
+		"field5":  []int32(nil),
+		"field6":  []int64(nil),
+		"field7":  []uint(nil),
+		"field8":  []uint8(nil),
+		"field9":  []uint16(nil),
+		"field10": []uint32(nil),
+		"field11": []uint64(nil),
+		"field12": []uintptr(nil),
+		"field13": []float32(nil),
+		"field14": []float64(nil),
+		"field15": []string(nil),
 	}
 
-	expectedChanges := map[string]interface{}{
-		"field1":  []bool{true},
-		"field2":  []int{2},
-		"field3":  []int8{3},
-		"field4":  []int16{4},
-		"field5":  []int32{5},
-		"field6":  []int64{6},
-		"field7":  []uint{7},
-		"field8":  []uint8{8},
-		"field9":  []uint16{9},
-		"field10": []uint32{10},
-		"field11": []uint64{11},
-		"field12": []uintptr{12},
-		"field13": []float32{13},
-		"field14": []float64{14},
-		"field15": []string{"15"},
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{[]bool(nil), reflect.TypeOf([]bool{})},
-		"field2":  Field{[]int(nil), reflect.TypeOf([]int{})},
-		"field3":  Field{[]int8(nil), reflect.TypeOf([]int8{})},
-		"field4":  Field{[]int16(nil), reflect.TypeOf([]int16{})},
-		"field5":  Field{[]int32(nil), reflect.TypeOf([]int32{})},
-		"field6":  Field{[]int64(nil), reflect.TypeOf([]int64{})},
-		"field7":  Field{[]uint(nil), reflect.TypeOf([]uint{})},
-		"field8":  Field{[]uint8(nil), reflect.TypeOf([]uint8{})},
-		"field9":  Field{[]uint16(nil), reflect.TypeOf([]uint16{})},
-		"field10": Field{[]uint32(nil), reflect.TypeOf([]uint32{})},
-		"field11": Field{[]uint64(nil), reflect.TypeOf([]uint64{})},
-		"field12": Field{[]uintptr(nil), reflect.TypeOf([]uintptr{})},
-		"field13": Field{[]float32(nil), reflect.TypeOf([]float32{})},
-		"field14": Field{[]float64(nil), reflect.TypeOf([]float64{})},
-		"field15": Field{[]string(nil), reflect.TypeOf([]string{})},
-	}
-
-	ch := Cast(entity, params, []string{
+	ch := Cast(entity, sliceParams, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -593,8 +520,9 @@ func TestCastSlice(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, ch.Changes(), expectedChanges)
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, sliceExpectedChanges, ch.Changes())
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, sliceExpectedTypes, ch.types)
 }
 
 func TestCastSliceWithValue(t *testing.T) {
@@ -632,61 +560,25 @@ func TestCastSliceWithValue(t *testing.T) {
 		[]string{"1"},
 	}
 
-	params := map[string]interface{}{
+	expectedData := map[string]interface{}{
 		"field1":  []bool{true},
-		"field2":  []int{2},
-		"field3":  []int8{3},
-		"field4":  []int16{4},
-		"field5":  []int32{5},
-		"field6":  []int64{6},
-		"field7":  []uint{7},
-		"field8":  []uint8{8},
-		"field9":  []uint16{9},
-		"field10": []uint32{10},
-		"field11": []uint64{11},
-		"field12": []uintptr{12},
-		"field13": []float32{13},
-		"field14": []float64{14},
-		"field15": []string{"15"},
+		"field2":  []int{1},
+		"field3":  []int8{1},
+		"field4":  []int16{1},
+		"field5":  []int32{1},
+		"field6":  []int64{1},
+		"field7":  []uint{1},
+		"field8":  []uint8{1},
+		"field9":  []uint16{1},
+		"field10": []uint32{1},
+		"field11": []uint64{1},
+		"field12": []uintptr{1},
+		"field13": []float32{1},
+		"field14": []float64{1},
+		"field15": []string{"1"},
 	}
 
-	expectedChanges := map[string]interface{}{
-		"field1":  []bool{true},
-		"field2":  []int{2},
-		"field3":  []int8{3},
-		"field4":  []int16{4},
-		"field5":  []int32{5},
-		"field6":  []int64{6},
-		"field7":  []uint{7},
-		"field8":  []uint8{8},
-		"field9":  []uint16{9},
-		"field10": []uint32{10},
-		"field11": []uint64{11},
-		"field12": []uintptr{12},
-		"field13": []float32{13},
-		"field14": []float64{14},
-		"field15": []string{"15"},
-	}
-
-	expectedSchema := map[string]Field{
-		"field1":  Field{[]bool{true}, reflect.TypeOf([]bool{})},
-		"field2":  Field{[]int{1}, reflect.TypeOf([]int{})},
-		"field3":  Field{[]int8{1}, reflect.TypeOf([]int8{})},
-		"field4":  Field{[]int16{1}, reflect.TypeOf([]int16{})},
-		"field5":  Field{[]int32{1}, reflect.TypeOf([]int32{})},
-		"field6":  Field{[]int64{1}, reflect.TypeOf([]int64{})},
-		"field7":  Field{[]uint{1}, reflect.TypeOf([]uint{})},
-		"field8":  Field{[]uint8{1}, reflect.TypeOf([]uint8{})},
-		"field9":  Field{[]uint16{1}, reflect.TypeOf([]uint16{})},
-		"field10": Field{[]uint32{1}, reflect.TypeOf([]uint32{})},
-		"field11": Field{[]uint64{1}, reflect.TypeOf([]uint64{})},
-		"field12": Field{[]uintptr{1}, reflect.TypeOf([]uintptr{})},
-		"field13": Field{[]float32{1}, reflect.TypeOf([]float32{})},
-		"field14": Field{[]float64{1}, reflect.TypeOf([]float64{})},
-		"field15": Field{[]string{"1"}, reflect.TypeOf([]string{})},
-	}
-
-	ch := Cast(entity, params, []string{
+	ch := Cast(entity, sliceParams, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -705,6 +597,7 @@ func TestCastSliceWithValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, ch.Changes(), expectedChanges)
-	assert.Equal(t, expectedSchema, ch.schema)
+	assert.Equal(t, sliceExpectedChanges, ch.Changes())
+	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, sliceExpectedTypes, ch.types)
 }

@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestChangesetChanges(t *testing.T) {
+func TestChangeset(t *testing.T) {
 	ch := Changeset{}
 	assert.Nil(t, ch.Changes())
+	assert.Nil(t, ch.Data())
 }

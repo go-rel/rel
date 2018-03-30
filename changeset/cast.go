@@ -3,6 +3,8 @@ package changeset
 import (
 	"reflect"
 	"strings"
+
+	"github.com/azer/snakecase"
 )
 
 var CastErrorMessage = "{field} is invalid"
@@ -15,13 +17,13 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 
 	ch := &Changeset{}
 	ch.changes = make(map[string]interface{})
-	ch.schema = mapFields(entity)
+	ch.data, ch.types = mapSchema(entity)
 
 	for _, f := range fields {
 		val, pexist := params[f]
-		sf, sexist := ch.schema[f]
-		if pexist && sexist {
-			if reflect.TypeOf(val).ConvertibleTo(sf.Type) {
+		typ, texist := ch.types[f]
+		if pexist && texist {
+			if reflect.TypeOf(val).ConvertibleTo(typ) {
 				ch.changes[f] = val
 			} else {
 				msg := strings.Replace(options.Message, "{field}", f, 1)
@@ -31,4 +33,43 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 	}
 
 	return ch
+}
+
+func mapSchema(entity interface{}) (map[string]interface{}, map[string]reflect.Type) {
+	mdata := make(map[string]interface{})
+	mtypes := make(map[string]reflect.Type)
+
+	rv := reflect.ValueOf(entity)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	rt := rv.Type()
+
+	if rv.Kind() != reflect.Struct {
+		panic("entity must be a struct")
+	}
+
+	for i := 0; i < rv.NumField(); i++ {
+		fv := rv.Field(i)
+		ft := rt.Field(i)
+
+		var name string
+		if tag := ft.Tag.Get("db"); tag != "" && tag != "-" {
+			name = tag
+		} else {
+			name = snakecase.SnakeCase(ft.Name)
+		}
+
+		if fv.Kind() == reflect.Ptr {
+			mtypes[name] = ft.Type.Elem()
+			if !fv.IsNil() {
+				mdata[name] = fv.Elem().Interface()
+			}
+		} else {
+			mtypes[name] = fv.Type()
+			mdata[name] = fv.Interface()
+		}
+	}
+
+	return mdata, mtypes
 }

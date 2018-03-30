@@ -6,6 +6,7 @@ import (
 
 type Changeset struct {
 	errors  []error
+	entity  interface{}
 	changes map[string]interface{}
 	values  map[string]interface{}
 	types   map[string]reflect.Type

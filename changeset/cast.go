@@ -16,8 +16,9 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 	options.Apply(opts)
 
 	ch := &Changeset{}
+	ch.entity = entity
 	ch.changes = make(map[string]interface{})
-	ch.values, ch.types = mapSchema(entity)
+	ch.values, ch.types = mapSchema(ch.entity)
 
 	for _, f := range fields {
 		val, pexist := params[f]

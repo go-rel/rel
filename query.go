@@ -21,7 +21,7 @@ type Query struct {
 	OrderClause     []c.Order
 	OffsetResult    int
 	LimitResult     int
-	SetChanges      map[string]interface{}
+	Changes         map[string]interface{}
 }
 
 func (query Query) Select(fields ...string) Query {
@@ -106,11 +106,11 @@ func (query Query) Find(id interface{}) Query {
 }
 
 func (query Query) Set(field string, value interface{}) Query {
-	if query.SetChanges == nil {
-		query.SetChanges = make(map[string]interface{})
+	if query.Changes == nil {
+		query.Changes = make(map[string]interface{})
 	}
 
-	query.SetChanges[field] = value
+	query.Changes[field] = value
 	return query
 }
 
@@ -160,13 +160,34 @@ func (query Query) MustInsert(doc interface{}, ch *changeset.Changeset) {
 	paranoid.Panic(query.Insert(doc, ch))
 }
 
-func (query Query) Update(doc interface{}, ch *changeset.Changeset) error {
-	qs, args := query.repo.adapter.Update(query, ch.Changes())
+func (query Query) Update(doc interface{}, ch ...*changeset.Changeset) error {
+	changes := make(map[string]interface{})
+
+	// only take the first changeset if any
+	if len(ch) != 0 {
+		for k, v := range ch[0].Changes() {
+			changes[k] = v
+		}
+	}
+
+	// apply query changes
+	for k, v := range query.Changes {
+		changes[k] = v
+	}
+
+	// nothing to update
+	if len(changes) == 0 {
+		return nil
+	}
+
+	// perform update
+	qs, args := query.repo.adapter.Update(query, changes)
 	_, _, err := query.repo.adapter.Exec(qs, args)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
+	// should not fetch updated record(s) if not necessery
 	if doc != nil {
 		return errors.Wrap(query.All(doc))
 	}
@@ -174,8 +195,8 @@ func (query Query) Update(doc interface{}, ch *changeset.Changeset) error {
 	return nil
 }
 
-func (query Query) MustUpdate(doc interface{}, ch *changeset.Changeset) {
-	paranoid.Panic(query.Update(doc, ch))
+func (query Query) MustUpdate(doc interface{}, ch ...*changeset.Changeset) {
+	paranoid.Panic(query.Update(doc, ch...))
 }
 
 func (query Query) Delete() error {
@@ -187,7 +208,3 @@ func (query Query) Delete() error {
 func (query Query) MustDelete() {
 	paranoid.Panic(query.Delete())
 }
-
-// func (query Query) Replace(doc interface{}) error {
-// 	return nil
-// }

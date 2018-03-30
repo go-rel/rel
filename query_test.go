@@ -9,7 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct{}
+type User struct {
+	Name string
+	Age  int
+}
 
 func TestSelect(t *testing.T) {
 	assert.Equal(t, repo.From("users").Select("*"), Query{
@@ -352,6 +355,27 @@ func TestFind(t *testing.T) {
 	})
 }
 
+func TestSet(t *testing.T) {
+	assert.Equal(t, repo.From("users").Set("field", 1), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"*"},
+		Changes: map[string]interface{}{
+			"field": 1,
+		},
+	})
+
+	assert.Equal(t, repo.From("users").Set("field1", 1).Set("field2", "2"), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"*"},
+		Changes: map[string]interface{}{
+			"field1": 1,
+			"field2": "2",
+		},
+	})
+}
+
 func TestOne(t *testing.T) {
 	user := User{}
 	mock := new(TestAdapter)
@@ -404,6 +428,19 @@ func TestAll(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func createChangeset() (*changeset.Changeset, User) {
+	user := User{}
+	ch := changeset.Cast(user, map[string]interface{}{
+		"name": "name",
+	}, []string{"name"})
+
+	if ch.Error() != nil {
+		panic(ch.Error())
+	}
+
+	return ch, user
+}
+
 func TestInsert(t *testing.T) {
 	user := User{}
 	ch := &changeset.Changeset{}
@@ -448,8 +485,7 @@ func TestInsertError(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	user := User{}
-	ch := &changeset.Changeset{}
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -463,8 +499,44 @@ func TestUpdate(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestUpdateWithSet(t *testing.T) {
+	ch, user := createChangeset()
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"name": "name",
+		"age":  10,
+	}
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query).Return("", []interface{}{}).
+		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Update(&user, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateSetOnly(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+
+	assert.Nil(t, query.Update(nil))
+	assert.NotPanics(t, func() { query.MustUpdate(nil) })
+	mock.AssertExpectations(t)
+}
+
 func TestUpdateNotReturning(t *testing.T) {
-	ch := &changeset.Changeset{}
+	ch, _ := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -476,9 +548,17 @@ func TestUpdateNotReturning(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestUpdateNothing(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	assert.Nil(t, query.Update(nil))
+	assert.NotPanics(t, func() { query.MustUpdate(nil) })
+	mock.AssertExpectations(t)
+}
+
 func TestUpdateError(t *testing.T) {
-	user := User{}
-	ch := &changeset.Changeset{}
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 

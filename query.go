@@ -21,6 +21,7 @@ type Query struct {
 	OrderClause     []c.Order
 	OffsetResult    int
 	LimitResult     int
+	SetChanges      map[string]interface{}
 }
 
 func (query Query) Select(fields ...string) Query {
@@ -102,6 +103,15 @@ func (query Query) Limit(limit int) Query {
 
 func (query Query) Find(id interface{}) Query {
 	return query.Where(c.Eq(c.I("id"), id))
+}
+
+func (query Query) Set(field string, value interface{}) Query {
+	if query.SetChanges == nil {
+		query.SetChanges = make(map[string]interface{})
+	}
+
+	query.SetChanges[field] = value
+	return query
 }
 
 func (query Query) One(doc interface{}) error {

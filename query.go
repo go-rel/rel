@@ -142,30 +142,49 @@ func (query Query) MustAll(doc interface{}) {
 	paranoid.Panic(query.All(doc))
 }
 
-func (query Query) Insert(doc interface{}, ch *changeset.Changeset) error {
-	qs, args := query.repo.adapter.Insert(query, ch.Changes())
-	id, _, err := query.repo.adapter.Exec(qs, args)
-	if err != nil {
-		return errors.Wrap(err)
+func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
+	var ids []interface{}
+
+	for _, ch := range chs {
+		changes := make(map[string]interface{})
+
+		for k, v := range ch.Changes() {
+			changes[k] = v
+		}
+
+		// apply query changes
+		for k, v := range query.Changes {
+			changes[k] = v
+		}
+
+		qs, args := query.repo.adapter.Insert(query, changes)
+		id, _, err := query.repo.adapter.Exec(qs, args)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		ids = append(ids, id)
 	}
 
-	if doc != nil {
-		return errors.Wrap(query.Find(id).One(doc))
+	if doc == nil || len(ids) == 0 {
+		return nil
+	} else if len(ids) == 1 {
+		return errors.Wrap(query.Find(ids[0]).One(doc))
+	} else {
+		return errors.Wrap(query.Where(c.In(c.I("id"), ids...)).All(doc))
 	}
-
-	return nil
 }
 
-func (query Query) MustInsert(doc interface{}, ch *changeset.Changeset) {
-	paranoid.Panic(query.Insert(doc, ch))
+func (query Query) MustInsert(doc interface{}, chs ...*changeset.Changeset) {
+	paranoid.Panic(query.Insert(doc, chs...))
 }
 
-func (query Query) Update(doc interface{}, ch ...*changeset.Changeset) error {
+func (query Query) Update(doc interface{}, chs ...*changeset.Changeset) error {
 	changes := make(map[string]interface{})
 
 	// only take the first changeset if any
-	if len(ch) != 0 {
-		for k, v := range ch[0].Changes() {
+	if len(chs) != 0 {
+		for k, v := range chs[0].Changes() {
 			changes[k] = v
 		}
 	}
@@ -195,8 +214,8 @@ func (query Query) Update(doc interface{}, ch ...*changeset.Changeset) error {
 	return nil
 }
 
-func (query Query) MustUpdate(doc interface{}, ch ...*changeset.Changeset) {
-	paranoid.Panic(query.Update(doc, ch...))
+func (query Query) MustUpdate(doc interface{}, chs ...*changeset.Changeset) {
+	paranoid.Panic(query.Update(doc, chs...))
 }
 
 func (query Query) Delete() error {

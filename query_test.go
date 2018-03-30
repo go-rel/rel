@@ -442,8 +442,7 @@ func createChangeset() (*changeset.Changeset, User) {
 }
 
 func TestInsert(t *testing.T) {
-	user := User{}
-	ch := &changeset.Changeset{}
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -458,7 +457,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestInsertNotReturning(t *testing.T) {
-	ch := &changeset.Changeset{}
+	ch, _ := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -471,8 +470,7 @@ func TestInsertNotReturning(t *testing.T) {
 }
 
 func TestInsertError(t *testing.T) {
-	user := User{}
-	ch := &changeset.Changeset{}
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 

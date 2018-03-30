@@ -56,12 +56,3 @@ func TestWrap(t *testing.T) {
 	assert.Equal(t, Error{}, Wrap(Error{}))
 	assert.Equal(t, UnexpectedError("error"), Wrap(e.New("error")))
 }
-
-func TestMultiError(t *testing.T) {
-	var errs error = Errors{
-		UnexpectedError("error1"),
-		NotFoundError("error2"),
-	}
-
-	assert.Equal(t, "error1, error2", errs.Error())
-}

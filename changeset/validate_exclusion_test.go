@@ -45,7 +45,7 @@ func TestValidateExclusionError(t *testing.T) {
 
 			ValidateExclusion(ch, "field", []interface{}{1, 2.0, "c"})
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must not be any of [1 2 c]", ch.Errors().Error())
+			assert.Equal(t, "field must not be any of [1 2 c]", ch.Error().Error())
 		})
 	}
 }

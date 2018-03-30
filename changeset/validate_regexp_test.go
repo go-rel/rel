@@ -41,7 +41,7 @@ func TestValidateRegexpError(t *testing.T) {
 
 	ValidateRegexp(ch, "field", regexp.MustCompile(`boo.*`))
 	assert.NotNil(t, ch.Errors())
-	assert.Equal(t, "field's format is invalid", ch.Errors().Error())
+	assert.Equal(t, "field's format is invalid", ch.Error().Error())
 }
 
 func TestValidateRegexpMissing(t *testing.T) {

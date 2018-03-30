@@ -3,12 +3,11 @@ package changeset
 import (
 	"reflect"
 
-	"github.com/Fs02/grimoire/errors"
 	"github.com/azer/snakecase"
 )
 
 type Changeset struct {
-	errors  errors.Errors
+	errors  []error
 	schema  map[string]Field
 	changes map[string]interface{}
 }
@@ -17,12 +16,15 @@ func (changeset *Changeset) Changes() map[string]interface{} {
 	return changeset.changes
 }
 
-func (changeset *Changeset) Errors() error {
-	if len(changeset.errors) > 0 {
-		return changeset.errors
-	} else {
-		return nil
+func (changeset *Changeset) Errors() []error {
+	return changeset.errors
+}
+
+func (changeset *Changeset) Error() error {
+	if changeset.errors != nil {
+		return changeset.errors[0]
 	}
+	return nil
 }
 
 type Field struct {

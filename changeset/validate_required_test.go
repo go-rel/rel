@@ -21,5 +21,5 @@ func TestValidateRequiredError(t *testing.T) {
 	ch := &Changeset{}
 	ValidateRequired(ch, []string{"field1"})
 	assert.NotNil(t, ch.Errors())
-	assert.Equal(t, "field1 is required", ch.Errors().Error())
+	assert.Equal(t, "field1 is required", ch.Error().Error())
 }

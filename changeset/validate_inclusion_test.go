@@ -45,7 +45,7 @@ func TestValidateInclusionError(t *testing.T) {
 
 			ValidateInclusion(ch, "field", []interface{}{2, 3.0, "d"})
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must be one of [2 3 d]", ch.Errors().Error())
+			assert.Equal(t, "field must be one of [2 3 d]", ch.Error().Error())
 		})
 	}
 }

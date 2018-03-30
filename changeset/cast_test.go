@@ -55,7 +55,7 @@ func TestCastError(t *testing.T) {
 
 	ch := Cast(entity, params, []string{"field1"})
 	assert.NotNil(t, ch.Errors())
-	assert.Equal(t, "field1 is invalid", ch.Errors().Error())
+	assert.Equal(t, "field1 is invalid", ch.Error().Error())
 }
 
 func TestCastPanic(t *testing.T) {

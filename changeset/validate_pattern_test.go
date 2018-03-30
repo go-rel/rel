@@ -38,7 +38,7 @@ func TestValidatePatternError(t *testing.T) {
 
 	ValidatePattern(ch, "field", "boo.*")
 	assert.NotNil(t, ch.Errors())
-	assert.Equal(t, "field's format is invalid", ch.Errors().Error())
+	assert.Equal(t, "field's format is invalid", ch.Error().Error())
 }
 
 func TestValidatePatternMissing(t *testing.T) {

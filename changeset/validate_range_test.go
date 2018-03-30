@@ -69,7 +69,7 @@ func TestValidateRangeError(t *testing.T) {
 
 			ValidateRange(ch, "field", 15, 20)
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must be between 15 and 20", ch.Errors().Error())
+			assert.Equal(t, "field must be between 15 and 20", ch.Error().Error())
 		})
 	}
 }

@@ -69,7 +69,7 @@ func TestValidateMinError(t *testing.T) {
 
 			ValidateMin(ch, "field", 15)
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must be more than 15", ch.Errors().Error())
+			assert.Equal(t, "field must be more than 15", ch.Error().Error())
 		})
 	}
 }

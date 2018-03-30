@@ -69,7 +69,7 @@ func TestValidateMaxError(t *testing.T) {
 
 			ValidateMax(ch, "field", 5)
 			assert.NotNil(t, ch.Errors())
-			assert.Equal(t, "field must be less than 5", ch.Errors().Error())
+			assert.Equal(t, "field must be less than 5", ch.Error().Error())
 		})
 	}
 }

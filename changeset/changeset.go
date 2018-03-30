@@ -7,7 +7,7 @@ import (
 type Changeset struct {
 	errors  []error
 	changes map[string]interface{}
-	data    map[string]interface{}
+	values  map[string]interface{}
 	types   map[string]reflect.Type
 }
 
@@ -26,6 +26,6 @@ func (changeset *Changeset) Changes() map[string]interface{} {
 	return changeset.changes
 }
 
-func (changeset *Changeset) Data() map[string]interface{} {
-	return changeset.data
+func (changeset *Changeset) Values() map[string]interface{} {
+	return changeset.values
 }

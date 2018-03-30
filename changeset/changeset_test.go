@@ -9,5 +9,5 @@ import (
 func TestChangeset(t *testing.T) {
 	ch := Changeset{}
 	assert.Nil(t, ch.Changes())
-	assert.Nil(t, ch.Data())
+	assert.Nil(t, ch.Values())
 }

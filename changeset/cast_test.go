@@ -33,7 +33,7 @@ func TestCast(t *testing.T) {
 		"field3": reflect.TypeOf(false),
 	}
 
-	expectedData := map[string]interface{}{
+	expectedValues := map[string]interface{}{
 		"field1": 0,
 		"field2": "",
 		"field3": false,
@@ -43,16 +43,16 @@ func TestCast(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 
 	ch = Cast(&entity, params, []string{"field1", "field2", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 
 	assert.NotNil(t, ch.Changes())
-	assert.NotNil(t, ch.Data())
+	assert.NotNil(t, ch.Values())
 }
 
 func TestCastError(t *testing.T) {
@@ -115,7 +115,7 @@ var expectedChanges = map[string]interface{}{
 	"field15": "15",
 }
 
-var expectedData = map[string]interface{}{
+var expectedValues = map[string]interface{}{
 	"field1":  false,
 	"field2":  0,
 	"field3":  int8(0),
@@ -190,7 +190,7 @@ func TestCastBasic(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
@@ -229,7 +229,7 @@ func TestCastBasicWithValue(t *testing.T) {
 		"1",
 	}
 
-	expectedData := map[string]interface{}{
+	expectedValues := map[string]interface{}{
 		"field1":  true,
 		"field2":  1,
 		"field3":  int8(1),
@@ -267,7 +267,7 @@ func TestCastBasicWithValue(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
@@ -308,11 +308,11 @@ func TestCastPtr(t *testing.T) {
 		"field15",
 	})
 
-	expectedData := map[string]interface{}{}
+	expectedValues := map[string]interface{}{}
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
@@ -368,7 +368,7 @@ func TestCastPtrWithValue(t *testing.T) {
 		&vstring,
 	}
 
-	expectedData := map[string]interface{}{
+	expectedValues := map[string]interface{}{
 		"field1":  true,
 		"field2":  1,
 		"field3":  int8(1),
@@ -406,7 +406,7 @@ func TestCastPtrWithValue(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
@@ -483,7 +483,7 @@ func TestCastSlice(t *testing.T) {
 		Field15 []string
 	}
 
-	expectedData := map[string]interface{}{
+	expectedValues := map[string]interface{}{
 		"field1":  []bool(nil),
 		"field2":  []int(nil),
 		"field3":  []int8(nil),
@@ -521,7 +521,7 @@ func TestCastSlice(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, sliceExpectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, sliceExpectedTypes, ch.types)
 }
 
@@ -560,7 +560,7 @@ func TestCastSliceWithValue(t *testing.T) {
 		[]string{"1"},
 	}
 
-	expectedData := map[string]interface{}{
+	expectedValues := map[string]interface{}{
 		"field1":  []bool{true},
 		"field2":  []int{1},
 		"field3":  []int8{1},
@@ -598,6 +598,6 @@ func TestCastSliceWithValue(t *testing.T) {
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, sliceExpectedChanges, ch.Changes())
-	assert.Equal(t, expectedData, ch.data)
+	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, sliceExpectedTypes, ch.types)
 }

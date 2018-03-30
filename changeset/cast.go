@@ -17,7 +17,7 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 
 	ch := &Changeset{}
 	ch.changes = make(map[string]interface{})
-	ch.data, ch.types = mapSchema(entity)
+	ch.values, ch.types = mapSchema(entity)
 
 	for _, f := range fields {
 		val, pexist := params[f]
@@ -36,7 +36,7 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 }
 
 func mapSchema(entity interface{}) (map[string]interface{}, map[string]reflect.Type) {
-	mdata := make(map[string]interface{})
+	mvalues := make(map[string]interface{})
 	mtypes := make(map[string]reflect.Type)
 
 	rv := reflect.ValueOf(entity)
@@ -63,13 +63,13 @@ func mapSchema(entity interface{}) (map[string]interface{}, map[string]reflect.T
 		if fv.Kind() == reflect.Ptr {
 			mtypes[name] = ft.Type.Elem()
 			if !fv.IsNil() {
-				mdata[name] = fv.Elem().Interface()
+				mvalues[name] = fv.Elem().Interface()
 			}
 		} else {
 			mtypes[name] = fv.Type()
-			mdata[name] = fv.Interface()
+			mvalues[name] = fv.Interface()
 		}
 	}
 
-	return mdata, mtypes
+	return mvalues, mtypes
 }

@@ -10,7 +10,7 @@ import (
 func TestPutChange(t *testing.T) {
 	ch := &Changeset{
 		changes: make(map[string]interface{}),
-		data: map[string]interface{}{
+		values: map[string]interface{}{
 			"field1": 0,
 		},
 		types: map[string]reflect.Type{

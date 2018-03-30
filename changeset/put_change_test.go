@@ -22,12 +22,21 @@ func TestPutChange(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, 0, len(ch.Changes()))
 
+	// normal put changes
 	PutChange(ch, "field1", 10)
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, 1, len(ch.Changes()))
 	assert.Equal(t, 10, ch.Changes()["field1"])
 
+	// put changes not valid and allowed to error
+	PutChange(ch, "field1", "10", AllowError(true))
+	assert.Nil(t, ch.Error())
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, 1, len(ch.Changes()))
+	assert.Equal(t, 10, ch.Changes()["field1"])
+
+	// put changes not valid and not allowed to error
 	PutChange(ch, "field1", "10")
 	assert.NotNil(t, ch.Error())
 	assert.NotNil(t, ch.Errors())

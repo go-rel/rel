@@ -88,21 +88,17 @@ func TestRepoInsert(t *testing.T) {
 
 	user := User{}
 	name := "insert"
-	createdAt := time.Now().Round(time.Second)
-	updatedAt := time.Now().Round(time.Second)
 
 	ch := changeset.Cast(user, map[string]interface{}{
-		"name":       name,
-		"created_at": createdAt,
-		"updated_at": updatedAt,
+		"name": name,
 	}, []string{"name", "created_at", "updated_at"})
 
 	err := grimoire.New(adapter).From("users").Insert(&user, ch)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, name, user.Name)
-	assert.Equal(t, createdAt, user.CreatedAt)
-	assert.Equal(t, updatedAt, user.UpdatedAt)
+	assert.NotNil(t, user.CreatedAt)
+	assert.NotNil(t, user.UpdatedAt)
 }
 
 func TestRepoUpdate(t *testing.T) {

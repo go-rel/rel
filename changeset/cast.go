@@ -7,13 +7,15 @@ import (
 	"github.com/azer/snakecase"
 )
 
+// CastErrorMessage is the default error message for Cast.
 var CastErrorMessage = "{field} is invalid"
 
+// Cast params as changes for the given entity according to the given fields. Returns a new changeset.
 func Cast(entity interface{}, params map[string]interface{}, fields []string, opts ...Option) *Changeset {
 	options := Options{
 		message: CastErrorMessage,
 	}
-	options.Apply(opts)
+	options.apply(opts)
 
 	ch := &Changeset{}
 	ch.entity = entity

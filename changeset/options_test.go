@@ -8,11 +8,9 @@ import (
 
 func TestOptionsMessage(t *testing.T) {
 	opts := Options{}
-	opts.Apply([]Option{
+	opts.apply([]Option{
 		Message("message"),
-		AllowError(true),
 	})
 
 	assert.Equal(t, "message", opts.message)
-	assert.Equal(t, true, opts.allowError)
 }

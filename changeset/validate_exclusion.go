@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
+// ValidateExclusionErrorMessage is the default error message for ValidateExclusion.
 var ValidateExclusionErrorMessage = "{field} must not be any of {values}"
 
+// ValidateExclusion validates a change is not included in the given values.
 func ValidateExclusion(ch *Changeset, field string, values []interface{}, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
@@ -16,7 +18,7 @@ func ValidateExclusion(ch *Changeset, field string, values []interface{}, opts .
 	options := Options{
 		message: ValidateExclusionErrorMessage,
 	}
-	options.Apply(opts)
+	options.apply(opts)
 
 	invalid := false
 	for _, inval := range values {

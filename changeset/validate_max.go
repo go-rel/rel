@@ -5,8 +5,11 @@ import (
 	"strings"
 )
 
+// ValidateMaxErrorMessage is the default error message for ValidateMax.
 var ValidateMaxErrorMessage = "{field} must be less than {max}"
 
+// ValidateMax validates the value of given field is not larger than max.
+// Validation can be performed againts string, slice and numbers.
 func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
@@ -16,7 +19,7 @@ func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 	options := Options{
 		message: ValidateMaxErrorMessage,
 	}
-	options.Apply(opts)
+	options.apply(opts)
 
 	invalid := false
 

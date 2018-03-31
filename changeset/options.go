@@ -1,26 +1,22 @@
 package changeset
 
+// Options applicable to changeset.
 type Options struct {
-	message    string
-	allowError bool
+	message string
 }
 
+// Option for changeset operation.
 type Option func(*Options)
 
-func (options *Options) Apply(opts []Option) {
+func (options *Options) apply(opts []Option) {
 	for _, opt := range opts {
 		opt(options)
 	}
 }
 
+// Message for changeset operation's error.
 func Message(message string) Option {
 	return func(opts *Options) {
 		opts.message = message
-	}
-}
-
-func AllowError(allow bool) Option {
-	return func(opts *Options) {
-		opts.allowError = allow
 	}
 }

@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
+// ValidateInclusionErrorMessage is the default error message for ValidateInclusion.
 var ValidateInclusionErrorMessage = "{field} must be one of {values}"
 
+// ValidateInclusion validates a change is included in the given values.
 func ValidateInclusion(ch *Changeset, field string, values []interface{}, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {
@@ -16,7 +18,7 @@ func ValidateInclusion(ch *Changeset, field string, values []interface{}, opts .
 	options := Options{
 		message: ValidateInclusionErrorMessage,
 	}
-	options.Apply(opts)
+	options.apply(opts)
 
 	invalid := true
 	for _, inval := range values {

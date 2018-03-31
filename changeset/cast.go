@@ -17,6 +17,7 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 
 	ch := &Changeset{}
 	ch.entity = entity
+	ch.params = params
 	ch.changes = make(map[string]interface{})
 	ch.values, ch.types = mapSchema(ch.entity)
 

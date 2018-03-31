@@ -12,7 +12,7 @@ type Inner struct {
 	Field5 string
 }
 
-func TestCastOne(t *testing.T) {
+func TestCastAssocOne(t *testing.T) {
 	var inner Inner
 	var entity struct {
 		Field1 int
@@ -53,7 +53,7 @@ func TestCastOne(t *testing.T) {
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2"})
-	CastOne(ch, "field3", changeInner)
+	CastAssoc(ch, "field3", changeInner)
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
@@ -61,7 +61,7 @@ func TestCastOne(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
-func TestCastOnePointer(t *testing.T) {
+func TestCastAssocOnePointer(t *testing.T) {
 	var inner Inner
 	var entity struct {
 		Field1 int
@@ -101,7 +101,7 @@ func TestCastOnePointer(t *testing.T) {
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2"})
-	CastOne(ch, "field3", changeInner)
+	CastAssoc(ch, "field3", changeInner)
 
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
@@ -109,7 +109,7 @@ func TestCastOnePointer(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
-func TestCastOneErrorParamsNotAMAp(t *testing.T) {
+func TestCastAssocOneErrorParamsNotAMAp(t *testing.T) {
 	var entity struct {
 		Field1 int
 		Field2 string
@@ -128,13 +128,13 @@ func TestCastOneErrorParamsNotAMAp(t *testing.T) {
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2"})
-	CastOne(ch, "field3", changeInner)
+	CastAssoc(ch, "field3", changeInner)
 
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, "field3 is invalid", ch.Error().Error())
 }
 
-func TestCastOneInnerChangesetError(t *testing.T) {
+func TestCastAssocOneInnerChangesetError(t *testing.T) {
 	var entity struct {
 		Field1 int
 		Field2 string
@@ -155,7 +155,7 @@ func TestCastOneInnerChangesetError(t *testing.T) {
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2"})
-	CastOne(ch, "field3", changeInner)
+	CastAssoc(ch, "field3", changeInner)
 
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, "field4 is invalid", ch.Error().Error())

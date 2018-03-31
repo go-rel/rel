@@ -465,6 +465,84 @@ func TestInsert(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestInsertAssocOne(t *testing.T) {
+	var card struct {
+		ID   int
+		User User
+	}
+
+	params := map[string]interface{}{
+		"id": 1,
+		"user": map[string]interface{}{
+			"name": "name",
+		},
+	}
+
+	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
+		ch := changeset.Cast(entity, params, []string{"name"})
+		return ch
+	}
+
+	ch := changeset.Cast(card, params, []string{"id"})
+	changeset.CastAssoc(ch, "user", userChangeset)
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("cards")
+
+	changes := map[string]interface{}{
+		"id": 1,
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
+		On("Query", &card, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Insert(&card, ch))
+	assert.NotPanics(t, func() { query.MustInsert(&card, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestInsertAssocMany(t *testing.T) {
+	var group struct {
+		Name  string
+		Users []User
+	}
+
+	params := map[string]interface{}{
+		"name": "name",
+		"users": []map[string]interface{}{
+			{
+				"name": "name",
+			},
+		},
+	}
+
+	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
+		ch := changeset.Cast(entity, params, []string{"name"})
+		return ch
+	}
+
+	ch := changeset.Cast(group, params, []string{"name"})
+	changeset.CastAssoc(ch, "users", userChangeset)
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("groups")
+
+	changes := map[string]interface{}{
+		"name": "name",
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
+		On("Query", &group, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Insert(&group, ch))
+	assert.NotPanics(t, func() { query.MustInsert(&group, ch) })
+	mock.AssertExpectations(t)
+}
+
 func TestInsertMultiple(t *testing.T) {
 	ch1, user1 := createChangeset()
 	ch2, user2 := createChangeset()
@@ -598,6 +676,84 @@ func TestUpdate(t *testing.T) {
 
 	assert.Nil(t, query.Update(&user, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateAssocOne(t *testing.T) {
+	var card struct {
+		ID   int
+		User User
+	}
+
+	params := map[string]interface{}{
+		"id": 1,
+		"user": map[string]interface{}{
+			"name": "name",
+		},
+	}
+
+	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
+		ch := changeset.Cast(entity, params, []string{"name"})
+		return ch
+	}
+
+	ch := changeset.Cast(card, params, []string{"id"})
+	changeset.CastAssoc(ch, "user", userChangeset)
+
+	changes := map[string]interface{}{
+		"id": 1,
+	}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("cards")
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query).Return("", []interface{}{}).
+		On("Query", &card, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Update(&card, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(&card, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateAssocMany(t *testing.T) {
+	var group struct {
+		Name  string
+		Users []User
+	}
+
+	params := map[string]interface{}{
+		"name": "name",
+		"user": []map[string]interface{}{
+			{
+				"name": "name",
+			},
+		},
+	}
+
+	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
+		ch := changeset.Cast(entity, params, []string{"name"})
+		return ch
+	}
+
+	ch := changeset.Cast(group, params, []string{"name"})
+	changeset.CastAssoc(ch, "users", userChangeset)
+
+	changes := map[string]interface{}{
+		"name": "name",
+	}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("groups")
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
+		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
+		On("Find", query).Return("", []interface{}{}).
+		On("Query", &group, "", []interface{}{}).Return(int64(1), nil)
+
+	assert.Nil(t, query.Update(&group, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(&group, ch) })
 	mock.AssertExpectations(t)
 }
 

@@ -11,7 +11,7 @@ var CastErrorMessage = "{field} is invalid"
 
 func Cast(entity interface{}, params map[string]interface{}, fields []string, opts ...Option) *Changeset {
 	options := Options{
-		Message: CastErrorMessage,
+		message: CastErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -28,7 +28,7 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 			if reflect.TypeOf(val).ConvertibleTo(typ) {
 				ch.changes[f] = val
 			} else {
-				msg := strings.Replace(options.Message, "{field}", f, 1)
+				msg := strings.Replace(options.message, "{field}", f, 1)
 				AddError(ch, f, msg)
 			}
 		}

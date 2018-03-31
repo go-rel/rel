@@ -14,7 +14,7 @@ func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 	}
 
 	options := Options{
-		Message: ValidateMinErrorMessage,
+		message: ValidateMinErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -55,6 +55,6 @@ func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{min}", strconv.Itoa(min))
-		AddError(ch, field, r.Replace(options.Message))
+		AddError(ch, field, r.Replace(options.message))
 	}
 }

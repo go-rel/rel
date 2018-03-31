@@ -14,14 +14,14 @@ func ValidatePattern(ch *Changeset, field string, pattern string, opts ...Option
 	}
 
 	options := Options{
-		Message: ValidatePatternErrorMessage,
+		message: ValidatePatternErrorMessage,
 	}
 	options.Apply(opts)
 
 	if str, ok := val.(string); ok {
 		match, _ := regexp.MatchString(pattern, str)
 		if !match {
-			msg := strings.Replace(options.Message, "{field}", field, 1)
+			msg := strings.Replace(options.message, "{field}", field, 1)
 			AddError(ch, field, msg)
 		}
 		return

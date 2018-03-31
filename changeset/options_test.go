@@ -13,6 +13,6 @@ func TestOptionsMessage(t *testing.T) {
 		AllowError(true),
 	})
 
-	assert.Equal(t, "message", opts.Message)
-	assert.Equal(t, true, opts.AllowError)
+	assert.Equal(t, "message", opts.message)
+	assert.Equal(t, true, opts.allowError)
 }

@@ -1,8 +1,8 @@
 package changeset
 
 type Options struct {
-	Message    string
-	AllowError bool
+	message    string
+	allowError bool
 }
 
 type Option func(*Options)
@@ -15,12 +15,12 @@ func (options *Options) Apply(opts []Option) {
 
 func Message(message string) Option {
 	return func(opts *Options) {
-		opts.Message = message
+		opts.message = message
 	}
 }
 
 func AllowError(allow bool) Option {
 	return func(opts *Options) {
-		opts.AllowError = allow
+		opts.allowError = allow
 	}
 }

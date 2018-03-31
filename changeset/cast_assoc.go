@@ -14,7 +14,7 @@ type changefunc func(interface{}, map[string]interface{}) *Changeset
 
 func CastAssoc(ch *Changeset, field string, fn changefunc, opts ...Option) {
 	options := Options{
-		Message: CastAssocErrorMessage,
+		message: CastAssocErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -31,7 +31,7 @@ func CastAssoc(ch *Changeset, field string, fn changefunc, opts ...Option) {
 	}
 
 	if !valid {
-		msg := strings.Replace(options.Message, "{field}", field, 1)
+		msg := strings.Replace(options.message, "{field}", field, 1)
 		AddError(ch, field, msg)
 	}
 }

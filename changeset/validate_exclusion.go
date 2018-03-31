@@ -14,7 +14,7 @@ func ValidateExclusion(ch *Changeset, field string, values []interface{}, opts .
 	}
 
 	options := Options{
-		Message: ValidateExclusionErrorMessage,
+		message: ValidateExclusionErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -28,6 +28,6 @@ func ValidateExclusion(ch *Changeset, field string, values []interface{}, opts .
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{values}", fmt.Sprintf("%v", values))
-		AddError(ch, field, r.Replace(options.Message))
+		AddError(ch, field, r.Replace(options.message))
 	}
 }

@@ -14,7 +14,7 @@ func ValidateRange(ch *Changeset, field string, min int, max int, opts ...Option
 	}
 
 	options := Options{
-		Message: ValidateRangeErrorMessage,
+		message: ValidateRangeErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -55,6 +55,6 @@ func ValidateRange(ch *Changeset, field string, min int, max int, opts ...Option
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{min}", strconv.Itoa(min), "{max}", strconv.Itoa(max))
-		AddError(ch, field, r.Replace(options.Message))
+		AddError(ch, field, r.Replace(options.message))
 	}
 }

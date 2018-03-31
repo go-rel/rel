@@ -14,14 +14,14 @@ func ValidateRegexp(ch *Changeset, field string, exp *regexp.Regexp, opts ...Opt
 	}
 
 	options := Options{
-		Message: ValidateRegexpErrorMessage,
+		message: ValidateRegexpErrorMessage,
 	}
 	options.Apply(opts)
 
 	if str, ok := val.(string); ok {
 		match := exp.MatchString(str)
 		if !match {
-			msg := strings.Replace(options.Message, "{field}", field, 1)
+			msg := strings.Replace(options.message, "{field}", field, 1)
 			AddError(ch, field, msg)
 		}
 		return

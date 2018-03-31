@@ -14,7 +14,7 @@ func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 	}
 
 	options := Options{
-		Message: ValidateMaxErrorMessage,
+		message: ValidateMaxErrorMessage,
 	}
 	options.Apply(opts)
 
@@ -55,6 +55,6 @@ func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 
 	if invalid {
 		r := strings.NewReplacer("{field}", field, "{max}", strconv.Itoa(max))
-		AddError(ch, field, r.Replace(options.Message))
+		AddError(ch, field, r.Replace(options.message))
 	}
 }

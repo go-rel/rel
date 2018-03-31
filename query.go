@@ -1,7 +1,9 @@
 package grimoire
 
 import (
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire/c"
@@ -142,34 +144,17 @@ func (query Query) MustAll(doc interface{}) {
 	paranoid.Panic(query.All(doc))
 }
 
-func (query Query) mergeChanges(ch *changeset.Changeset) map[string]interface{} {
-	var changes map[string]interface{}
-
-	if len(query.Changes) > 0 {
-		changes = make(map[string]interface{})
-
-		// copy changes
-		for k, v := range ch.Changes() {
-			changes[k] = v
-		}
-
-		// apply query changes
-		for k, v := range query.Changes {
-			changes[k] = v
-		}
-	} else {
-		changes = ch.Changes()
-	}
-
-	return changes
-}
-
 func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
 	var ids []interface{}
 
 	if len(chs) > 0 {
 		for _, ch := range chs {
-			changes := query.mergeChanges(ch)
+			changes := make(map[string]interface{})
+			cloneChangeset(changes, ch.Changes())
+			putTimestamp(changes, "created_at", ch.Types())
+			putTimestamp(changes, "updated_at", ch.Types())
+			cloneQuery(changes, query.Changes)
+
 			qs, args := query.repo.adapter.Insert(query, changes)
 			id, _, err := query.repo.adapter.Exec(qs, args)
 
@@ -203,14 +188,15 @@ func (query Query) MustInsert(doc interface{}, chs ...*changeset.Changeset) {
 }
 
 func (query Query) Update(doc interface{}, chs ...*changeset.Changeset) error {
-	var changes map[string]interface{}
+	changes := make(map[string]interface{})
 
 	// only take the first changeset if any
 	if len(chs) != 0 {
-		changes = query.mergeChanges(chs[0])
-	} else {
-		changes = query.Changes
+		cloneChangeset(changes, chs[0].Changes())
+		putTimestamp(changes, "updated_at", chs[0].Types())
 	}
+
+	cloneQuery(changes, query.Changes)
 
 	// nothing to update
 	if len(changes) == 0 {
@@ -244,4 +230,31 @@ func (query Query) Delete() error {
 
 func (query Query) MustDelete() {
 	paranoid.Panic(query.Delete())
+}
+
+func cloneChangeset(out map[string]interface{}, changes map[string]interface{}) {
+	for k, v := range changes {
+		// filter out changeset
+		if _, ok := v.(*changeset.Changeset); ok {
+			continue
+		}
+
+		if _, ok := v.([]*changeset.Changeset); ok {
+			continue
+		}
+
+		out[k] = v
+	}
+}
+
+func cloneQuery(out map[string]interface{}, changes map[string]interface{}) {
+	for k, v := range changes {
+		out[k] = v
+	}
+}
+
+func putTimestamp(out map[string]interface{}, field string, types map[string]reflect.Type) {
+	if typ, ok := types[field]; ok && typ == reflect.TypeOf(time.Time{}) {
+		out[field] = time.Now()
+	}
 }

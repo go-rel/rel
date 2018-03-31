@@ -31,3 +31,7 @@ func (changeset *Changeset) Changes() map[string]interface{} {
 func (changeset *Changeset) Values() map[string]interface{} {
 	return changeset.values
 }
+
+func (changeset *Changeset) Types() map[string]reflect.Type {
+	return changeset.types
+}

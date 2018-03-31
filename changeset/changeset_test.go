@@ -10,4 +10,5 @@ func TestChangeset(t *testing.T) {
 	ch := Changeset{}
 	assert.Nil(t, ch.Changes())
 	assert.Nil(t, ch.Values())
+	assert.Nil(t, ch.Types())
 }

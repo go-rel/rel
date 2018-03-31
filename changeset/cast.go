@@ -62,11 +62,14 @@ func mapSchema(entity interface{}) (map[string]interface{}, map[string]reflect.T
 			name = snakecase.SnakeCase(ft.Name)
 		}
 
-		if fv.Kind() == reflect.Ptr {
+		if ft.Type.Kind() == reflect.Ptr {
 			mtypes[name] = ft.Type.Elem()
 			if !fv.IsNil() {
 				mvalues[name] = fv.Elem().Interface()
 			}
+		} else if ft.Type.Kind() == reflect.Slice && ft.Type.Elem().Kind() == reflect.Ptr {
+			mtypes[name] = reflect.SliceOf(ft.Type.Elem().Elem())
+			mvalues[name] = fv.Interface()
 		} else {
 			mtypes[name] = fv.Type()
 			mvalues[name] = fv.Interface()

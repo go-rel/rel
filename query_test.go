@@ -2,6 +2,7 @@ package grimoire
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
@@ -10,8 +11,10 @@ import (
 )
 
 type User struct {
-	Name string
-	Age  int
+	Name      string
+	Age       int
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func TestSelect(t *testing.T) {
@@ -446,7 +449,13 @@ func TestInsert(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
 		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
@@ -464,7 +473,13 @@ func TestInsertMultiple(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch1.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query.Where(In(I("id"), int64(0), int64(0)))).Return("", []interface{}{}).
 		On("Query", &users, "", []interface{}{}).Return(int64(1), nil)
@@ -479,7 +494,13 @@ func TestInsertNotReturning(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
 
 	assert.Nil(t, query.Insert(nil, ch))
@@ -493,8 +514,10 @@ func TestInsertWithSet(t *testing.T) {
 	query := Repo{adapter: mock}.From("users").Set("age", 10)
 
 	changes := map[string]interface{}{
-		"name": "name",
-		"age":  10,
+		"name":       "name",
+		"age":        10,
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
 	}
 
 	mock.On("Insert", query, changes).Return("", []interface{}{}).
@@ -544,7 +567,13 @@ func TestInsertError(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Insert", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Insert(&user, ch))
@@ -557,7 +586,12 @@ func TestUpdate(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
 		On("Find", query).Return("", []interface{}{}).
 		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
@@ -573,8 +607,9 @@ func TestUpdateWithSet(t *testing.T) {
 	query := Repo{adapter: mock}.From("users").Set("age", 10)
 
 	changes := map[string]interface{}{
-		"name": "name",
-		"age":  10,
+		"name":       "name",
+		"age":        10,
+		"updated_at": time.Now().Round(time.Second),
 	}
 
 	mock.On("Update", query, changes).Return("", []interface{}{}).
@@ -608,7 +643,12 @@ func TestUpdateNotReturning(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
 
 	assert.Nil(t, query.Update(nil, ch))
@@ -630,7 +670,12 @@ func TestUpdateError(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Update", query, ch.Changes()).Return("", []interface{}{}).
+	changes := map[string]interface{}{
+		"name":       "name",
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return("", []interface{}{}).
 		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Update(&user, ch))

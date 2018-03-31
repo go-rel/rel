@@ -255,6 +255,6 @@ func cloneQuery(out map[string]interface{}, changes map[string]interface{}) {
 
 func putTimestamp(out map[string]interface{}, field string, types map[string]reflect.Type) {
 	if typ, ok := types[field]; ok && typ == reflect.TypeOf(time.Time{}) {
-		out[field] = time.Now()
+		out[field] = time.Now().Round(time.Second)
 	}
 }

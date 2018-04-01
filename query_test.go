@@ -46,7 +46,7 @@ func TestJoin(t *testing.T) {
 		Collection: "users",
 		Fields:     []string{"*"},
 		JoinClause: []Join{
-			Join{
+			{
 				Mode:       "JOIN",
 				Collection: "transactions",
 				Condition: And(Eq(
@@ -65,7 +65,7 @@ func TestJoin(t *testing.T) {
 		Collection: "users",
 		Fields:     []string{"*"},
 		JoinClause: []Join{
-			Join{
+			{
 				Mode:       "JOIN",
 				Collection: "transactions",
 				Condition: And(Eq(
@@ -316,7 +316,7 @@ func TestOrderBy(t *testing.T) {
 		Collection: "users",
 		Fields:     []string{"*"},
 		OrderClause: []Order{
-			Order{
+			{
 				Field: "id",
 				Order: 1,
 			},

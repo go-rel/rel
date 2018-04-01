@@ -263,7 +263,7 @@ func TestAnd(t *testing.T) {
 				Type: ConditionAnd,
 				Inner: []Condition{
 					cond1,
-					Condition{
+					{
 						Type:  ConditionOr,
 						Inner: []Condition{cond2, cond3},
 					},
@@ -276,7 +276,7 @@ func TestAnd(t *testing.T) {
 			Condition{
 				Type: ConditionAnd,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionOr,
 						Inner: []Condition{cond1, cond2},
 					},
@@ -290,11 +290,11 @@ func TestAnd(t *testing.T) {
 			Condition{
 				Type: ConditionAnd,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionOr,
 						Inner: []Condition{cond1, cond2},
 					},
-					Condition{
+					{
 						Type:  ConditionOr,
 						Inner: []Condition{cond3, cond4},
 					},
@@ -341,7 +341,7 @@ func TestOr(t *testing.T) {
 				Type: ConditionOr,
 				Inner: []Condition{
 					cond1,
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond2, cond3},
 					},
@@ -354,7 +354,7 @@ func TestOr(t *testing.T) {
 			Condition{
 				Type: ConditionOr,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond1, cond2},
 					},
@@ -368,11 +368,11 @@ func TestOr(t *testing.T) {
 			Condition{
 				Type: ConditionOr,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond1, cond2},
 					},
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond3, cond4},
 					},
@@ -419,7 +419,7 @@ func TestXor(t *testing.T) {
 				Type: ConditionXor,
 				Inner: []Condition{
 					cond1,
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond2, cond3},
 					},
@@ -432,7 +432,7 @@ func TestXor(t *testing.T) {
 			Condition{
 				Type: ConditionXor,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond1, cond2},
 					},
@@ -446,11 +446,11 @@ func TestXor(t *testing.T) {
 			Condition{
 				Type: ConditionXor,
 				Inner: []Condition{
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond1, cond2},
 					},
-					Condition{
+					{
 						Type:  ConditionAnd,
 						Inner: []Condition{cond3, cond4},
 					},

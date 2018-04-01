@@ -1,11 +1,62 @@
 package changeset
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func ExampleCast() {
+	type User struct {
+		ID   int
+		Name string
+	}
+
+	user := User{}
+	params := map[string]interface{}{
+		"id":   1,
+		"name": "name",
+	}
+
+	ch := Cast(user, params, []string{"name"})
+	fmt.Println(ch.Changes())
+	// Output: map[name:name]
+}
+
+func ExampleCast_invalidType() {
+	type User struct {
+		ID   int
+		Name string
+	}
+
+	user := User{}
+	params := map[string]interface{}{
+		"id":   1,
+		"name": true,
+	}
+
+	ch := Cast(user, params, []string{"name"})
+	fmt.Println(ch.Error())
+	// Output: name is invalid
+}
+func ExampleCast_invalidTypeWithCustomError() {
+	type User struct {
+		ID   int
+		Name string
+	}
+
+	user := User{}
+	params := map[string]interface{}{
+		"id":   1,
+		"name": true,
+	}
+
+	ch := Cast(user, params, []string{"name"}, Message("{field} tidak valid"))
+	fmt.Println(ch.Error())
+	// Output: name tidak valid
+}
 
 func TestCast(t *testing.T) {
 	var entity struct {

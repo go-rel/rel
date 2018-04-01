@@ -63,12 +63,12 @@
 //   	// Read
 //
 //   	// Find a product with id 1
-//   	repo.From("products").Find(1).One(&product)
+//   	repo.From("products").Find(1).MustOne(&product)
 //
 //   	// Find() is a shortcut for this
 //   	// this equal: SELECT * FROM products WHERE id=1 LIMIT 1;
 //   	const id = I("id")
-//   	repo.From("products").Where(Eq(id, 1)).One(&product)
+//   	repo.From("products").Where(Eq(id, 1)).MustOne(&product)
 //
 //   	// More advanced query that returns array of results
 //   	// this equal: SELECT * FROM products WHERE (name="shampoo" AND price<1000) OR (name<>"shampoo" AND price>1000);

@@ -13,61 +13,61 @@ Example:
 package main
 
 import (
-    "time"
-   	"github.com/Fs02/grimoire"
-   	. "github.com/Fs02/grimoire/c"
-   	"github.com/Fs02/grimoire/adapter/mysql"
-   	"github.com/Fs02/grimoire/changeset"
+	"time"
+	"github.com/Fs02/grimoire"
+	. "github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/adapter/mysql"
+	"github.com/Fs02/grimoire/changeset"
 )
 
 type Product struct {
-   	ID        int
-   	Name      string
-   	Price     int
-   	CreatedAt time.Time
-   	UpdatedAt time.Time
+	ID        int
+	Name      string
+	Price     int
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func ProductChangeset(product interface{}, params map[string]interface{}) *changeset.Changeset {
-   	ch := changeset.Cast(product, params, []string{"name", "price"})
-   	changeset.ValidateRequired(ch, []string{"name", price})
-   	changeset.ValidateMin(ch, "price", 100)
-   	return ch
+	ch := changeset.Cast(product, params, []string{"name", "price"})
+	changeset.ValidateRequired(ch, []string{"name", price})
+	changeset.ValidateMin(ch, "price", 100)
+	return ch
 }
 
 func main() {
-   	// initialize mysql adapter
-   	adapter, err := mysql.Open("root@(127.0.0.1:3306)/db?charset=utf8&parseTime=True&loc=Local")
-   	if err != nil {
-   		panic(err)
-   	}
-   	defer adapter.Close()
+	// initialize mysql adapter
+	adapter, err := mysql.Open("root@(127.0.0.1:3306)/db?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
 
-   	// initialize grimoire's repo
-   	repo := grimoire.New(adapter)
+	// initialize grimoire's repo
+	repo := grimoire.New(adapter)
 
-   	var product Product
+	var product Product
 
-   	// Changeset is used when creating or updating your data
-   	ch := ProductChangeset(product, map[string]interface{}{
-   		"name": "shampoo",
-   		"price": 1000
-   	})
+	// Changeset is used when creating or updating your data
+	ch := ProductChangeset(product, map[string]interface{}{
+		"name": "shampoo",
+		"price": 1000
+	})
 
-   	if ch.Error() != nil {
-   		// do something
-   	}
+	if ch.Error() != nil {
+		// do something
+	}
 
-   	// Create products with changeset and return the result to &product
-   	repo.From("products").MustCreate(&product, ch)
+	// Create products with changeset and return the result to &product
+	repo.From("products").MustCreate(&product, ch)
 
-   	// Find a product with id 1
-   	repo.From("products").Find(1).One(&product)
+	// Find a product with id 1
+	repo.From("products").Find(1).MustOne(&product)
 
-   	// Update products with id=1
-   	repo.From("products").Find(1).MustUpdate(&product, ch)
+	// Update products with id=1
+	repo.From("products").Find(1).MustUpdate(&product, ch)
 
-   	// Delete Product with id=1
-   	repo.From("products").Find(1).MustDelete()
+	// Delete Product with id=1
+	repo.From("products").Find(1).MustDelete()
 }
 ```

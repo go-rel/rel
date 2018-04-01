@@ -9,7 +9,7 @@ import (
 var ValidateMinErrorMessage = "{field} must be more than {min}"
 
 // ValidateMin validates the value of given field is not smaller than min.
-// Validation can be performed againts string, slice and numbers.
+// Validation can be performed against string, slice and numbers.
 func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {

@@ -9,7 +9,7 @@ import (
 var ValidateRangeErrorMessage = "{field} must be between {min} and {max}"
 
 // ValidateRange validates the value of given field is not larger than max and not smaller than min.
-// Validation can be performed againts string, slice and numbers.
+// Validation can be performed against string, slice and numbers.
 func ValidateRange(ch *Changeset, field string, min int, max int, opts ...Option) {
 	val, exist := ch.changes[field]
 	if !exist {

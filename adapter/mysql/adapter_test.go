@@ -2,10 +2,12 @@ package mysql
 
 import (
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/Fs02/grimoire"
+	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
@@ -20,17 +22,56 @@ func init() {
 	adapter.Exec(`CREATE TABLE users (
 		id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		name VARCHAR(30) NOT NULL,
+		gender VARCHAR(10) NOT NULL,
+		age INT NOT NULL,
+		note varchar(50),
 		created_at DATETIME,
 		updated_at DATETIME
 	);`, []interface{}{})
+
+	// prepare data
+	repo := grimoire.New(adapter)
+	data := repo.From("users").
+		Set("gender", "male").
+		Set("created_at", time.Now()).
+		Set("updated_at", time.Now())
+
+	for i := 1; i <= 5; i++ {
+		data.Set("id", i).
+			Set("name", "name"+strconv.Itoa(i)).
+			Set("age", i*10).
+			MustInsert(nil)
+	}
+
+	data = data.Set("gender", "female")
+	for i := 6; i <= 8; i++ {
+		data.Set("id", i).
+			Set("name", "name"+strconv.Itoa(i)).
+			Set("age", i*10).
+			MustInsert(nil)
+	}
 }
 
 type User struct {
 	ID        int64
 	Name      string
+	Gender    string
+	Age       int
+	Note      *string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+// User table identifiers
+const (
+	users     = "users"
+	id        = I("id")
+	name      = I("name")
+	gender    = I("gender")
+	age       = I("age")
+	note      = I("note")
+	createdAt = I("created_at")
+)
 
 func dsn() string {
 	if os.Getenv("MYSQL_DATABASE") != "" {
@@ -38,6 +79,57 @@ func dsn() string {
 	}
 
 	return "root@(127.0.0.1:3306)/grimoire_test"
+}
+
+func TestRepoQuery(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	defer adapter.Close()
+
+	repo := grimoire.New(adapter)
+
+	queries := []grimoire.Query{
+		repo.From(users).Where(Eq(id, 1)),
+		repo.From(users).Where(Eq(name, "name1")),
+		repo.From(users).Where(Eq(age, 10)),
+		repo.From(users).Where(Eq(id, 1), Eq(name, "name1")),
+		repo.From(users).Where(Eq(id, 1), Eq(name, "name1"), Eq(age, 10)),
+		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1")),
+		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1"), Eq(age, 10)),
+		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1")).OrWhere(Eq(age, 10)),
+		repo.From(users).Where(Ne(gender, "male")),
+		repo.From(users).Where(Gt(age, 79)),
+		repo.From(users).Where(Gte(age, 80)),
+		repo.From(users).Where(Lt(age, 11)),
+		repo.From(users).Where(Lte(age, 10)),
+		repo.From(users).Where(Nil(note)),
+		repo.From(users).Where(NotNil(name)),
+		repo.From(users).Order(Asc(name)),
+		repo.From(users).Order(Asc(name), Desc(age)),
+		repo.From(users).Where(In(id, 1, 2, 3)),
+		repo.From(users).Where(Nin(id, 1, 2, 3)),
+		repo.From(users).Where(Like(name, "name%")),
+		repo.From(users).Where(NotLike(name, "noname%")),
+		repo.From(users).Where(Fragment("id = ?", 1)),
+		repo.From(users).Where(Not(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
+		repo.From(users).Where(Xor(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
+		repo.From(users).Limit(5),
+		repo.From(users).Limit(5).Offset(5),
+		repo.From(users).Find(1),
+		repo.From(users).Select("name").Find(1),
+		repo.From(users).Select("name", "age").Find(1),
+		repo.From(users).Distinct().Find(1),
+	}
+
+	for _, q := range queries {
+		str, _ := adapter.Find(q)
+		t.Run("ALL|"+str, func(t *testing.T) {
+			var result []User
+			err := q.All(&result)
+			assert.Nil(t, err)
+			assert.NotEqual(t, 0, len(result))
+		})
+	}
 }
 
 func TestRepoFind(t *testing.T) {

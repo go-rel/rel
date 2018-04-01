@@ -56,7 +56,7 @@ func TestFind(t *testing.T) {
 			users.Order(Asc("created_at")),
 		},
 		{
-			"SELECT * FROM users OFFSET 10 LIMIT 10;",
+			"SELECT * FROM users LIMIT 10 OFFSET 10;",
 			nil,
 			users.Offset(10).Limit(10),
 		},
@@ -118,7 +118,7 @@ func TestFindOrdinal(t *testing.T) {
 			users.Order(Asc("created_at")),
 		},
 		{
-			"SELECT * FROM users OFFSET 10 LIMIT 10;",
+			"SELECT * FROM users LIMIT 10 OFFSET 10;",
 			nil,
 			users.Offset(10).Limit(10),
 		},

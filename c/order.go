@@ -1,18 +1,18 @@
 package c
 
 type Order struct {
-	Field string
+	Field I
 	Order int
 }
 
-func Asc(field string) Order {
+func Asc(field I) Order {
 	return Order{
 		Field: field,
 		Order: 1,
 	}
 }
 
-func Desc(field string) Order {
+func Desc(field I) Order {
 	return Order{
 		Field: field,
 		Order: -1,

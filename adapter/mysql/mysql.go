@@ -102,10 +102,10 @@ func (adapter *Adapter) Exec(qs string, args []interface{}) (int64, int64, error
 		return 0, 0, adapter.Error(err)
 	}
 
-	lastId, _ := res.LastInsertId()
+	lastID, _ := res.LastInsertId()
 	rowCount, _ := res.RowsAffected()
 
-	return lastId, rowCount, nil
+	return lastID, rowCount, nil
 }
 
 func (adapter *Adapter) Error(err error) error {

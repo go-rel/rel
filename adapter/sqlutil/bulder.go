@@ -56,12 +56,12 @@ func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 		buffer.WriteString(s)
 	}
 
-	if s := builder.Offset(q.OffsetResult); s != "" {
+	if s := builder.Limit(q.LimitResult); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.Limit(q.LimitResult); s != "" {
+	if s := builder.Offset(q.OffsetResult); s != "" && q.LimitResult != 0 {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
@@ -224,9 +224,9 @@ func (builder *Builder) OrderBy(orders ...c.Order) string {
 	qs := "ORDER BY "
 	for i, o := range orders {
 		if o.Asc() {
-			qs += o.Field + " ASC"
+			qs += string(o.Field) + " ASC"
 		} else {
-			qs += o.Field + " DESC"
+			qs += string(o.Field) + " DESC"
 		}
 
 		if i < length-1 {

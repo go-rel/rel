@@ -34,7 +34,7 @@
 //   	}
 //   	defer adapter.Close()
 //
-//   	// initializer grimoire's repo
+//   	// initialize grimoire's repo
 //   	repo := grimoire.New(adapter)
 //
 //   	var product Product

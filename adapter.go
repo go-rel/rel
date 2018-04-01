@@ -4,9 +4,6 @@ package grimoire
 // accepts struct and query or changeset
 // returns query string and arguments
 type Adapter interface {
-	Open(string) error
-	Close() error
-
 	Find(Query) (string, []interface{})
 	Insert(Query, map[string]interface{}) (string, []interface{})
 	Update(Query, map[string]interface{}) (string, []interface{})

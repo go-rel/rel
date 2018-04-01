@@ -14,8 +14,10 @@ import (
 )
 
 func init() {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
@@ -82,8 +84,10 @@ func dsn() string {
 }
 
 func TestRepoQuery(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	repo := grimoire.New(adapter)
@@ -133,8 +137,10 @@ func TestRepoQuery(t *testing.T) {
 }
 
 func TestRepoFind(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
@@ -174,8 +180,10 @@ func TestRepoFind(t *testing.T) {
 }
 
 func TestRepoInsert(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	user := User{}
@@ -185,7 +193,7 @@ func TestRepoInsert(t *testing.T) {
 		"name": name,
 	}, []string{"name", "created_at", "updated_at"})
 
-	err := grimoire.New(adapter).From("users").Insert(&user, ch)
+	err = grimoire.New(adapter).From("users").Insert(&user, ch)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, name, user.Name)
@@ -194,8 +202,10 @@ func TestRepoInsert(t *testing.T) {
 }
 
 func TestRepoUpdate(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
@@ -224,8 +234,10 @@ func TestRepoUpdate(t *testing.T) {
 }
 
 func TestRepoDelete(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"

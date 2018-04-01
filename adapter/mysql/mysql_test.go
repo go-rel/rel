@@ -10,8 +10,10 @@ import (
 )
 
 func TestTransactionCommit(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	assert.Nil(t, adapter.Begin())
@@ -20,8 +22,10 @@ func TestTransactionCommit(t *testing.T) {
 }
 
 func TestTransactionRollback(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	assert.Nil(t, adapter.Begin())
@@ -30,24 +34,30 @@ func TestTransactionRollback(t *testing.T) {
 }
 
 func TestTransactionCommitError(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Commit())
 }
 
 func TestTransactionRollbackError(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Rollback())
 }
 
 func TestQuery(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	out := struct{}{}
@@ -68,19 +78,23 @@ func TestQuery(t *testing.T) {
 }
 
 func TestQueryError(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	out := struct{}{}
 
-	_, err := adapter.Query(&out, ";;", []interface{}{})
+	_, err = adapter.Query(&out, ";;", []interface{}{})
 	assert.NotNil(t, err)
 }
 
 func TestExec(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
 	// normal exec
@@ -104,11 +118,13 @@ func TestExec(t *testing.T) {
 }
 
 func TestExecError(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
 	defer adapter.Close()
 
-	_, _, err := adapter.Exec(";;", []interface{}{})
+	_, _, err = adapter.Exec(";;", []interface{}{})
 	assert.NotNil(t, err)
 }
 

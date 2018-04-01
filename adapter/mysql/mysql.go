@@ -17,10 +17,11 @@ type Adapter struct {
 
 var _ grimoire.Adapter = (*Adapter)(nil)
 
-func (adapter *Adapter) Open(dsn string) error {
+func Open(dsn string) (*Adapter, error) {
 	var err error
+	adapter := &Adapter{}
 	adapter.db, err = sql.Open("mysql", dsn)
-	return err
+	return adapter, err
 }
 
 func (adapter *Adapter) Close() error {

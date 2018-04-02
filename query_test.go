@@ -347,14 +347,14 @@ func TestFind(t *testing.T) {
 		repo:       &repo,
 		Collection: "users",
 		Fields:     []string{"*"},
-		Condition:  And(Eq(I("id"), 1)),
+		Condition:  And(Eq(I("users.id"), 1)),
 	})
 
 	assert.Equal(t, repo.From("users").Find("abc123"), Query{
 		repo:       &repo,
 		Collection: "users",
 		Fields:     []string{"*"},
-		Condition:  And(Eq(I("id"), "abc123")),
+		Condition:  And(Eq(I("users.id"), "abc123")),
 	})
 }
 

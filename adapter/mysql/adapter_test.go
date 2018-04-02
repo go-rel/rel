@@ -6,53 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Fs02/go-paranoid"
+
 	"github.com/Fs02/grimoire"
 	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
-	}
-	defer adapter.Close()
-
-	adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
-	adapter.Exec(`CREATE TABLE users (
-		id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		name VARCHAR(30) NOT NULL,
-		gender VARCHAR(10) NOT NULL,
-		age INT NOT NULL,
-		note varchar(50),
-		created_at DATETIME,
-		updated_at DATETIME
-	);`, []interface{}{})
-
-	// prepare data
-	repo := grimoire.New(adapter)
-	data := repo.From("users").
-		Set("gender", "male").
-		Set("created_at", time.Now()).
-		Set("updated_at", time.Now())
-
-	for i := 1; i <= 5; i++ {
-		data.Set("id", i).
-			Set("name", "name"+strconv.Itoa(i)).
-			Set("age", i*10).
-			MustInsert(nil)
-	}
-
-	data = data.Set("gender", "female")
-	for i := 6; i <= 8; i++ {
-		data.Set("id", i).
-			Set("name", "name"+strconv.Itoa(i)).
-			Set("age", i*10).
-			MustInsert(nil)
-	}
-}
 
 type User struct {
 	ID        int64
@@ -67,13 +28,76 @@ type User struct {
 // User table identifiers
 const (
 	users     = "users"
+	addresses = "addresses"
 	id        = I("id")
 	name      = I("name")
 	gender    = I("gender")
 	age       = I("age")
 	note      = I("note")
 	createdAt = I("created_at")
+	address   = I("address")
 )
+
+func init() {
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, []interface{}{})
+	paranoid.Panic(err)
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
+	paranoid.Panic(err)
+
+	_, _, err = adapter.Exec(`CREATE TABLE users (
+		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(30) NOT NULL,
+		gender VARCHAR(10) NOT NULL,
+		age INT NOT NULL,
+		note varchar(50),
+		created_at DATETIME,
+		updated_at DATETIME
+	);`, []interface{}{})
+	paranoid.Panic(err)
+
+	_, _, err = adapter.Exec(`CREATE TABLE addresses (
+		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		user_id INT UNSIGNED,
+		address VARCHAR(60) NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`, []interface{}{})
+	paranoid.Panic(err)
+
+	// prepare data
+	repo := grimoire.New(adapter)
+	users := repo.From("users").
+		Set("gender", "male").
+		Set("created_at", time.Now()).
+		Set("updated_at", time.Now())
+
+	addresses := repo.From("addresses")
+
+	for i := 1; i <= 5; i++ {
+		user := User{}
+		users.Set("id", i).
+			Set("name", "name"+strconv.Itoa(i)).
+			Set("age", i*10).
+			MustInsert(&user)
+
+		addresses.Set("user_id", user.ID).
+			Set("address", "address"+strconv.Itoa(i)).
+			MustInsert(nil)
+	}
+
+	users = users.Set("gender", "female")
+	for i := 6; i <= 8; i++ {
+		users.Set("id", i).
+			Set("name", "name"+strconv.Itoa(i)).
+			Set("age", i*10).
+			MustInsert(nil)
+	}
+}
 
 func dsn() string {
 	if os.Getenv("MYSQL_DATABASE") != "" {
@@ -108,8 +132,6 @@ func TestRepoQuery(t *testing.T) {
 		repo.From(users).Where(Lte(age, 10)),
 		repo.From(users).Where(Nil(note)),
 		repo.From(users).Where(NotNil(name)),
-		repo.From(users).Order(Asc(name)),
-		repo.From(users).Order(Asc(name), Desc(age)),
 		repo.From(users).Where(In(id, 1, 2, 3)),
 		repo.From(users).Where(Nin(id, 1, 2, 3)),
 		repo.From(users).Where(Like(name, "name%")),
@@ -117,6 +139,19 @@ func TestRepoQuery(t *testing.T) {
 		repo.From(users).Where(Fragment("id = ?", 1)),
 		repo.From(users).Where(Not(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
 		repo.From(users).Where(Xor(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
+		repo.From(addresses).Join(users),
+		repo.From(addresses).Join(users, Eq(I("addresses.user_id"), I("users.id"))),
+		repo.From(addresses).Join(users).Find(1),
+		repo.From(addresses).Join(users).Where(Eq(address, "address1")),
+		repo.From(addresses).Join(users).Where(Eq(address, "address1")).Order(Asc(name)),
+		repo.From(addresses).JoinWith("LEFT JOIN", users),
+		repo.From(addresses).JoinWith("LEFT OUTER JOIN", users),
+		repo.From(addresses).Join(users).Where(Eq(address, "address1")).Having(Eq(address, "address1")).Order(Asc(name)),
+		repo.From(addresses).Group("gender").Join(users).Where(Eq(address, "address1")).Having(Eq(address, "address1")).Order(Asc(name)),
+		repo.From(users).Order(Asc(name)),
+		repo.From(users).Order(Desc(name)),
+		repo.From(users).Order(Asc(name), Desc(age)),
+		repo.From(users).Group("gender").Select("COUNT(id)"),
 		repo.From(users).Limit(5),
 		repo.From(users).Limit(5).Offset(5),
 		repo.From(users).Find(1),
@@ -136,43 +171,15 @@ func TestRepoQuery(t *testing.T) {
 	}
 }
 
-func TestRepoFind(t *testing.T) {
+func TestRepoQueryNotFound(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
 	}
 	defer adapter.Close()
 
-	stmt := "INSERT INTO users (name, created_at, updated_at) VALUES (?,?,?)"
-	name := "find"
-	createdAt := time.Now().Round(time.Second)
-	updatedAt := time.Now().Round(time.Second)
-
-	id, count, err := adapter.Exec(stmt, []interface{}{name, createdAt, updatedAt})
-	assert.Nil(t, err)
-	assert.True(t, id > 0)
-	assert.Equal(t, int64(1), count)
-
 	repo := grimoire.New(adapter)
 	user := User{}
-	users := []User{}
-
-	// find inserted user
-	err = repo.From("users").Find(id).One(&user)
-	assert.Nil(t, err)
-	assert.Equal(t, id, user.ID)
-	assert.Equal(t, name, user.Name)
-	assert.Equal(t, createdAt, user.CreatedAt)
-	assert.Equal(t, updatedAt, user.UpdatedAt)
-
-	// find all user
-	err = repo.From("users").Find(id).All(&users)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(users))
-	assert.Equal(t, id, users[0].ID)
-	assert.Equal(t, name, users[0].Name)
-	assert.Equal(t, createdAt, users[0].CreatedAt)
-	assert.Equal(t, updatedAt, users[0].UpdatedAt)
 
 	// find user error not found
 	err = repo.From("users").Find(0).One(&user)

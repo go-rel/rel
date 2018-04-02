@@ -104,7 +104,7 @@ func (query Query) Limit(limit int) Query {
 }
 
 func (query Query) Find(id interface{}) Query {
-	return query.Where(c.Eq(c.I("id"), id))
+	return query.Where(c.Eq(c.I(query.Collection+".id"), id))
 }
 
 func (query Query) Set(field string, value interface{}) Query {

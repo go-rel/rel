@@ -200,12 +200,23 @@ func TestRepoInsert(t *testing.T) {
 		"name": name,
 	}, []string{"name", "created_at", "updated_at"})
 
+	// insert one
 	err = grimoire.New(adapter).From("users").Insert(&user, ch)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, name, user.Name)
 	assert.NotNil(t, user.CreatedAt)
 	assert.NotNil(t, user.UpdatedAt)
+
+	// insert multiple
+	users := []User{}
+	err = grimoire.New(adapter).From("users").Insert(&users, ch, ch, ch)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(users))
+	assert.NotEqual(t, 0, users[0].ID)
+	assert.Equal(t, name, users[0].Name)
+	assert.NotNil(t, users[0].CreatedAt)
+	assert.NotNil(t, users[0].UpdatedAt)
 }
 
 func TestRepoUpdate(t *testing.T) {

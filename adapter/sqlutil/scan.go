@@ -3,6 +3,7 @@ package sqlutil
 import (
 	"database/sql"
 	"reflect"
+	"time"
 
 	"github.com/azer/snakecase"
 )
@@ -92,6 +93,28 @@ func fieldIndex(rt reflect.Type) map[string]int {
 	fields := make(map[string]int)
 	for i := 0; i < rt.NumField(); i++ {
 		f := rt.Field(i)
+
+		// skip if struct or slice but not a scanner or time
+		if f.Type.Kind() == reflect.Ptr {
+			fzeroval := reflect.New(f.Type.Elem()).Interface()
+			kind := f.Type.Elem().Kind()
+			_, isScanner := fzeroval.(sql.Scanner)
+			_, isTime := fzeroval.(*time.Time)
+
+			if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
+				continue
+			}
+		} else {
+			fzeroval := reflect.New(f.Type).Interface()
+			kind := f.Type.Kind()
+			_, isScanner := fzeroval.(sql.Scanner)
+			_, isTime := fzeroval.(*time.Time)
+
+			if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
+				continue
+			}
+		}
+
 		if tag := f.Tag.Get("db"); tag != "" {
 			if tag == "-" {
 				continue

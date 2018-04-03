@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -167,12 +168,36 @@ func TestFieldPtr(t *testing.T) {
 }
 
 func TestFieldIndex(t *testing.T) {
-	index := fieldIndex(reflect.TypeOf(User{}))
+	var obj struct {
+		ID                 int
+		Name               string
+		Other              bool
+		SkippedStructSlice []User
+		OtherID            int64
+		SkippedIntSlice    []int
+		Score              float64
+		SkippedStruct      User
+		Custom             Custom
+		SkippedStringSlice []string
+		CreatedAt          time.Time
+		DeletedAt          *time.Time
+		CustomPtr          *Custom
+		SkippedStructPtr   *User
+		SkippedIntSlicePtr *[]int
+		ArrayInt           [1]int
+		ArrayIntPtr        *[2]int
+	}
+
+	index := fieldIndex(reflect.TypeOf(obj))
 	assert.Equal(t, map[string]int{
 		"id":         0,
 		"name":       1,
-		"other_info": 2,
-		"real_name":  3,
-		"custom":     5,
+		"other":      2,
+		"other_id":   4,
+		"score":      6,
+		"custom":     8,
+		"created_at": 10,
+		"deleted_at": 11,
+		"custom_ptr": 12,
 	}, index)
 }

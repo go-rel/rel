@@ -16,9 +16,11 @@ import (
 )
 
 type Address struct {
-	ID      int64
-	UserID  int64
-	Address string
+	ID        int64
+	UserID    int64
+	Address   string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type User struct {
@@ -72,6 +74,8 @@ func init() {
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		user_id INT UNSIGNED,
 		address VARCHAR(60) NOT NULL,
+		created_at DATETIME,
+		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	);`, []interface{}{})
 	paranoid.Panic(err)
@@ -93,6 +97,8 @@ func init() {
 			MustInsert(&user)
 
 		addresses.Set("user_id", user.ID).
+			Set("created_at", time.Now()).
+			Set("updated_at", time.Now()).
 			Set("address", "address"+strconv.Itoa(i)).
 			MustInsert(nil)
 	}
@@ -112,6 +118,22 @@ func dsn() string {
 	}
 
 	return "root@(127.0.0.1:3306)/grimoire_test"
+}
+
+func changeUser(user interface{}, params map[string]interface{}) *changeset.Changeset {
+	ch := changeset.Cast(user, params, []string{
+		"name",
+		"gender",
+		"age",
+		"note",
+	})
+	changeset.CastAssoc(ch, "addresses", changeAddress)
+	return ch
+}
+
+func changeAddress(address interface{}, params map[string]interface{}) *changeset.Changeset {
+	ch := changeset.Cast(address, params, []string{"address"})
+	return ch
 }
 
 func TestRepoQuery(t *testing.T) {
@@ -201,19 +223,17 @@ func TestRepoInsert(t *testing.T) {
 	defer adapter.Close()
 
 	user := User{}
-	name := "insert"
-
-	ch := changeset.Cast(user, map[string]interface{}{
-		"name": name,
-	}, []string{"name", "created_at", "updated_at"})
+	ch := changeUser(user, map[string]interface{}{
+		"name": "insert",
+	})
 
 	// insert one
 	err = grimoire.New(adapter).From("users").Insert(&user, ch)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
-	assert.Equal(t, name, user.Name)
-	assert.NotNil(t, user.CreatedAt)
-	assert.NotNil(t, user.UpdatedAt)
+	assert.Equal(t, "insert", user.Name)
+	assert.NotEqual(t, time.Time{}, user.CreatedAt)
+	assert.NotEqual(t, time.Time{}, user.UpdatedAt)
 
 	// insert multiple
 	users := []User{}
@@ -221,7 +241,7 @@ func TestRepoInsert(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(users))
 	assert.NotEqual(t, 0, users[0].ID)
-	assert.Equal(t, name, users[0].Name)
+	assert.Equal(t, "insert", users[0].Name)
 	assert.NotNil(t, users[0].CreatedAt)
 	assert.NotNil(t, users[0].UpdatedAt)
 }
@@ -244,16 +264,14 @@ func TestRepoUpdate(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	user := User{}
-	newName := "new update"
-
-	ch := changeset.Cast(user, map[string]interface{}{
-		"name": newName,
-	}, []string{"name"})
+	ch := changeUser(user, map[string]interface{}{
+		"name": "now updated",
+	})
 
 	err = grimoire.New(adapter).From("users").Find(id).Update(&user, ch)
 	assert.Nil(t, err)
 	assert.Equal(t, id, user.ID)
-	assert.Equal(t, newName, user.Name)
+	assert.Equal(t, "now updated", user.Name)
 	assert.Equal(t, createdAt, user.CreatedAt)
 	assert.Equal(t, updatedAt, user.UpdatedAt)
 }
@@ -282,22 +300,6 @@ func TestRepoDelete(t *testing.T) {
 	user := User{}
 	err = repo.From("users").Find(id).One(&user)
 	assert.NotNil(t, err)
-}
-
-func changeUser(user interface{}, params map[string]interface{}) *changeset.Changeset {
-	ch := changeset.Cast(user, params, []string{
-		"name",
-		"gender",
-		"age",
-		"note",
-	})
-	changeset.CastAssoc(ch, "addresses", changeAddress)
-	return ch
-}
-
-func changeAddress(address interface{}, params map[string]interface{}) *changeset.Changeset {
-	ch := changeset.Cast(address, params, []string{"address"})
-	return ch
 }
 
 func TestRepoTransaction(t *testing.T) {
@@ -342,8 +344,14 @@ func TestRepoTransaction(t *testing.T) {
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 18, user.Age)
 	assert.Equal(t, "some note here", *user.Note)
+	assert.NotEqual(t, time.Time{}, user.CreatedAt)
+	assert.NotEqual(t, time.Time{}, user.UpdatedAt)
 
 	assert.Equal(t, 2, len(user.Addresses))
 	assert.Equal(t, "Aceh, Indonesia", user.Addresses[0].Address)
+	assert.NotEqual(t, time.Time{}, user.Addresses[0].CreatedAt)
+	assert.NotEqual(t, time.Time{}, user.Addresses[0].UpdatedAt)
 	assert.Equal(t, "Bandung, Indonesia", user.Addresses[1].Address)
+	assert.NotEqual(t, time.Time{}, user.Addresses[1].CreatedAt)
+	assert.NotEqual(t, time.Time{}, user.Addresses[1].UpdatedAt)
 }

@@ -16,9 +16,9 @@ func TestTransactionCommit(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	assert.Nil(t, adapter.Begin())
-	assert.NotNil(t, adapter.tx)
-	assert.Nil(t, adapter.Commit())
+	txAdapter, err := adapter.Begin()
+	assert.Nil(t, err)
+	assert.Nil(t, txAdapter.Commit())
 }
 
 func TestTransactionRollback(t *testing.T) {
@@ -28,9 +28,9 @@ func TestTransactionRollback(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	assert.Nil(t, adapter.Begin())
-	assert.NotNil(t, adapter.tx)
-	assert.Nil(t, adapter.Rollback())
+	txAdapter, err := adapter.Begin()
+	assert.Nil(t, err)
+	assert.Nil(t, txAdapter.Rollback())
 }
 
 func TestTransactionCommitError(t *testing.T) {
@@ -68,13 +68,14 @@ func TestQuery(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// within transaction
-	assert.Nil(t, adapter.Begin())
+	txAdapter, err := adapter.Begin()
+	assert.Nil(t, err)
 
-	count, err = adapter.Query(&out, "SELECT 10;", []interface{}{})
+	count, err = txAdapter.Query(&out, "SELECT 10;", []interface{}{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, int64(1), count)
-	assert.Nil(t, adapter.Commit())
+	assert.Nil(t, txAdapter.Commit())
 }
 
 func TestQueryError(t *testing.T) {
@@ -107,14 +108,16 @@ func TestExec(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// within transaction
-	assert.Nil(t, adapter.Begin())
+	// within transaction
+	txAdapter, err := adapter.Begin()
+	assert.Nil(t, err)
 
-	id, count, err = adapter.Exec(stmt, args)
+	id, count, err = txAdapter.Exec(stmt, args)
 	assert.Nil(t, err)
 	assert.True(t, id > 0)
 	assert.Equal(t, int64(1), count)
 
-	assert.Nil(t, adapter.Commit())
+	assert.Nil(t, txAdapter.Commit())
 }
 
 func TestExecError(t *testing.T) {

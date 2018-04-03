@@ -52,10 +52,9 @@ func (adapter *Adapter) Delete(query grimoire.Query) (string, []interface{}) {
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin() error {
+func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 	tx, err := adapter.db.BeginTx(context.Background(), nil)
-	adapter.tx = tx
-	return err
+	return &Adapter{tx: tx}, err
 }
 
 // Commit commits current transaction.
@@ -65,7 +64,6 @@ func (adapter *Adapter) Commit() error {
 	}
 
 	err := adapter.tx.Commit()
-	adapter.tx = nil
 	return adapter.Error(err)
 }
 
@@ -76,7 +74,6 @@ func (adapter *Adapter) Rollback() error {
 	}
 
 	err := adapter.tx.Rollback()
-	adapter.tx = nil
 	return adapter.Error(err)
 }
 

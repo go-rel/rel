@@ -40,9 +40,9 @@ func (adapter TestAdapter) Delete(query Query) (string, []interface{}) {
 	return args.String(0), args.Get(1).([]interface{})
 }
 
-func (adapter TestAdapter) Begin() error {
+func (adapter TestAdapter) Begin() (Adapter, error) {
 	args := adapter.Called()
-	return args.Error(0)
+	return adapter, args.Error(0)
 }
 
 func (adapter TestAdapter) Commit() error {

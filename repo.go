@@ -23,15 +23,17 @@ func (repo Repo) From(collection string) Query {
 }
 
 func (repo Repo) Transaction(fn func(Repo) error) error {
-	err := repo.adapter.Begin()
+	adp, err := repo.adapter.Begin()
 	if err != nil {
 		return err
 	}
 
+	txRepo := New(adp)
+
 	func() {
 		defer func() {
 			if p := recover(); p != nil {
-				repo.adapter.Rollback()
+				txRepo.adapter.Rollback()
 
 				if e, ok := p.(errors.Error); ok && !e.UnexpectedError() {
 					err = e
@@ -39,13 +41,13 @@ func (repo Repo) Transaction(fn func(Repo) error) error {
 					panic(p) // re-throw panic after Rollback
 				}
 			} else if err != nil {
-				repo.adapter.Rollback()
+				txRepo.adapter.Rollback()
 			} else {
-				err = repo.adapter.Commit()
+				err = txRepo.adapter.Commit()
 			}
 		}()
 
-		err = fn(repo)
+		err = fn(txRepo)
 	}()
 
 	return err

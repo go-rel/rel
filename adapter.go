@@ -9,7 +9,7 @@ type Adapter interface {
 	Update(Query, map[string]interface{}) (string, []interface{})
 	Delete(Query) (string, []interface{})
 
-	Begin() error
+	Begin() (Adapter, error)
 	Commit() error
 	Rollback() error
 

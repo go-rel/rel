@@ -26,11 +26,13 @@ type Query struct {
 	Changes         map[string]interface{}
 }
 
+// Select filter fields to be selected from database.
 func (query Query) Select(fields ...string) Query {
 	query.Fields = fields
 	return query
 }
 
+// Distinct add distinct option to select query.
 func (query Query) Distinct() Query {
 	query.AsDistinct = true
 	return query
@@ -88,25 +90,31 @@ func (query Query) OrHaving(condition ...c.Condition) Query {
 	return query
 }
 
+// Order the result returned by database.
 func (query Query) Order(order ...c.Order) Query {
 	query.OrderClause = append(query.OrderClause, order...)
 	return query
 }
 
+// Offset the result returned by database.
 func (query Query) Offset(offset int) Query {
 	query.OffsetResult = offset
 	return query
 }
 
+// Limit result returned by database.
 func (query Query) Limit(limit int) Query {
 	query.LimitResult = limit
 	return query
 }
 
+// Find adds where id=? into query.
+// This is short cut for Where(Eq(I("id"), 1))
 func (query Query) Find(id interface{}) Query {
 	return query.Where(c.Eq(c.I(query.Collection+".id"), id))
 }
 
+// Set value for insert or update operation that will replace changeset value.
 func (query Query) Set(field string, value interface{}) Query {
 	if query.Changes == nil {
 		query.Changes = make(map[string]interface{})
@@ -116,10 +124,11 @@ func (query Query) Set(field string, value interface{}) Query {
 	return query
 }
 
-func (query Query) One(doc interface{}) error {
+// One retrieves one result that match the query.
+// If no result found, it'll return not found error.
+func (query Query) One(record interface{}) error {
 	query.LimitResult = 1
-	qs, args := query.repo.adapter.Find(query)
-	count, err := query.repo.adapter.Query(doc, qs, args)
+	count, err := query.repo.adapter.All(query, record)
 
 	if err != nil {
 		return errors.Wrap(err)
@@ -130,21 +139,26 @@ func (query Query) One(doc interface{}) error {
 	}
 }
 
-func (query Query) MustOne(doc interface{}) {
-	paranoid.Panic(query.One(doc))
+// MustOne retrieves one result that match the query.
+// If no result found, it'll panic.
+func (query Query) MustOne(record interface{}) {
+	paranoid.Panic(query.One(record))
 }
 
-func (query Query) All(doc interface{}) error {
-	qs, args := query.repo.adapter.Find(query)
-	_, err := query.repo.adapter.Query(doc, qs, args)
-	return errors.Wrap(err)
+// All retrieves all results that match the query.
+func (query Query) All(record interface{}) error {
+	_, err := query.repo.adapter.All(query, record)
+	return err
 }
 
-func (query Query) MustAll(doc interface{}) {
-	paranoid.Panic(query.All(doc))
+// MustAll retrieves all results that match the query.
+// It'll panic if any error eccured.
+func (query Query) MustAll(record interface{}) {
+	paranoid.Panic(query.All(record))
 }
 
-func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
+// Insert records to database.
+func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
 	var ids []interface{}
 
 	if len(chs) > 0 {
@@ -155,8 +169,7 @@ func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
 			putTimestamp(changes, "updated_at", ch.Types())
 			cloneQuery(changes, query.Changes)
 
-			qs, args := query.repo.adapter.Insert(query, changes)
-			id, _, err := query.repo.adapter.Exec(qs, args)
+			id, err := query.repo.adapter.Insert(query, changes)
 
 			if err != nil {
 				return errors.Wrap(err)
@@ -165,8 +178,8 @@ func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
 			ids = append(ids, id)
 		}
 	} else {
-		qs, args := query.repo.adapter.Insert(query, query.Changes)
-		id, _, err := query.repo.adapter.Exec(qs, args)
+		id, err := query.repo.adapter.Insert(query, query.Changes)
+
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -174,20 +187,24 @@ func (query Query) Insert(doc interface{}, chs ...*changeset.Changeset) error {
 		ids = append(ids, id)
 	}
 
-	if doc == nil || len(ids) == 0 {
+	if record == nil || len(ids) == 0 {
 		return nil
 	} else if len(ids) == 1 {
-		return errors.Wrap(query.Find(ids[0]).One(doc))
+		return errors.Wrap(query.Find(ids[0]).One(record))
 	} else {
-		return errors.Wrap(query.Where(c.In(c.I("id"), ids...)).All(doc))
+		return errors.Wrap(query.Where(c.In(c.I("id"), ids...)).All(record))
 	}
 }
 
-func (query Query) MustInsert(doc interface{}, chs ...*changeset.Changeset) {
-	paranoid.Panic(query.Insert(doc, chs...))
+// MustInsert records to database.
+// It'll panic if any error occured.
+func (query Query) MustInsert(record interface{}, chs ...*changeset.Changeset) {
+	paranoid.Panic(query.Insert(record, chs...))
 }
 
-func (query Query) Update(doc interface{}, chs ...*changeset.Changeset) error {
+// Update records in database.
+// It'll panic if any error occured.
+func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error {
 	changes := make(map[string]interface{})
 
 	// only take the first changeset if any
@@ -204,30 +221,32 @@ func (query Query) Update(doc interface{}, chs ...*changeset.Changeset) error {
 	}
 
 	// perform update
-	qs, args := query.repo.adapter.Update(query, changes)
-	_, _, err := query.repo.adapter.Exec(qs, args)
+	err := query.repo.adapter.Update(query, changes)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
 	// should not fetch updated record(s) if not necessery
-	if doc != nil {
-		return errors.Wrap(query.All(doc))
+	if record != nil {
+		return errors.Wrap(query.All(record))
 	}
 
 	return nil
 }
 
-func (query Query) MustUpdate(doc interface{}, chs ...*changeset.Changeset) {
-	paranoid.Panic(query.Update(doc, chs...))
+// MustUpdate records in database.
+// It'll panic if any error occured.
+func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
+	paranoid.Panic(query.Update(record, chs...))
 }
 
+// Delete deletes all results that match the query.
 func (query Query) Delete() error {
-	qs, args := query.repo.adapter.Delete(query)
-	_, _, err := query.repo.adapter.Exec(qs, args)
-	return errors.Wrap(err)
+	return errors.Wrap(query.repo.adapter.Delete(query))
 }
 
+// MustDelete deletes all results that match the query.
+// It'll panic if any error eccured.
 func (query Query) MustDelete() {
 	paranoid.Panic(query.Delete())
 }

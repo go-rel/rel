@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTransactionCommit(t *testing.T) {
+func TestAdapterTransactionCommit(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -21,7 +21,7 @@ func TestTransactionCommit(t *testing.T) {
 	assert.Nil(t, txAdapter.Commit())
 }
 
-func TestTransactionRollback(t *testing.T) {
+func TestAdapterTransactionRollback(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func TestTransactionRollback(t *testing.T) {
 	assert.Nil(t, txAdapter.Rollback())
 }
 
-func TestTransactionCommitError(t *testing.T) {
+func TestAdapterTransactionCommitError(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -43,7 +43,7 @@ func TestTransactionCommitError(t *testing.T) {
 	assert.NotNil(t, adapter.Commit())
 }
 
-func TestTransactionRollbackError(t *testing.T) {
+func TestAdapterTransactionRollbackError(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func TestTransactionRollbackError(t *testing.T) {
 	assert.NotNil(t, adapter.Rollback())
 }
 
-func TestQuery(t *testing.T) {
+func TestAdapterQuery(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -78,7 +78,7 @@ func TestQuery(t *testing.T) {
 	assert.Nil(t, txAdapter.Commit())
 }
 
-func TestQueryError(t *testing.T) {
+func TestAdapterQueryError(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -91,7 +91,7 @@ func TestQueryError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestExec(t *testing.T) {
+func TestAdapterExec(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -120,7 +120,7 @@ func TestExec(t *testing.T) {
 	assert.Nil(t, txAdapter.Commit())
 }
 
-func TestExecError(t *testing.T) {
+func TestAdapterExecError(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
@@ -131,7 +131,7 @@ func TestExecError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestError(t *testing.T) {
+func TestAdapterError(t *testing.T) {
 	adapter := new(Adapter)
 
 	// error nil

@@ -19,25 +19,24 @@ func (adapter TestAdapter) Close() error {
 	args := adapter.Called()
 	return args.Error(0)
 }
-
-func (adapter TestAdapter) Find(query Query) (string, []interface{}) {
-	args := adapter.Called(query)
-	return args.String(0), args.Get(1).([]interface{})
+func (adapter TestAdapter) All(query Query, doc interface{}) (int, error) {
+	args := adapter.Called(query, doc)
+	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}) (string, []interface{}) {
+func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}) (int, error) {
 	args := adapter.Called(query, ch)
-	return args.String(0), args.Get(1).([]interface{})
+	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) Update(query Query, ch map[string]interface{}) (string, []interface{}) {
+func (adapter TestAdapter) Update(query Query, ch map[string]interface{}) error {
 	args := adapter.Called(query, ch)
-	return args.String(0), args.Get(1).([]interface{})
+	return args.Error(0)
 }
 
-func (adapter TestAdapter) Delete(query Query) (string, []interface{}) {
+func (adapter TestAdapter) Delete(query Query) error {
 	args := adapter.Called(query)
-	return args.String(0), args.Get(1).([]interface{})
+	return args.Error(0)
 }
 
 func (adapter TestAdapter) Begin() (Adapter, error) {

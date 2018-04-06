@@ -17,7 +17,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-func TestSelect(t *testing.T) {
+func TestQuerySelect(t *testing.T) {
 	assert.Equal(t, repo.From("users").Select("*"), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -31,7 +31,7 @@ func TestSelect(t *testing.T) {
 	})
 }
 
-func TestDistinct(t *testing.T) {
+func TestQueryDistinct(t *testing.T) {
 	assert.Equal(t, repo.From("users").Distinct(), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -40,7 +40,7 @@ func TestDistinct(t *testing.T) {
 	})
 }
 
-func TestJoin(t *testing.T) {
+func TestQueryJoin(t *testing.T) {
 	assert.Equal(t, repo.From("users").Join("transactions"), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -77,11 +77,11 @@ func TestJoin(t *testing.T) {
 	})
 }
 
-func TestJoinWith(t *testing.T) {
+func TestQueryJoinWith(t *testing.T) {
 	t.Skip("PENDING")
 }
 
-func TestWhere(t *testing.T) {
+func TestQueryWhere(t *testing.T) {
 	tests := []struct {
 		Case     string
 		Build    Query
@@ -126,7 +126,7 @@ func TestWhere(t *testing.T) {
 	}
 }
 
-func TestOrWhere(t *testing.T) {
+func TestQueryOrWhere(t *testing.T) {
 	tests := []struct {
 		Case     string
 		Build    Query
@@ -191,7 +191,7 @@ func TestOrWhere(t *testing.T) {
 	}
 }
 
-func TestGroup(t *testing.T) {
+func TestQueryGroup(t *testing.T) {
 	assert.Equal(t, repo.From("users").Group("active", "plan"), Query{
 		repo:        &repo,
 		Collection:  "users",
@@ -200,7 +200,7 @@ func TestGroup(t *testing.T) {
 	})
 }
 
-func TestHaving(t *testing.T) {
+func TestQueryHaving(t *testing.T) {
 	tests := []struct {
 		Case     string
 		Build    Query
@@ -245,7 +245,7 @@ func TestHaving(t *testing.T) {
 	}
 }
 
-func TestOrHaving(t *testing.T) {
+func TestQueryOrHaving(t *testing.T) {
 	tests := []struct {
 		Case     string
 		Build    Query
@@ -310,7 +310,7 @@ func TestOrHaving(t *testing.T) {
 	}
 }
 
-func TestOrderBy(t *testing.T) {
+func TestQueryOrderBy(t *testing.T) {
 	assert.Equal(t, repo.From("users").Order(Asc("id")), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -324,7 +324,7 @@ func TestOrderBy(t *testing.T) {
 	})
 }
 
-func TestOffset(t *testing.T) {
+func TestQueryOffset(t *testing.T) {
 	assert.Equal(t, repo.From("users").Offset(10), Query{
 		repo:         &repo,
 		Collection:   "users",
@@ -333,7 +333,7 @@ func TestOffset(t *testing.T) {
 	})
 }
 
-func TestLimit(t *testing.T) {
+func TestQueryLimit(t *testing.T) {
 	assert.Equal(t, repo.From("users").Limit(10), Query{
 		repo:        &repo,
 		Collection:  "users",
@@ -342,7 +342,7 @@ func TestLimit(t *testing.T) {
 	})
 }
 
-func TestFind(t *testing.T) {
+func TestQueryFind(t *testing.T) {
 	assert.Equal(t, repo.From("users").Find(1), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -358,7 +358,7 @@ func TestFind(t *testing.T) {
 	})
 }
 
-func TestSet(t *testing.T) {
+func TestQuerySet(t *testing.T) {
 	assert.Equal(t, repo.From("users").Set("field", 1), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -379,52 +379,48 @@ func TestSet(t *testing.T) {
 	})
 }
 
-func TestOne(t *testing.T) {
+func TestQueryOne(t *testing.T) {
 	user := User{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
-	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("All", query, &user).Return(1, nil)
 
 	assert.Nil(t, query.One(&user))
 	assert.NotPanics(t, func() { query.MustOne(&user) })
 	mock.AssertExpectations(t)
 }
 
-func TestOneUnexpectedError(t *testing.T) {
+func TestQueryOneUnexpectedError(t *testing.T) {
 	user := User{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
-	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(0), errors.UnexpectedError("error"))
+	mock.On("All", query, &user).Return(1, errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.One(&user))
 	assert.Panics(t, func() { query.MustOne(&user) })
 	mock.AssertExpectations(t)
 }
 
-func TestOneNoResultFound(t *testing.T) {
+func TestQueryOneNotFound(t *testing.T) {
 	user := User{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
-	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(0), nil)
+	mock.On("All", query, &user).Return(0, nil)
 
-	assert.NotNil(t, query.One(&user))
+	assert.Equal(t, errors.NotFoundError("no result found"), query.One(&user))
 	assert.Panics(t, func() { query.MustOne(&user) })
 	mock.AssertExpectations(t)
 }
 
-func TestAll(t *testing.T) {
+func TestQueryAll(t *testing.T) {
 	user := User{}
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Limit(1)
 
-	mock.On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("All", query, &user).Return(1, nil)
 
 	assert.Nil(t, query.All(&user))
 	assert.NotPanics(t, func() { query.MustAll(&user) })
@@ -444,7 +440,7 @@ func createChangeset() (*changeset.Changeset, User) {
 	return ch, user
 }
 
-func TestInsert(t *testing.T) {
+func TestQueryInsert(t *testing.T) {
 	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
@@ -455,17 +451,105 @@ func TestInsert(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Insert", query, changes).Return(0, nil).
+		On("All", query.Find(0).Limit(1), &user).Return(1, nil)
 
 	assert.Nil(t, query.Insert(&user, ch))
 	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestInsertAssocOne(t *testing.T) {
+func TestQueryInsertMultiple(t *testing.T) {
+	ch1, user1 := createChangeset()
+	ch2, user2 := createChangeset()
+	users := []User{user1, user2}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return(0, nil).
+		On("All", query.Where(In(I("id"), 0, 0)), &users).Return(2, nil)
+
+	assert.Nil(t, query.Insert(&users, ch1, ch2))
+	assert.NotPanics(t, func() { query.MustInsert(&users, ch1, ch2) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertNotReturning(t *testing.T) {
+	ch, _ := createChangeset()
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return(0, nil)
+
+	assert.Nil(t, query.Insert(nil, ch))
+	assert.NotPanics(t, func() { query.MustInsert(nil, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsert_withSet(t *testing.T) {
+	ch, user := createChangeset()
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"age":        10,
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return(0, nil).
+		On("All", query.Find(0).Limit(1), &user).Return(1, nil)
+
+	assert.Nil(t, query.Insert(&user, ch))
+	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertOnlySet(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Insert", query, changes).Return(0, nil)
+
+	assert.Nil(t, query.Insert(nil))
+	assert.NotPanics(t, func() { query.MustInsert(nil) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertOnlySetError(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Insert", query, changes).Return(0, errors.UnexpectedError("error"))
+
+	assert.NotNil(t, query.Insert(nil))
+	assert.Panics(t, func() { query.MustInsert(nil) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertAssocOne(t *testing.T) {
 	var card struct {
 		ID   int
 		User User
@@ -493,17 +577,15 @@ func TestInsertAssocOne(t *testing.T) {
 		"id": 1,
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
-		On("Query", &card, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Insert", query, changes).Return(0, nil).
+		On("All", query.Find(0).Limit(1), &card).Return(1, nil)
 
 	assert.Nil(t, query.Insert(&card, ch))
 	assert.NotPanics(t, func() { query.MustInsert(&card, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestInsertAssocMany(t *testing.T) {
+func TestQueryInsertAssocMany(t *testing.T) {
 	var group struct {
 		Name  string
 		Users []User
@@ -533,21 +615,15 @@ func TestInsertAssocMany(t *testing.T) {
 		"name": "name",
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
-		On("Query", &group, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Insert", query, changes).Return(0, nil).
+		On("All", query.Find(0).Limit(1), &group).Return(1, nil)
 
 	assert.Nil(t, query.Insert(&group, ch))
 	assert.NotPanics(t, func() { query.MustInsert(&group, ch) })
 	mock.AssertExpectations(t)
 }
-
-func TestInsertMultiple(t *testing.T) {
-	ch1, user1 := createChangeset()
-	ch2, user2 := createChangeset()
-	users := []User{user1, user2}
-
+func TestQueryInsertError(t *testing.T) {
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
@@ -557,36 +633,32 @@ func TestInsertMultiple(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query.Where(In(I("id"), int64(0), int64(0)))).Return("", []interface{}{}).
-		On("Query", &users, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Insert", query, changes).Return(0, errors.UnexpectedError("error"))
 
-	assert.Nil(t, query.Insert(&users, ch1, ch2))
-	assert.NotPanics(t, func() { query.MustInsert(&users, ch1, ch2) })
+	assert.NotNil(t, query.Insert(&user, ch))
+	assert.Panics(t, func() { query.MustInsert(&user, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestInsertNotReturning(t *testing.T) {
-	ch, _ := createChangeset()
+func TestQueryUpdate(t *testing.T) {
+	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
 	changes := map[string]interface{}{
 		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &user).Return(1, nil)
 
-	assert.Nil(t, query.Insert(nil, ch))
-	assert.NotPanics(t, func() { query.MustInsert(nil, ch) })
+	assert.Nil(t, query.Update(&user, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestInsertWithSet(t *testing.T) {
+func TestUpdateWithSet(t *testing.T) {
 	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Set("age", 10)
@@ -594,92 +666,59 @@ func TestInsertWithSet(t *testing.T) {
 	changes := map[string]interface{}{
 		"name":       "name",
 		"age":        10,
-		"created_at": time.Now().Round(time.Second),
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query.Find(int64(0)).Limit(1)).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
-
-	assert.Nil(t, query.Insert(&user, ch))
-	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
-	mock.AssertExpectations(t)
-}
-
-func TestInsertOnlySet(t *testing.T) {
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users").Set("age", 10)
-
-	changes := map[string]interface{}{
-		"age": 10,
-	}
-
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
-
-	assert.Nil(t, query.Insert(nil))
-	assert.NotPanics(t, func() { query.MustInsert(nil) })
-	mock.AssertExpectations(t)
-}
-
-func TestInsertOnlySetError(t *testing.T) {
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users").Set("age", 10)
-
-	changes := map[string]interface{}{
-		"age": 10,
-	}
-
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
-
-	assert.NotNil(t, query.Insert(nil))
-	assert.Panics(t, func() { query.MustInsert(nil) })
-	mock.AssertExpectations(t)
-}
-
-func TestInsertError(t *testing.T) {
-	ch, user := createChangeset()
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users")
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	mock.On("Insert", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
-
-	assert.NotNil(t, query.Insert(&user, ch))
-	assert.Panics(t, func() { query.MustInsert(&user, ch) })
-	mock.AssertExpectations(t)
-}
-
-func TestUpdate(t *testing.T) {
-	ch, user := createChangeset()
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users")
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &user).Return(1, nil)
 
 	assert.Nil(t, query.Update(&user, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestUpdateAssocOne(t *testing.T) {
+func TestUpdateOnlySet(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 10)
+
+	changes := map[string]interface{}{
+		"age": 10,
+	}
+
+	mock.On("Update", query, changes).Return(nil)
+
+	assert.Nil(t, query.Update(nil))
+	assert.NotPanics(t, func() { query.MustUpdate(nil) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateNotReturning(t *testing.T) {
+	ch, _ := createChangeset()
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return(nil)
+
+	assert.Nil(t, query.Update(nil, ch))
+	assert.NotPanics(t, func() { query.MustUpdate(nil, ch) })
+	mock.AssertExpectations(t)
+}
+
+func TestUpdateNothing(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	assert.Nil(t, query.Update(nil))
+	assert.NotPanics(t, func() { query.MustUpdate(nil) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryUpdateAssocOne(t *testing.T) {
 	var card struct {
 		ID   int
 		User User
@@ -707,10 +746,8 @@ func TestUpdateAssocOne(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("cards")
 
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query).Return("", []interface{}{}).
-		On("Query", &card, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &card).Return(1, nil)
 
 	assert.Nil(t, query.Update(&card, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&card, ch) })
@@ -747,81 +784,15 @@ func TestUpdateAssocMany(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("groups")
 
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query).Return("", []interface{}{}).
-		On("Query", &group, "", []interface{}{}).Return(int64(1), nil)
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &group).Return(1, nil)
 
 	assert.Nil(t, query.Update(&group, ch))
 	assert.NotPanics(t, func() { query.MustUpdate(&group, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestUpdateWithSet(t *testing.T) {
-	ch, user := createChangeset()
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users").Set("age", 10)
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"age":        10,
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil).
-		On("Find", query).Return("", []interface{}{}).
-		On("Query", &user, "", []interface{}{}).Return(int64(1), nil)
-
-	assert.Nil(t, query.Update(&user, ch))
-	assert.NotPanics(t, func() { query.MustUpdate(&user, ch) })
-	mock.AssertExpectations(t)
-}
-
-func TestUpdateOnlySet(t *testing.T) {
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users").Set("age", 10)
-
-	changes := map[string]interface{}{
-		"age": 10,
-	}
-
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
-
-	assert.Nil(t, query.Update(nil))
-	assert.NotPanics(t, func() { query.MustUpdate(nil) })
-	mock.AssertExpectations(t)
-}
-
-func TestUpdateNotReturning(t *testing.T) {
-	ch, _ := createChangeset()
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users")
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
-
-	assert.Nil(t, query.Update(nil, ch))
-	assert.NotPanics(t, func() { query.MustUpdate(nil, ch) })
-	mock.AssertExpectations(t)
-}
-
-func TestUpdateNothing(t *testing.T) {
-	mock := new(TestAdapter)
-	query := Repo{adapter: mock}.From("users")
-
-	assert.Nil(t, query.Update(nil))
-	assert.NotPanics(t, func() { query.MustUpdate(nil) })
-	mock.AssertExpectations(t)
-}
-
-func TestUpdateError(t *testing.T) {
+func TestQueryUpdateError(t *testing.T) {
 	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
@@ -831,20 +802,18 @@ func TestUpdateError(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Update", query, changes).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), errors.UnexpectedError("error"))
+	mock.On("Update", query, changes).Return(errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Update(&user, ch))
 	assert.Panics(t, func() { query.MustUpdate(&user, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestDelete(t *testing.T) {
+func TestQueryDelete(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
 
-	mock.On("Delete", query).Return("", []interface{}{}).
-		On("Exec", "", []interface{}{}).Return(int64(0), int64(0), nil)
+	mock.On("Delete", query).Return(nil)
 
 	assert.Nil(t, query.Delete())
 	assert.NotPanics(t, func() { query.MustDelete() })

@@ -31,24 +31,32 @@ func (adapter *Adapter) Close() error {
 	return adapter.db.Close()
 }
 
-// Find generates sql query and arguments query operation.
-func (adapter *Adapter) Find(query grimoire.Query) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Find(query)
+// All retrieves all record that match the query.
+func (adapter *Adapter) All(query grimoire.Query, doc interface{}) (int, error) {
+	statement, args := sqlutil.NewBuilder("?", false).Find(query)
+	count, err := adapter.Query(doc, statement, args)
+	return int(count), err
 }
 
-// Insert generates sql query and arguments for insert operation.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Insert(query.Collection, changes)
+// Delete deletes all results that match the query.
+func (adapter *Adapter) Delete(query grimoire.Query) error {
+	statement, args := sqlutil.NewBuilder("?", false).Delete(query.Collection, query.Condition)
+	_, _, err := adapter.Exec(statement, args)
+	return err
 }
 
-// Update generates sql query and arguments for update operation.
-func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Update(query.Collection, changes, query.Condition)
+// Insert inserts a record to database and returns its id.
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (int, error) {
+	statement, args := sqlutil.NewBuilder("?", false).Insert(query.Collection, changes)
+	id, _, err := adapter.Exec(statement, args)
+	return int(id), err
 }
 
-// Delete generates sql query and argumetns for delete opration.
-func (adapter *Adapter) Delete(query grimoire.Query) (string, []interface{}) {
-	return sqlutil.NewBuilder("?", false).Delete(query.Collection, query.Condition)
+// Update updates a record in database.
+func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}) error {
+	statement, args := sqlutil.NewBuilder("?", false).Update(query.Collection, changes, query.Condition)
+	_, _, err := adapter.Exec(statement, args)
+	return err
 }
 
 // Begin begins a new transaction.
@@ -78,14 +86,14 @@ func (adapter *Adapter) Rollback() error {
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(out interface{}, qs string, args []interface{}) (int64, error) {
+func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}) (int64, error) {
 	var rows *sql.Rows
 	var err error
 
 	if adapter.tx != nil {
-		rows, err = adapter.tx.Query(qs, args...)
+		rows, err = adapter.tx.Query(statement, args...)
 	} else {
-		rows, err = adapter.db.Query(qs, args...)
+		rows, err = adapter.db.Query(statement, args...)
 	}
 
 	if err != nil {
@@ -98,14 +106,14 @@ func (adapter *Adapter) Query(out interface{}, qs string, args []interface{}) (i
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(qs string, args []interface{}) (int64, int64, error) {
+func (adapter *Adapter) Exec(statement string, args []interface{}) (int64, int64, error) {
 	var res sql.Result
 	var err error
 
 	if adapter.tx != nil {
-		res, err = adapter.tx.Exec(qs, args...)
+		res, err = adapter.tx.Exec(statement, args...)
 	} else {
-		res, err = adapter.db.Exec(qs, args...)
+		res, err = adapter.db.Exec(statement, args...)
 	}
 
 	if err != nil {

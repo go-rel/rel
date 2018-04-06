@@ -9,6 +9,7 @@ import (
 	"github.com/Fs02/go-paranoid"
 
 	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/adapter/sqlutil"
 	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
@@ -190,8 +191,8 @@ func TestRepoQuery(t *testing.T) {
 	}
 
 	for _, q := range queries {
-		str, _ := adapter.Find(q)
-		t.Run("ALL|"+str, func(t *testing.T) {
+		statement, _ := sqlutil.NewBuilder("?", false).Find(q)
+		t.Run("ALL|"+statement, func(t *testing.T) {
 			var result []User
 			err := q.All(&result)
 			assert.Nil(t, err)

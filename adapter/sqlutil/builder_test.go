@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFind(t *testing.T) {
+func TestBuilderFind(t *testing.T) {
 	users := grimoire.Query{
 		Collection: "users",
 		Fields:     []string{"*"},
@@ -71,7 +71,7 @@ func TestFind(t *testing.T) {
 	}
 }
 
-func TestFindOrdinal(t *testing.T) {
+func TestBuilderFindOrdinal(t *testing.T) {
 	users := grimoire.Query{
 		Collection: "users",
 		Fields:     []string{"*"},
@@ -133,7 +133,7 @@ func TestFindOrdinal(t *testing.T) {
 	}
 }
 
-func TestInsert(t *testing.T) {
+func TestBuilderInsert(t *testing.T) {
 	changes := map[string]interface{}{
 		"name": "foo",
 	}
@@ -159,7 +159,52 @@ func TestInsert(t *testing.T) {
 	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
-func TestUdate(t *testing.T) {
+func TestBuilderInsertAll(t *testing.T) {
+	fields := []string{"name"}
+	allchanges := []map[string]interface{}{
+		{"name": "foo"},
+		{"age": 12},
+		{"name": "boo"},
+	}
+
+	statement, args := NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name) VALUES (?),(DEFAULT),(?);", statement)
+	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+
+	// ordinal
+	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name) VALUES ($1),(DEFAULT),($2);", statement)
+	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+
+	// with age
+	fields = append(fields, "age")
+	statement, args = NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name,age) VALUES (?,DEFAULT),(DEFAULT,?),(?,DEFAULT);", statement)
+	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+
+	// ordinal
+	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT);", statement)
+	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+
+	// all changes have value
+	allchanges = []map[string]interface{}{
+		{"name": "foo", "age": 10},
+		{"name": "zoo", "age": 12},
+		{"name": "boo", "age": 20},
+	}
+
+	statement, args = NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name,age) VALUES (?,?),(?,?),(?,?);", statement)
+	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
+
+	// ordinal
+	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,$2),($3,$4),($5,$6);", statement)
+	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
+}
+
+func TestBuilderUdate(t *testing.T) {
 	changes := map[string]interface{}{
 		"name": "foo",
 	}
@@ -197,7 +242,7 @@ func TestUdate(t *testing.T) {
 	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
-func TestDelete(t *testing.T) {
+func TestBuilderDelete(t *testing.T) {
 	qs, args := NewBuilder("?", false).Delete("users", And())
 	assert.Equal(t, "DELETE FROM users;", qs)
 	assert.Equal(t, []interface{}(nil), args)
@@ -211,7 +256,7 @@ func TestDelete(t *testing.T) {
 	assert.Equal(t, []interface{}{1}, args)
 }
 
-func TestSelect(t *testing.T) {
+func TestBuilderSelect(t *testing.T) {
 	assert.Equal(t, "SELECT *", NewBuilder("?", false).Select(false, "*"))
 	assert.Equal(t, "SELECT id, name", NewBuilder("?", false).Select(false, "id", "name"))
 
@@ -219,11 +264,11 @@ func TestSelect(t *testing.T) {
 	assert.Equal(t, "SELECT DISTINCT id, name", NewBuilder("?", false).Select(true, "id", "name"))
 }
 
-func TestFrom(t *testing.T) {
+func TestBuilderFrom(t *testing.T) {
 	assert.Equal(t, "FROM users", NewBuilder("?", false).From("users"))
 }
 
-func TestJoin(t *testing.T) {
+func TestBuilderJoin(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -261,7 +306,7 @@ func TestJoin(t *testing.T) {
 	}
 }
 
-func TestWhere(t *testing.T) {
+func TestBuilderWhere(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -293,7 +338,7 @@ func TestWhere(t *testing.T) {
 	}
 }
 
-func TestWhereOrdinal(t *testing.T) {
+func TestBuilderWhereOrdinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -325,13 +370,13 @@ func TestWhereOrdinal(t *testing.T) {
 	}
 }
 
-func TestGroupBy(t *testing.T) {
+func TestBuilderGroupBy(t *testing.T) {
 	assert.Equal(t, "", NewBuilder("?", false).GroupBy())
 	assert.Equal(t, "GROUP BY city", NewBuilder("?", false).GroupBy("city"))
 	assert.Equal(t, "GROUP BY city, nation", NewBuilder("?", false).GroupBy("city", "nation"))
 }
 
-func TestHaving(t *testing.T) {
+func TestBuilderHaving(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -363,7 +408,7 @@ func TestHaving(t *testing.T) {
 	}
 }
 
-func TestHavingOrdinal(t *testing.T) {
+func TestBuilderHavingOrdinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -395,23 +440,23 @@ func TestHavingOrdinal(t *testing.T) {
 	}
 }
 
-func TestOrderBy(t *testing.T) {
+func TestBuilderOrderBy(t *testing.T) {
 	assert.Equal(t, "", NewBuilder("?", false).OrderBy())
 	assert.Equal(t, "ORDER BY name ASC", NewBuilder("?", false).OrderBy(Asc("name")))
 	assert.Equal(t, "ORDER BY name ASC, created_at DESC", NewBuilder("?", false).OrderBy(Asc("name"), Desc("created_at")))
 }
 
-func TestOffset(t *testing.T) {
+func TestBuilderOffset(t *testing.T) {
 	assert.Equal(t, "", NewBuilder("?", false).Offset(0))
 	assert.Equal(t, "OFFSET 10", NewBuilder("?", false).Offset(10))
 }
 
-func TestLimit(t *testing.T) {
+func TestBuilderLimit(t *testing.T) {
 	assert.Equal(t, "", NewBuilder("?", false).Limit(0))
 	assert.Equal(t, "LIMIT 10", NewBuilder("?", false).Limit(10))
 }
 
-func TestCondition(t *testing.T) {
+func TestBuilderCondition(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -653,7 +698,7 @@ func TestCondition(t *testing.T) {
 	}
 }
 
-func TestConditionOrdinal(t *testing.T) {
+func TestBuilderConditionOrdinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}

@@ -104,6 +104,42 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 	return buffer.String(), args
 }
 
+func (builder *Builder) InsertAll(collection string, fields []string, allchanges []map[string]interface{}) (string, []interface{}) {
+	var buffer bytes.Buffer
+	var args = make([]interface{}, 0, len(fields)*len(allchanges))
+
+	buffer.WriteString("INSERT INTO ")
+	buffer.WriteString(collection)
+	buffer.WriteString(" (")
+	buffer.WriteString(strings.Join(fields, ","))
+	buffer.WriteString(") VALUES ")
+
+	for i, changes := range allchanges {
+		buffer.WriteString("(")
+
+		for j, field := range fields {
+			if val, exist := changes[field]; exist {
+				buffer.WriteString(builder.ph())
+				args = append(args, val)
+			} else {
+				buffer.WriteString("DEFAULT")
+			}
+
+			if j < len(fields)-1 {
+				buffer.WriteString(",")
+			}
+		}
+
+		if i < len(allchanges)-1 {
+			buffer.WriteString("),")
+		} else {
+			buffer.WriteString(");")
+		}
+	}
+
+	return buffer.String(), args
+}
+
 func (builder *Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
 	length := len(changes)
 

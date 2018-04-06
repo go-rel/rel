@@ -7,6 +7,7 @@ type Adapter interface {
 	All(Query, interface{}) (int, error)
 	Delete(Query) error
 	Insert(Query, map[string]interface{}) (int, error)
+	InsertAll(Query, []string, []map[string]interface{}) ([]int, error)
 	Update(Query, map[string]interface{}) error
 
 	Begin() (Adapter, error)

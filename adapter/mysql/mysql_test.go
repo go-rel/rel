@@ -4,10 +4,49 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAdapterInsertAll(t *testing.T) {
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	fields := []string{"name"}
+	allchanges := []map[string]interface{}{
+		{"name": "foo"},
+		{"age": 12},
+		{"name": "boo"},
+	}
+
+	ids, err := adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(ids))
+}
+
+func TestAdapterInsertAllError(t *testing.T) {
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	fields := []string{"notexist"}
+	allchanges := []map[string]interface{}{
+		{"notexist": "12"},
+		{"notexist": "13"},
+	}
+
+	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+
+	assert.NotNil(t, err)
+}
 
 func TestAdapterTransactionCommit(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")

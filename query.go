@@ -197,13 +197,13 @@ func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error
 }
 
 // MustInsert records to database.
-// It'll panic if any error occured.
+// It'll panic if any error occurred.
 func (query Query) MustInsert(record interface{}, chs ...*changeset.Changeset) {
 	paranoid.Panic(query.Insert(record, chs...))
 }
 
 // Update records in database.
-// It'll panic if any error occured.
+// It'll panic if any error occurred.
 func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error {
 	changes := make(map[string]interface{})
 
@@ -235,7 +235,7 @@ func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error
 }
 
 // MustUpdate records in database.
-// It'll panic if any error occured.
+// It'll panic if any error occurred.
 func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
 	paranoid.Panic(query.Update(record, chs...))
 }

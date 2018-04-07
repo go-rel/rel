@@ -159,6 +159,7 @@ func (query Query) MustAll(record interface{}) {
 
 // Insert records to database.
 func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
+	var err error
 	var ids []interface{}
 
 	if len(chs) == 1 {
@@ -170,10 +171,8 @@ func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error
 		putTimestamp(changes, "updated_at", ch.Types())
 		cloneQuery(changes, query.Changes)
 
-		id, err := query.repo.adapter.Insert(query, changes)
-		if err != nil {
-			return errors.Wrap(err)
-		}
+		var id interface{}
+		id, err = query.repo.adapter.Insert(query, changes)
 		ids = append(ids, id)
 	} else if len(chs) > 1 {
 		// multiple insert
@@ -190,21 +189,17 @@ func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error
 			allchanges[i] = changes
 		}
 
-		var err error
 		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges)
-		if err != nil {
-			return errors.Wrap(err)
-		}
 	} else if len(query.Changes) > 0 {
 		// set only
-		id, err := query.repo.adapter.Insert(query, query.Changes)
-		if err != nil {
-			return errors.Wrap(err)
-		}
+		var id interface{}
+		id, err = query.repo.adapter.Insert(query, query.Changes)
 		ids = append(ids, id)
 	}
 
-	if record == nil || len(ids) == 0 {
+	if err != nil {
+		return errors.Wrap(err)
+	} else if record == nil || len(ids) == 0 {
 		return nil
 	} else if len(ids) == 1 {
 		return errors.Wrap(query.Find(ids[0]).One(record))

@@ -316,30 +316,8 @@ func (builder *Builder) Condition(cond c.Condition) (string, []interface{}) {
 		return string(cond.Left.Column) + " IS NULL", cond.Right.Values
 	case c.ConditionNotNil:
 		return string(cond.Left.Column) + " IS NOT NULL", cond.Right.Values
-	case c.ConditionIn:
-		var buffer bytes.Buffer
-		buffer.WriteString(string(cond.Left.Column))
-		buffer.WriteString(" IN (")
-		buffer.WriteString(builder.ph())
-		for i := 1; i <= len(cond.Right.Values)-1; i++ {
-			buffer.WriteString(",")
-			buffer.WriteString(builder.ph())
-		}
-		buffer.WriteString(")")
-
-		return buffer.String(), cond.Right.Values
-	case c.ConditionNin:
-		var buffer bytes.Buffer
-		buffer.WriteString(string(cond.Left.Column))
-		buffer.WriteString(" NOT IN (")
-		buffer.WriteString(builder.ph())
-		for i := 1; i <= len(cond.Right.Values)-1; i++ {
-			buffer.WriteString(",")
-			buffer.WriteString(builder.ph())
-		}
-		buffer.WriteString(")")
-
-		return buffer.String(), cond.Right.Values
+	case c.ConditionIn, c.ConditionNin:
+		return builder.buildInclusion(cond)
 	case c.ConditionLike:
 		return string(cond.Left.Column) + " LIKE " + builder.ph(), cond.Right.Values
 	case c.ConditionNotLike:
@@ -392,6 +370,26 @@ func (builder *Builder) buildComparison(op string, left, right c.Operand) (strin
 	}
 
 	return cs, append(left.Values, right.Values...)
+}
+
+func (builder *Builder) buildInclusion(cond c.Condition) (string, []interface{}) {
+	var buffer bytes.Buffer
+	buffer.WriteString(string(cond.Left.Column))
+
+	if cond.Type == c.ConditionIn {
+		buffer.WriteString(" IN (")
+	} else {
+		buffer.WriteString(" NOT IN (")
+	}
+
+	buffer.WriteString(builder.ph())
+	for i := 1; i <= len(cond.Right.Values)-1; i++ {
+		buffer.WriteString(",")
+		buffer.WriteString(builder.ph())
+	}
+	buffer.WriteString(")")
+
+	return buffer.String(), cond.Right.Values
 }
 
 func (builder *Builder) ph() string {

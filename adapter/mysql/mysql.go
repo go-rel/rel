@@ -39,22 +39,15 @@ func (adapter *Adapter) All(query grimoire.Query, doc interface{}) (int, error) 
 	return int(count), err
 }
 
-// Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query grimoire.Query) error {
-	statement, args := sqlutil.NewBuilder("?", false).Delete(query.Collection, query.Condition)
-	_, _, err := adapter.Exec(statement, args)
-	return err
-}
-
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (int, error) {
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (interface{}, error) {
 	statement, args := sqlutil.NewBuilder("?", false).Insert(query.Collection, changes)
 	id, _, err := adapter.Exec(statement, args)
-	return int(id), err
+	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}) ([]int, error) {
+func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}) ([]interface{}, error) {
 	statement, args := sqlutil.NewBuilder("?", false).InsertAll(query.Collection, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args)
 	if err != nil {
@@ -62,10 +55,10 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 	}
 
 	inc := adapter.getIncrement()
-	ids := []int{int(id)}
+	ids := []interface{}{id}
 
 	for i := 1; i < len(allchanges); i++ {
-		ids = append(ids, int(id)+inc*i)
+		ids = append(ids, id+int64(inc*i))
 	}
 
 	return ids, nil
@@ -74,6 +67,13 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 // Update updates a record in database.
 func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}) error {
 	statement, args := sqlutil.NewBuilder("?", false).Update(query.Collection, changes, query.Condition)
+	_, _, err := adapter.Exec(statement, args)
+	return err
+}
+
+// Delete deletes all results that match the query.
+func (adapter *Adapter) Delete(query grimoire.Query) error {
+	statement, args := sqlutil.NewBuilder("?", false).Delete(query.Collection, query.Condition)
 	_, _, err := adapter.Exec(statement, args)
 	return err
 }
@@ -148,7 +148,12 @@ func (adapter *Adapter) Exec(statement string, args []interface{}) (int64, int64
 func (adapter *Adapter) getIncrement() int {
 	var variable string
 	var increment int
-	err := adapter.db.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
+	var err error
+	if adapter.tx != nil {
+		err = adapter.tx.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
+	} else {
+		err = adapter.db.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
+	}
 	paranoid.Panic(err)
 
 	return increment

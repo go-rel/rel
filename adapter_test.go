@@ -24,14 +24,14 @@ func (adapter TestAdapter) All(query Query, doc interface{}) (int, error) {
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}) (int, error) {
+func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}) (interface{}, error) {
 	args := adapter.Called(query, ch)
-	return args.Int(0), args.Error(1)
+	return args.Get(0), args.Error(1)
 }
 
-func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}) ([]int, error) {
+func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}) ([]interface{}, error) {
 	args := adapter.Called(query, fields, chs)
-	return args.Get(0).([]int), args.Error(1)
+	return args.Get(0).([]interface{}), args.Error(1)
 }
 
 func (adapter TestAdapter) Update(query Query, ch map[string]interface{}) error {

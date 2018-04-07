@@ -161,29 +161,46 @@ func (query Query) MustAll(record interface{}) {
 func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
 	var ids []interface{}
 
-	if len(chs) > 0 {
-		for _, ch := range chs {
+	if len(chs) == 1 {
+		// single insert
+		ch := chs[0]
+		changes := make(map[string]interface{})
+		cloneChangeset(changes, ch.Changes())
+		putTimestamp(changes, "created_at", ch.Types())
+		putTimestamp(changes, "updated_at", ch.Types())
+		cloneQuery(changes, query.Changes)
+
+		id, err := query.repo.adapter.Insert(query, changes)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		ids = append(ids, id)
+	} else if len(chs) > 1 {
+		// multiple insert
+		fields := getFields(query, chs)
+
+		allchanges := make([]map[string]interface{}, len(chs))
+		for i, ch := range chs {
 			changes := make(map[string]interface{})
 			cloneChangeset(changes, ch.Changes())
 			putTimestamp(changes, "created_at", ch.Types())
 			putTimestamp(changes, "updated_at", ch.Types())
 			cloneQuery(changes, query.Changes)
 
-			id, err := query.repo.adapter.Insert(query, changes)
-
-			if err != nil {
-				return errors.Wrap(err)
-			}
-
-			ids = append(ids, id)
+			allchanges[i] = changes
 		}
-	} else {
-		id, err := query.repo.adapter.Insert(query, query.Changes)
 
+		var err error
+		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-
+	} else if len(query.Changes) > 0 {
+		// set only
+		id, err := query.repo.adapter.Insert(query, query.Changes)
+		if err != nil {
+			return errors.Wrap(err)
+		}
 		ids = append(ids, id)
 	}
 
@@ -276,4 +293,28 @@ func putTimestamp(out map[string]interface{}, field string, types map[string]ref
 	if typ, ok := types[field]; ok && typ == reflect.TypeOf(time.Time{}) {
 		out[field] = time.Now().Round(time.Second)
 	}
+}
+
+func getFields(query Query, chs []*changeset.Changeset) []string {
+	fields := make([]string, 0, len(chs[0].Types()))
+
+	for f := range chs[0].Types() {
+		if f == "created_at" || f == "updated_at" {
+			fields = append(fields, f)
+			continue
+		}
+
+		if _, exist := query.Changes[f]; exist {
+			fields = append(fields, f)
+		}
+
+		for _, ch := range chs {
+			if _, exist := ch.Changes()[f]; exist {
+				fields = append(fields, f)
+				break
+			}
+		}
+	}
+
+	return fields
 }

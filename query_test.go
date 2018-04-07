@@ -451,8 +451,8 @@ func TestQueryInsert(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return(0, nil).
-		On("All", query.Find(0).Limit(1), &user).Return(1, nil)
+	mock.On("Insert", query, changes).Return(1, nil).
+		On("All", query.Find(1).Limit(1), &user).Return(1, nil)
 
 	assert.Nil(t, query.Insert(&user, ch))
 	assert.NotPanics(t, func() { query.MustInsert(&user, ch) })
@@ -473,11 +473,64 @@ func TestQueryInsertMultiple(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return(0, nil).
-		On("All", query.Where(In(I("id"), 0, 0)), &users).Return(2, nil)
+	allchanges := []map[string]interface{}{changes, changes}
+	fields := []string{"name", "created_at", "updated_at"}
+
+	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, nil).
+		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(2, nil)
 
 	assert.Nil(t, query.Insert(&users, ch1, ch2))
 	assert.NotPanics(t, func() { query.MustInsert(&users, ch1, ch2) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertMultipleWithSet(t *testing.T) {
+	ch1, user1 := createChangeset()
+	ch2, user2 := createChangeset()
+	users := []User{user1, user2}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Set("age", 18)
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"age":        18,
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	allchanges := []map[string]interface{}{changes, changes}
+	fields := []string{"name", "age", "created_at", "updated_at"}
+
+	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, nil).
+		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(2, nil)
+
+	assert.Nil(t, query.Insert(&users, ch1, ch2))
+	assert.NotPanics(t, func() { query.MustInsert(&users, ch1, ch2) })
+	mock.AssertExpectations(t)
+}
+
+func TestQueryInsertMultipleError(t *testing.T) {
+	ch1, user1 := createChangeset()
+	ch2, user2 := createChangeset()
+	users := []User{user1, user2}
+
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	changes := map[string]interface{}{
+		"name":       "name",
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	allchanges := []map[string]interface{}{changes, changes}
+	fields := []string{"name", "created_at", "updated_at"}
+
+	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, errors.UnexpectedError("error"))
+
+	assert.NotNil(t, query.Insert(&users, ch1, ch2))
+	assert.Panics(t, func() { query.MustInsert(&users, ch1, ch2) })
 	mock.AssertExpectations(t)
 }
 
@@ -492,14 +545,14 @@ func TestQueryInsertNotReturning(t *testing.T) {
 		"updated_at": time.Now().Round(time.Second),
 	}
 
-	mock.On("Insert", query, changes).Return(0, nil)
+	mock.On("Insert", query, changes).Return(1, nil)
 
 	assert.Nil(t, query.Insert(nil, ch))
 	assert.NotPanics(t, func() { query.MustInsert(nil, ch) })
 	mock.AssertExpectations(t)
 }
 
-func TestQueryInsert_withSet(t *testing.T) {
+func TestQueryInsertWithSet(t *testing.T) {
 	ch, user := createChangeset()
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Set("age", 10)

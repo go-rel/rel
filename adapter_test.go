@@ -30,7 +30,7 @@ func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}) (inter
 }
 
 func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}) ([]interface{}, error) {
-	args := adapter.Called(query, fields, chs)
+	args := adapter.Called(query, chs)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 

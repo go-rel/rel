@@ -474,9 +474,8 @@ func TestQueryInsertMultiple(t *testing.T) {
 	}
 
 	allchanges := []map[string]interface{}{changes, changes}
-	fields := []string{"name", "created_at", "updated_at"}
 
-	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, nil).
+	mock.On("InsertAll", query, allchanges).Return([]interface{}{1, 2}, nil).
 		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(2, nil)
 
 	assert.Nil(t, query.Insert(&users, ch1, ch2))
@@ -500,9 +499,8 @@ func TestQueryInsertMultipleWithSet(t *testing.T) {
 	}
 
 	allchanges := []map[string]interface{}{changes, changes}
-	fields := []string{"name", "age", "created_at", "updated_at"}
 
-	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, nil).
+	mock.On("InsertAll", query, allchanges).Return([]interface{}{1, 2}, nil).
 		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(2, nil)
 
 	assert.Nil(t, query.Insert(&users, ch1, ch2))
@@ -525,9 +523,8 @@ func TestQueryInsertMultipleError(t *testing.T) {
 	}
 
 	allchanges := []map[string]interface{}{changes, changes}
-	fields := []string{"name", "created_at", "updated_at"}
 
-	mock.On("InsertAll", query, fields, allchanges).Return([]interface{}{1, 2}, errors.UnexpectedError("error"))
+	mock.On("InsertAll", query, allchanges).Return([]interface{}{1, 2}, errors.UnexpectedError("error"))
 
 	assert.NotNil(t, query.Insert(&users, ch1, ch2))
 	assert.Panics(t, func() { query.MustInsert(&users, ch1, ch2) })

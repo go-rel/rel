@@ -300,23 +300,19 @@ func (builder *Builder) Condition(cond c.Condition) (string, []interface{}) {
 	case c.ConditionNot:
 		qs, args := builder.build("AND", cond.Inner)
 		return "NOT " + qs, args
-	case c.ConditionEq:
-		return builder.buildComparison("=", cond.Left, cond.Right)
-	case c.ConditionNe:
-		return builder.buildComparison("<>", cond.Left, cond.Right)
-	case c.ConditionLt:
-		return builder.buildComparison("<", cond.Left, cond.Right)
-	case c.ConditionLte:
-		return builder.buildComparison("<=", cond.Left, cond.Right)
-	case c.ConditionGt:
-		return builder.buildComparison(">", cond.Left, cond.Right)
-	case c.ConditionGte:
-		return builder.buildComparison(">=", cond.Left, cond.Right)
+	case c.ConditionEq,
+		c.ConditionNe,
+		c.ConditionLt,
+		c.ConditionLte,
+		c.ConditionGt,
+		c.ConditionGte:
+		return builder.buildComparison(cond)
 	case c.ConditionNil:
 		return string(cond.Left.Column) + " IS NULL", cond.Right.Values
 	case c.ConditionNotNil:
 		return string(cond.Left.Column) + " IS NOT NULL", cond.Right.Values
-	case c.ConditionIn, c.ConditionNin:
+	case c.ConditionIn,
+		c.ConditionNin:
 		return builder.buildInclusion(cond)
 	case c.ConditionLike:
 		return string(cond.Left.Column) + " LIKE " + builder.ph(), cond.Right.Values
@@ -355,21 +351,38 @@ func (builder *Builder) build(op string, inner []c.Condition) (string, []interfa
 	return qstring, args
 }
 
-func (builder *Builder) buildComparison(op string, left, right c.Operand) (string, []interface{}) {
+func (builder *Builder) buildComparison(cond c.Condition) (string, []interface{}) {
 	var cs string
-	if left.Column != "" {
-		cs = string(left.Column) + op
+	var op string
+
+	switch cond.Type {
+	case c.ConditionEq:
+		op = "="
+	case c.ConditionNe:
+		op = "<>"
+	case c.ConditionLt:
+		op = "<"
+	case c.ConditionLte:
+		op = "<="
+	case c.ConditionGt:
+		op = ">"
+	case c.ConditionGte:
+		op = ">="
+	}
+
+	if cond.Left.Column != "" {
+		cs = string(cond.Left.Column) + op
 	} else {
 		cs = builder.ph() + op
 	}
 
-	if right.Column != "" {
-		cs += string(right.Column)
+	if cond.Right.Column != "" {
+		cs += string(cond.Right.Column)
 	} else {
 		cs += builder.ph()
 	}
 
-	return cs, append(left.Values, right.Values...)
+	return cs, append(cond.Left.Values, cond.Right.Values...)
 }
 
 func (builder *Builder) buildInclusion(cond c.Condition) (string, []interface{}) {

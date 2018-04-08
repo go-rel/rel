@@ -6,7 +6,6 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/c"
-	"github.com/Fs02/grimoire/changeset"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,10 +17,8 @@ func PutInsert(t *testing.T, repo grimoire.Repo) {
 
 	for _, query := range tests {
 		record := User{Name: "put insert", Age: 100}
-		ch := changeset.Change(record)
-		statement, _ := sqlutil.NewBuilder("?", false).Insert(query.Collection, ch.Changes())
 
-		t.Run("PutInsert|"+statement, func(t *testing.T) {
+		t.Run("PutInsert", func(t *testing.T) {
 			assert.Nil(t, query.Put(&record))
 
 			var result User
@@ -42,9 +39,8 @@ func PutInsertAll(t *testing.T, repo grimoire.Repo) {
 			{Name: "put insert all 1", Age: 100},
 			{Name: "put insert all 2", Age: 100},
 		}
-		statement, _ := sqlutil.NewBuilder("?", false).InsertAll(query.Collection, []string{"name", "age"}, []map[string]interface{}{})
 
-		t.Run("PutInsertAll|"+statement, func(t *testing.T) {
+		t.Run("PutInsertAll", func(t *testing.T) {
 			assert.Nil(t, query.Put(&records))
 		})
 	}

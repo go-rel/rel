@@ -2,6 +2,7 @@ package specs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
@@ -48,6 +49,35 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 
 			// multiple insert
 			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
+		})
+	}
+}
+
+// InsertSet tests insert specifications only using Set query.
+func InsertSet(t *testing.T, repo grimoire.Repo) {
+	user := User{}
+	assert.Nil(t, repo.From(users).Put(&user))
+	now := time.Now()
+
+	tests := []struct {
+		query  grimoire.Query
+		record interface{}
+	}{
+		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set"), &User{}},
+		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set").Set("age", 100), &User{}},
+		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set").Set("age", 100).Set("note", "note"), &User{}},
+		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("note", "note"), &User{}},
+		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("address", "address"), &Address{}},
+		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("address", "address").Set("user_id", user.ID), &Address{}},
+		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("user_id", user.ID), &Address{}},
+	}
+
+	for _, test := range tests {
+		statement, _ := sqlutil.NewBuilder("?", false).Insert(test.query.Collection, test.query.Changes)
+
+		t.Run("InsertSet|"+statement, func(t *testing.T) {
+			assert.Nil(t, test.query.Insert(nil))
+			assert.Nil(t, test.query.Insert(test.record))
 		})
 	}
 }

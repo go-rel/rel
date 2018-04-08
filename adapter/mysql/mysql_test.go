@@ -26,6 +26,7 @@ func TestSpecs(t *testing.T) {
 
 	// Insert Specs
 	specs.Insert(t, repo)
+	specs.InsertSet(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)

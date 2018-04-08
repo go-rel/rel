@@ -6,6 +6,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,4 +95,16 @@ func QueryJoin(t *testing.T, repo grimoire.Repo) {
 			assert.Nil(t, query.One(&result))
 		})
 	}
+}
+
+// QueryNotFound tests query specifications when no result found.
+func QueryNotFound(t *testing.T, repo grimoire.Repo) {
+	t.Run("NotFound", func(t *testing.T) {
+		user := User{}
+
+		// find user error not found
+		err := repo.From("users").Find(0).One(&user)
+		assert.NotNil(t, err)
+		assert.True(t, err.(errors.Error).NotFoundError())
+	})
 }

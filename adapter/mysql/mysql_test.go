@@ -25,6 +25,7 @@ func TestSpecs(t *testing.T) {
 
 	// Put Specs
 	specs.PutInsert(t, repo)
+	specs.PutInsertAll(t, repo)
 	specs.PutUpdate(t, repo)
 
 	//Delete specs

@@ -353,6 +353,11 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 
 		for _, ch := range chs {
 			if _, exist := ch.Changes()[f]; exist {
+				// skip if struct or slice but not a scanner or time
+				if internal.SkipType(ch.Types()[f]) {
+					break
+				}
+
 				fields = append(fields, f)
 				break
 			}

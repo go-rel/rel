@@ -31,6 +31,25 @@ func PutInsert(t *testing.T, repo grimoire.Repo) {
 	}
 }
 
+// PutInsertAll tests put insert multiple recors specifications.
+func PutInsertAll(t *testing.T, repo grimoire.Repo) {
+	tests := []grimoire.Query{
+		repo.From(users),
+	}
+
+	for _, query := range tests {
+		records := []User{
+			{Name: "put insert all 1", Age: 100},
+			{Name: "put insert all 2", Age: 100},
+		}
+		statement, _ := sqlutil.NewBuilder("?", false).InsertAll(query.Collection, []string{"name", "age"}, []map[string]interface{}{})
+
+		t.Run("PutInsertAll|"+statement, func(t *testing.T) {
+			assert.Nil(t, query.Put(&records))
+		})
+	}
+}
+
 // PutUpdate tests put update specifications.
 func PutUpdate(t *testing.T, repo grimoire.Repo) {
 	record := User{Name: "put update", Age: 100}

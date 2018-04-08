@@ -645,7 +645,10 @@ func TestQueryInsertAssocMany(t *testing.T) {
 		"name": "name",
 		"users": []map[string]interface{}{
 			{
-				"name": "name",
+				"name": "name1",
+			},
+			{
+				"name": "name2",
 			},
 		},
 	}
@@ -661,15 +664,26 @@ func TestQueryInsertAssocMany(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("groups")
 
-	changes := map[string]interface{}{
-		"name": "name",
+	allchanges := []map[string]interface{}{
+		{
+			"name":       "name1",
+			"created_at": time.Now().Round(time.Second),
+			"updated_at": time.Now().Round(time.Second),
+		},
+		{
+			"name":       "name2",
+			"created_at": time.Now().Round(time.Second),
+			"updated_at": time.Now().Round(time.Second),
+		},
 	}
 
-	mock.On("Insert", query, changes).Return(0, nil).
-		On("All", query.Find(0).Limit(1), &group).Return(1, nil)
+	userChs := ch.Changes()["users"].([]*changeset.Changeset)
 
-	assert.Nil(t, query.Insert(&group, ch))
-	assert.NotPanics(t, func() { query.MustInsert(&group, ch) })
+	mock.On("InsertAll", query, allchanges).Return([]interface{}{1, 2}, nil).
+		On("All", query.Where(In("id", 1, 2)), &group.Users).Return(1, nil)
+
+	assert.Nil(t, query.Insert(&group.Users, userChs...))
+	assert.NotPanics(t, func() { query.MustInsert(&group.Users, userChs...) })
 	mock.AssertExpectations(t)
 }
 func TestQueryInsertError(t *testing.T) {
@@ -859,6 +873,93 @@ func TestQueryUpdateError(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestPutInsert(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+	user := User{}
+
+	changes := map[string]interface{}{
+		"name":       "",
+		"age":        0,
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Insert", query, changes).Return(1, nil).
+		On("All", query.Find(1).Limit(1), &user).Return(1, nil)
+
+	assert.Nil(t, query.Put(&user))
+	assert.NotPanics(t, func() { query.MustPut(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestPutInsertMultiple(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+	users := []User{User{}, User{}}
+
+	changes := map[string]interface{}{
+		"name":       "",
+		"age":        0,
+		"created_at": time.Now().Round(time.Second),
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("InsertAll", query, []map[string]interface{}{changes, changes}).Return([]interface{}{1, 2}, nil).
+		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(1, nil)
+
+	assert.Nil(t, query.Put(&users))
+	assert.NotPanics(t, func() { query.MustPut(&users) })
+	mock.AssertExpectations(t)
+}
+
+func TestPutUpdate(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Find(1)
+	user := User{}
+
+	changes := map[string]interface{}{
+		"name":       "",
+		"age":        0,
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &user).Return(1, nil)
+
+	assert.Nil(t, query.Put(&user))
+	assert.NotPanics(t, func() { query.MustPut(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestPutUpdateMultiple(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users").Where(Eq("name", "name"))
+	users := []User{User{}, User{}}
+
+	changes := map[string]interface{}{
+		"name":       "",
+		"age":        0,
+		"updated_at": time.Now().Round(time.Second),
+	}
+
+	mock.On("Update", query, changes).Return(nil).
+		On("All", query, &users).Return(1, nil)
+
+	assert.Nil(t, query.Put(&users))
+	assert.NotPanics(t, func() { query.MustPut(&users) })
+	mock.AssertExpectations(t)
+}
+
+func TestPutSliceEmpty(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+	users := []User{}
+
+	assert.Nil(t, query.Put(&users))
+	assert.NotPanics(t, func() { query.MustPut(&users) })
+}
+
 func TestQueryDelete(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
@@ -868,4 +969,31 @@ func TestQueryDelete(t *testing.T) {
 	assert.Nil(t, query.Delete())
 	assert.NotPanics(t, func() { query.MustDelete() })
 	mock.AssertExpectations(t)
+}
+
+func TestGetFields(t *testing.T) {
+	var group struct {
+		Name  string
+		Users []User
+	}
+
+	query := Repo{}.From("users")
+	params := map[string]interface{}{
+		"name": "name",
+		"users": []map[string]interface{}{
+			{
+				"name": "name1",
+			},
+		},
+	}
+
+	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
+		ch := changeset.Cast(entity, params, []string{"name"})
+		return ch
+	}
+
+	ch := changeset.Cast(group, params, []string{"name"})
+	changeset.CastAssoc(ch, "users", userChangeset)
+
+	assert.Equal(t, []string{"name"}, getFields(query, []*changeset.Changeset{ch}))
 }

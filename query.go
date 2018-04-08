@@ -279,23 +279,27 @@ func (query Query) Put(record interface{}) error {
 			}
 
 			return query.Insert(record, chs...)
-		} else {
-			// Update only with first record definition.
-			ch := changeset.Change(rv.Index(0).Interface())
-			changeset.DeleteChange(ch, "id")
-			return query.Update(record, ch)
 		}
-	} else {
-		// Put single records
-		ch := changeset.Change(record)
+
+		// Update only with first record definition.
+		ch := changeset.Change(rv.Index(0).Interface())
 		changeset.DeleteChange(ch, "id")
-
-		if query.Condition.None() {
-			return query.Insert(record, ch)
-		}
-
+		changeset.DeleteChange(ch, "created_at")
 		return query.Update(record, ch)
 	}
+
+	// Put single records
+	ch := changeset.Change(record)
+	changeset.DeleteChange(ch, "id")
+
+	if query.Condition.None() {
+		return query.Insert(record, ch)
+	}
+
+	// remove created_at from changeset
+	changeset.DeleteChange(ch, "created_at")
+
+	return query.Update(record, ch)
 }
 
 // MustPut puts a record to database.

@@ -36,25 +36,18 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 		t.Run("Insert|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
 
+			assert.Nil(t, test.query.Insert(nil, ch))
 			assert.Nil(t, test.query.Insert(test.record, ch))
+
+			// multiple insert
+			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
 		})
-	}
-}
 
-// InsertAll tests put insert multiple recors specifications.
-func InsertAll(t *testing.T, repo grimoire.Repo) {
-	tests := []grimoire.Query{
-		repo.From(users),
-	}
+		t.Run("InsertAll|"+statement, func(t *testing.T) {
+			assert.Nil(t, ch.Error())
 
-	for _, query := range tests {
-		records := []User{
-			{Name: "put insert all 1", Age: 100},
-			{Name: "put insert all 2", Age: 100},
-		}
-
-		t.Run("InsertAll", func(t *testing.T) {
-			assert.Nil(t, query.Put(&records))
+			// multiple insert
+			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
 		})
 	}
 }

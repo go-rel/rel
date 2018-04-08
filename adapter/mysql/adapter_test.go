@@ -9,7 +9,6 @@ import (
 	"github.com/Fs02/go-paranoid"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
 	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
@@ -135,70 +134,6 @@ func changeUser(user interface{}, params map[string]interface{}) *changeset.Chan
 func changeAddress(address interface{}, params map[string]interface{}) *changeset.Changeset {
 	ch := changeset.Cast(address, params, []string{"address"})
 	return ch
-}
-
-func TestRepoQuery(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
-	}
-	defer adapter.Close()
-
-	repo := grimoire.New(adapter)
-
-	queries := []grimoire.Query{
-		repo.From(users).Where(Eq(id, 1)),
-		repo.From(users).Where(Eq(name, "name1")),
-		repo.From(users).Where(Eq(age, 10)),
-		repo.From(users).Where(Eq(id, 1), Eq(name, "name1")),
-		repo.From(users).Where(Eq(id, 1), Eq(name, "name1"), Eq(age, 10)),
-		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1")),
-		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1"), Eq(age, 10)),
-		repo.From(users).Where(Eq(id, 1)).OrWhere(Eq(name, "name1")).OrWhere(Eq(age, 10)),
-		repo.From(users).Where(Ne(gender, "male")),
-		repo.From(users).Where(Gt(age, 79)),
-		repo.From(users).Where(Gte(age, 80)),
-		repo.From(users).Where(Lt(age, 11)),
-		repo.From(users).Where(Lte(age, 10)),
-		repo.From(users).Where(Nil(note)),
-		repo.From(users).Where(NotNil(name)),
-		repo.From(users).Where(In(id, 1, 2, 3)),
-		repo.From(users).Where(Nin(id, 1, 2, 3)),
-		repo.From(users).Where(Like(name, "name%")),
-		repo.From(users).Where(NotLike(name, "noname%")),
-		repo.From(users).Where(Fragment("id = ?", 1)),
-		repo.From(users).Where(Not(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
-		repo.From(users).Where(Xor(Eq(id, 1), Eq(name, "name1"), Eq(age, 10))),
-		repo.From(addresses).Join(users),
-		repo.From(addresses).Join(users, Eq(I("addresses.user_id"), I("users.id"))),
-		repo.From(addresses).Join(users).Find(1),
-		repo.From(addresses).Join(users).Where(Eq(address, "address1")),
-		repo.From(addresses).Join(users).Where(Eq(address, "address1")).Order(Asc(name)),
-		repo.From(addresses).JoinWith("LEFT JOIN", users),
-		repo.From(addresses).JoinWith("LEFT OUTER JOIN", users),
-		repo.From(addresses).Join(users).Where(Eq(address, "address1")).Having(Eq(address, "address1")).Order(Asc(name)),
-		repo.From(addresses).Group("gender").Join(users).Where(Eq(address, "address1")).Having(Eq(address, "address1")).Order(Asc(name)),
-		repo.From(users).Order(Asc(name)),
-		repo.From(users).Order(Desc(name)),
-		repo.From(users).Order(Asc(name), Desc(age)),
-		repo.From(users).Group("gender").Select("COUNT(id)"),
-		repo.From(users).Limit(5),
-		repo.From(users).Limit(5).Offset(5),
-		repo.From(users).Find(1),
-		repo.From(users).Select("name").Find(1),
-		repo.From(users).Select("name", "age").Find(1),
-		repo.From(users).Distinct().Find(1),
-	}
-
-	for _, q := range queries {
-		statement, _ := sqlutil.NewBuilder("?", false).Find(q)
-		t.Run("ALL|"+statement, func(t *testing.T) {
-			var result []User
-			err := q.All(&result)
-			assert.Nil(t, err)
-			assert.NotEqual(t, 0, len(result))
-		})
-	}
 }
 
 func TestRepoQueryNotFound(t *testing.T) {

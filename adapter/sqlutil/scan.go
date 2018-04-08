@@ -3,12 +3,12 @@ package sqlutil
 import (
 	"database/sql"
 	"reflect"
-	"time"
 
+	"github.com/Fs02/grimoire/internal"
 	"github.com/azer/snakecase"
 )
 
-// minimum rows interface for test purpose
+// Rows is minimal rows interface for test purpose
 type Rows interface {
 	Scan(dest ...interface{}) error
 	Columns() ([]string, error)
@@ -17,6 +17,7 @@ type Rows interface {
 
 var typeScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 
+// Scan rows into interface
 func Scan(value interface{}, rows Rows) (int64, error) {
 	columns, err := rows.Columns()
 	if err != nil {
@@ -36,6 +37,7 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 
 	if !isScanner {
 		if isSlice {
+			rv.Set(reflect.Zero(rv.Type()))
 			index = fieldIndex(rv.Type().Elem())
 		} else {
 			index = fieldIndex(rv.Type())
@@ -62,7 +64,7 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 			return 0, err
 		}
 
-		count += 1
+		count++
 
 		if isSlice {
 			rv.Set(reflect.Append(rv, elem))
@@ -95,24 +97,8 @@ func fieldIndex(rt reflect.Type) map[string]int {
 		f := rt.Field(i)
 
 		// skip if struct or slice but not a scanner or time
-		if f.Type.Kind() == reflect.Ptr {
-			fzeroval := reflect.New(f.Type.Elem()).Interface()
-			kind := f.Type.Elem().Kind()
-			_, isScanner := fzeroval.(sql.Scanner)
-			_, isTime := fzeroval.(*time.Time)
-
-			if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
-				continue
-			}
-		} else {
-			fzeroval := reflect.New(f.Type).Interface()
-			kind := f.Type.Kind()
-			_, isScanner := fzeroval.(sql.Scanner)
-			_, isTime := fzeroval.(*time.Time)
-
-			if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
-				continue
-			}
+		if internal.SkipType(f.Type) {
+			continue
 		}
 
 		if tag := f.Tag.Get("db"); tag != "" {

@@ -5,10 +5,31 @@ import (
 	"time"
 
 	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestSpecs(t *testing.T) {
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+	repo := grimoire.New(adapter)
+
+	// Query Specs
+	specs.Query(t, repo)
+	specs.QueryJoin(t, repo)
+
+	// Put Specs
+	specs.PutInsert(t, repo)
+	specs.PutUpdate(t, repo)
+
+	//Delete specs
+	specs.Delete(t, repo)
+}
 
 func TestAdapterInsertAll(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")

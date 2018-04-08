@@ -9,6 +9,7 @@ import (
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/internal"
 )
 
 type Query struct {
@@ -252,6 +253,57 @@ func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
 	paranoid.Panic(query.Update(record, chs...))
 }
 
+// Put a record to database.
+// If condition exist, put will try to update the record, otherwise it'll insert it.
+// Put ignores id from record.
+func (query Query) Put(record interface{}) error {
+	rv := reflect.ValueOf(record)
+	rt := rv.Type()
+	if rt.Kind() == reflect.Ptr && rt.Elem().Kind() == reflect.Slice {
+		// Put multiple records
+		rv = rv.Elem()
+
+		// if it's an empty slice, do nothing
+		if rv.Len() == 0 {
+			return nil
+		}
+
+		if query.Condition.None() {
+			// InsertAll
+			chs := []*changeset.Changeset{}
+
+			for i := 0; i < rv.Len(); i++ {
+				ch := changeset.Change(rv.Index(i).Interface())
+				changeset.DeleteChange(ch, "id")
+				chs = append(chs, ch)
+			}
+
+			return query.Insert(record, chs...)
+		} else {
+			// Update only with first record definition.
+			ch := changeset.Change(rv.Index(0).Interface())
+			changeset.DeleteChange(ch, "id")
+			return query.Update(record, ch)
+		}
+	} else {
+		// Put single records
+		ch := changeset.Change(record)
+		changeset.DeleteChange(ch, "id")
+
+		if query.Condition.None() {
+			return query.Insert(record, ch)
+		}
+
+		return query.Update(record, ch)
+	}
+}
+
+// MustPut puts a record to database.
+// It'll panic if any error eccured.
+func (query Query) MustPut(record interface{}) {
+	paranoid.Panic(query.Put(record))
+}
+
 // Delete deletes all results that match the query.
 func (query Query) Delete() error {
 	return errors.Wrap(query.repo.adapter.Delete(query))
@@ -265,12 +317,8 @@ func (query Query) MustDelete() {
 
 func cloneChangeset(out map[string]interface{}, changes map[string]interface{}) {
 	for k, v := range changes {
-		// filter out changeset
-		if _, ok := v.(*changeset.Changeset); ok {
-			continue
-		}
-
-		if _, ok := v.([]*changeset.Changeset); ok {
+		// skip if struct or slice but not a scanner or time
+		if internal.SkipType(reflect.TypeOf(v)) {
 			continue
 		}
 

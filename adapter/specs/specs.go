@@ -6,6 +6,7 @@ import (
 	"github.com/Fs02/grimoire/c"
 )
 
+// User defines users schema.
 type User struct {
 	ID        int64
 	Name      string
@@ -17,9 +18,10 @@ type User struct {
 	UpdatedAt time.Time
 }
 
+// Address defines addresses schema.
 type Address struct {
 	ID        int64
-	UserID    int64
+	UserID    *int64
 	Address   string
 	CreatedAt time.Time
 	UpdatedAt time.Time

@@ -22,6 +22,10 @@ func TestSpecs(t *testing.T) {
 	// Query Specs
 	specs.Query(t, repo)
 	specs.QueryJoin(t, repo)
+	// TODO: not found
+
+	// Insert Specs
+	specs.Insert(t, repo)
 
 	// Put Specs
 	specs.PutInsert(t, repo)

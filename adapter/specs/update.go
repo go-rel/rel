@@ -74,3 +74,32 @@ func UpdateWhere(t *testing.T, repo grimoire.Repo) {
 		})
 	}
 }
+
+// UpdateSet tests update specifications using Set query.
+func UpdateSet(t *testing.T, repo grimoire.Repo) {
+	user := User{Name: "update"}
+	assert.Nil(t, repo.From(users).Put(&user))
+
+	address := Address{Address: "update"}
+	assert.Nil(t, repo.From(addresses).Put(&address))
+
+	tests := []struct {
+		query  grimoire.Query
+		record interface{}
+	}{
+		{repo.From(users).Find(user.ID).Set("name", "update set"), &User{}},
+		{repo.From(users).Find(user.ID).Set("name", "update set").Set("age", 18), &User{}},
+		{repo.From(users).Find(user.ID).Set("note", "note set"), &User{}},
+		{repo.From(addresses).Find(address.ID).Set("address", "address set"), &Address{}},
+		{repo.From(addresses).Find(address.ID).Set("user_id", user.ID), &Address{}},
+	}
+
+	for _, test := range tests {
+		statement, _ := sqlutil.NewBuilder("?", false).Update(test.query.Collection, test.query.Changes, test.query.Condition)
+
+		t.Run("Update|"+statement, func(t *testing.T) {
+			assert.Nil(t, test.query.Update(nil))
+			assert.Nil(t, test.query.Update(test.record))
+		})
+	}
+}

@@ -31,6 +31,7 @@ func TestSpecs(t *testing.T) {
 	// Update Specs
 	specs.Update(t, repo)
 	specs.UpdateWhere(t, repo)
+	specs.UpdateSet(t, repo)
 
 	// Put Specs
 	specs.PutInsert(t, repo)

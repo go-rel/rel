@@ -12,18 +12,31 @@ import (
 
 // Query tests query specifications without join.
 func Query(t *testing.T, repo grimoire.Repo) {
+	// preparte tests data
+	user := User{Name: "name1", Gender: "male", Age: 10}
+	assert.Nil(t, repo.From(users).Put(&user))
+	assert.Nil(t, repo.From(users).Put(&User{Name: "name2", Gender: "male", Age: 20}))
+	assert.Nil(t, repo.From(users).Put(&User{Name: "name3", Gender: "male", Age: 30}))
+	assert.Nil(t, repo.From(users).Put(&User{Name: "name4", Gender: "female", Age: 40}))
+	assert.Nil(t, repo.From(users).Put(&User{Name: "name5", Gender: "female", Age: 50}))
+	assert.Nil(t, repo.From(users).Put(&User{Name: "name6", Gender: "female", Age: 60}))
+
+	assert.Nil(t, repo.From(addresses).Put(&Address{Address: "address1", UserID: &user.ID}))
+	assert.Nil(t, repo.From(addresses).Put(&Address{Address: "address2", UserID: &user.ID}))
+	assert.Nil(t, repo.From(addresses).Put(&Address{Address: "address3", UserID: &user.ID}))
+
 	tests := []grimoire.Query{
-		repo.From(users).Where(c.Eq(id, 1)),
+		repo.From(users).Where(c.Eq(id, user.ID)),
 		repo.From(users).Where(c.Eq(name, "name1")),
 		repo.From(users).Where(c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, 1), c.Eq(name, "name1")),
-		repo.From(users).Where(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, 1)).OrWhere(c.Eq(name, "name1")),
-		repo.From(users).Where(c.Eq(id, 1)).OrWhere(c.Eq(name, "name1"), c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, 1)).OrWhere(c.Eq(name, "name1")).OrWhere(c.Eq(age, 10)),
+		repo.From(users).Where(c.Eq(id, user.ID), c.Eq(name, "name1")),
+		repo.From(users).Where(c.Eq(id, user.ID), c.Eq(name, "name1"), c.Eq(age, 10)),
+		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1")),
+		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1"), c.Eq(age, 10)),
+		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1")).OrWhere(c.Eq(age, 10)),
 		repo.From(users).Where(c.Ne(gender, "male")),
-		repo.From(users).Where(c.Gt(age, 79)),
-		repo.From(users).Where(c.Gte(age, 80)),
+		repo.From(users).Where(c.Gt(age, 59)),
+		repo.From(users).Where(c.Gte(age, 60)),
 		repo.From(users).Where(c.Lt(age, 11)),
 		repo.From(users).Where(c.Lte(age, 10)),
 		repo.From(users).Where(c.Nil(note)),

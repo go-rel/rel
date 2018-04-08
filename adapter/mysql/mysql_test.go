@@ -40,26 +40,6 @@ func TestSpecs(t *testing.T) {
 	specs.Delete(t, repo)
 }
 
-func TestAdapterInsertAll(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
-	if err != nil {
-		panic(err)
-	}
-	defer adapter.Close()
-
-	fields := []string{"name"}
-	allchanges := []map[string]interface{}{
-		{"name": "foo"},
-		{"age": 12},
-		{"name": "boo"},
-	}
-
-	ids, err := adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
-
-	assert.Nil(t, err)
-	assert.Equal(t, 3, len(ids))
-}
-
 func TestAdapterInsertAllError(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {

@@ -1,6 +1,7 @@
 package specs
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -43,12 +44,40 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 			// multiple insert
 			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
 		})
+	}
+}
+
+// InsertAll tests insert multiple specifications.
+func InsertAll(t *testing.T, repo grimoire.Repo) {
+	user := User{}
+	assert.Nil(t, repo.From(users).Put(&user))
+
+	tests := []struct {
+		query  grimoire.Query
+		schema interface{}
+		record interface{}
+		params map[string]interface{}
+	}{
+		{repo.From(users), User{}, &[]User{}, map[string]interface{}{}},
+		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"name": "insert", "age": 100}},
+		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"name": "insert", "age": 100, "note": "note"}},
+		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"note": "note"}},
+		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{}},
+		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"address": "address"}},
+		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"user_id": user.ID}},
+		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"address": "address", "user_id": user.ID}},
+	}
+
+	for _, test := range tests {
+		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
+		statement, _ := sqlutil.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
 
 		t.Run("InsertAll|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
 
 			// multiple insert
-			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
+			assert.Nil(t, test.query.Insert(test.record, ch, ch, ch))
+			assert.Equal(t, 3, reflect.ValueOf(test.record).Elem().Len())
 		})
 	}
 }

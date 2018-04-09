@@ -13,12 +13,4 @@ type Adapter interface {
 	Begin() (Adapter, error)
 	Commit() error
 	Rollback() error
-
-	// Query exec query string with it's arguments
-	// reurns results and an error if any
-	Query(interface{}, string, []interface{}) (int64, error)
-
-	// Query exec query string with it's arguments
-	// returns last inserted id, rows affected and error
-	Exec(string, []interface{}) (int64, int64, error)
 }

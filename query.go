@@ -253,10 +253,10 @@ func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
 	paranoid.Panic(query.Update(record, chs...))
 }
 
-// Put a record to database.
+// Save a record to database.
 // If condition exist, put will try to update the record, otherwise it'll insert it.
-// Put ignores id from record.
-func (query Query) Put(record interface{}) error {
+// Save ignores id from record.
+func (query Query) Save(record interface{}) error {
 	rv := reflect.ValueOf(record)
 	rt := rv.Type()
 	if rt.Kind() == reflect.Ptr && rt.Elem().Kind() == reflect.Slice {
@@ -302,10 +302,10 @@ func (query Query) Put(record interface{}) error {
 	return query.Update(record, ch)
 }
 
-// MustPut puts a record to database.
+// MustSave puts a record to database.
 // It'll panic if any error eccured.
-func (query Query) MustPut(record interface{}) {
-	paranoid.Panic(query.Put(record))
+func (query Query) MustSave(record interface{}) {
+	paranoid.Panic(query.Save(record))
 }
 
 // Delete deletes all results that match the query.

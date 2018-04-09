@@ -19,7 +19,7 @@ func PutInsert(t *testing.T, repo grimoire.Repo) {
 		record := User{Name: "put insert", Age: 100}
 
 		t.Run("PutInsert", func(t *testing.T) {
-			assert.Nil(t, query.Put(&record))
+			assert.Nil(t, query.Save(&record))
 
 			var result User
 			assert.Nil(t, query.Find(record.ID).One(&result))
@@ -41,7 +41,7 @@ func PutInsertAll(t *testing.T, repo grimoire.Repo) {
 		}
 
 		t.Run("PutInsertAll", func(t *testing.T) {
-			assert.Nil(t, query.Put(&records))
+			assert.Nil(t, query.Save(&records))
 		})
 	}
 }
@@ -49,9 +49,9 @@ func PutInsertAll(t *testing.T, repo grimoire.Repo) {
 // PutUpdate tests put update specifications.
 func PutUpdate(t *testing.T, repo grimoire.Repo) {
 	record := User{Name: "put update", Age: 100}
-	assert.Nil(t, repo.From(users).Put(&record))
-	assert.Nil(t, repo.From(users).Put(&User{Name: "put update", Age: 100}))
-	assert.Nil(t, repo.From(users).Put(&User{Name: "put update", Age: 100}))
+	assert.Nil(t, repo.From(users).Save(&record))
+	assert.Nil(t, repo.From(users).Save(&User{Name: "put update", Age: 100}))
+	assert.Nil(t, repo.From(users).Save(&User{Name: "put update", Age: 100}))
 
 	tests := []grimoire.Query{
 		repo.From(users).Find(record.ID),
@@ -67,7 +67,7 @@ func PutUpdate(t *testing.T, repo grimoire.Repo) {
 			assert.NotEqual(t, 0, count)
 
 			record := []User{{Name: "put update", Age: 100}}
-			assert.Nil(t, query.Put(&record))
+			assert.Nil(t, query.Save(&record))
 			assert.Equal(t, count, len(record))
 		})
 	}

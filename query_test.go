@@ -888,8 +888,8 @@ func TestPutInsert(t *testing.T) {
 	mock.On("Insert", query, changes).Return(1, nil).
 		On("All", query.Find(1).Limit(1), &user).Return(1, nil)
 
-	assert.Nil(t, query.Put(&user))
-	assert.NotPanics(t, func() { query.MustPut(&user) })
+	assert.Nil(t, query.Save(&user))
+	assert.NotPanics(t, func() { query.MustSave(&user) })
 	mock.AssertExpectations(t)
 }
 
@@ -908,8 +908,8 @@ func TestPutInsertMultiple(t *testing.T) {
 	mock.On("InsertAll", query, []map[string]interface{}{changes, changes}).Return([]interface{}{1, 2}, nil).
 		On("All", query.Where(In(I("id"), 1, 2)), &users).Return(1, nil)
 
-	assert.Nil(t, query.Put(&users))
-	assert.NotPanics(t, func() { query.MustPut(&users) })
+	assert.Nil(t, query.Save(&users))
+	assert.NotPanics(t, func() { query.MustSave(&users) })
 	mock.AssertExpectations(t)
 }
 
@@ -927,8 +927,8 @@ func TestPutUpdate(t *testing.T) {
 	mock.On("Update", query, changes).Return(nil).
 		On("All", query, &user).Return(1, nil)
 
-	assert.Nil(t, query.Put(&user))
-	assert.NotPanics(t, func() { query.MustPut(&user) })
+	assert.Nil(t, query.Save(&user))
+	assert.NotPanics(t, func() { query.MustSave(&user) })
 	mock.AssertExpectations(t)
 }
 
@@ -946,8 +946,8 @@ func TestPutUpdateMultiple(t *testing.T) {
 	mock.On("Update", query, changes).Return(nil).
 		On("All", query, &users).Return(1, nil)
 
-	assert.Nil(t, query.Put(&users))
-	assert.NotPanics(t, func() { query.MustPut(&users) })
+	assert.Nil(t, query.Save(&users))
+	assert.NotPanics(t, func() { query.MustSave(&users) })
 	mock.AssertExpectations(t)
 }
 
@@ -956,8 +956,8 @@ func TestPutSliceEmpty(t *testing.T) {
 	query := Repo{adapter: mock}.From("users")
 	users := []User{}
 
-	assert.Nil(t, query.Put(&users))
-	assert.NotPanics(t, func() { query.MustPut(&users) })
+	assert.Nil(t, query.Save(&users))
+	assert.NotPanics(t, func() { query.MustSave(&users) })
 }
 
 func TestQueryDelete(t *testing.T) {

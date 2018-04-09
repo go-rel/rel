@@ -14,7 +14,7 @@ import (
 // Insert tests insert specifications.
 func Insert(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Put(&user))
+	assert.Nil(t, repo.From(users).Save(&user))
 
 	tests := []struct {
 		query  grimoire.Query
@@ -50,7 +50,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 // InsertAll tests insert multiple specifications.
 func InsertAll(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Put(&user))
+	assert.Nil(t, repo.From(users).Save(&user))
 
 	tests := []struct {
 		query  grimoire.Query
@@ -85,7 +85,7 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 // InsertSet tests insert specifications only using Set query.
 func InsertSet(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Put(&user))
+	assert.Nil(t, repo.From(users).Save(&user))
 	now := time.Now()
 
 	tests := []struct {

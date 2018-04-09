@@ -1,14 +1,58 @@
 package mysql
 
 import (
+	"os"
 	"testing"
 
+	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, []interface{}{})
+	paranoid.Panic(err)
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
+	paranoid.Panic(err)
+
+	_, _, err = adapter.Exec(`CREATE TABLE users (
+		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(30) NOT NULL,
+		gender VARCHAR(10) NOT NULL,
+		age INT NOT NULL,
+		note varchar(50),
+		created_at DATETIME,
+		updated_at DATETIME
+	);`, []interface{}{})
+	paranoid.Panic(err)
+
+	_, _, err = adapter.Exec(`CREATE TABLE addresses (
+		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		user_id INT UNSIGNED,
+		address VARCHAR(60) NOT NULL,
+		created_at DATETIME,
+		updated_at DATETIME,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`, []interface{}{})
+	paranoid.Panic(err)
+}
+
+func dsn() string {
+	if os.Getenv("MYSQL_DATABASE") != "" {
+		return os.Getenv("MYSQL_DATABASE")
+	}
+
+	return "root@(127.0.0.1:3306)/grimoire_test"
+}
 
 func TestSpecs(t *testing.T) {
 	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")

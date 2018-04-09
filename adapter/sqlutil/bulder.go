@@ -43,12 +43,12 @@ func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 	if s := builder.GroupBy(q.GroupFields...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
-	}
 
-	if s, arg := builder.Having(q.HavingCondition); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
-		args = append(args, arg...)
+		if s, arg := builder.Having(q.HavingCondition); s != "" {
+			buffer.WriteString(" ")
+			buffer.WriteString(s)
+			args = append(args, arg...)
+		}
 	}
 
 	if s := builder.OrderBy(q.OrderClause...); s != "" {

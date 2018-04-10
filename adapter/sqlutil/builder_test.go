@@ -41,14 +41,14 @@ func TestBuilderFind(t *testing.T) {
 			users.Where(Eq(I("id"), 10)),
 		},
 		{
-			"SELECT DISTINCT * FROM users GROUP BY type;",
-			nil,
-			users.Distinct().Group("type"),
+			"SELECT DISTINCT * FROM users GROUP BY type HAVING price>?;",
+			[]interface{}{1000},
+			users.Distinct().Group("type").Having(Gt(I("price"), 1000)),
 		},
 		{
-			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id HAVING price>?;",
-			[]interface{}{1000},
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))).Having(Gt(I("price"), 1000)),
+			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id;",
+			nil,
+			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
 		},
 		{
 			"SELECT * FROM users ORDER BY created_at ASC;",
@@ -103,14 +103,14 @@ func TestBuilderFindOrdinal(t *testing.T) {
 			users.Where(Eq(I("id"), 10)),
 		},
 		{
-			"SELECT DISTINCT * FROM users GROUP BY type;",
-			nil,
-			users.Distinct().Group("type"),
+			"SELECT DISTINCT * FROM users GROUP BY type HAVING price>$1;",
+			[]interface{}{1000},
+			users.Distinct().Group("type").Having(Gt(I("price"), 1000)),
 		},
 		{
-			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id HAVING price>$1;",
-			[]interface{}{1000},
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))).Having(Gt(I("price"), 1000)),
+			"SELECT * FROM users JOIN transactions ON transactions.id=users.transaction_id;",
+			nil,
+			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
 		},
 		{
 			"SELECT * FROM users ORDER BY created_at ASC;",

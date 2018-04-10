@@ -14,7 +14,6 @@ var cond4 = Lt(I("avg"), 10)
 func TestConditionNone(t *testing.T) {
 	assert.True(t, Condition{}.None())
 	assert.True(t, And().None())
-	assert.True(t, Xor().None())
 	assert.True(t, Not().None())
 
 	assert.False(t, And(cond1).None())
@@ -162,76 +161,6 @@ func TestConditionOr(t *testing.T) {
 	}
 }
 
-func TestConditionXor(t *testing.T) {
-	tests := []struct {
-		Case      string
-		Operation Condition
-		Result    Condition
-	}{
-		{
-			`Condition{}.Xor()`,
-			Condition{}.Xor(),
-			Xor(),
-		},
-		{
-			`Condition{}.Xor(cond1)`,
-			Condition{}.Xor(cond1),
-			cond1,
-		},
-		{
-			`Condition{}.Xor(cond1).Xor()`,
-			Condition{}.Xor(cond1).Xor(),
-			cond1,
-		},
-		{
-			`Condition{}.Xor(cond1, cond2)`,
-			Condition{}.Xor(cond1, cond2),
-			Xor(cond1, cond2),
-		},
-		{
-			`Condition{}.Xor(cond1, cond2).Xor()`,
-			Condition{}.Xor(cond1, cond2).Xor(),
-			Xor(cond1, cond2),
-		},
-		{
-			`Condition{}.Xor(cond1, cond2, cond3)`,
-			Condition{}.Xor(cond1, cond2, cond3),
-			Xor(cond1, cond2, cond3),
-		},
-		{
-			`Condition{}.Xor(cond1, cond2, cond3).Xor()`,
-			Condition{}.Xor(cond1, cond2, cond3).Xor(),
-			Xor(cond1, cond2, cond3),
-		},
-		{
-			`cond1.Xor(cond2)`,
-			cond1.Xor(cond2),
-			Xor(cond1, cond2),
-		},
-		{
-			`cond1.Xor(cond2).Xor()`,
-			cond1.Xor(cond2).Xor(),
-			Xor(cond1, cond2),
-		},
-		{
-			`cond1.Xor(cond2).Xor(cond3)`,
-			cond1.Xor(cond2).Xor(cond3),
-			Xor(cond1, cond2, cond3),
-		},
-		{
-			`cond1.Xor(cond2).Xor(cond3).Xor()`,
-			cond1.Xor(cond2).Xor(cond3).Xor(),
-			Xor(cond1, cond2, cond3),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
-		})
-	}
-}
-
 func TestAnd(t *testing.T) {
 	tests := []struct {
 		Case      string
@@ -367,84 +296,6 @@ func TestOr(t *testing.T) {
 			Or(And(cond1, cond2), And(cond3, cond4)),
 			Condition{
 				Type: ConditionOr,
-				Inner: []Condition{
-					{
-						Type:  ConditionAnd,
-						Inner: []Condition{cond1, cond2},
-					},
-					{
-						Type:  ConditionAnd,
-						Inner: []Condition{cond3, cond4},
-					},
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
-		})
-	}
-}
-
-func TestXor(t *testing.T) {
-	tests := []struct {
-		Case      string
-		Operation Condition
-		Result    Condition
-	}{
-		{
-			`Xor()`,
-			Xor(),
-			Condition{Type: ConditionXor},
-		},
-		{
-			`Xor(cond1)`,
-			Xor(cond1),
-			cond1,
-		},
-		{
-			`Xor(cond1, cond2)`,
-			Xor(cond1, cond2),
-			Condition{
-				Type:  ConditionXor,
-				Inner: []Condition{cond1, cond2},
-			},
-		},
-		{
-			`Xor(cond1, And(cond2, cond3))`,
-			Xor(cond1, And(cond2, cond3)),
-			Condition{
-				Type: ConditionXor,
-				Inner: []Condition{
-					cond1,
-					{
-						Type:  ConditionAnd,
-						Inner: []Condition{cond2, cond3},
-					},
-				},
-			},
-		},
-		{
-			`Xor(And(cond1, cond2), cond3)`,
-			Xor(And(cond1, cond2), cond3),
-			Condition{
-				Type: ConditionXor,
-				Inner: []Condition{
-					{
-						Type:  ConditionAnd,
-						Inner: []Condition{cond1, cond2},
-					},
-					cond3,
-				},
-			},
-		},
-		{
-			`Xor(And(cond1, cond2), And(cond3, cond4))`,
-			Xor(And(cond1, cond2), And(cond3, cond4)),
-			Condition{
-				Type: ConditionXor,
 				Inner: []Condition{
 					{
 						Type:  ConditionAnd,

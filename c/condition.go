@@ -5,7 +5,6 @@ type ConditionType int
 const (
 	ConditionAnd ConditionType = iota
 	ConditionOr
-	ConditionXor
 	ConditionNot
 
 	ConditionEq
@@ -56,7 +55,6 @@ type Condition struct {
 func (c Condition) None() bool {
 	return (c.Type == ConditionAnd ||
 		c.Type == ConditionOr ||
-		c.Type == ConditionXor ||
 		c.Type == ConditionNot) &&
 		len(c.Inner) == 0
 }
@@ -86,19 +84,6 @@ func (c Condition) Or(condition ...Condition) Condition {
 	return Or(inner...)
 }
 
-func (c Condition) Xor(condition ...Condition) Condition {
-	if c.None() && len(condition) == 1 {
-		return condition[0]
-	} else if c.Type == ConditionXor || c.None() {
-		c.Type = ConditionXor
-		c.Inner = append(c.Inner, condition...)
-		return c
-	}
-
-	inner := append([]Condition{c}, condition...)
-	return Xor(inner...)
-}
-
 func And(inner ...Condition) Condition {
 	if len(inner) == 1 {
 		return inner[0]
@@ -117,17 +102,6 @@ func Or(inner ...Condition) Condition {
 
 	return Condition{
 		Type:  ConditionOr,
-		Inner: inner,
-	}
-}
-
-func Xor(inner ...Condition) Condition {
-	if len(inner) == 1 {
-		return inner[0]
-	}
-
-	return Condition{
-		Type:  ConditionXor,
 		Inner: inner,
 	}
 }

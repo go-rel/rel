@@ -309,8 +309,6 @@ func (builder *Builder) condition(cond c.Condition) (string, []interface{}) {
 		return builder.build("AND", cond.Inner)
 	case c.ConditionOr:
 		return builder.build("OR", cond.Inner)
-	case c.ConditionXor:
-		return builder.build("XOR", cond.Inner)
 	case c.ConditionNot:
 		qs, args := builder.build("AND", cond.Inner)
 		return "NOT " + qs, args

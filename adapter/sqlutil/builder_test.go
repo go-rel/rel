@@ -633,16 +633,6 @@ func TestBuilderCondition(t *testing.T) {
 			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
 		},
 		{
-			"(field1=? XOR field2=?)",
-			[]interface{}{"value1", "value2"},
-			Xor(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
-		},
-		{
-			"(field1=? XOR field2=? XOR field3=?)",
-			[]interface{}{"value1", "value2", "value3"},
-			Xor(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
-		},
-		{
 			"NOT (field1=? AND field2=?)",
 			[]interface{}{"value1", "value2"},
 			Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
@@ -873,16 +863,6 @@ func TestBuilderConditionOrdinal(t *testing.T) {
 			"(field1=$1 OR field2=$2 OR field3=$3)",
 			[]interface{}{"value1", "value2", "value3"},
 			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
-		},
-		{
-			"(field1=$1 XOR field2=$2)",
-			[]interface{}{"value1", "value2"},
-			Xor(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
-		},
-		{
-			"(field1=$1 XOR field2=$2 XOR field3=$3)",
-			[]interface{}{"value1", "value2", "value3"},
-			Xor(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
 		},
 		{
 			"NOT (field1=$1 AND field2=$2)",

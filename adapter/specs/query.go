@@ -47,12 +47,11 @@ func Query(t *testing.T, repo grimoire.Repo) {
 		repo.From(users).Where(c.NotLike(name, "noname%")),
 		repo.From(users).Where(c.Fragment("id > 0")),
 		repo.From(users).Where(c.Not(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10))),
-		// repo.From(users).Where(c.Xor(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10))),
 		repo.From(users).Order(c.Asc(name)),
 		repo.From(users).Order(c.Desc(name)),
 		repo.From(users).Order(c.Asc(name), c.Desc(age)),
 		repo.From(users).Group("gender").Select("COUNT(id)"),
-		repo.From(users).Group("gender").Having(c.Gt(age, 10)),
+		repo.From(users).Group("age").Having(c.Gt(age, 10)).Select("COUNT(id)"),
 		repo.From(users).Limit(5),
 		repo.From(users).Limit(5).Offset(5),
 		repo.From(users).Find(1),
@@ -89,7 +88,6 @@ func QueryJoin(t *testing.T, repo grimoire.Repo) {
 		repo.From(addresses).Join(users).Where(c.Eq(address, "address1")).Order(c.Asc(name)),
 		repo.From(addresses).JoinWith("LEFT JOIN", users),
 		repo.From(addresses).JoinWith("LEFT OUTER JOIN", users),
-		repo.From(addresses).Group("gender").Join(users).Where(c.Eq(address, "address1")).Having(c.Eq(address, "address1")).Order(c.Asc(name)),
 	}
 
 	for _, query := range tests {

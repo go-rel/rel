@@ -26,12 +26,6 @@
   version = "v1.3"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/microcosm-cc/bluemonday"
-  packages = ["."]
-  revision = "542fd4642604d0d0c26112396ce5b1a9d01eee0b"
-
-[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -52,18 +46,9 @@
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/net"
-  packages = [
-    "html",
-    "html/atom"
-  ]
-  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "08de70518318eab19d3e6ed207fe1b96bfa7bc6ca74a75e0301b2cd101a60a86"
+  inputs-digest = "f666274ddfb929c6b29c9108e829d843027d39e2bff1322664a3d5beeab4fadf"
   solver-name = "gps-cdcl"
   solver-version = 1

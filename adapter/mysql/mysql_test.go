@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -48,14 +48,14 @@ func init() {
 
 func dsn() string {
 	if os.Getenv("MYSQL_DATABASE") != "" {
-		return os.Getenv("MYSQL_DATABASE")
+		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True&loc=Local"
 	}
 
-	return "root@(127.0.0.1:3306)/grimoire_test"
+	return "root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local"
 }
 
 func TestSpecs(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func TestSpecs(t *testing.T) {
 }
 
 func TestAdapterInsertAllError(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -108,7 +108,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 }
 
 func TestAdapterTransactionCommitError(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +118,7 @@ func TestAdapterTransactionCommitError(t *testing.T) {
 }
 
 func TestAdapterTransactionRollbackError(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +128,7 @@ func TestAdapterTransactionRollbackError(t *testing.T) {
 }
 
 func TestAdapterQueryError(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +141,7 @@ func TestAdapterQueryError(t *testing.T) {
 }
 
 func TestAdapterExecError(t *testing.T) {
-	adapter, err := Open(dsn() + "?charset=utf8&parseTime=True&loc=Local")
+	adapter, err := Open(dsn())
 	if err != nil {
 		panic(err)
 	}

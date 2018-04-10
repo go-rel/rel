@@ -66,9 +66,9 @@ func TestSpecs(t *testing.T) {
 	specs.QueryNotFound(t, repo)
 
 	// Insert Specs
-	// specs.Insert(t, repo)
-	// specs.InsertAll(t, repo)
-	// specs.InsertSet(t, repo)
+	specs.Insert(t, repo)
+	specs.InsertAll(t, repo)
+	specs.InsertSet(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)

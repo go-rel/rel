@@ -9,59 +9,62 @@ import (
 	"github.com/Fs02/grimoire/c"
 )
 
+// Builder defines information of query builder.
 type Builder struct {
 	Placeholder string
 	Ordinal     bool
+	ReturnField string
 	count       int
 }
 
+// Find generates query for select.
 func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
 
-	if s := builder.Select(q.AsDistinct, q.Fields...); s != "" {
+	if s := builder.fields(q.AsDistinct, q.Fields...); s != "" {
 		buffer.WriteString(s)
 	}
 
-	if s := builder.From(q.Collection); s != "" {
+	if s := builder.from(q.Collection); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s, arg := builder.Join(q.JoinClause...); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
-		args = append(args, arg...)
-	}
-
-	if s, arg := builder.Where(q.Condition); s != "" {
+	if s, arg := builder.join(q.JoinClause...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.GroupBy(q.GroupFields...); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
-	}
-
-	if s, arg := builder.Having(q.HavingCondition); s != "" {
+	if s, arg := builder.where(q.Condition); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.OrderBy(q.OrderClause...); s != "" {
+	if s := builder.groupBy(q.GroupFields...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.Limit(q.LimitResult); s != "" {
+	if s, arg := builder.having(q.HavingCondition); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+		args = append(args, arg...)
+	}
+
+	if s := builder.orderBy(q.OrderClause...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.Offset(q.OffsetResult); s != "" && q.LimitResult != 0 {
+	if s := builder.limit(q.LimitResult); s != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(s)
+	}
+
+	if s := builder.offset(q.OffsetResult); s != "" && q.LimitResult != 0 {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
@@ -71,6 +74,7 @@ func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 	return buffer.String(), args
 }
 
+// Insert generates query for insert.
 func (builder *Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
 	length := len(changes)
 
@@ -99,11 +103,19 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 		buffer.WriteString(",")
 		buffer.WriteString(builder.ph())
 	}
-	buffer.WriteString(");")
+	buffer.WriteString(")")
+
+	if builder.ReturnField != "" {
+		buffer.WriteString(" RETURNING ")
+		buffer.WriteString(builder.ReturnField)
+	}
+
+	buffer.WriteString(";")
 
 	return buffer.String(), args
 }
 
+// InsertAll generates query for multiple insert.
 func (builder *Builder) InsertAll(collection string, fields []string, allchanges []map[string]interface{}) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args = make([]interface{}, 0, len(fields)*len(allchanges))
@@ -140,6 +152,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 	return buffer.String(), args
 }
 
+// Update generates query for update.
 func (builder *Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
 	length := len(changes)
 
@@ -164,7 +177,7 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 		curr++
 	}
 
-	if s, arg := builder.Where(cond); s != "" {
+	if s, arg := builder.where(cond); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
@@ -175,6 +188,7 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 	return buffer.String(), args
 }
 
+// Delete generates query for delete.
 func (builder *Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
 	var buffer bytes.Buffer
 	var args []interface{}
@@ -182,7 +196,7 @@ func (builder *Builder) Delete(collection string, cond c.Condition) (string, []i
 	buffer.WriteString("DELETE FROM ")
 	buffer.WriteString(collection)
 
-	if s, arg := builder.Where(cond); s != "" {
+	if s, arg := builder.where(cond); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
@@ -193,7 +207,7 @@ func (builder *Builder) Delete(collection string, cond c.Condition) (string, []i
 	return buffer.String(), args
 }
 
-func (builder *Builder) Select(distinct bool, fields ...string) string {
+func (builder *Builder) fields(distinct bool, fields ...string) string {
 	if distinct {
 		return "SELECT DISTINCT " + strings.Join(fields, ", ")
 	}
@@ -201,11 +215,11 @@ func (builder *Builder) Select(distinct bool, fields ...string) string {
 	return "SELECT " + strings.Join(fields, ", ")
 }
 
-func (builder *Builder) From(collection string) string {
+func (builder *Builder) from(collection string) string {
 	return "FROM " + collection
 }
 
-func (builder *Builder) Join(join ...c.Join) (string, []interface{}) {
+func (builder *Builder) join(join ...c.Join) (string, []interface{}) {
 	if len(join) == 0 {
 		return "", nil
 	}
@@ -213,7 +227,7 @@ func (builder *Builder) Join(join ...c.Join) (string, []interface{}) {
 	var qs string
 	var args []interface{}
 	for i, j := range join {
-		cs, jargs := builder.Condition(j.Condition)
+		cs, jargs := builder.condition(j.Condition)
 		qs += j.Mode + " " + j.Collection + " ON " + cs
 		args = append(args, jargs...)
 
@@ -225,16 +239,16 @@ func (builder *Builder) Join(join ...c.Join) (string, []interface{}) {
 	return qs, args
 }
 
-func (builder *Builder) Where(condition c.Condition) (string, []interface{}) {
+func (builder *Builder) where(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
 
-	qs, args := builder.Condition(condition)
+	qs, args := builder.condition(condition)
 	return "WHERE " + qs, args
 }
 
-func (builder *Builder) GroupBy(fields ...string) string {
+func (builder *Builder) groupBy(fields ...string) string {
 	if len(fields) > 0 {
 		return "GROUP BY " + strings.Join(fields, ", ")
 	}
@@ -242,16 +256,16 @@ func (builder *Builder) GroupBy(fields ...string) string {
 	return ""
 }
 
-func (builder *Builder) Having(condition c.Condition) (string, []interface{}) {
+func (builder *Builder) having(condition c.Condition) (string, []interface{}) {
 	if condition.None() {
 		return "", nil
 	}
 
-	qs, args := builder.Condition(condition)
+	qs, args := builder.condition(condition)
 	return "HAVING " + qs, args
 }
 
-func (builder *Builder) OrderBy(orders ...c.Order) string {
+func (builder *Builder) orderBy(orders ...c.Order) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -273,7 +287,7 @@ func (builder *Builder) OrderBy(orders ...c.Order) string {
 	return qs
 }
 
-func (builder *Builder) Offset(n int) string {
+func (builder *Builder) offset(n int) string {
 	if n > 0 {
 		return "OFFSET " + strconv.Itoa(n)
 	}
@@ -281,7 +295,7 @@ func (builder *Builder) Offset(n int) string {
 	return ""
 }
 
-func (builder *Builder) Limit(n int) string {
+func (builder *Builder) limit(n int) string {
 	if n > 0 {
 		return "LIMIT " + strconv.Itoa(n)
 	}
@@ -289,7 +303,7 @@ func (builder *Builder) Limit(n int) string {
 	return ""
 }
 
-func (builder *Builder) Condition(cond c.Condition) (string, []interface{}) {
+func (builder *Builder) condition(cond c.Condition) (string, []interface{}) {
 	switch cond.Type {
 	case c.ConditionAnd:
 		return builder.build("AND", cond.Inner)
@@ -335,7 +349,7 @@ func (builder *Builder) build(op string, inner []c.Condition) (string, []interfa
 	}
 
 	for i, c := range inner {
-		cQstring, cArgs := builder.Condition(c)
+		cQstring, cArgs := builder.condition(c)
 		qstring += cQstring
 		args = append(args, cArgs...)
 
@@ -412,6 +426,12 @@ func (builder *Builder) ph() string {
 	}
 
 	return builder.Placeholder
+}
+
+// Returning append returning to insert query.
+func (builder *Builder) Returning(field string) *Builder {
+	builder.ReturnField = field
+	return builder
 }
 
 func NewBuilder(placeholder string, ordinal bool) *Builder {

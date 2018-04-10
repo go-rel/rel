@@ -64,7 +64,7 @@ func TestSpecs(t *testing.T) {
 	// Query Specs
 	specs.Query(t, repo)
 	specs.QueryJoin(t, repo)
-	specs.QueryNotFound(t, repo)
+	// specs.QueryNotFound(t, repo)
 
 	// Insert Specs
 	// specs.Insert(t, repo)

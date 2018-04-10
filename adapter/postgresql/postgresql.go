@@ -41,9 +41,14 @@ func (adapter *Adapter) All(query grimoire.Query, doc interface{}) (int, error) 
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (interface{}, error) {
-	statement, args := sqlutil.NewBuilder("$", true).Insert(query.Collection, changes)
-	id, _, err := adapter.Exec(statement, args)
-	return id, err
+	statement, args := sqlutil.NewBuilder("$", true).Returning("id").Insert(query.Collection, changes)
+
+	var result struct {
+		ID int64
+	}
+
+	_, err := adapter.Query(&result, statement, args)
+	return result.ID, err
 }
 
 // InsertAll inserts all record to database and returns its ids.

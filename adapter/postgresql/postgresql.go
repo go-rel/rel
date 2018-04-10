@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
 	"github.com/Fs02/grimoire/errors"
@@ -54,19 +53,19 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 // InsertAll inserts all record to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}) ([]interface{}, error) {
 	statement, args := sqlutil.NewBuilder("$", true).InsertAll(query.Collection, fields, allchanges)
-	id, _, err := adapter.Exec(statement, args)
-	if err != nil {
-		return nil, err
+
+	var result []struct {
+		ID int64
 	}
 
-	inc := adapter.getIncrement()
-	ids := []interface{}{id}
+	_, err := adapter.Query(&result, statement, args)
 
-	for i := 1; i < len(allchanges); i++ {
-		ids = append(ids, id+int64(inc*i))
+	ids := make([]interface{}, 0, len(result))
+	for _, r := range result {
+		ids = append(ids, r.ID)
 	}
 
-	return ids, nil
+	return ids, err
 }
 
 // Update updates a record in database.
@@ -148,20 +147,6 @@ func (adapter *Adapter) Exec(statement string, args []interface{}) (int64, int64
 	rowCount, _ := res.RowsAffected()
 
 	return lastID, rowCount, nil
-}
-
-func (adapter *Adapter) getIncrement() int {
-	var variable string
-	var increment int
-	var err error
-	if adapter.tx != nil {
-		err = adapter.tx.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
-	} else {
-		err = adapter.db.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
-	}
-	paranoid.Panic(err)
-
-	return increment
 }
 
 // Error transform adapter error to grimoire error.

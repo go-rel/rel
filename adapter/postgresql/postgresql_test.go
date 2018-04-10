@@ -26,9 +26,9 @@ func init() {
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id SERIAL NOT NULL PRIMARY KEY,
-		name VARCHAR(30) NOT NULL,
-		gender VARCHAR(10) NOT NULL,
-		age INT NOT NULL,
+		name VARCHAR(30),
+		gender VARCHAR(10),
+		age INT,
 		note varchar(50),
 		created_at TIMESTAMP,
 		updated_at TIMESTAMP
@@ -38,7 +38,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id SERIAL NOT NULL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
-		address VARCHAR(60) NOT NULL,
+		address VARCHAR(60),
 		created_at TIMESTAMP,
 		updated_at TIMESTAMP
 	);`, []interface{}{})
@@ -64,7 +64,7 @@ func TestSpecs(t *testing.T) {
 	// Query Specs
 	specs.Query(t, repo)
 	specs.QueryJoin(t, repo)
-	// specs.QueryNotFound(t, repo)
+	specs.QueryNotFound(t, repo)
 
 	// Insert Specs
 	// specs.Insert(t, repo)
@@ -72,20 +72,20 @@ func TestSpecs(t *testing.T) {
 	// specs.InsertSet(t, repo)
 
 	// Update Specs
-	// specs.Update(t, repo)
-	// specs.UpdateWhere(t, repo)
-	// specs.UpdateSet(t, repo)
+	specs.Update(t, repo)
+	specs.UpdateWhere(t, repo)
+	specs.UpdateSet(t, repo)
 
 	// Put Specs
-	// specs.SaveInsert(t, repo)
-	// specs.SaveInsertAll(t, repo)
-	// specs.SaveUpdate(t, repo)
+	specs.SaveInsert(t, repo)
+	specs.SaveInsertAll(t, repo)
+	specs.SaveUpdate(t, repo)
 
 	// Delete specs
-	// specs.Delete(t, repo)
+	specs.Delete(t, repo)
 
 	// Transaction specs
-	// specs.Transaction(t, repo)
+	specs.Transaction(t, repo)
 }
 
 func TestAdapterInsertAllError(t *testing.T) {

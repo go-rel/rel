@@ -136,7 +136,7 @@ func TestAdapterQueryError(t *testing.T) {
 
 	out := struct{}{}
 
-	_, err = adapter.Query(&out, ";;", []interface{}{})
+	_, err = adapter.Query(&out, "error", []interface{}{})
 	assert.NotNil(t, err)
 }
 
@@ -147,7 +147,7 @@ func TestAdapterExecError(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec(";;", []interface{}{})
+	_, _, err = adapter.Exec("error", []interface{}{})
 	assert.NotNil(t, err)
 }
 

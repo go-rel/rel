@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,7 @@ func Transaction(t *testing.T, repo grimoire.Repo) {
 		{"InsertWithAssoc", insertWithAssoc, nil},
 		{"InsertWithAssocError", insertWithAssocError, errors.NotFoundError("let's rollback")},
 		{"InsertWithAssocPanic", insertWithAssocPanic, errors.NotFoundError("let's rollback")},
+		{"ReplaceAssoc", replaceAssoc, nil},
 	}
 
 	for _, tt := range tests {
@@ -102,6 +104,24 @@ func insertWithAssocPanic(t *testing.T) func(repo grimoire.Repo) error {
 
 		// should rollback
 		panic(errors.NotFoundError("let's rollback"))
+	}
+}
+
+func replaceAssoc(t *testing.T) func(repo grimoire.Repo) error {
+	user := User{}
+
+	ch := changeUser(user, params)
+	assert.Nil(t, ch.Error())
+
+	// transaction block
+	return func(repo grimoire.Repo) error {
+		repo.From("users").MustOne(&user)
+		addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+
+		repo.From("addresses").Where(c.Eq(c.I("user_id"), user.ID)).MustDelete()
+		repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+		return nil
 	}
 }
 

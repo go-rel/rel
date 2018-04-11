@@ -9,6 +9,20 @@ Grimoire is a database access layer and validation for go. Grimoire is not an OR
 - Builtin validation using changeset
 - Multi adapter support
 
+## Table of contents
+
+<!--ts-->
+   * [Install](#install)
+   * [Quick Start](#quick-start)
+   * [Connecting to a database](#connecting-to-database)
+   * [CRUD Interface](#crud-interface)
+      * [Create](#create)
+      * [Query (TODO Doc)](#query)
+      * [Update](#update)
+      * [Delete](#delete)
+   * [Transaction (TODO Doc)](#transaction)
+<!--te-->
+
 ## Install
 
 ```bash

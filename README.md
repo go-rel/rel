@@ -216,7 +216,7 @@ repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(nil)
 // When used alongside Changeset or using `Save` function, it'll replace value defined in changeset or struct.
 // This behaviour especially useful when dealing with relation.
 repo.From("users").Find(1).Set("crew_id", 10).Update(&user, ch, ch, ch)
-repo.From("users").Find(1).Set("crew_id", 10).Update(&users)
+repo.From("users").Find(1).Set("crew_id", 10).Save(&users)
 ```
 
 ### Delete

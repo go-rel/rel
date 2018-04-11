@@ -1,13 +1,21 @@
 # grimoire
 [![GoDoc](https://godoc.org/github.com/Fs02/grimoire?status.svg)](https://godoc.org/github.com/Fs02/grimoire) [![Build Status](https://travis-ci.org/Fs02/grimoire.svg?branch=master)](https://travis-ci.org/Fs02/grimoire) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/grimoire)](https://goreportcard.com/report/github.com/Fs02/grimoire) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/grimoire/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/grimoire/test_coverage)
 
-Grimoire is a data access layer and validation for go.
+Grimoire is a database access layer and validation for go. Grimoire is not an ORM but it gives a way to nicely deal with relations.
 
-```
+- Query Builder
+- Struct style create and update
+- Changeset Style create and update
+- Builtin validation using changeset
+- Multi adapter support
+
+## Install
+
+```bash
 go get github.com/Fs02/grimoire
 ```
 
-Example:
+## Quick Start
 
 ```golang
 package main
@@ -30,25 +38,25 @@ type Product struct {
 
 func ProductChangeset(product interface{}, params map[string]interface{}) *changeset.Changeset {
 	ch := changeset.Cast(product, params, []string{"name", "price"})
-	changeset.ValidateRequired(ch, []string{"name", price})
+	changeset.ValidateRequired(ch, []string{"name", "price"})
 	changeset.ValidateMin(ch, "price", 100)
 	return ch
 }
 
 func main() {
-	// initialize mysql adapter
+	// initialize mysql adapter.
 	adapter, err := mysql.Open("root@(127.0.0.1:3306)/db?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		panic(err)
 	}
 	defer adapter.Close()
 
-	// initialize grimoire's repo
+	// initialize grimoire's repo.
 	repo := grimoire.New(adapter)
 
 	var product Product
 
-	// Changeset is used when creating or updating your data
+	// Changeset is used when creating or updating your data.
 	ch := ProductChangeset(product, map[string]interface{}{
 		"name": "shampoo",
 		"price": 1000
@@ -58,16 +66,94 @@ func main() {
 		// do something
 	}
 
-	// Create products with changeset and return the result to &product
+	// Create products with changeset and return the result to &product,
 	repo.From("products").MustCreate(&product, ch)
 
-	// Find a product with id 1
+	// Find a product with id 1.
 	repo.From("products").Find(1).MustOne(&product)
 
-	// Update products with id=1
+	// Update products with id=1.
 	repo.From("products").Find(1).MustUpdate(&product, ch)
 
-	// Delete Product with id=1
+	// Delete Product with id=1.
 	repo.From("products").Find(1).MustDelete()
 }
+```
+
+### Connecting to database
+
+In order to connect to database, first you need to initialize adapter and then create a grimoire's repo using the adapter instance.
+
+```golang
+import (
+	"github.com/Fs02/grimoire"
+	"github.com/Fs02/grimoire/adapter/mysql" // use mysql adapter
+)
+
+func main() {
+	// open mysql connection.
+	adapter, err := mysql.Open("root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	// initialize grimoire's repo.
+	repo := grimoire.New(adapter)
+}
+```
+
+## CRUD Interface
+
+### Create
+
+There's three alternatives on how you can persist a record to a database depending on your needs. The esiest way is by using struct directly like in most other Golang orm.
+
+```golang
+user := User{Name: "Alice", Age: 18}
+// Create a new record in `users`.
+repo.From("users").Save(&user)
+
+// Create multiple records at once,
+repo.From("users").Save(&[]User{user, user})
+```
+
+The other way is by using changeset, most of the time you might want to use this way especially when handling data from user.
+The advantages of using changeset is you can validates and pre-process your data before presisting to database. Using changeset also solves the problem of dealing with `zero values`, `null` and `undefined` fields where it's usually tricky to handle in `patch` request.
+
+```golang
+user := User{} // this also hold the schema
+
+// prepare the changes
+ch := changeset.Cast(user, map[string]interface{}{
+	"name": "Alice",
+	"age": 18,
+	"address": "world",
+}, []string{"name", "age"}) // this will filter `address`.
+changeset.ValidateRequired(ch, []string{"name", "age"}) // validate `name` and `age` field exists.
+
+// Insert changes to `users` table and return the result to `&user`.
+repo.From("users").Insert(&user, ch)
+
+// It's also possible to insert multiple changes at once.
+users := []User{}
+repo.From("users").Insert(&users, ch, ch)
+
+// If you don't care about the return value, you can pass nil.
+repo.From("users").Insert(nil, ch)
+```
+
+It's also possible to insert a record using query builder directly. Inserting a record without using changeset or `Save` method won't set `created_at` and `updated_at` fields.
+
+```golang
+// Insert a record to users.
+repo.From("users").Set("name", "Alice").Set("age", 18).Insert(&user)
+
+// If you don't care about the return value, you can pass nil.
+repo.From("users").Set("name", "Alice").Set("age", 18).Insert(nil)
+
+// When used alongside Changeset or using `Save` function, it'll replace value defined in changeset or struct.
+// This behaviour especially useful when dealing with relation.
+repo.From("users").Set("crew_id", 10).Insert(&user, ch, ch, ch)
+repo.From("users").Set("crew_id", 10).Save(&users)
 ```

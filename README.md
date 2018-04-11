@@ -107,7 +107,7 @@ func main() {
 
 ### Create
 
-There's three alternatives on how you can persist a record to a database depending on your needs. The esiest way is by using struct directly like in most other Golang orm.
+There's three alternatives on how you can insert records to a database depending on your needs. The esiest way is by using struct directly like in most other Golang orm.
 
 ```golang
 user := User{Name: "Alice", Age: 18}
@@ -143,7 +143,7 @@ repo.From("users").Insert(&users, ch, ch)
 repo.From("users").Insert(nil, ch)
 ```
 
-It's also possible to insert a record using query builder directly. Inserting a record without using changeset or `Save` method won't set `created_at` and `updated_at` fields.
+It's also possible to insert using query builder directly. Inserting without using changeset or `Save` method won't set `created_at` and `updated_at` fields.
 
 ```golang
 // Insert a record to users.
@@ -156,4 +156,65 @@ repo.From("users").Set("name", "Alice").Set("age", 18).Insert(nil)
 // This behaviour especially useful when dealing with relation.
 repo.From("users").Set("crew_id", 10).Insert(&user, ch, ch, ch)
 repo.From("users").Set("crew_id", 10).Save(&users)
+```
+
+### Update
+
+There's also three alternatives on how you can update records to a database. The easiest way is by using struct directly.
+
+
+```golang
+user := User{Name: "Alice", Age: 18}
+
+// Update a record from `users` where id=1.
+// Notice updating a record using `Save` function is similar to creating, but you will need to specify condition.
+repo.From("users").Find(1).Save(&user)
+
+// It's also possible to update multiple record (where age=18) at once and retrieves all the results.
+// The following will update all record matches the condition and return it to array.
+// Only the first item from slice will be used as update value.
+users := []User{user}
+repo.From("users").Where(Eq(I("age"), 18)).Save(&users)
+```
+
+Updating using changeset is similar to inserting.
+
+```golang
+user := User{} // this also hold the schema
+
+// prepare the changes
+ch := changeset.Cast(user, map[string]interface{}{
+	"name": "Alice",
+	"age": 18,
+	"address": "world",
+}, []string{"name", "age"}) // this will filter `address`.
+changeset.ValidateRequired(ch, []string{"name", "age"}) // validate `name` and `age` field exists.
+
+// Update changes to `users` where id=1 table and return the result to `&user`.
+repo.From("users").Find(1).Update(&user, ch)
+
+// If you don't care about the return value, you can pass nil.
+repo.From("users").Find(1).Update(nil, ch)
+
+// The following will update all record matches the condition and return it to array.
+users := []User{user}
+repo.From("users").Where(Eq(I("age"), 18)).Update(&user, ch)
+
+// If no condition is used, grimoire will update all records.
+repo.From("users").Update(nil, ch)
+```
+
+It's also possible to update using query builder directly. Update a record without using changeset or `Save` method won't set `updated_at` fields.
+
+```golang
+// Update a record where id=1.
+repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(&user)
+
+// If you don't care about the return value, you can pass nil.
+repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(nil)
+
+// When used alongside Changeset or using `Save` function, it'll replace value defined in changeset or struct.
+// This behaviour especially useful when dealing with relation.
+repo.From("users").Find(1).Set("crew_id", 10).Update(&user, ch, ch, ch)
+repo.From("users").Find(1).Set("crew_id", 10).Update(&users)
 ```

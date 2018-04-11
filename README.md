@@ -218,3 +218,18 @@ repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(nil)
 repo.From("users").Find(1).Set("crew_id", 10).Update(&user, ch, ch, ch)
 repo.From("users").Find(1).Set("crew_id", 10).Update(&users)
 ```
+
+### Delete
+
+Deleting one or more records is simple.
+
+```golang
+// Delete a record with id=1.
+repo.From("products").Find(1).Delete()
+
+// Delete records where age=18
+repo.From("users").Where(Eq(I("age"), 18)).Delete()
+
+// Delete all records.
+repo.From("users").Delete()
+```

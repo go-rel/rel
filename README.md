@@ -20,7 +20,7 @@ Grimoire is a database access layer and validation for go. Grimoire is not an OR
       * [Query (TODO Doc)](#query)
       * [Update](#update)
       * [Delete](#delete)
-   * [Transaction (TODO Doc)](#transaction)
+   * [Transaction](#transaction)
 <!--te-->
 
 ## Install
@@ -246,4 +246,44 @@ repo.From("users").Where(Eq(I("age"), 18)).Delete()
 
 // Delete all records.
 repo.From("users").Delete()
+```
+
+
+## Transaction
+
+Transactions in grimoire are run inside a transaction function that returns an error.
+Commit and Rollback is handled automatically by grimoire, transaction will rollback when the function returns an error or throw a panic.
+if panic is not caused by grimoire's error or it's an grimoire's `UnexpectedError()`, the function will repanic after recovered.
+If no error returned or function did not panic, then the transaction will be commited.
+
+```golang
+user := User{}
+
+// cast user changes alongside addreses
+ch := changeUser(user, params)
+if ch.Error() {
+	// do something
+}
+
+// declare and execute transaction
+err := repo.Transaction(func repo grimoire.Repo) error {
+	// MustInsert similar to Insert, but this will panic if any error occured.
+	// If it's panic, transaction will automatically rolled back
+	// and the panic cause will be returned as an error as long as it's grimoire's error.
+	repo.From("users").MustInsert(&user, ch)
+
+	// Get array of addresses changeset.
+	addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+
+	// Insert multiple addresses changeset at once.
+	// Set("user_id", user.ID) will ensure it's user_id refer to previous inserted user.
+	repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+	// commit transaction
+	return nil
+})
+
+if err != nil {
+	// do something
+}
 ```

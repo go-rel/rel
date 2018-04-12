@@ -3,11 +3,15 @@
 
 Grimoire is a database access layer and validation for go. Grimoire is not an ORM but it gives a nice way to deal with relations.
 
+Features:
+
 - Query Builder
 - Struct style create and update
 - Changeset Style create and update
 - Builtin validation using changeset
 - Multi adapter support
+- Logger
+- Unit tested
 
 ## Table of contents
 
@@ -21,6 +25,8 @@ Grimoire is a database access layer and validation for go. Grimoire is not an OR
       * [Update](#update)
       * [Delete](#delete)
    * [Transaction](#transaction)
+   * [Logger (TODO)](#logger)
+   * [Struct Mapping (TODO)](#struct-mapping)
 <!--te-->
 
 ## Install
@@ -121,7 +127,7 @@ func main() {
 
 ### Create
 
-There's three alternatives on how you can insert records to a database depending on your needs. The easiest way is by using struct directly like in most other Golang orm.
+There's three alternatives on how you can insert records to a database depending on your needs. The easiest way is by using struct directly like in most other Golang ORM.
 
 ```golang
 user := User{Name: "Alice", Age: 18}
@@ -174,7 +180,7 @@ err := repo.From("users").Set("crew_id", 10).Save(&users)
 
 ### Query
 
-Grimoire's use query builder to perform select, insert, update and delete query.
+In general Grimoire's use query builder to perform select, insert, update and delete query.
 
 #### Where
 
@@ -346,8 +352,8 @@ err := repo.From("users").Delete()
 ## Transaction
 
 Transactions in grimoire are run inside a transaction function that returns an error.
-Commit and Rollback is handled automatically by grimoire, transaction will rollback when the function returns an error or throw a panic.
-if panic is not caused by grimoire's error or it's an grimoire's `UnexpectedError()`, the function will repanic after recovered.
+Commit and Rollback are handled automatically by grimoire, transaction will rollback when the function returns an error or throws a panic.
+if panic is not caused by grimoire's error or it's an grimoire's `UnexpectedError()`, the function will repanic after recover.
 If no error returned or function did not panic, then the transaction will be commited.
 
 ```golang

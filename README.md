@@ -121,7 +121,7 @@ func main() {
 
 ### Create
 
-There's three alternatives on how you can insert records to a database depending on your needs. The esiest way is by using struct directly like in most other Golang orm.
+There's three alternatives on how you can insert records to a database depending on your needs. The easiest way is by using struct directly like in most other Golang orm.
 
 ```golang
 user := User{Name: "Alice", Age: 18}

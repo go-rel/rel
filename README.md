@@ -17,7 +17,7 @@ Grimoire is a database access layer and validation for go. Grimoire is not an OR
    * [Connecting to a database](#connecting-to-database)
    * [CRUD Interface](#crud-interface)
       * [Create](#create)
-      * [Query (TODO Doc)](#query)
+      * [Query](#query)
       * [Update](#update)
       * [Delete](#delete)
    * [Transaction](#transaction)
@@ -126,10 +126,10 @@ There's three alternatives on how you can insert records to a database depending
 ```golang
 user := User{Name: "Alice", Age: 18}
 // Create a new record in `users`.
-repo.From("users").Save(&user)
+err := repo.From("users").Save(&user)
 
 // Create multiple records at once,
-repo.From("users").Save(&[]User{user, user})
+err := repo.From("users").Save(&[]User{user, user})
 ```
 
 The other way is by using changeset, most of the time you might want to use this way especially when handling data from user.
@@ -147,29 +147,123 @@ ch := changeset.Cast(user, map[string]interface{}{
 changeset.ValidateRequired(ch, []string{"name", "age"}) // validate `name` and `age` field exists.
 
 // Insert changes to `users` table and return the result to `&user`.
-repo.From("users").Insert(&user, ch)
+err := repo.From("users").Insert(&user, ch)
 
 // It's also possible to insert multiple changes at once.
 users := []User{}
-repo.From("users").Insert(&users, ch, ch)
+err := repo.From("users").Insert(&users, ch, ch)
 
 // If you don't care about the return value, you can pass nil.
-repo.From("users").Insert(nil, ch)
+err := repo.From("users").Insert(nil, ch)
 ```
 
 It's also possible to insert using query builder directly. Inserting without using changeset or `Save` method won't set `created_at` and `updated_at` fields.
 
 ```golang
 // Insert a record to users.
-repo.From("users").Set("name", "Alice").Set("age", 18).Insert(&user)
+err := repo.From("users").Set("name", "Alice").Set("age", 18).Insert(&user)
 
 // If you don't care about the return value, you can pass nil.
-repo.From("users").Set("name", "Alice").Set("age", 18).Insert(nil)
+err := repo.From("users").Set("name", "Alice").Set("age", 18).Insert(nil)
 
 // When used alongside Changeset or using `Save` function, it'll replace value defined in changeset or struct.
 // This behaviour especially useful when dealing with relation.
-repo.From("users").Set("crew_id", 10).Insert(&user, ch, ch, ch)
-repo.From("users").Set("crew_id", 10).Save(&users)
+err := repo.From("users").Set("crew_id", 10).Insert(&user, ch, ch, ch)
+err := repo.From("users").Set("crew_id", 10).Save(&users)
+```
+
+### Query
+
+Grimoire's use query builder to perform select, insert, update and delete query.
+
+#### Where
+
+Grimoire's support various condition in query builder. to see a full list of supported condition check [this](https://godoc.org/github.com/Fs02/grimoire/c) out.
+
+```golang
+// declare some variables.
+users     := "users"
+id        := c.I("id") // identify column in a table.
+name      := c.I("name")
+age       := c.I("age")
+
+user := User{}
+
+// Get a record from users table using id.
+// One will automatically add limit=1 to query.
+err := repo.From(users).Find(1).One(&user)
+
+// Which equal to:
+err := repo.From(users).Where(c.Eq(id, user.ID)).One(&user)
+
+alluser := []User{}
+
+// Retrieves all record where name=Alice
+err := repo.From(users).Where(c.Eq(name, "Alice")).All(&alluser)
+
+// You can add more condition just by adding more arguments.
+// This will retrieve all record where name=Alice and age=10.
+// All condition inside where will automatically joined using and expression.
+err := repo.From(users).Where(c.Eq(name, "Alice"), c.Ne(age, 10)).All(&alluser)
+
+// Use or:
+// This will retrieve all record where age=10 or age=15.
+err := repo.From(users).Where(c.Eq(age, 10)).OrWhere(c.Eq(age, 15)).All(&alluser)
+
+// Multiple condition inside `OrWhere` will be joined using and expression.
+// This will retrieve all record where age=10 or (name=Alice and age=15).
+err := repo.From(users).Where(c.Eq(age, 10)).OrWhere(c.Eq(name, "Alice"), c.Eq(age, 15)).All(&alluser)
+```
+
+#### Selecting Fields
+
+```golang
+// Get one record and only select only it's name and age.
+er := repo.From(users).Select("name", "age").Find(1).One(&user)
+```
+
+#### Offset and Limit
+
+```golang
+// Limit query by 5.
+err := repo.From(users).Limit(5).All(&alluser)
+
+// Limit by 5 and offset by 5.
+err := repo.From(users).Limit(5).Offset(5).All(&alluser)
+```
+
+#### Order
+
+```golang
+// Order by name ascending.
+err := repo.From(users).Order(c.Asc(name)).All(&alluser)
+
+// Order by name descending.
+err := repo.From(users).Order(c.Desc(name)).All(&alluser)
+```
+
+#### Group By
+
+```golang
+// Group by gender and retrieves it's count.
+err := repo.From(users).Group("gender").Select("COUNT(id)").All(&alluser)
+
+// Group by with having.
+err := repo.From(users).Group("age").Having(c.Gt(age, 10)).Select("COUNT(id)").All(&alluser)
+```
+
+#### Join
+
+```golang
+// Join addresses table with users on addresses.user_id=users.id
+err := repo.From(addresses).Join(users).All(&alluser)
+
+// Which equal to this if the join condition is manually specified.
+err := repo.From(addresses).Join(users, c.Eq(c.I("addresses.user_id"), c.I("users.id"))).All(&alluser)
+
+// It's also possible to join using other join mode using `JoinWith`
+err := repo.From(addresses).JoinWith("LEFT JOIN", users).All(&alluser)
+err := repo.From(addresses).JoinWith("LEFT OUTER JOIN", users).All(&alluser)
 ```
 
 ### Update
@@ -182,13 +276,13 @@ user := User{Name: "Alice", Age: 18}
 
 // Update a record from `users` where id=1.
 // Notice updating a record using `Save` function is similar to creating, but you will need to specify condition.
-repo.From("users").Find(1).Save(&user)
+err := repo.From("users").Find(1).Save(&user)
 
 // It's also possible to update multiple record (where age=18) at once and retrieves all the results.
 // The following will update all record matches the condition and return it to array.
 // Only the first item from slice will be used as update value.
 users := []User{user}
-repo.From("users").Where(Eq(I("age"), 18)).Save(&users)
+err := repo.From("users").Where(Eq(I("age"), 18)).Save(&users)
 ```
 
 Updating using changeset is similar to inserting.
@@ -205,32 +299,32 @@ ch := changeset.Cast(user, map[string]interface{}{
 changeset.ValidateRequired(ch, []string{"name", "age"}) // validate `name` and `age` field exists.
 
 // Update changes to `users` where id=1 table and return the result to `&user`.
-repo.From("users").Find(1).Update(&user, ch)
+err := repo.From("users").Find(1).Update(&user, ch)
 
 // If you don't care about the return value, you can pass nil.
-repo.From("users").Find(1).Update(nil, ch)
+err := repo.From("users").Find(1).Update(nil, ch)
 
 // The following will update all record matches the condition and return it to array.
 users := []User{user}
-repo.From("users").Where(Eq(I("age"), 18)).Update(&user, ch)
+err := repo.From("users").Where(Eq(I("age"), 18)).Update(&user, ch)
 
 // If no condition is used, grimoire will update all records.
-repo.From("users").Update(nil, ch)
+err := repo.From("users").Update(nil, ch)
 ```
 
 It's also possible to update using query builder directly. Update a record without using changeset or `Save` method won't set `updated_at` fields.
 
 ```golang
 // Update a record where id=1.
-repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(&user)
+err := repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(&user)
 
 // If you don't care about the return value, you can pass nil.
-repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(nil)
+err := repo.From("users").Find(1).Set("name", "Alice").Set("age", 18).Update(nil)
 
 // When used alongside Changeset or using `Save` function, it'll replace value defined in changeset or struct.
 // This behaviour especially useful when dealing with relation.
-repo.From("users").Find(1).Set("crew_id", 10).Update(&user, ch, ch, ch)
-repo.From("users").Find(1).Set("crew_id", 10).Save(&users)
+err := repo.From("users").Find(1).Set("crew_id", 10).Update(&user, ch, ch, ch)
+err := repo.From("users").Find(1).Set("crew_id", 10).Save(&users)
 ```
 
 ### Delete
@@ -239,13 +333,13 @@ Deleting one or more records is simple.
 
 ```golang
 // Delete a record with id=1.
-repo.From("products").Find(1).Delete()
+err := repo.From("products").Find(1).Delete()
 
 // Delete records where age=18
-repo.From("users").Where(Eq(I("age"), 18)).Delete()
+err := repo.From("users").Where(Eq(I("age"), 18)).Delete()
 
 // Delete all records.
-repo.From("users").Delete()
+err := repo.From("users").Delete()
 ```
 
 

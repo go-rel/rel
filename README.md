@@ -407,7 +407,7 @@ But field name can be defined manually using struct tags.
 ```golang
 type Entity struct {
 	ALLCAP		bool 	`db:"all_cap"` 	// map `ALLCAP` as `all_cap`
-	Virtual		bool 	`db:"-"` 		// using `-` will treat field as virtual.
-	FullName	string					// by default it'll map to `full_name`
+	Virtual		bool 	`db:"-"` 	// using `-` will treat field as virtual.
+	FullName	string			// by default it'll map to `full_name`
 }
 ```

@@ -25,7 +25,7 @@ Features:
       * [Update](#update)
       * [Delete](#delete)
    * [Transaction](#transaction)
-   * [Logger (TODO)](#logger)
+   * [Logger](#logger)
    * [Struct Mapping (TODO)](#struct-mapping)
 <!--te-->
 
@@ -386,4 +386,15 @@ err := repo.Transaction(func repo grimoire.Repo) error {
 if err != nil {
 	// do something
 }
+```
+
+## Logger
+
+Grimoire's default logger can be replaced with repo's `SetLogger()` function.
+
+```golang
+// replace default logger with custom logger function.
+repo.SetLogger(func(query string, duration time.Duration, err error) {
+	log.Print("[", duration, "] - ", query)
+})
 ```

@@ -96,8 +96,8 @@ func fieldIndex(rt reflect.Type) map[string]int {
 	for i := 0; i < rt.NumField(); i++ {
 		f := rt.Field(i)
 
-		// skip if struct or slice but not a scanner or time
-		if internal.SkipType(f.Type) {
+		// skip if not scannable
+		if !internal.Scannable(f.Type) {
 			continue
 		}
 

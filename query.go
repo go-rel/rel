@@ -321,8 +321,8 @@ func (query Query) MustDelete() {
 
 func cloneChangeset(out map[string]interface{}, changes map[string]interface{}) {
 	for k, v := range changes {
-		// skip if struct or slice but not a scanner or time
-		if internal.SkipType(reflect.TypeOf(v)) {
+		// skip if not scannable
+		if !internal.Scannable(reflect.TypeOf(v)) {
 			continue
 		}
 
@@ -357,8 +357,8 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 
 		for _, ch := range chs {
 			if _, exist := ch.Changes()[f]; exist {
-				// skip if struct or slice but not a scanner or time
-				if internal.SkipType(ch.Types()[f]) {
+				// skip if not scannable
+				if !internal.Scannable(ch.Types()[f]) {
 					break
 				}
 

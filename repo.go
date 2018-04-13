@@ -6,12 +6,18 @@ import (
 
 type Repo struct {
 	adapter Adapter
+	logger  Logger
 }
 
 func New(adapter Adapter) Repo {
 	return Repo{
 		adapter: adapter,
+		logger:  logger,
 	}
+}
+
+func (repo *Repo) SetLogger(logger Logger) {
+	repo.logger = logger
 }
 
 func (repo Repo) From(collection string) Query {

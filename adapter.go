@@ -1,14 +1,12 @@
 package grimoire
 
-// Adapter abstraction
-// accepts struct and query or changeset
-// returns query string and arguments
+// Adapter interface
 type Adapter interface {
-	All(Query, interface{}) (int, error)
-	Delete(Query) error
-	Insert(Query, map[string]interface{}) (interface{}, error)
-	InsertAll(Query, []string, []map[string]interface{}) ([]interface{}, error)
-	Update(Query, map[string]interface{}) error
+	All(Query, interface{}, Logger) (int, error)
+	Delete(Query, Logger) error
+	Insert(Query, map[string]interface{}, Logger) (interface{}, error)
+	InsertAll(Query, []string, []map[string]interface{}, Logger) ([]interface{}, error)
+	Update(Query, map[string]interface{}, Logger) error
 
 	Begin() (Adapter, error)
 	Commit() error

@@ -26,7 +26,7 @@ Features:
       * [Delete](#delete)
    * [Transaction](#transaction)
    * [Logger](#logger)
-   * [Field Mapping)](#field-mapping)
+   * [Field Mapping](#field-mapping)
 <!--te-->
 
 ## Install

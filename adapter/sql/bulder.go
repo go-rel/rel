@@ -97,11 +97,14 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 		curr++
 	}
 	buffer.WriteString(") VALUES ")
+
 	buffer.WriteString("(")
-	buffer.WriteString(builder.ph())
-	for i := 1; i <= length-1; i++ {
-		buffer.WriteString(",")
+	for i := 0; i < length; i++ {
 		buffer.WriteString(builder.ph())
+
+		if i < length-1 {
+			buffer.WriteString(",")
+		}
 	}
 	buffer.WriteString(")")
 

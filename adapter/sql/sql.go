@@ -47,8 +47,12 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 		return nil, err
 	}
 
-	inc := adapter.IncrementFunc(*adapter)
 	ids := []interface{}{id}
+	inc := 1
+
+	if adapter.IncrementFunc != nil {
+		inc = adapter.IncrementFunc(*adapter)
+	}
 
 	for i := 1; i < len(allchanges); i++ {
 		ids = append(ids, id+int64(inc*i))

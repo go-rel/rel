@@ -1,17 +1,17 @@
-package postgresql
+package postgres
 
 import (
 	"context"
-	"database/sql"
+	db "database/sql"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/adapter/sql"
 	_ "github.com/lib/pq"
 )
 
 // Adapter definition for mysql database.
 type Adapter struct {
-	*sqlutil.Adapter
+	*sql.Adapter
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
@@ -20,20 +20,20 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 	adapter := &Adapter{
-		&sqlutil.Adapter{
+		&sql.Adapter{
 			Placeholder: "$",
 			IsOrdinal:   true,
 			ErrorFunc:   errorFunc,
 		},
 	}
 
-	adapter.DB, err = sql.Open("postgres", dsn)
+	adapter.DB, err = db.Open("postgres", dsn)
 	return adapter, err
 }
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
-	statement, args := sqlutil.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).
 		Returning("id").
 		Insert(query.Collection, changes)
 
@@ -47,7 +47,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 
 // InsertAll inserts all record to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
-	statement, args := sqlutil.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
@@ -68,7 +68,7 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 	TX, err := adapter.DB.BeginTx(context.Background(), nil)
 
 	return &Adapter{
-		&sqlutil.Adapter{
+		&sql.Adapter{
 			Placeholder:   adapter.Placeholder,
 			IsOrdinal:     adapter.IsOrdinal,
 			IncrementFunc: adapter.IncrementFunc,

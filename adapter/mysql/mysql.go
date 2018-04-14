@@ -1,18 +1,18 @@
 package mysql
 
 import (
-	"database/sql"
+	db "database/sql"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/go-sql-driver/mysql"
 )
 
 // Adapter definition for mysql database.
 type Adapter struct {
-	*sqlutil.Adapter
+	*sql.Adapter
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
@@ -21,7 +21,7 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 	adapter := &Adapter{
-		&sqlutil.Adapter{
+		&sql.Adapter{
 			Placeholder:   "?",
 			IsOrdinal:     false,
 			IncrementFunc: incrementFunc,
@@ -29,11 +29,11 @@ func Open(dsn string) (*Adapter, error) {
 		},
 	}
 
-	adapter.DB, err = sql.Open("mysql", dsn)
+	adapter.DB, err = db.Open("mysql", dsn)
 	return adapter, err
 }
 
-func incrementFunc(adapter sqlutil.Adapter) int {
+func incrementFunc(adapter sql.Adapter) int {
 	var variable string
 	var increment int
 	var err error

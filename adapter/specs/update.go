@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +33,7 @@ func Update(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sqlutil.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
+		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
 
 		t.Run("Update|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -64,7 +64,7 @@ func UpdateWhere(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sqlutil.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
+		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
 
 		t.Run("Update|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -95,7 +95,7 @@ func UpdateSet(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, test := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Update(test.query.Collection, test.query.Changes, test.query.Condition)
+		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, test.query.Changes, test.query.Condition)
 
 		t.Run("Update|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Update(nil))

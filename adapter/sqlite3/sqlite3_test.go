@@ -25,9 +25,9 @@ func init() {
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id INTEGER PRIMARY KEY,
-		name VARCHAR(30),
-		gender VARCHAR(10),
-		age INTEGER,
+		name VARCHAR(30) NOT NULL DEFAULT '',
+		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		age INTEGER NOT NULL DEFAULT 0,
 		note varchar(50),
 		created_at DATETIME,
 		updated_at DATETIME
@@ -37,7 +37,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id INTEGER PRIMARY KEY,
 		user_id INTEGER,
-		address VARCHAR(60),
+		address VARCHAR(60) NOT NULL DEFAULT '',
 		created_at DATETIME,
 		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)

@@ -145,9 +145,16 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 		if i < len(allchanges)-1 {
 			buffer.WriteString("),")
 		} else {
-			buffer.WriteString(");")
+			buffer.WriteString(")")
 		}
 	}
+
+	if builder.ReturnField != "" {
+		buffer.WriteString(" RETURNING ")
+		buffer.WriteString(builder.ReturnField)
+	}
+
+	buffer.WriteString(";")
 
 	return buffer.String(), args
 }

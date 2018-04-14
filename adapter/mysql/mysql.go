@@ -37,8 +37,8 @@ func incrementFunc(adapter sql.Adapter) int {
 	var variable string
 	var increment int
 	var err error
-	if adapter.TX != nil {
-		err = adapter.TX.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
+	if adapter.Tx != nil {
+		err = adapter.Tx.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	} else {
 		err = adapter.DB.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	}

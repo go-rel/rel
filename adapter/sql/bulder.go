@@ -439,6 +439,7 @@ func (builder *Builder) Returning(field string) *Builder {
 	return builder
 }
 
+// NewBuilder create new SQL builder.
 func NewBuilder(placeholder string, ordinal bool) *Builder {
 	return &Builder{
 		Placeholder: placeholder,

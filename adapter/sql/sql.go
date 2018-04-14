@@ -1,7 +1,6 @@
 package sql
 
 import (
-	"context"
 	"database/sql"
 	"time"
 
@@ -16,7 +15,7 @@ type Adapter struct {
 	IncrementFunc func(Adapter) int
 	ErrorFunc     func(error) error
 	DB            *sql.DB
-	TX            *sql.Tx
+	Tx            *sql.Tx
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
@@ -74,34 +73,34 @@ func (adapter *Adapter) Delete(query grimoire.Query, logger grimoire.Logger) err
 
 // Begin begins a new transaction.
 func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
-	TX, err := adapter.DB.BeginTx(context.Background(), nil)
+	Tx, err := adapter.DB.Begin()
 
 	return &Adapter{
 		Placeholder:   adapter.Placeholder,
 		IsOrdinal:     adapter.IsOrdinal,
 		IncrementFunc: adapter.IncrementFunc,
 		ErrorFunc:     adapter.ErrorFunc,
-		TX:            TX,
+		Tx:            Tx,
 	}, err
 }
 
 // Commit commits current transaction.
 func (adapter *Adapter) Commit() error {
-	if adapter.TX == nil {
+	if adapter.Tx == nil {
 		return errors.UnexpectedError("not in transaction")
 	}
 
-	err := adapter.TX.Commit()
+	err := adapter.Tx.Commit()
 	return adapter.ErrorFunc(err)
 }
 
 // Rollback revert current transaction.
 func (adapter *Adapter) Rollback() error {
-	if adapter.TX == nil {
+	if adapter.Tx == nil {
 		return errors.UnexpectedError("not in transaction")
 	}
 
-	err := adapter.TX.Rollback()
+	err := adapter.Tx.Rollback()
 	return adapter.ErrorFunc(err)
 }
 
@@ -111,8 +110,8 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 	var err error
 
 	start := time.Now()
-	if adapter.TX != nil {
-		rows, err = adapter.TX.Query(statement, args...)
+	if adapter.Tx != nil {
+		rows, err = adapter.Tx.Query(statement, args...)
 	} else {
 		rows, err = adapter.DB.Query(statement, args...)
 	}
@@ -133,8 +132,8 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, logger grimoi
 	var err error
 
 	start := time.Now()
-	if adapter.TX != nil {
-		res, err = adapter.TX.Exec(statement, args...)
+	if adapter.Tx != nil {
+		res, err = adapter.Tx.Exec(statement, args...)
 	} else {
 		res, err = adapter.DB.Exec(statement, args...)
 	}

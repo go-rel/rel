@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"context"
 	db "database/sql"
 
 	"github.com/Fs02/grimoire"
@@ -65,7 +64,7 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 
 // Begin begins a new transaction.
 func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
-	TX, err := adapter.DB.BeginTx(context.Background(), nil)
+	Tx, err := adapter.DB.Begin()
 
 	return &Adapter{
 		&sql.Adapter{
@@ -73,7 +72,7 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 			IsOrdinal:     adapter.IsOrdinal,
 			IncrementFunc: adapter.IncrementFunc,
 			ErrorFunc:     adapter.ErrorFunc,
-			TX:            TX,
+			Tx:            Tx,
 		},
 	}, err
 }

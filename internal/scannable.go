@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// SkipType checks whether type should be skipped when scanning or generating changes.
-func SkipType(rt reflect.Type) bool {
+// Scannable checks whether type is scannable.
+func Scannable(rt reflect.Type) bool {
 	if rt.Kind() == reflect.Ptr {
 		fzeroval := reflect.New(rt.Elem()).Interface()
 		kind := rt.Elem().Kind()
@@ -15,7 +15,7 @@ func SkipType(rt reflect.Type) bool {
 		_, isTime := fzeroval.(*time.Time)
 
 		if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
-			return true
+			return false
 		}
 	} else {
 		fzeroval := reflect.New(rt).Interface()
@@ -24,8 +24,8 @@ func SkipType(rt reflect.Type) bool {
 		_, isTime := fzeroval.(*time.Time)
 
 		if (kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Array) && kind != reflect.Uint8 && !isScanner && !isTime {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }

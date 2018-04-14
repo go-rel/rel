@@ -77,10 +77,6 @@ func TestQueryJoin(t *testing.T) {
 	})
 }
 
-func TestQueryJoinWith(t *testing.T) {
-	t.Skip("PENDING")
-}
-
 func TestQueryWhere(t *testing.T) {
 	tests := []struct {
 		Case     string

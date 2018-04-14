@@ -25,8 +25,8 @@ Features:
       * [Update](#update)
       * [Delete](#delete)
    * [Transaction](#transaction)
-   * [Logger (TODO)](#logger)
-   * [Struct Mapping (TODO)](#struct-mapping)
+   * [Logger](#logger)
+   * [Field Mapping](#field-mapping)
 <!--te-->
 
 ## Install
@@ -385,5 +385,29 @@ err := repo.Transaction(func repo grimoire.Repo) error {
 
 if err != nil {
 	// do something
+}
+```
+
+## Logger
+
+Grimoire's default logger can be replaced with repo's `SetLogger()` function.
+
+```golang
+// replace default logger with custom logger function.
+repo.SetLogger(func(query string, duration time.Duration, err error) {
+	log.Print("[", duration, "] - ", query)
+})
+```
+
+## Field Mapping
+
+By default Grimoire's will map struct fields by converting field's name to snake case.
+But field name can be defined manually using struct tags.
+
+```golang
+type Entity struct {
+	ALLCAP		bool 	`db:"all_cap"` 	// map `ALLCAP` as `all_cap`
+	Virtual		bool 	`db:"-"` 	// using `-` will treat field as virtual.
+	FullName	string			// by default it'll map to `full_name`
 }
 ```

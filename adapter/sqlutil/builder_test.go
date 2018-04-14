@@ -143,8 +143,8 @@ func TestBuilderInsert(t *testing.T) {
 	assert.Equal(t, "INSERT INTO users (name) VALUES (?);", qs)
 	assert.Equal(t, args, qargs)
 
-	qs, qargs = NewBuilder("$", true).Insert("users", changes)
-	assert.Equal(t, "INSERT INTO users (name) VALUES ($1);", qs)
+	qs, qargs = NewBuilder("$", true).Returning("id").Insert("users", changes)
+	assert.Equal(t, "INSERT INTO users (name) VALUES ($1) RETURNING id;", qs)
 	assert.Equal(t, args, qargs)
 
 	// test for multiple changes since map is randomly ordered
@@ -172,8 +172,8 @@ func TestBuilderInsertAll(t *testing.T) {
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// ordinal
-	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO users (name) VALUES ($1),(DEFAULT),($2);", statement)
+	statement, args = NewBuilder("$", true).Returning("id").InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name) VALUES ($1),(DEFAULT),($2) RETURNING id;", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
@@ -183,8 +183,8 @@ func TestBuilderInsertAll(t *testing.T) {
 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
 	// ordinal
-	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT);", statement)
+	statement, args = NewBuilder("$", true).Returning("id").InsertAll("users", fields, allchanges)
+	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT) RETURNING id;", statement)
 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
 	// all changes have value

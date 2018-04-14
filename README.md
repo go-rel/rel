@@ -11,7 +11,6 @@ Features:
 - Builtin validation using changeset
 - Multi adapter support
 - Logger
-- Unit tested
 
 ## Table of contents
 

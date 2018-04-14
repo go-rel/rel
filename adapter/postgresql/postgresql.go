@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sqlutil"
@@ -32,33 +33,33 @@ func (adapter *Adapter) Close() error {
 }
 
 // All retrieves all record that match the query.
-func (adapter *Adapter) All(query grimoire.Query, doc interface{}) (int, error) {
+func (adapter *Adapter) All(query grimoire.Query, doc interface{}, logger grimoire.Logger) (int, error) {
 	statement, args := sqlutil.NewBuilder("$", true).Find(query)
-	count, err := adapter.Query(doc, statement, args)
+	count, err := adapter.Query(doc, statement, args, logger)
 	return int(count), err
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}) (interface{}, error) {
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
 	statement, args := sqlutil.NewBuilder("$", true).Returning("id").Insert(query.Collection, changes)
 
 	var result struct {
 		ID int64
 	}
 
-	_, err := adapter.Query(&result, statement, args)
+	_, err := adapter.Query(&result, statement, args, logger)
 	return result.ID, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
 	statement, args := sqlutil.NewBuilder("$", true).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
 	}
 
-	_, err := adapter.Query(&result, statement, args)
+	_, err := adapter.Query(&result, statement, args, logger)
 
 	ids := make([]interface{}, 0, len(result))
 	for _, r := range result {
@@ -69,16 +70,16 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}) error {
+func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) error {
 	statement, args := sqlutil.NewBuilder("$", true).Update(query.Collection, changes, query.Condition)
-	_, _, err := adapter.Exec(statement, args)
+	_, _, err := adapter.Exec(statement, args, logger)
 	return err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query grimoire.Query) error {
+func (adapter *Adapter) Delete(query grimoire.Query, logger grimoire.Logger) error {
 	statement, args := sqlutil.NewBuilder("$", true).Delete(query.Collection, query.Condition)
-	_, _, err := adapter.Exec(statement, args)
+	_, _, err := adapter.Exec(statement, args, logger)
 	return err
 }
 
@@ -109,15 +110,17 @@ func (adapter *Adapter) Rollback() error {
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}) (int64, error) {
+func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}, logger grimoire.Logger) (int64, error) {
 	var rows *sql.Rows
 	var err error
 
+	start := time.Now()
 	if adapter.tx != nil {
 		rows, err = adapter.tx.Query(statement, args...)
 	} else {
 		rows, err = adapter.db.Query(statement, args...)
 	}
+	logger(statement, time.Since(start), err)
 
 	if err != nil {
 		return 0, adapter.Error(err)
@@ -129,15 +132,17 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(statement string, args []interface{}) (int64, int64, error) {
+func (adapter *Adapter) Exec(statement string, args []interface{}, logger grimoire.Logger) (int64, int64, error) {
 	var res sql.Result
 	var err error
 
+	start := time.Now()
 	if adapter.tx != nil {
 		res, err = adapter.tx.Exec(statement, args...)
 	} else {
 		res, err = adapter.db.Exec(statement, args...)
 	}
+	logger(statement, time.Since(start), err)
 
 	if err != nil {
 		return 0, 0, adapter.Error(err)

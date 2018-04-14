@@ -191,6 +191,21 @@ func TestCastAssocMany(t *testing.T) {
 		},
 	}
 
+	interfaceParams := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": []interface{}{
+			map[string]interface{}{
+				"field4": 14,
+				"field5": "15",
+			},
+			map[string]interface{}{
+				"field4": 24,
+				"field5": "25",
+			},
+		},
+	}
+
 	field3 := params["field3"].([]map[string]interface{})
 	expectedChanges := map[string]interface{}{
 		"field1": 1,
@@ -213,7 +228,17 @@ func TestCastAssocMany(t *testing.T) {
 		"field3": []Inner(nil),
 	}
 
+	// with map assoc
 	ch := Cast(entity, params, []string{"field1", "field2"})
+	CastAssoc(ch, "field3", changeInner)
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedChanges, ch.Changes())
+
+	// with slice of interface assoc
+	ch = Cast(entity, interfaceParams, []string{"field1", "field2"})
 	CastAssoc(ch, "field3", changeInner)
 
 	assert.Nil(t, ch.Errors())
@@ -250,6 +275,21 @@ func TestCastAssocManyPointer(t *testing.T) {
 		},
 	}
 
+	interfaceParams := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": []interface{}{
+			map[string]interface{}{
+				"field4": 14,
+				"field5": "15",
+			},
+			map[string]interface{}{
+				"field4": 24,
+				"field5": "25",
+			},
+		},
+	}
+
 	field3 := params["field3"].([]map[string]interface{})
 	expectedChanges := map[string]interface{}{
 		"field1": 1,
@@ -273,6 +313,14 @@ func TestCastAssocManyPointer(t *testing.T) {
 	}
 
 	ch := Cast(entity, params, []string{"field1", "field2"})
+	CastAssoc(ch, "field3", changeInner)
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedChanges, ch.Changes())
+
+	ch = Cast(entity, interfaceParams, []string{"field1", "field2"})
 	CastAssoc(ch, "field3", changeInner)
 
 	assert.Nil(t, ch.Errors())
@@ -304,6 +352,38 @@ func TestCastAssocManyErrorParamsNotASliceOfAMap(t *testing.T) {
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, "field3 is invalid", ch.Error().Error())
 }
+
+func TestCastAssocManyErrorMixed(t *testing.T) {
+	var entity struct {
+		Field1 int
+		Field2 string
+		Field3 []Inner
+	}
+
+	changeInner := func(entity interface{}, params map[string]interface{}) *Changeset {
+		ch := Cast(entity, params, []string{"field4", "field5"})
+		return ch
+	}
+
+	params := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": []interface{}{
+			map[string]interface{}{
+				"field4": 14,
+				"field5": "15",
+			},
+			"3",
+		},
+	}
+
+	ch := Cast(entity, params, []string{"field1", "field2"})
+	CastAssoc(ch, "field3", changeInner)
+
+	assert.NotNil(t, ch.Errors())
+	assert.Equal(t, "field3 is invalid", ch.Error().Error())
+}
+
 func TestCastAssocManyInnerChangesetError(t *testing.T) {
 	var entity struct {
 		Field1 int

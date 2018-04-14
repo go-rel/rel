@@ -57,34 +57,53 @@ func castOne(ch *Changeset, field string, typ reflect.Type, par interface{}, fn 
 	ch.changes[field] = innerch
 
 	// add errors to main errors
-	for _, err := range innerch.errors {
-		e := err.(errors.Error)
-		AddError(ch, field+"."+e.Field, e.Message)
-	}
+	mergeErrors(ch, innerch, field+".")
 
 	return true
 }
 
-func castMany(ch *Changeset, field string, typ reflect.Type, par interface{}, fn ChangeFunc) bool {
-	spar, ok := par.([]map[string]interface{})
-	if !ok {
-		return false
-	}
-
-	chs := make([]*Changeset, 0, len(spar))
+func castMany(ch *Changeset, field string, typ reflect.Type, params interface{}, fn ChangeFunc) bool {
 	entity := reflect.Zero(typ.Elem()).Interface()
 
-	for i, par := range spar {
-		innerch := fn(entity, par)
-		chs = append(chs, innerch)
+	if spar, ok := params.([]map[string]interface{}); ok {
+		chs := make([]*Changeset, 0, len(spar))
 
-		// add errors to main errors
-		for _, err := range innerch.errors {
-			e := err.(errors.Error)
-			AddError(ch, field+"["+strconv.Itoa(i)+"]."+e.Field, e.Message)
+		for i, par := range spar {
+			innerch := fn(entity, par)
+			chs = append(chs, innerch)
+
+			// add errors to main errors
+			mergeErrors(ch, innerch, field+"["+strconv.Itoa(i)+"].")
 		}
+
+		ch.changes[field] = chs
+		return true
+	} else if spar, ok := params.([]interface{}); ok {
+		chs := make([]*Changeset, 0, len(spar))
+
+		for i, par := range spar {
+			p, ok := par.(map[string]interface{})
+			if !ok {
+				return false
+			}
+
+			innerch := fn(entity, p)
+			chs = append(chs, innerch)
+
+			// add errors to main errors
+			mergeErrors(ch, innerch, field+"["+strconv.Itoa(i)+"].")
+		}
+
+		ch.changes[field] = chs
+		return true
 	}
 
-	ch.changes[field] = chs
-	return true
+	return false
+}
+
+func mergeErrors(parent *Changeset, child *Changeset, prefix string) {
+	for _, err := range child.errors {
+		e := err.(errors.Error)
+		AddError(parent, prefix+e.Field, e.Message)
+	}
 }

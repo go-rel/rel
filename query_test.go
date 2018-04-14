@@ -896,7 +896,7 @@ func TestPutInsert(t *testing.T) {
 func TestPutInsertMultiple(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
-	users := []User{User{}, User{}}
+	users := []User{{}, {}}
 
 	changes := map[string]interface{}{
 		"name":       "",
@@ -935,7 +935,7 @@ func TestPutUpdate(t *testing.T) {
 func TestPutUpdateMultiple(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users").Where(Eq("name", "name"))
-	users := []User{User{}, User{}}
+	users := []User{{}, {}}
 
 	changes := map[string]interface{}{
 		"name":       "",

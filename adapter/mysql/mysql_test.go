@@ -154,18 +154,16 @@ func TestAdapterExecError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapterError(t *testing.T) {
-	adapter := new(Adapter)
-
+func TestErrorFunc(t *testing.T) {
 	// error nil
-	assert.Nil(t, adapter.Error(nil))
+	assert.Nil(t, errorFunc(nil))
 
 	// 1062 error
 	rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
 	duperr := errors.DuplicateError(rawerr.Message, "")
-	assert.Equal(t, duperr, adapter.Error(rawerr))
+	assert.Equal(t, duperr, errorFunc(rawerr))
 
 	// other errors
 	err := errors.UnexpectedError("error")
-	assert.Equal(t, err, adapter.Error(err))
+	assert.Equal(t, err, errorFunc(err))
 }

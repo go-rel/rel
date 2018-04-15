@@ -3,6 +3,7 @@ package sqlite3
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
@@ -11,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func logger(string, time.Duration, error) {}
+
 func init() {
 	adapter, err := Open(dsn())
 	if err != nil {
@@ -18,9 +21,9 @@ func init() {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, []interface{}{})
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, []interface{}{}, logger)
 	paranoid.Panic(err)
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{})
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{}, logger)
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
@@ -31,7 +34,7 @@ func init() {
 		note varchar(50),
 		created_at DATETIME,
 		updated_at DATETIME
-	);`, []interface{}{})
+	);`, []interface{}{}, logger)
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
@@ -41,7 +44,7 @@ func init() {
 		created_at DATETIME,
 		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)
-	);`, []interface{}{})
+	);`, []interface{}{}, logger)
 	paranoid.Panic(err)
 }
 
@@ -101,7 +104,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 		{"notexist": "13"},
 	}
 
-	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges, logger)
 
 	assert.NotNil(t, err)
 }
@@ -135,7 +138,7 @@ func TestAdapterQueryError(t *testing.T) {
 
 	out := struct{}{}
 
-	_, err = adapter.Query(&out, "error", []interface{}{})
+	_, err = adapter.Query(&out, "error", []interface{}{}, logger)
 	assert.NotNil(t, err)
 }
 
@@ -146,22 +149,20 @@ func TestAdapterExecError(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec("error", []interface{}{})
+	_, _, err = adapter.Exec("error", []interface{}{}, logger)
 	assert.NotNil(t, err)
 }
 
 func TestAdapterError(t *testing.T) {
-	adapter := new(Adapter)
-
 	// error nil
-	assert.Nil(t, adapter.Error(nil))
+	assert.Nil(t, errorFunc(nil))
 
 	// TODO: 1062 error
 	// rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
 	// duperr := errors.DuplicateError(rawerr.Message, "")
-	// assert.Equal(t, duperr, adapter.Error(rawerr))
+	// assert.Equal(t, duperr, errorFunc(rawerr))
 
 	// other errors
 	err := errors.UnexpectedError("error")
-	assert.Equal(t, err, adapter.Error(err))
+	assert.Equal(t, err, errorFunc(err))
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -156,10 +157,10 @@ func TestErrorFunc(t *testing.T) {
 	// error nil
 	assert.Nil(t, errorFunc(nil))
 
-	// 1062 error
-	// rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
-	// duperr := errors.DuplicateError(rawerr.Message, "")
-	// assert.Equal(t, duperr, errorFunc(rawerr))
+	// Duplicate error
+	rawerr := &pq.Error{Message: "unique_violation", Code: "23505"}
+	duperr := errors.DuplicateError(rawerr.Message, "")
+	assert.Equal(t, duperr, errorFunc(rawerr))
 
 	// other errors
 	err := errors.UnexpectedError("error")

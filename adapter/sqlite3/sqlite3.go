@@ -20,14 +20,20 @@ func Open(dsn string) (*Adapter, error) {
 	var err error
 	adapter := &Adapter{
 		&sql.Adapter{
-			Placeholder: "?",
-			IsOrdinal:   false,
-			ErrorFunc:   errorFunc,
+			Placeholder:   "?",
+			IsOrdinal:     false,
+			IncrementFunc: incrementFunc,
+			ErrorFunc:     errorFunc,
 		},
 	}
 
 	adapter.DB, err = db.Open("sqlite3", dsn)
 	return adapter, err
+}
+
+func incrementFunc(adapter sql.Adapter) int {
+	// decrement
+	return -1
 }
 
 func errorFunc(err error) error {

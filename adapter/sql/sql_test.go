@@ -19,7 +19,7 @@ func open() (*Adapter, error) {
 	var err error
 	adapter := &Adapter{
 		Placeholder:   "?",
-		IsOrdinal:     false,
+		Ordinal:       false,
 		IncrementFunc: func(Adapter) int { return 1 },
 		ErrorFunc:     func(err error) error { return err },
 	}

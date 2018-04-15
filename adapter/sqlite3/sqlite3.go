@@ -19,16 +19,12 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 // Open mysql connection using dsn.
 func Open(dsn string) (*Adapter, error) {
 	var err error
-	adapter := &Adapter{
-		&sql.Adapter{
-			Placeholder:   "?",
-			IsOrdinal:     false,
-			IncrementFunc: incrementFunc,
-			ErrorFunc:     errorFunc,
-		},
-	}
 
+	adapter := &Adapter{sql.New("?", false)}
+	adapter.IncrementFunc = incrementFunc
+	adapter.ErrorFunc = errorFunc
 	adapter.DB, err = db.Open("sqlite3", dsn)
+
 	return adapter, err
 }
 

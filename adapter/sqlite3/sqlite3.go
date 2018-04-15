@@ -5,7 +5,8 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/Fs02/grimoire/errors"
+	"github.com/mattn/go-sqlite3"
 )
 
 // Adapter definition for mysql database.
@@ -39,8 +40,8 @@ func incrementFunc(adapter sql.Adapter) int {
 func errorFunc(err error) error {
 	if err == nil {
 		return nil
-		// } else if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
-		// 	return errors.DuplicateError(e.Message, "")
+	} else if e, ok := err.(sqlite3.Error); ok && e.ExtendedCode == sqlite3.ErrConstraintUnique {
+		return errors.DuplicateError(e.Error(), "")
 	}
 
 	return err

@@ -9,6 +9,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/Fs02/grimoire/errors"
+	sqlite3 "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -157,10 +158,10 @@ func TestAdapterError(t *testing.T) {
 	// error nil
 	assert.Nil(t, errorFunc(nil))
 
-	// TODO: 1062 error
-	// rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
-	// duperr := errors.DuplicateError(rawerr.Message, "")
-	// assert.Equal(t, duperr, errorFunc(rawerr))
+	// Duplicate Error
+	rawerr := sqlite3.Error{ExtendedCode: sqlite3.ErrConstraintUnique}
+	duperr := errors.DuplicateError(rawerr.Error(), "")
+	assert.Equal(t, duperr, errorFunc(rawerr))
 
 	// other errors
 	err := errors.UnexpectedError("error")

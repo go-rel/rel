@@ -20,8 +20,7 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New("$", true)}
-	adapter.ErrorFunc = errorFunc
+	adapter := &Adapter{sql.New("$", true, errorFunc, nil)}
 	adapter.DB, err = db.Open("postgres", dsn)
 
 	return adapter, err

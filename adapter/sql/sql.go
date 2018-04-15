@@ -12,8 +12,8 @@ import (
 type Adapter struct {
 	Placeholder   string
 	Ordinal       bool
-	IncrementFunc func(Adapter) int
 	ErrorFunc     func(error) error
+	IncrementFunc func(Adapter) int
 	DB            *sql.DB
 	Tx            *sql.Tx
 }
@@ -21,10 +21,12 @@ type Adapter struct {
 var _ grimoire.Adapter = (*Adapter)(nil)
 
 // New initialize adapter without db.
-func New(placeholder string, ordinal bool) *Adapter {
+func New(placeholder string, ordinal bool, errfn func(error) error, incfn func(Adapter) int) *Adapter {
 	return &Adapter{
-		Placeholder: placeholder,
-		Ordinal:     ordinal,
+		Placeholder:   placeholder,
+		Ordinal:       ordinal,
+		ErrorFunc:     errfn,
+		IncrementFunc: incfn,
 	}
 }
 

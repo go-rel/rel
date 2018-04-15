@@ -36,6 +36,10 @@ func open() (*Adapter, error) {
 	return adapter, err
 }
 
+func TestAdapterNew(t *testing.T) {
+	assert.NotNil(t, New("?", false, nil, nil))
+}
+
 func TestAdapterAll(t *testing.T) {
 	adapter, err := open()
 	if err != nil {

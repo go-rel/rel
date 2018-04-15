@@ -4,16 +4,26 @@ import (
 	"github.com/Fs02/grimoire/errors"
 )
 
+// Repo defines grimoire repository.
 type Repo struct {
 	adapter Adapter
+	logger  Logger
 }
 
+// New create new repo using adapter.
 func New(adapter Adapter) Repo {
 	return Repo{
 		adapter: adapter,
+		logger:  logger,
 	}
 }
 
+// SetLogger replace default logger with custom logger.
+func (repo *Repo) SetLogger(logger Logger) {
+	repo.logger = logger
+}
+
+// From initiates a query for a collection.
 func (repo Repo) From(collection string) Query {
 	return Query{
 		repo:       &repo,
@@ -22,6 +32,7 @@ func (repo Repo) From(collection string) Query {
 	}
 }
 
+// Transaction performs transaction with given function argument.
 func (repo Repo) Transaction(fn func(Repo) error) error {
 	adp, err := repo.adapter.Begin()
 	if err != nil {

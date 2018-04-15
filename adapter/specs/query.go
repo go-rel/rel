@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +45,7 @@ func Query(t *testing.T, repo grimoire.Repo) {
 		repo.From(users).Where(c.Nin(id, 1, 2, 3)),
 		repo.From(users).Where(c.Like(name, "name%")),
 		repo.From(users).Where(c.NotLike(name, "noname%")),
-		repo.From(users).Where(c.Fragment("id = ?", 1)),
+		repo.From(users).Where(c.Fragment("id > 0")),
 		repo.From(users).Where(c.Not(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10))),
 		repo.From(users).Order(c.Asc(name)),
 		repo.From(users).Order(c.Desc(name)),
@@ -61,7 +61,7 @@ func Query(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Find(query)
+		statement, _ := sql.NewBuilder("?", false).Find(query)
 		t.Run("All|"+statement, func(t *testing.T) {
 			var result []User
 			assert.Nil(t, query.All(&result))
@@ -70,7 +70,7 @@ func Query(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Find(query)
+		statement, _ := sql.NewBuilder("?", false).Find(query)
 		t.Run("One|"+statement, func(t *testing.T) {
 			var result User
 			assert.Nil(t, query.One(&result))
@@ -91,7 +91,7 @@ func QueryJoin(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Find(query)
+		statement, _ := sql.NewBuilder("?", false).Find(query)
 		t.Run("All|"+statement, func(t *testing.T) {
 			var result []User
 			assert.Nil(t, query.All(&result))
@@ -100,7 +100,7 @@ func QueryJoin(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Find(query)
+		statement, _ := sql.NewBuilder("?", false).Find(query)
 		t.Run("One|"+statement, func(t *testing.T) {
 			var result User
 			assert.Nil(t, query.One(&result))

@@ -13,7 +13,14 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, New(new(TestAdapter)))
 }
 
-func TestFrom(t *testing.T) {
+func TestRepoSetLogger(t *testing.T) {
+	repo := Repo{}
+	assert.Nil(t, repo.logger)
+	repo.SetLogger(logger)
+	assert.NotNil(t, repo.logger)
+}
+
+func TestRepoFrom(t *testing.T) {
 	assert.Equal(t, repo.From("users"), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -21,7 +28,7 @@ func TestFrom(t *testing.T) {
 	})
 }
 
-func TestTransaction(t *testing.T) {
+func TestRepoTransaction(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
 		On("Commit").Return(nil)

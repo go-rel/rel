@@ -1,4 +1,4 @@
-package mysql
+package postgres
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/Fs02/grimoire/errors"
-	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,33 +28,32 @@ func init() {
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
-		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		name VARCHAR(30) NOT NULL,
-		gender VARCHAR(10) NOT NULL,
-		age INT NOT NULL,
+		id SERIAL NOT NULL PRIMARY KEY,
+		name VARCHAR(30) NOT NULL DEFAULT '',
+		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
-		created_at DATETIME,
-		updated_at DATETIME
+		created_at TIMESTAMP,
+		updated_at TIMESTAMP
 	);`, []interface{}{}, logger)
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
-		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		user_id INT UNSIGNED,
-		address VARCHAR(60) NOT NULL,
-		created_at DATETIME,
-		updated_at DATETIME,
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		id SERIAL NOT NULL PRIMARY KEY,
+		user_id INTEGER REFERENCES users(id),
+		address VARCHAR(60) NOT NULL DEFAULT '',
+		created_at TIMESTAMP,
+		updated_at TIMESTAMP
 	);`, []interface{}{}, logger)
 	paranoid.Panic(err)
 }
 
 func dsn() string {
-	if os.Getenv("MYSQL_DATABASE") != "" {
-		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True&loc=Local"
+	if os.Getenv("POSTGRESQL_DATABASE") != "" {
+		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local"
+	return "postgres://postgres@localhost/grimoire_test?sslmode=disable"
 }
 
 func TestSpecs(t *testing.T) {
@@ -158,8 +157,8 @@ func TestErrorFunc(t *testing.T) {
 	// error nil
 	assert.Nil(t, errorFunc(nil))
 
-	// 1062 error
-	rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
+	// Duplicate error
+	rawerr := &pq.Error{Message: "unique_violation", Code: "23505"}
 	duperr := errors.DuplicateError(rawerr.Message, "")
 	assert.Equal(t, duperr, errorFunc(rawerr))
 

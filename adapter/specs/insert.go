@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sqlutil"
+	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +33,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sqlutil.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
+		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
 
 		t.Run("Insert|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -70,7 +70,7 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sqlutil.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
+		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
 
 		t.Run("InsertAll|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -102,7 +102,7 @@ func InsertSet(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, test := range tests {
-		statement, _ := sqlutil.NewBuilder("?", false).Insert(test.query.Collection, test.query.Changes)
+		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, test.query.Changes)
 
 		t.Run("InsertSet|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Insert(nil))

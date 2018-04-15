@@ -19,7 +19,7 @@ func open() (*Adapter, error) {
 	var err error
 	adapter := &Adapter{
 		Placeholder:   "?",
-		IsOrdinal:     false,
+		Ordinal:       false,
 		IncrementFunc: func(Adapter) int { return 1 },
 		ErrorFunc:     func(err error) error { return err },
 	}
@@ -34,6 +34,10 @@ func open() (*Adapter, error) {
 	paranoid.Panic(execerr)
 
 	return adapter, err
+}
+
+func TestAdapterNew(t *testing.T) {
+	assert.NotNil(t, New("?", false, nil, nil))
 }
 
 func TestAdapterAll(t *testing.T) {

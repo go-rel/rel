@@ -19,21 +19,16 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 // Open mysql connection using dsn.
 func Open(dsn string) (*Adapter, error) {
 	var err error
-	adapter := &Adapter{
-		&sql.Adapter{
-			Placeholder: "$",
-			IsOrdinal:   true,
-			ErrorFunc:   errorFunc,
-		},
-	}
 
+	adapter := &Adapter{sql.New("$", true, errorFunc, nil)}
 	adapter.DB, err = db.Open("postgres", dsn)
+
 	return adapter, err
 }
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).
 		Returning("id").
 		Insert(query.Collection, changes)
 
@@ -47,7 +42,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 
 // InsertAll inserts all record to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
@@ -70,7 +65,7 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 	return &Adapter{
 		&sql.Adapter{
 			Placeholder:   adapter.Placeholder,
-			IsOrdinal:     adapter.IsOrdinal,
+			Ordinal:       adapter.Ordinal,
 			IncrementFunc: adapter.IncrementFunc,
 			ErrorFunc:     adapter.ErrorFunc,
 			Tx:            Tx,

@@ -1,4 +1,4 @@
 vendor
 coverage.out
 .tool-versions
-
+*.db

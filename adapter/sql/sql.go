@@ -11,14 +11,24 @@ import (
 // Adapter definition for mysql database.
 type Adapter struct {
 	Placeholder   string
-	IsOrdinal     bool
-	IncrementFunc func(Adapter) int
+	Ordinal       bool
 	ErrorFunc     func(error) error
+	IncrementFunc func(Adapter) int
 	DB            *sql.DB
 	Tx            *sql.Tx
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
+
+// New initialize adapter without db.
+func New(placeholder string, ordinal bool, errfn func(error) error, incfn func(Adapter) int) *Adapter {
+	return &Adapter{
+		Placeholder:   placeholder,
+		Ordinal:       ordinal,
+		ErrorFunc:     errfn,
+		IncrementFunc: incfn,
+	}
+}
 
 // Close mysql connection.
 func (adapter *Adapter) Close() error {
@@ -27,21 +37,21 @@ func (adapter *Adapter) Close() error {
 
 // All retrieves all record that match the query.
 func (adapter *Adapter) All(query grimoire.Query, doc interface{}, logger grimoire.Logger) (int, error) {
-	statement, args := NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Find(query)
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Find(query)
 	count, err := adapter.Query(doc, statement, args, logger)
 	return int(count), err
 }
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
-	statement, args := NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Insert(query.Collection, changes)
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Insert(query.Collection, changes)
 	id, _, err := adapter.Exec(statement, args, logger)
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Placeholder, adapter.IsOrdinal).InsertAll(query.Collection, fields, allchanges)
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).InsertAll(query.Collection, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args, logger)
 	if err != nil {
 		return nil, err
@@ -63,14 +73,14 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 
 // Update updates a record in database.
 func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Update(query.Collection, changes, query.Condition)
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Update(query.Collection, changes, query.Condition)
 	_, _, err := adapter.Exec(statement, args, logger)
 	return err
 }
 
 // Delete deletes all results that match the query.
 func (adapter *Adapter) Delete(query grimoire.Query, logger grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Placeholder, adapter.IsOrdinal).Delete(query.Collection, query.Condition)
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Delete(query.Collection, query.Condition)
 	_, _, err := adapter.Exec(statement, args, logger)
 	return err
 }
@@ -81,7 +91,7 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 
 	return &Adapter{
 		Placeholder:   adapter.Placeholder,
-		IsOrdinal:     adapter.IsOrdinal,
+		Ordinal:       adapter.Ordinal,
 		IncrementFunc: adapter.IncrementFunc,
 		ErrorFunc:     adapter.ErrorFunc,
 		Tx:            Tx,

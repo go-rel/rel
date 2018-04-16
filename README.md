@@ -17,7 +17,7 @@ Features:
 <!--ts-->
    * [Install](#install)
    * [Quick Start](#quick-start)
-   * [Connecting to a database](#connecting-to-database)
+   * [Adapters](#adapters)
    * [CRUD Interface](#crud-interface)
       * [Create](#create)
       * [Query](#query)
@@ -99,7 +99,13 @@ func main() {
 }
 ```
 
-### Connecting to database
+### Adapters
+
+| Adapter    | Package                                     | Godoc |
+|------------|---------------------------------------------|-------|
+| MySQL      | `github.com/Fs02/grimoire/adapter/mysql`    | [![GoDoc](https://godoc.org/github.com/Fs02/grimoire/adapter/mysql?status.svg)](https://godoc.org/github.com/Fs02/grimoire/adapter/mysql) |
+| PostgreSQL | `github.com/Fs02/grimoire/adapter/postgres` | [![GoDoc](https://godoc.org/github.com/Fs02/grimoire/adapter/postgres?status.svg)](https://godoc.org/github.com/Fs02/grimoire/adapter/postgres) |
+| SQLite3    | `github.com/Fs02/grimoire/adapter/sqlite3`  | [![GoDoc](https://godoc.org/github.com/Fs02/grimoire/adapter/sqlite3?status.svg)](https://godoc.org/github.com/Fs02/grimoire/adapter/sqlite3) |
 
 In order to connect to database, first you need to initialize adapter and then create a grimoire's repo using the adapter instance.
 

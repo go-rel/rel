@@ -218,6 +218,9 @@ err := repo.From(users).Where(c.Eq(age, 10)).OrWhere(c.Eq(age, 15)).All(&alluser
 // Multiple condition inside `OrWhere` will be joined using and expression.
 // This will retrieve all record where age=10 or (name=Alice and age=15).
 err := repo.From(users).Where(c.Eq(age, 10)).OrWhere(c.Eq(name, "Alice"), c.Eq(age, 15)).All(&alluser)
+
+// Count query can be done similarly like querying result.
+count, err := repo.From(users).Where(c.Eq(age, 10)).OrWhere(c.Eq(name, "Alice"), c.Eq(age, 15)).Count()
 ```
 
 #### Selecting Fields

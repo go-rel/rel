@@ -1,40 +1,59 @@
 package c
 
+// ConditionType defines enumeration of all supported condition types.
 type ConditionType int
 
 const (
+	// ConditionAnd is condition type for and operator.
 	ConditionAnd ConditionType = iota
+	// ConditionOr is condition type for or operator.
 	ConditionOr
+	// ConditionNot is condition type for not operator.
 	ConditionNot
 
+	// ConditionEq is condition type for equal comparison.
 	ConditionEq
+	// ConditionNe is condition type for not equal comparison.
 	ConditionNe
 
+	// ConditionLt is condition type for less than comparison.
 	ConditionLt
+	// ConditionLte is condition type for less than or equal comparison.
 	ConditionLte
+	// ConditionGt is condition type for greater than comparison.
 	ConditionGt
+	// ConditionGte is condition type for greter than or equal comparison.
 	ConditionGte
 
+	// ConditionNil is condition type for nil check.
 	ConditionNil
+	// ConditionNotNil is condition type for not nil check.
 	ConditionNotNil
 
+	// ConditionIn is condition type for inclusion comparison.
 	ConditionIn
+	// ConditionNin is condition type for not inclusion comparison.
 	ConditionNin
 
+	// ConditionLike is condition type for like comparison.
 	ConditionLike
+	// ConditionNotLike is condition type for not like comparison.
 	ConditionNotLike
 
+	// ConditionFragment is condition type for custom condition.
 	ConditionFragment
 )
 
-// column
+// I identifies database variable such as column name or table name.
 type I string
 
+// Operand defines information about condition's operand.
 type Operand struct {
 	Column I
 	Values []interface{}
 }
 
+// NewOperand create new operand.
 func NewOperand(o ...interface{}) Operand {
 	if len(o) == 1 {
 		if c, ok := o[0].(I); ok {
@@ -45,6 +64,7 @@ func NewOperand(o ...interface{}) Operand {
 	return Operand{Values: o}
 }
 
+// Condition defines details of a coundition type.
 type Condition struct {
 	Type  ConditionType
 	Left  Operand
@@ -52,6 +72,7 @@ type Condition struct {
 	Inner []Condition
 }
 
+// None returns true if no condition is specified.
 func (c Condition) None() bool {
 	return (c.Type == ConditionAnd ||
 		c.Type == ConditionOr ||
@@ -59,6 +80,7 @@ func (c Condition) None() bool {
 		len(c.Inner) == 0
 }
 
+// And wraps conditions using and.
 func (c Condition) And(condition ...Condition) Condition {
 	if c.None() && len(condition) == 1 {
 		return condition[0]
@@ -71,6 +93,7 @@ func (c Condition) And(condition ...Condition) Condition {
 	return And(inner...)
 }
 
+// Or wraps conditions using or.
 func (c Condition) Or(condition ...Condition) Condition {
 	if c.None() && len(condition) == 1 {
 		return condition[0]
@@ -84,6 +107,7 @@ func (c Condition) Or(condition ...Condition) Condition {
 	return Or(inner...)
 }
 
+// And compares other conditions using and.
 func And(inner ...Condition) Condition {
 	if len(inner) == 1 {
 		return inner[0]
@@ -95,6 +119,7 @@ func And(inner ...Condition) Condition {
 	}
 }
 
+// Or compares other conditions using and.
 func Or(inner ...Condition) Condition {
 	if len(inner) == 1 {
 		return inner[0]
@@ -106,6 +131,8 @@ func Or(inner ...Condition) Condition {
 	}
 }
 
+// Not wraps conditions using not.
+// It'll negate the condition type if possible.
 func Not(inner ...Condition) Condition {
 	if len(inner) == 1 {
 		c := inner[0]
@@ -143,6 +170,7 @@ func Not(inner ...Condition) Condition {
 	}
 }
 
+// Eq compares that left value is equal to right value.
 func Eq(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionEq,
@@ -151,6 +179,7 @@ func Eq(left, right interface{}) Condition {
 	}
 }
 
+// Ne compares that left value is not equal to right value.
 func Ne(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionNe,
@@ -159,6 +188,7 @@ func Ne(left, right interface{}) Condition {
 	}
 }
 
+// Lt compares that left value is less than to right value.
 func Lt(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionLt,
@@ -167,6 +197,7 @@ func Lt(left, right interface{}) Condition {
 	}
 }
 
+// Lte compares that left value is less than or equal to right value.
 func Lte(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionLte,
@@ -175,6 +206,7 @@ func Lte(left, right interface{}) Condition {
 	}
 }
 
+// Gt compares that left value is greater than to right value.
 func Gt(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionGt,
@@ -183,6 +215,7 @@ func Gt(left, right interface{}) Condition {
 	}
 }
 
+// Gte compares that left value is greater than or equal to right value.
 func Gte(left, right interface{}) Condition {
 	return Condition{
 		Type:  ConditionGte,
@@ -191,6 +224,7 @@ func Gte(left, right interface{}) Condition {
 	}
 }
 
+// Nil check whether column is nil.
 func Nil(col I) Condition {
 	return Condition{
 		Type: ConditionNil,
@@ -198,6 +232,7 @@ func Nil(col I) Condition {
 	}
 }
 
+// NotNil check whether column is not nil.
 func NotNil(col I) Condition {
 	return Condition{
 		Type: ConditionNotNil,
@@ -205,6 +240,7 @@ func NotNil(col I) Condition {
 	}
 }
 
+// In check whethers value of the column is included in values.
 func In(col I, values ...interface{}) Condition {
 	return Condition{
 		Type:  ConditionIn,
@@ -213,6 +249,7 @@ func In(col I, values ...interface{}) Condition {
 	}
 }
 
+// Nin check whethers value of the column is not included in values.
 func Nin(col I, values ...interface{}) Condition {
 	return Condition{
 		Type:  ConditionNin,
@@ -221,6 +258,7 @@ func Nin(col I, values ...interface{}) Condition {
 	}
 }
 
+// Like compares value of column to match string pattern.
 func Like(col I, pattern string) Condition {
 	return Condition{
 		Type:  ConditionLike,
@@ -229,6 +267,7 @@ func Like(col I, pattern string) Condition {
 	}
 }
 
+// NotLike compares value of column to not match string pattern.
 func NotLike(col I, pattern string) Condition {
 	return Condition{
 		Type:  ConditionNotLike,
@@ -237,6 +276,7 @@ func NotLike(col I, pattern string) Condition {
 	}
 }
 
+// Fragment add custom condition.
 func Fragment(expr I, values ...interface{}) Condition {
 	return Condition{
 		Type:  ConditionFragment,

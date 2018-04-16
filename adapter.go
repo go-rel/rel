@@ -2,6 +2,7 @@ package grimoire
 
 // Adapter interface
 type Adapter interface {
+	Count(Query, Logger) (int, error)
 	All(Query, interface{}, Logger) (int, error)
 	Delete(Query, Logger) error
 	Insert(Query, map[string]interface{}, Logger) (interface{}, error)

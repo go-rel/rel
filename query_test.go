@@ -423,6 +423,23 @@ func TestQueryAll(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestQueryCount(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+
+	mock.On("Count", query).Return(10, nil)
+
+	count, err := query.Count()
+	assert.Nil(t, err)
+	assert.Equal(t, 10, count)
+
+	assert.NotPanics(t, func() {
+		assert.Equal(t, 10, query.MustCount())
+	})
+
+	mock.AssertExpectations(t)
+}
+
 func createChangeset() (*changeset.Changeset, User) {
 	user := User{}
 	ch := changeset.Cast(user, map[string]interface{}{

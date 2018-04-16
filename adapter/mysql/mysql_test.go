@@ -70,6 +70,9 @@ func TestSpecs(t *testing.T) {
 	specs.QueryJoin(t, repo)
 	specs.QueryNotFound(t, repo)
 
+	// Count Specs
+	specs.Count(t, repo)
+
 	// Insert Specs
 	specs.Insert(t, repo)
 	specs.InsertAll(t, repo)

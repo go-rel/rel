@@ -35,6 +35,18 @@ func (adapter *Adapter) Close() error {
 	return adapter.DB.Close()
 }
 
+// Count retrieves count of record that match the query.
+func (adapter *Adapter) Count(query grimoire.Query, logger grimoire.Logger) (int, error) {
+	var doc struct {
+		Count int
+	}
+
+	query.Fields = []string{"COUNT(*) AS count"}
+	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Find(query)
+	_, err := adapter.Query(&doc, statement, args, logger)
+	return doc.Count, err
+}
+
 // All retrieves all record that match the query.
 func (adapter *Adapter) All(query grimoire.Query, doc interface{}, logger grimoire.Logger) (int, error) {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Find(query)

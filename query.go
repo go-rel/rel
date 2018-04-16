@@ -158,6 +158,20 @@ func (query Query) MustAll(record interface{}) {
 	paranoid.Panic(query.All(record))
 }
 
+// Count retrieves count of results that match the query.
+func (query Query) Count() (int, error) {
+	count, err := query.repo.adapter.Count(query, query.repo.logger)
+	return count, err
+}
+
+// MustCount retrieves count of results that match the query.
+// It'll panic if any error eccured.
+func (query Query) MustCount() int {
+	count, err := query.Count()
+	paranoid.Panic(err)
+	return count
+}
+
 // Insert records to database.
 func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
 	var err error

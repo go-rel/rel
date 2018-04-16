@@ -40,6 +40,17 @@ func TestAdapterNew(t *testing.T) {
 	assert.NotNil(t, New("?", false, nil, nil))
 }
 
+func TestAdapterCount(t *testing.T) {
+	adapter, err := open()
+	if err != nil {
+		panic(err)
+	}
+	defer adapter.Close()
+
+	_, err = grimoire.New(adapter).From("test").Count()
+	assert.Nil(t, err)
+}
+
 func TestAdapterAll(t *testing.T) {
 	adapter, err := open()
 	if err != nil {

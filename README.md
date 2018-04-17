@@ -398,7 +398,7 @@ if err != nil {
 
 ## Logger
 
-Grimoire's default logger can be replaced with repo's `SetLogger()` function.
+Grimoire's default logger can be replaced with repo's `SetLogger()` function. Multiple logger is supported by grimoire.
 
 ```golang
 // replace default logger with custom logger function.

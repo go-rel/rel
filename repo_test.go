@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 func TestRepoSetLogger(t *testing.T) {
 	repo := Repo{}
 	assert.Nil(t, repo.logger)
-	repo.SetLogger(logger)
+	repo.SetLogger(DefaultLogger)
 	assert.NotNil(t, repo.logger)
 }
 

@@ -20,32 +20,32 @@ func (adapter TestAdapter) Close() error {
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Count(query Query, logger Logger) (int, error) {
+func (adapter TestAdapter) Count(query Query, logger ...Logger) (int, error) {
 	args := adapter.Called(query)
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) All(query Query, doc interface{}, logger Logger) (int, error) {
+func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (int, error) {
 	args := adapter.Called(query, doc)
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}, logger Logger) (interface{}, error) {
+func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}, logger ...Logger) (interface{}, error) {
 	args := adapter.Called(query, ch)
 	return args.Get(0), args.Error(1)
 }
 
-func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}, logger Logger) ([]interface{}, error) {
+func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}, logger ...Logger) ([]interface{}, error) {
 	args := adapter.Called(query, chs)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (adapter TestAdapter) Update(query Query, ch map[string]interface{}, logger Logger) error {
+func (adapter TestAdapter) Update(query Query, ch map[string]interface{}, logger ...Logger) error {
 	args := adapter.Called(query, ch)
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Delete(query Query, logger Logger) error {
+func (adapter TestAdapter) Delete(query Query, logger ...Logger) error {
 	args := adapter.Called(query)
 	return args.Error(0)
 }

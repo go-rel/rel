@@ -7,19 +7,19 @@ import (
 // Repo defines grimoire repository.
 type Repo struct {
 	adapter Adapter
-	logger  Logger
+	logger  []Logger
 }
 
 // New create new repo using adapter.
 func New(adapter Adapter) Repo {
 	return Repo{
 		adapter: adapter,
-		logger:  logger,
+		logger:  []Logger{DefaultLogger},
 	}
 }
 
 // SetLogger replace default logger with custom logger.
-func (repo *Repo) SetLogger(logger Logger) {
+func (repo *Repo) SetLogger(logger ...Logger) {
 	repo.logger = logger
 }
 

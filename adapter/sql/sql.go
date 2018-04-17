@@ -36,35 +36,35 @@ func (adapter *Adapter) Close() error {
 }
 
 // Count retrieves count of record that match the query.
-func (adapter *Adapter) Count(query grimoire.Query, logger grimoire.Logger) (int, error) {
+func (adapter *Adapter) Count(query grimoire.Query, loggers ...grimoire.Logger) (int, error) {
 	var doc struct {
 		Count int
 	}
 
 	query.Fields = []string{"COUNT(*) AS count"}
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Find(query)
-	_, err := adapter.Query(&doc, statement, args, logger)
+	_, err := adapter.Query(&doc, statement, args, loggers...)
 	return doc.Count, err
 }
 
 // All retrieves all record that match the query.
-func (adapter *Adapter) All(query grimoire.Query, doc interface{}, logger grimoire.Logger) (int, error) {
+func (adapter *Adapter) All(query grimoire.Query, doc interface{}, loggers ...grimoire.Logger) (int, error) {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Find(query)
-	count, err := adapter.Query(doc, statement, args, logger)
+	count, err := adapter.Query(doc, statement, args, loggers...)
 	return int(count), err
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Insert(query.Collection, changes)
-	id, _, err := adapter.Exec(statement, args, logger)
+	id, _, err := adapter.Exec(statement, args, loggers...)
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).InsertAll(query.Collection, fields, allchanges)
-	id, _, err := adapter.Exec(statement, args, logger)
+	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,16 +84,16 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) error {
+func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) error {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Update(query.Collection, changes, query.Condition)
-	_, _, err := adapter.Exec(statement, args, logger)
+	_, _, err := adapter.Exec(statement, args, loggers...)
 	return err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query grimoire.Query, logger grimoire.Logger) error {
+func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger) error {
 	statement, args := NewBuilder(adapter.Placeholder, adapter.Ordinal).Delete(query.Collection, query.Condition)
-	_, _, err := adapter.Exec(statement, args, logger)
+	_, _, err := adapter.Exec(statement, args, loggers...)
 	return err
 }
 
@@ -131,7 +131,7 @@ func (adapter *Adapter) Rollback() error {
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}, logger grimoire.Logger) (int64, error) {
+func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}, loggers ...grimoire.Logger) (int64, error) {
 	var rows *sql.Rows
 	var err error
 
@@ -141,7 +141,7 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 	} else {
 		rows, err = adapter.DB.Query(statement, args...)
 	}
-	logger(statement, time.Since(start), err)
+	go grimoire.Log(loggers, statement, time.Since(start), err)
 
 	if err != nil {
 		return 0, adapter.ErrorFunc(err)
@@ -153,7 +153,7 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(statement string, args []interface{}, logger grimoire.Logger) (int64, int64, error) {
+func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...grimoire.Logger) (int64, int64, error) {
 	var res sql.Result
 	var err error
 
@@ -163,7 +163,7 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, logger grimoi
 	} else {
 		res, err = adapter.DB.Exec(statement, args...)
 	}
-	logger(statement, time.Since(start), err)
+	go grimoire.Log(loggers, statement, time.Since(start), err)
 
 	if err != nil {
 		return 0, 0, adapter.ErrorFunc(err)

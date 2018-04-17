@@ -3,7 +3,6 @@ package sql
 import (
 	db "database/sql"
 	"testing"
-	"time"
 
 	paranoid "github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
@@ -12,8 +11,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
-
-func logger(string, time.Duration, error) {}
 
 func open() (*Adapter, error) {
 	var err error
@@ -30,7 +27,7 @@ func open() (*Adapter, error) {
 	_, _, execerr := adapter.Exec(`CREATE TABLE test (
 		id INTEGER PRIMARY KEY,
 		name STRING
-	);`, []interface{}{}, logger)
+	);`, nil)
 	paranoid.Panic(execerr)
 
 	return adapter, err
@@ -149,7 +146,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 		{"notexist": "13"},
 	}
 
-	_, err = adapter.InsertAll(grimoire.Repo{}.From("test"), fields, allchanges, logger)
+	_, err = adapter.InsertAll(grimoire.Repo{}.From("test"), fields, allchanges)
 
 	assert.NotNil(t, err)
 }
@@ -183,7 +180,7 @@ func TestAdapterQueryError(t *testing.T) {
 
 	out := struct{}{}
 
-	_, err = adapter.Query(&out, "error", []interface{}{}, logger)
+	_, err = adapter.Query(&out, "error", nil)
 	assert.NotNil(t, err)
 }
 
@@ -194,6 +191,6 @@ func TestAdapterExecError(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec("error", []interface{}{}, logger)
+	_, _, err = adapter.Exec("error", nil)
 	assert.NotNil(t, err)
 }

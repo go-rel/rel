@@ -27,7 +27,7 @@ func Open(dsn string) (*Adapter, error) {
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, logger grimoire.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
 	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).
 		Returning("id").
 		Insert(query.Collection, changes)
@@ -36,19 +36,19 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 		ID int64
 	}
 
-	_, err := adapter.Query(&result, statement, args, logger)
+	_, err := adapter.Query(&result, statement, args, loggers...)
 	return result.ID, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, logger grimoire.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
 	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
 	}
 
-	_, err := adapter.Query(&result, statement, args, logger)
+	_, err := adapter.Query(&result, statement, args, loggers...)
 
 	ids := make([]interface{}, 0, len(result))
 	for _, r := range result {

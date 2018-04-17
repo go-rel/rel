@@ -3,7 +3,6 @@ package postgres
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
@@ -13,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func logger(string, time.Duration, error) {}
-
 func init() {
 	adapter, err := Open(dsn())
 	if err != nil {
@@ -22,9 +19,9 @@ func init() {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, []interface{}{}, logger)
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, nil)
 	paranoid.Panic(err)
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, []interface{}{}, logger)
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
@@ -35,7 +32,7 @@ func init() {
 		note varchar(50),
 		created_at TIMESTAMP,
 		updated_at TIMESTAMP
-	);`, []interface{}{}, logger)
+	);`, nil)
 	paranoid.Panic(err)
 
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
@@ -44,7 +41,7 @@ func init() {
 		address VARCHAR(60) NOT NULL DEFAULT '',
 		created_at TIMESTAMP,
 		updated_at TIMESTAMP
-	);`, []interface{}{}, logger)
+	);`, nil)
 	paranoid.Panic(err)
 }
 
@@ -107,7 +104,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 		{"notexist": "13"},
 	}
 
-	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges, logger)
+	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
 
 	assert.NotNil(t, err)
 }
@@ -141,7 +138,7 @@ func TestAdapterQueryError(t *testing.T) {
 
 	out := struct{}{}
 
-	_, err = adapter.Query(&out, "error", []interface{}{}, logger)
+	_, err = adapter.Query(&out, "error", nil)
 	assert.NotNil(t, err)
 }
 
@@ -152,7 +149,7 @@ func TestAdapterExecError(t *testing.T) {
 	}
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec("error", []interface{}{}, logger)
+	_, _, err = adapter.Exec("error", nil)
 	assert.NotNil(t, err)
 }
 

@@ -135,7 +135,7 @@ func (query Query) Set(field string, value interface{}) Query {
 // If no result found, it'll return not found error.
 func (query Query) One(record interface{}) error {
 	query.LimitResult = 1
-	count, err := query.repo.adapter.All(query, record, query.repo.logger)
+	count, err := query.repo.adapter.All(query, record, query.repo.logger...)
 
 	if err != nil {
 		return errors.Wrap(err)
@@ -154,7 +154,7 @@ func (query Query) MustOne(record interface{}) {
 
 // All retrieves all results that match the query.
 func (query Query) All(record interface{}) error {
-	_, err := query.repo.adapter.All(query, record, query.repo.logger)
+	_, err := query.repo.adapter.All(query, record, query.repo.logger...)
 	return err
 }
 
@@ -166,7 +166,7 @@ func (query Query) MustAll(record interface{}) {
 
 // Count retrieves count of results that match the query.
 func (query Query) Count() (int, error) {
-	count, err := query.repo.adapter.Count(query, query.repo.logger)
+	count, err := query.repo.adapter.Count(query, query.repo.logger...)
 	return count, err
 }
 
@@ -193,7 +193,7 @@ func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error
 		cloneQuery(changes, query.Changes)
 
 		var id interface{}
-		id, err = query.repo.adapter.Insert(query, changes, query.repo.logger)
+		id, err = query.repo.adapter.Insert(query, changes, query.repo.logger...)
 		ids = append(ids, id)
 	} else if len(chs) > 1 {
 		// multiple insert
@@ -210,11 +210,11 @@ func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error
 			allchanges[i] = changes
 		}
 
-		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges, query.repo.logger)
+		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges, query.repo.logger...)
 	} else if len(query.Changes) > 0 {
 		// set only
 		var id interface{}
-		id, err = query.repo.adapter.Insert(query, query.Changes, query.repo.logger)
+		id, err = query.repo.adapter.Insert(query, query.Changes, query.repo.logger...)
 		ids = append(ids, id)
 	}
 
@@ -254,7 +254,7 @@ func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error
 	}
 
 	// perform update
-	err := query.repo.adapter.Update(query, changes, query.repo.logger)
+	err := query.repo.adapter.Update(query, changes, query.repo.logger...)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -330,7 +330,7 @@ func (query Query) MustSave(record interface{}) {
 
 // Delete deletes all results that match the query.
 func (query Query) Delete() error {
-	return errors.Wrap(query.repo.adapter.Delete(query, query.repo.logger))
+	return errors.Wrap(query.repo.adapter.Delete(query, query.repo.logger...))
 }
 
 // MustDelete deletes all results that match the query.

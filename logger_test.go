@@ -8,9 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDefaultLogger(t *testing.T) {
+	assert.NotPanics(t, func() {
+		DefaultLogger("", time.Second, nil)
+		DefaultLogger("", time.Second, errors.UnexpectedError("error"))
+	})
+}
+
 func TestLogger(t *testing.T) {
 	assert.NotPanics(t, func() {
-		logger("", time.Second, nil)
-		logger("", time.Second, errors.UnexpectedError("error"))
+		Log([]Logger{DefaultLogger}, "", time.Second, nil)
 	})
 }

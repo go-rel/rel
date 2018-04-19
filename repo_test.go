@@ -24,7 +24,7 @@ func TestRepoFrom(t *testing.T) {
 	assert.Equal(t, repo.From("users"), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 	})
 }
 

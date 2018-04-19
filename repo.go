@@ -28,7 +28,7 @@ func (repo Repo) From(collection string) Query {
 	return Query{
 		repo:       &repo,
 		Collection: collection,
-		Fields:     []string{"*"},
+		Fields:     []string{collection + ".*"},
 	}
 }
 

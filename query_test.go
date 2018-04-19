@@ -35,7 +35,7 @@ func TestQueryDistinct(t *testing.T) {
 	assert.Equal(t, repo.From("users").Distinct(), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		AsDistinct: true,
 	})
 }
@@ -44,7 +44,7 @@ func TestQueryJoin(t *testing.T) {
 	assert.Equal(t, repo.From("users").Join("transactions"), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		JoinClause: []Join{
 			{
 				Mode:       "JOIN",
@@ -63,7 +63,7 @@ func TestQueryJoin(t *testing.T) {
 	)), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		JoinClause: []Join{
 			{
 				Mode:       "JOIN",
@@ -89,7 +89,7 @@ func TestQueryWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -99,7 +99,7 @@ func TestQueryWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -109,7 +109,7 @@ func TestQueryWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  And(Eq("id", 1), Nil("deleted_at"), Ne("active", false)),
 			},
 		},
@@ -134,7 +134,7 @@ func TestQueryOrWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -144,7 +144,7 @@ func TestQueryOrWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  Or(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -154,7 +154,7 @@ func TestQueryOrWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  Or(And(Eq("id", 1), Nil("deleted_at")), Ne("active", false)),
 			},
 		},
@@ -164,7 +164,7 @@ func TestQueryOrWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  Or(And(Eq("id", 1), Nil("deleted_at")), And(Ne("active", false), Gte("score", 80))),
 			},
 		},
@@ -174,7 +174,7 @@ func TestQueryOrWhere(t *testing.T) {
 			Query{
 				repo:       &repo,
 				Collection: "users",
-				Fields:     []string{"*"},
+				Fields:     []string{"users.*"},
 				Condition:  And(Or(And(Eq("id", 1), Nil("deleted_at")), And(Ne("active", false), Gte("score", 80))), Lt("price", 10000)),
 			},
 		},
@@ -191,7 +191,7 @@ func TestQueryGroup(t *testing.T) {
 	assert.Equal(t, repo.From("users").Group("active", "plan"), Query{
 		repo:        &repo,
 		Collection:  "users",
-		Fields:      []string{"*"},
+		Fields:      []string{"users.*"},
 		GroupFields: []string{"active", "plan"},
 	})
 }
@@ -208,7 +208,7 @@ func TestQueryHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -218,7 +218,7 @@ func TestQueryHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -228,7 +228,7 @@ func TestQueryHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: And(Eq("id", 1), Nil("deleted_at"), Ne("active", false)),
 			},
 		},
@@ -253,7 +253,7 @@ func TestQueryOrHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: And(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -263,7 +263,7 @@ func TestQueryOrHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: Or(Eq("id", 1), Nil("deleted_at")),
 			},
 		},
@@ -273,7 +273,7 @@ func TestQueryOrHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: Or(And(Eq("id", 1), Nil("deleted_at")), Ne("active", false)),
 			},
 		},
@@ -283,7 +283,7 @@ func TestQueryOrHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: Or(And(Eq("id", 1), Nil("deleted_at")), And(Ne("active", false), Gte("score", 80))),
 			},
 		},
@@ -293,7 +293,7 @@ func TestQueryOrHaving(t *testing.T) {
 			Query{
 				repo:            &repo,
 				Collection:      "users",
-				Fields:          []string{"*"},
+				Fields:          []string{"users.*"},
 				HavingCondition: And(Or(And(Eq("id", 1), Nil("deleted_at")), And(Ne("active", false), Gte("score", 80))), Lt("price", 10000)),
 			},
 		},
@@ -310,7 +310,7 @@ func TestQueryOrderBy(t *testing.T) {
 	assert.Equal(t, repo.From("users").Order(Asc("id")), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		OrderClause: []Order{
 			{
 				Field: "id",
@@ -324,7 +324,7 @@ func TestQueryOffset(t *testing.T) {
 	assert.Equal(t, repo.From("users").Offset(10), Query{
 		repo:         &repo,
 		Collection:   "users",
-		Fields:       []string{"*"},
+		Fields:       []string{"users.*"},
 		OffsetResult: 10,
 	})
 }
@@ -333,7 +333,7 @@ func TestQueryLimit(t *testing.T) {
 	assert.Equal(t, repo.From("users").Limit(10), Query{
 		repo:        &repo,
 		Collection:  "users",
-		Fields:      []string{"*"},
+		Fields:      []string{"users.*"},
 		LimitResult: 10,
 	})
 }
@@ -342,14 +342,14 @@ func TestQueryFind(t *testing.T) {
 	assert.Equal(t, repo.From("users").Find(1), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		Condition:  And(Eq(I("users.id"), 1)),
 	})
 
 	assert.Equal(t, repo.From("users").Find("abc123"), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		Condition:  And(Eq(I("users.id"), "abc123")),
 	})
 }
@@ -358,7 +358,7 @@ func TestQuerySet(t *testing.T) {
 	assert.Equal(t, repo.From("users").Set("field", 1), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		Changes: map[string]interface{}{
 			"field": 1,
 		},
@@ -367,7 +367,7 @@ func TestQuerySet(t *testing.T) {
 	assert.Equal(t, repo.From("users").Set("field1", 1).Set("field2", "2"), Query{
 		repo:       &repo,
 		Collection: "users",
-		Fields:     []string{"*"},
+		Fields:     []string{"users.*"},
 		Changes: map[string]interface{}{
 			"field1": 1,
 			"field2": "2",

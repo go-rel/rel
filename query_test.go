@@ -1249,3 +1249,10 @@ func TestPreloadSliceBelongsTo(t *testing.T) {
 
 	mock.AssertExpectations(t)
 }
+
+func TestPreloadEmptySlice(t *testing.T) {
+	repo := Repo{}
+	addresses := []Address{}
+
+	assert.Nil(t, repo.From("transactions").Preload(&addresses, "User.Transactions"))
+}

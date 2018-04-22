@@ -408,7 +408,7 @@ func (query Query) Preload(record interface{}, field string) error {
 
 	preload := traversePreloadTarget(rv.Elem(), path)
 	if len(preload) == 0 {
-		return errors.UnexpectedError("nothing to preload")
+		return nil
 	}
 
 	schemaType := preload[0].schema.Type()

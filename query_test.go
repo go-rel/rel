@@ -15,7 +15,7 @@ type User struct {
 	Name         string
 	Age          int
 	Transactions []Transaction `references:"ID" foreign_key:"BuyerID"`
-	Address      Address       `references:"ID" foreign_key:"UserID"`
+	Address      Address
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -29,7 +29,7 @@ type Transaction struct {
 type Address struct {
 	ID     int
 	UserID int
-	User   *User `references:"UserID" foreign_key:"ID"`
+	User   *User
 }
 
 func TestQuerySelect(t *testing.T) {

@@ -527,6 +527,17 @@ func getPreloadInfo(rt reflect.Type, field string) ([]int, []int, string) {
 		ft = ft.Elem()
 	}
 
+	// Try to guess ref and fk if not defined.
+	if ref == "" || fk == "" {
+		if _, isBelongsTo := rt.FieldByName(sft.Name + "ID"); isBelongsTo {
+			ref = sft.Name + "ID"
+			fk = "ID"
+		} else {
+			ref = "ID"
+			fk = rt.Name() + "ID"
+		}
+	}
+
 	var refIndex []int
 	if idv, exist := rt.FieldByName(ref); !exist {
 		panic("grimoire: references (" + ref + ") field not found ")

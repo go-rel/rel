@@ -6,6 +6,7 @@ import (
 
 type TestAdapter struct {
 	mock.Mock
+	result interface{}
 }
 
 var _ Adapter = (*TestAdapter)(nil)
@@ -27,6 +28,14 @@ func (adapter TestAdapter) Count(query Query, logger ...Logger) (int, error) {
 
 func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (int, error) {
 	args := adapter.Called(query, doc)
+
+	if adapter.result != nil {
+		switch doc.(type) {
+		case *[]Address:
+			*doc.(*[]Address) = adapter.result.([]Address)
+		}
+	}
+
 	return args.Int(0), args.Error(1)
 }
 
@@ -63,4 +72,9 @@ func (adapter TestAdapter) Commit() error {
 func (adapter TestAdapter) Rollback() error {
 	args := adapter.Called()
 	return args.Error(0)
+}
+
+func (adapter *TestAdapter) Result(result interface{}) *TestAdapter {
+	adapter.result = result
+	return adapter
 }

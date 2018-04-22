@@ -11,10 +11,25 @@ import (
 )
 
 type User struct {
-	Name      string
-	Age       int
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           int
+	Name         string
+	Age          int
+	Transactions []Transaction `assoc:"has_many" ref:"ID" fk:"UserID"` // Map User.ID to Transaction.Address
+	Address      Address       `assoc:"has_one" ref:"ID" fk:"UserID"`  // Map User.ID to Address.UserID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type Transaction struct {
+	ID     int
+	UserID int
+	User   User `assoc:"belongs_to" ref:"UserID" fk:"ID"` // Map Transaction.UserID to User.ID
+}
+
+type Address struct {
+	ID     int
+	UserID int
+	User   *User `assoc:"belongs_to" ref:"UserID" fk:"ID"` // Map Address.UserID to User.ID
 }
 
 func TestQuerySelect(t *testing.T) {
@@ -1010,3 +1025,94 @@ func TestGetFields(t *testing.T) {
 
 	assert.Equal(t, []string{"name"}, getFields(query, []*changeset.Changeset{ch}))
 }
+
+func TestPreloadHasOne(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	user := User{ID: 10}
+	query := repo.From("addresses")
+
+	mock.Result([]Address{
+		{ID: 100, UserID: 10},
+	}).On("All", query.Where(In("user_id", 10)), &[]Address{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&user, "Address"))
+	assert.Equal(t, Address{ID: 100, UserID: 10}, user.Address)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestPreloadSliceHasOne(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	users := []User{{ID: 10}, {ID: 20}}
+	query := repo.From("addresses")
+
+	mock.Result([]Address{
+		{ID: 100, UserID: 10},
+		{ID: 200, UserID: 20},
+	}).On("All", query.Where(In("user_id", 10, 20)), &[]Address{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&users, "Address"))
+	assert.Equal(t, Address{ID: 100, UserID: 10}, users[0].Address)
+	assert.Equal(t, Address{ID: 200, UserID: 20}, users[1].Address)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestPreloadNestedHasOne(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	transaction := Transaction{
+		User: User{ID: 10},
+	}
+	query := repo.From("addresses")
+
+	mock.Result([]Address{
+		{ID: 100, UserID: 10},
+	}).On("All", query.Where(In("user_id", 10)), &[]Address{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&transaction, "User.Address"))
+	assert.Equal(t, Address{ID: 100, UserID: 10}, transaction.User.Address)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+	mock.AssertExpectations(t)
+}
+
+func TestPreloadSliceNestedHasOne(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	transactions := []Transaction{
+		{User: User{ID: 10}},
+		{User: User{ID: 20}},
+	}
+	query := repo.From("addresses")
+
+	mock.Result([]Address{
+		{ID: 100, UserID: 10},
+		{ID: 200, UserID: 20},
+	}).On("All", query.Where(In("user_id", 10, 20)), &[]Address{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&transactions, "User.Address"))
+	assert.Equal(t, Address{ID: 100, UserID: 10}, transactions[0].User.Address)
+	assert.Equal(t, Address{ID: 200, UserID: 20}, transactions[1].User.Address)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+	mock.AssertExpectations(t)
+}
+
+// func TestPreloadHasMany(t *testing.T) {
+// 	mock := new(TestAdapter)
+// 	repo := Repo{adapter: mock}
+
+// 	user := User{ID: 10}
+// 	query := repo.From("transactions")
+
+// 	mock.On("All", query.Where(In("user_id", uint(10))), &[]Transaction{}).Return(1, nil)
+
+// 	assert.Nil(t, query.Preload(&user, "Transactions"))
+// 	// assert.NotPanics(t, func() { query.MustSave(&user) })
+// 	mock.AssertExpectations(t)
+// }

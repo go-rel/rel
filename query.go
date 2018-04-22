@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -400,23 +401,36 @@ type preloadInfo struct {
 func (query Query) Preload(record interface{}, field string) error {
 	path := strings.Split(field, ".")
 
-	preload := traversePreloadTarget(reflect.ValueOf(record), path)
+	rv := reflect.ValueOf(record)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		panic("grimoire: record parameter must be a pointer")
+	}
+
+	preload := traversePreloadTarget(rv.Elem(), path)
 	if len(preload) == 0 {
 		return errors.UnexpectedError("nothing to preload")
 	}
 
 	schemaType := preload[0].schema.Type()
+	fieldType := preload[0].field.Type()
 	_, ref, fk := getAssocInfo(schemaType, path[len(path)-1])
 
 	// get db field name.
 	// TODO: handle db tag
 	fieldName := snakecase.SnakeCase(fk)
 
-	var idIndex []int
+	var refIndex []int
 	if idv, exist := schemaType.FieldByName(ref); !exist {
 		panic("grimoire: ref field not found " + ref)
 	} else {
-		idIndex = idv.Index
+		refIndex = idv.Index
+	}
+
+	var fkIndex []int
+	if idv, exist := fieldType.FieldByName(fk); !exist {
+		panic("grimoire: fk field not found " + fk)
+	} else {
+		fkIndex = idv.Index
 	}
 
 	// collect ids.
@@ -424,7 +438,7 @@ func (query Query) Preload(record interface{}, field string) error {
 	ids := []interface{}{}
 
 	for _, pre := range preload {
-		id := pre.schema.FieldByIndex(idIndex).Interface()
+		id := pre.schema.FieldByIndex(refIndex).Interface()
 		addrs[id] = append(addrs[id], pre.field)
 
 		// add to ids if not yet added.
@@ -435,28 +449,32 @@ func (query Query) Preload(record interface{}, field string) error {
 
 	// prepare temp result variable for querying
 	rt := preload[0].field.Type()
+	fmt.Printf("-%#v\n", rt)
 	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array || rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
+		fmt.Printf("---%#v\n", rt)
 	}
-	result := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids)).Interface()
+	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids))
+	result := reflect.New(slice.Type())
+	result.Elem().Set(slice)
+	fmt.Printf("result %#v\n", result)
 
 	// query all records usinc collected ids.
-	query.Where(c.In(c.I(fieldName), ids)).All(&result)
-
-	// TODO get key index
-	keyIndex := []int{}
+	query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
 
 	// map results.
-	rv := reflect.ValueOf(result)
+	// result := reflect.ValueOf(result)
+	result = result.Elem()
 
-	for i := 0; i < rv.Len(); i++ {
-		key := rv.Index(i).FieldByIndex(keyIndex).Interface()
+	for i := 0; i < result.Len(); i++ {
+		curr := result.Index(i)
+		key := curr.FieldByIndex(fkIndex).Interface()
 
 		for _, addr := range addrs[key] {
 			if addr.Kind() == reflect.Slice {
-				addr.Set(reflect.Append(addr, rv))
+				addr.Set(reflect.Append(addr, curr))
 			} else {
-				addr.Set(rv)
+				addr.Set(curr)
 			}
 		}
 	}
@@ -469,10 +487,10 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	rt := rv.Type()
 
 	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
-		rv = rv.Elem()
 		for i := 0; i < rv.Len(); i++ {
-			result = append(result, traversePreloadTarget(rv, path)...)
+			result = append(result, traversePreloadTarget(rv.Index(i), path)...)
 		}
+		return result
 	}
 
 	if rt.Kind() == reflect.Ptr {
@@ -488,6 +506,10 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	fv := rv.FieldByName(path[0])
 	if !fv.IsValid() {
 		panic("grimoire: field not found " + path[0])
+	}
+
+	if fv.Kind() == reflect.Ptr {
+		fv = fv.Elem()
 	}
 
 	if len(path) == 1 {

@@ -392,7 +392,7 @@ func (query Query) MustDelete() {
 	paranoid.Panic(query.Delete())
 }
 
-type preloadInfo struct {
+type preloadTarget struct {
 	schema reflect.Value
 	field  reflect.Value
 }
@@ -412,11 +412,7 @@ func (query Query) Preload(record interface{}, field string) error {
 	}
 
 	schemaType := preload[0].schema.Type()
-	_, refIndex, fk, fkIndex := getPreloadKeys(schemaType, path[len(path)-1])
-
-	// get db field name.
-	// TODO: handle db tag
-	fieldName := snakecase.SnakeCase(fk)
+	refIndex, fkIndex, column := getPreloadInfo(schemaType, path[len(path)-1])
 
 	// collect ids.
 	addrs := make(map[interface{}][]reflect.Value)
@@ -443,7 +439,7 @@ func (query Query) Preload(record interface{}, field string) error {
 	result.Elem().Set(slice)
 
 	// query all records using collected ids.
-	err := query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
+	err := query.Where(c.In(c.I(column), ids...)).All(result.Interface())
 	if err != nil {
 		return err
 	}
@@ -472,8 +468,8 @@ func (query Query) MustPreload(record interface{}, field string) {
 	paranoid.Panic(query.Preload(record, field))
 }
 
-func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
-	result := []preloadInfo{}
+func traversePreloadTarget(rv reflect.Value, path []string) []preloadTarget {
+	result := []preloadTarget{}
 	rt := rv.Type()
 
 	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
@@ -508,7 +504,7 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	}
 
 	if len(path) == 1 {
-		result = append(result, preloadInfo{
+		result = append(result, preloadTarget{
 			schema: rv,
 			field:  fv,
 		})
@@ -519,12 +515,13 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	return result
 }
 
-func getPreloadKeys(rt reflect.Type, field string) (string, []int, string, []int) {
+func getPreloadInfo(rt reflect.Type, field string) ([]int, []int, string) {
 	sft, _ := rt.FieldByName(field)
 	ft := sft.Type
 
 	ref := sft.Tag.Get("references")
 	fk := sft.Tag.Get("foreign_key")
+	column := ""
 
 	if ft.Kind() == reflect.Ptr || ft.Kind() == reflect.Slice || ft.Kind() == reflect.Array {
 		ft = ft.Elem()
@@ -538,11 +535,17 @@ func getPreloadKeys(rt reflect.Type, field string) (string, []int, string, []int
 	}
 
 	var fkIndex []int
-	if idv, exist := ft.FieldByName(fk); !exist {
+	if sf, exist := ft.FieldByName(fk); !exist {
 		panic("grimoire: foreign_key (" + fk + ") field not found " + fk)
 	} else {
-		fkIndex = idv.Index
+		fkIndex = sf.Index
+
+		if tag := sf.Tag.Get("db"); tag != "" {
+			column = tag
+		} else {
+			column = snakecase.SnakeCase(fk)
+		}
 	}
 
-	return ref, refIndex, fk, fkIndex
+	return refIndex, fkIndex, column
 }

@@ -397,6 +397,7 @@ type preloadInfo struct {
 	field  reflect.Value
 }
 
+// Preload loads association with given query.
 func (query Query) Preload(record interface{}, field string) error {
 	path := strings.Split(field, ".")
 
@@ -461,7 +462,10 @@ func (query Query) Preload(record interface{}, field string) error {
 	result.Elem().Set(slice)
 
 	// query all records usinc collected ids.
-	query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
+	err := query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
+	if err != nil {
+		return err
+	}
 
 	// map results.
 	result = result.Elem()
@@ -479,6 +483,12 @@ func (query Query) Preload(record interface{}, field string) error {
 	}
 
 	return nil
+}
+
+// MustPreload loads association with given query.
+// It'll panic if any error occured.
+func (query Query) MustPreload(record interface{}, field string) {
+	paranoid.Panic(query.Preload(record, field))
 }
 
 func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {

@@ -1,7 +1,6 @@
 package grimoire
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -412,8 +411,12 @@ func (query Query) Preload(record interface{}, field string) error {
 	}
 
 	schemaType := preload[0].schema.Type()
-	fieldType := preload[0].field.Type()
 	_, ref, fk := getAssocInfo(schemaType, path[len(path)-1])
+	fieldType := preload[0].field.Type()
+
+	if fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
+		fieldType = fieldType.Elem()
+	}
 
 	// get db field name.
 	// TODO: handle db tag
@@ -449,23 +452,19 @@ func (query Query) Preload(record interface{}, field string) error {
 
 	// prepare temp result variable for querying
 	rt := preload[0].field.Type()
-	fmt.Printf("-%#v\n", rt)
 	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array || rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
-		fmt.Printf("---%#v\n", rt)
 	}
+
 	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids))
 	result := reflect.New(slice.Type())
 	result.Elem().Set(slice)
-	fmt.Printf("result %#v\n", result)
 
 	// query all records usinc collected ids.
 	query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
 
 	// map results.
-	// result := reflect.ValueOf(result)
 	result = result.Elem()
-
 	for i := 0; i < result.Len(); i++ {
 		curr := result.Index(i)
 		key := curr.FieldByIndex(fkIndex).Interface()

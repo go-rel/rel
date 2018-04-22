@@ -33,6 +33,10 @@ func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (
 		switch doc.(type) {
 		case *[]Address:
 			*doc.(*[]Address) = adapter.result.([]Address)
+		case *[]Transaction:
+			*doc.(*[]Transaction) = adapter.result.([]Transaction)
+		default:
+			panic("not implemented")
 		}
 	}
 

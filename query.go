@@ -412,30 +412,11 @@ func (query Query) Preload(record interface{}, field string) error {
 	}
 
 	schemaType := preload[0].schema.Type()
-	_, ref, fk := getAssocInfo(schemaType, path[len(path)-1])
-	fieldType := preload[0].field.Type()
-
-	if fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
-		fieldType = fieldType.Elem()
-	}
+	_, refIndex, fk, fkIndex := getPreloadKeys(schemaType, path[len(path)-1])
 
 	// get db field name.
 	// TODO: handle db tag
 	fieldName := snakecase.SnakeCase(fk)
-
-	var refIndex []int
-	if idv, exist := schemaType.FieldByName(ref); !exist {
-		panic("grimoire: ref field not found " + ref)
-	} else {
-		refIndex = idv.Index
-	}
-
-	var fkIndex []int
-	if idv, exist := fieldType.FieldByName(fk); !exist {
-		panic("grimoire: fk field not found " + fk)
-	} else {
-		fkIndex = idv.Index
-	}
 
 	// collect ids.
 	addrs := make(map[interface{}][]reflect.Value)
@@ -461,7 +442,7 @@ func (query Query) Preload(record interface{}, field string) error {
 	result := reflect.New(slice.Type())
 	result.Elem().Set(slice)
 
-	// query all records usinc collected ids.
+	// query all records using collected ids.
 	err := query.Where(c.In(c.I(fieldName), ids...)).All(result.Interface())
 	if err != nil {
 		return err
@@ -538,11 +519,30 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	return result
 }
 
-func getAssocInfo(rt reflect.Type, field string) (string, string, string) {
-	ft, _ := rt.FieldByName(field)
-	assoc := ft.Tag.Get("assoc")
-	ref := ft.Tag.Get("ref")
-	fk := ft.Tag.Get("fk")
+func getPreloadKeys(rt reflect.Type, field string) (string, []int, string, []int) {
+	sft, _ := rt.FieldByName(field)
+	ft := sft.Type
 
-	return assoc, ref, fk
+	ref := sft.Tag.Get("references")
+	fk := sft.Tag.Get("foreign_key")
+
+	if ft.Kind() == reflect.Ptr || ft.Kind() == reflect.Slice || ft.Kind() == reflect.Array {
+		ft = ft.Elem()
+	}
+
+	var refIndex []int
+	if idv, exist := rt.FieldByName(ref); !exist {
+		panic("grimoire: references (" + ref + ") field not found ")
+	} else {
+		refIndex = idv.Index
+	}
+
+	var fkIndex []int
+	if idv, exist := ft.FieldByName(fk); !exist {
+		panic("grimoire: foreign_key (" + fk + ") field not found " + fk)
+	} else {
+		fkIndex = idv.Index
+	}
+
+	return ref, refIndex, fk, fkIndex
 }

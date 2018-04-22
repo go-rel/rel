@@ -14,8 +14,8 @@ type User struct {
 	ID           int
 	Name         string
 	Age          int
-	Transactions []Transaction `assoc:"has_many" ref:"ID" fk:"UserID"` // Map User.ID to Transaction.Address
-	Address      Address       `assoc:"has_one" ref:"ID" fk:"UserID"`  // Map User.ID to Address.UserID
+	Transactions []Transaction `references:"ID" foreign_key:"UserID"`
+	Address      Address       `references:"ID" foreign_key:"UserID"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -23,13 +23,13 @@ type User struct {
 type Transaction struct {
 	ID     int
 	UserID int
-	User   User `assoc:"belongs_to" ref:"UserID" fk:"ID"` // Map Transaction.UserID to User.ID
+	User   User `references:"UserID" foreign_key:"ID"`
 }
 
 type Address struct {
 	ID     int
 	UserID int
-	User   *User `assoc:"belongs_to" ref:"UserID" fk:"ID"` // Map Address.UserID to User.ID
+	User   *User `references:"UserID" foreign_key:"ID"`
 }
 
 func TestQuerySelect(t *testing.T) {

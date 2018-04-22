@@ -1257,3 +1257,44 @@ func TestPreloadEmptySlice(t *testing.T) {
 
 	assert.Nil(t, repo.From("transactions").Preload(&addresses, "User.Transactions"))
 }
+
+func TestPreloadNotPointerPanic(t *testing.T) {
+	repo := Repo{}
+	transaction := Transaction{}
+
+	assert.Panics(t, func() { repo.From("users").Preload(transaction, "User") })
+}
+
+func TestPreloadNotValidPanic(t *testing.T) {
+	repo := Repo{}
+	transaction := Transaction{}
+
+	assert.Panics(t, func() { repo.From("users").Preload(&transaction, "ID") })
+	assert.Panics(t, func() { repo.From("users").Preload(&transaction, "ID.User") })
+}
+
+func TestPreloadInvalidKeyPanic(t *testing.T) {
+	repo := Repo{}
+	info := struct {
+		ID        int
+		User      User `references:"UID" foreign_key:"InfoID"`
+		OtherUser User `references:"ID" foreign_key:"InfoID"`
+	}{}
+
+	assert.Panics(t, func() { repo.From("users").Preload(&info, "User") })
+	assert.Panics(t, func() { repo.From("users").Preload(&info, "OtherUser") })
+}
+
+func TestPreloadQueryError(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	user := User{ID: 10}
+	query := repo.From("addresses")
+
+	mock.On("All", query.Where(In("user_id", 10)), &[]Address{}).Return(1, errors.UnexpectedError("query error"))
+
+	assert.NotNil(t, query.Preload(&user, "Address"))
+	assert.Panics(t, func() { query.MustPreload(&user, "Address") })
+	mock.AssertExpectations(t)
+}

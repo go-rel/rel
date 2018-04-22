@@ -403,7 +403,7 @@ func (query Query) Preload(record interface{}, field string) error {
 
 	rv := reflect.ValueOf(record)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		panic("grimoire: record parameter must be a pointer")
+		panic("grimoire: record parameter must be a pointer.")
 	}
 
 	preload := traversePreloadTarget(rv.Elem(), path)
@@ -484,14 +484,14 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadTarget {
 	// 	rt = rv.Type()
 	// }
 
-	if rt.Kind() != reflect.Struct {
-		panic("grimoire: preload field must be a struct")
-	}
+	// if rt.Kind() != reflect.Struct {
+	// 	panic("grimoire: preload field must be a struct.")
+	// }
 
 	// forward to next path.
 	fv := rv.FieldByName(path[0])
-	if !fv.IsValid() {
-		panic("grimoire: field not found " + path[0])
+	if !fv.IsValid() || (fv.Kind() != reflect.Struct && fv.Kind() != reflect.Slice && fv.Kind() != reflect.Ptr) {
+		panic("grimoire: field (" + path[0] + ") is not a struct, a slice or a pointer.")
 	}
 
 	if fv.Kind() == reflect.Ptr {

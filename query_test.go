@@ -1202,3 +1202,45 @@ func TestPreloadNestedSliceHasMany(t *testing.T) {
 	// assert.NotPanics(t, func() { query.MustSave(&user) })
 	mock.AssertExpectations(t)
 }
+
+func TestPreloadBelongsTo(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	transaction := Transaction{UserID: 10}
+	// address := Address{UserID: 10}
+	result := []User{{ID: 10}}
+
+	query := repo.From("users")
+
+	mock.Result(result).On("All", query.Where(In("id", 10)), &[]User{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&transaction, "User"))
+	assert.Equal(t, result[0], transaction.User)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+
+	// TODO: handle nil pointer
+	// assert.Nil(t, query.Preload(&address, "User"))
+	// assert.Equal(t, result[0], address.User)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+
+	mock.AssertExpectations(t)
+}
+
+func TestPreloadSliceBelongsTo(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	transactions := []Transaction{{UserID: 10}, {UserID: 20}}
+	result := []User{{ID: 10}, {ID: 20}}
+
+	query := repo.From("users")
+
+	mock.Result(result).On("All", query.Where(In("id", 10, 20)), &[]User{}).Return(2, nil)
+
+	assert.Nil(t, query.Preload(&transactions, "User"))
+	assert.Equal(t, result[0], transactions[0].User)
+	assert.Equal(t, result[1], transactions[1].User)
+	// assert.NotPanics(t, func() { query.MustSave(&user) })
+	mock.AssertExpectations(t)
+}

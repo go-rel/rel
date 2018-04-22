@@ -35,6 +35,8 @@ func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (
 			*doc.(*[]Address) = adapter.result.([]Address)
 		case *[]Transaction:
 			*doc.(*[]Transaction) = adapter.result.([]Transaction)
+		case *[]User:
+			*doc.(*[]User) = adapter.result.([]User)
 		default:
 			panic("not implemented")
 		}

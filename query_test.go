@@ -1208,7 +1208,7 @@ func TestPreloadBelongsTo(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transaction := Transaction{UserID: 10}
-	// address := Address{UserID: 10}
+	address := Address{UserID: 10}
 	result := []User{{ID: 10}}
 
 	query := repo.From("users")
@@ -1219,9 +1219,8 @@ func TestPreloadBelongsTo(t *testing.T) {
 	assert.Equal(t, result[0], transaction.User)
 	// assert.NotPanics(t, func() { query.MustSave(&user) })
 
-	// TODO: handle nil pointer
-	// assert.Nil(t, query.Preload(&address, "User"))
-	// assert.Equal(t, result[0], address.User)
+	assert.Nil(t, query.Preload(&address, "User"))
+	assert.Equal(t, result[0], *address.User)
 	// assert.NotPanics(t, func() { query.MustSave(&user) })
 
 	mock.AssertExpectations(t)
@@ -1232,6 +1231,7 @@ func TestPreloadSliceBelongsTo(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transactions := []Transaction{{UserID: 10}, {UserID: 20}}
+	addresses := []Address{{UserID: 10}, {UserID: 20}}
 	result := []User{{ID: 10}, {ID: 20}}
 
 	query := repo.From("users")
@@ -1242,5 +1242,10 @@ func TestPreloadSliceBelongsTo(t *testing.T) {
 	assert.Equal(t, result[0], transactions[0].User)
 	assert.Equal(t, result[1], transactions[1].User)
 	// assert.NotPanics(t, func() { query.MustSave(&user) })
+
+	assert.Nil(t, query.Preload(&addresses, "User"))
+	assert.Equal(t, result[0], *addresses[0].User)
+	assert.Equal(t, result[1], *addresses[1].User)
+
 	mock.AssertExpectations(t)
 }

@@ -492,10 +492,10 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 		return result
 	}
 
-	if rt.Kind() == reflect.Ptr {
-		rv = rv.Elem()
-		rt = rv.Type()
-	}
+	// if rt.Kind() == reflect.Ptr {
+	// 	rv = rv.Elem()
+	// 	rt = rv.Type()
+	// }
 
 	if rt.Kind() != reflect.Struct {
 		panic("grimoire: preload field must be a struct")
@@ -508,6 +508,11 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadInfo {
 	}
 
 	if fv.Kind() == reflect.Ptr {
+		if len(path) == 1 && fv.IsNil() {
+			typ := fv.Type().Elem()
+			fv.Set(reflect.New(typ))
+		}
+
 		fv = fv.Elem()
 	}
 

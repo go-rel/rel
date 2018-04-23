@@ -23,7 +23,7 @@ type User struct {
 type Transaction struct {
 	ID      int
 	BuyerID int  `db:"user_id"`
-	User    User `references:"BuyerID" foreign_key:"ID"`
+	Buyer   User `references:"BuyerID" foreign_key:"ID"`
 }
 
 type Address struct {
@@ -1071,20 +1071,20 @@ func TestPreloadNestedHasOne(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transaction := Transaction{
-		User: User{ID: 10},
+		Buyer: User{ID: 10},
 	}
 
 	result := []Address{
-		{ID: 100, UserID: &transaction.User.ID},
+		{ID: 100, UserID: &transaction.Buyer.ID},
 	}
 
 	query := repo.From("addresses")
 
 	mock.Result(result).On("All", query.Where(In("user_id", 10)), &[]Address{}).Return(1, nil)
 
-	assert.Nil(t, query.Preload(&transaction, "User.Address"))
-	assert.Equal(t, result[0], transaction.User.Address)
-	assert.NotPanics(t, func() { query.MustPreload(&transaction, "User.Address") })
+	assert.Nil(t, query.Preload(&transaction, "Buyer.Address"))
+	assert.Equal(t, result[0], transaction.Buyer.Address)
+	assert.NotPanics(t, func() { query.MustPreload(&transaction, "Buyer.Address") })
 	mock.AssertExpectations(t)
 }
 
@@ -1093,23 +1093,23 @@ func TestPreloadSliceNestedHasOne(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transactions := []Transaction{
-		{User: User{ID: 10}},
-		{User: User{ID: 20}},
+		{Buyer: User{ID: 10}},
+		{Buyer: User{ID: 20}},
 	}
 
 	result := []Address{
-		{ID: 100, UserID: &transactions[0].User.ID},
-		{ID: 200, UserID: &transactions[1].User.ID},
+		{ID: 100, UserID: &transactions[0].Buyer.ID},
+		{ID: 200, UserID: &transactions[1].Buyer.ID},
 	}
 
 	query := repo.From("addresses")
 
 	mock.Result(result).On("All", query.Where(In("user_id", 10, 20)), &[]Address{}).Return(2, nil)
 
-	assert.Nil(t, query.Preload(&transactions, "User.Address"))
-	assert.Equal(t, result[0], transactions[0].User.Address)
-	assert.Equal(t, result[1], transactions[1].User.Address)
-	assert.NotPanics(t, func() { query.MustPreload(&transactions, "User.Address") })
+	assert.Nil(t, query.Preload(&transactions, "Buyer.Address"))
+	assert.Equal(t, result[0], transactions[0].Buyer.Address)
+	assert.Equal(t, result[1], transactions[1].Buyer.Address)
+	assert.NotPanics(t, func() { query.MustPreload(&transactions, "Buyer.Address") })
 	mock.AssertExpectations(t)
 }
 
@@ -1215,9 +1215,9 @@ func TestPreloadBelongsTo(t *testing.T) {
 
 	mock.Result(result).On("All", query.Where(In("id", 10)), &[]User{}).Return(1, nil)
 
-	assert.Nil(t, query.Preload(&transaction, "User"))
-	assert.Equal(t, result[0], transaction.User)
-	assert.NotPanics(t, func() { query.MustPreload(&transaction, "User") })
+	assert.Nil(t, query.Preload(&transaction, "Buyer"))
+	assert.Equal(t, result[0], transaction.Buyer)
+	assert.NotPanics(t, func() { query.MustPreload(&transaction, "Buyer") })
 
 	assert.Nil(t, query.Preload(&address, "User"))
 	assert.Equal(t, result[0], *address.User)
@@ -1242,10 +1242,10 @@ func TestPreloadSliceBelongsTo(t *testing.T) {
 
 	mock.Result(result).On("All", query.Where(In("id", 10, 20)), &[]User{}).Return(2, nil)
 
-	assert.Nil(t, query.Preload(&transactions, "User"))
-	assert.Equal(t, result[0], transactions[0].User)
-	assert.Equal(t, result[1], transactions[1].User)
-	assert.NotPanics(t, func() { query.MustPreload(&transactions, "User") })
+	assert.Nil(t, query.Preload(&transactions, "Buyer"))
+	assert.Equal(t, result[0], transactions[0].Buyer)
+	assert.Equal(t, result[1], transactions[1].Buyer)
+	assert.NotPanics(t, func() { query.MustPreload(&transactions, "Buyer") })
 
 	assert.Nil(t, query.Preload(&addresses, "User"))
 	assert.Equal(t, result[0], *addresses[0].User)

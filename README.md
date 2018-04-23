@@ -6,6 +6,7 @@ Grimoire is a database access layer and validation for go. Grimoire is not an OR
 Features:
 
 - Query Builder
+- Association Preloading
 - Struct style create and update
 - Changeset Style create and update
 - Builtin validation using changeset
@@ -23,6 +24,7 @@ Features:
       * [Query](#query)
       * [Update](#update)
       * [Delete](#delete)
+   * [Association Preloading](#association-preloading)
    * [Transaction](#transaction)
    * [Logger](#logger)
    * [Field Mapping](#field-mapping)
@@ -356,6 +358,58 @@ err := repo.From("users").Where(Eq(I("age"), 18)).Delete()
 err := repo.From("users").Delete()
 ```
 
+## Association Preloading
+
+Grimoire's support preloading association within struct using grimoire query builder.
+
+```golang
+// Assume the following tables.
+type User struct {
+	ID           int
+	Name         string
+	Age          int
+	Transactions []Transaction `references:"ID" foreign_key:"BuyerID"` // Optional, if not provided grimoire will try to guess it for you
+	Address      Address
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type Transaction struct {
+	ID      int
+	BuyerID int  `db:"user_id"`
+	Buyer   User `references:"BuyerID" foreign_key:"ID"`
+}
+
+type Address struct {
+	ID     int
+	City   string
+	UserID *int
+	User   *User
+}
+
+user := User{ID: 10}
+transaction := Transaction{ID: 10, BuyerID: 10}
+
+// Preload an address (has one) where UserID=10.
+repo.From("addresses").Preload(&user, "Address")
+
+// Preload transactions (has many) where UserID=10.
+repo.From("transactions").Preload(&user, "Transaction")
+
+// Preload buyer (belongs to) where ID=10
+repo.From("users").Preload(&transaction, "Buyer")
+
+// Grimoire supports preloading using slice of structs.
+users := []User{{ID: 10, ID: 20}}
+repo.From("addresses").Preload(&users, "Address")
+
+// Grimoire supports preloading nested struct.
+repo.From("users").Preload(&transaction, "Buyer") // Preload buyer first
+repo.From("addresses").Preload(&transaction, "Buyer.Address") // then preload its address
+
+// It's also possible to add custom query to preloading query.
+repo.From("addresses").Where(c.Eq(c.I("city"), "Bandung")).Preload(&user, "Address") // Only preload address with city=Bandung
+```
 
 ## Transaction
 

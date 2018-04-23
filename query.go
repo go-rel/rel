@@ -419,7 +419,15 @@ func (query Query) Preload(record interface{}, field string) error {
 	ids := []interface{}{}
 
 	for _, pre := range preload {
-		id := pre.schema.FieldByIndex(refIndex).Interface()
+		fv := pre.schema.FieldByIndex(refIndex)
+		var id interface{}
+
+		if fv.Kind() == reflect.Ptr {
+			id = fv.Elem().Interface()
+		} else {
+			id = fv.Interface()
+		}
+
 		addrs[id] = append(addrs[id], pre.field)
 
 		// add to ids if not yet added.
@@ -448,7 +456,14 @@ func (query Query) Preload(record interface{}, field string) error {
 	result = result.Elem()
 	for i := 0; i < result.Len(); i++ {
 		curr := result.Index(i)
-		key := curr.FieldByIndex(fkIndex).Interface()
+		fv := curr.FieldByIndex(fkIndex)
+
+		var key interface{}
+		if fv.Kind() == reflect.Ptr {
+			key = curr.FieldByIndex(fkIndex).Elem().Interface()
+		} else {
+			key = curr.FieldByIndex(fkIndex).Interface()
+		}
 
 		for _, addr := range addrs[key] {
 			if addr.Kind() == reflect.Slice {

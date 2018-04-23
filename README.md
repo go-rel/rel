@@ -360,7 +360,13 @@ err := repo.From("users").Delete()
 
 ## Association Preloading
 
-Grimoire's support preloading association within struct using grimoire query builder.
+Grimoire's support preloading association within struct using grimoire query builder. 
+
+Optional field tags:
+
+- `references` - Sets the key on the current schema to be used for the association.
+- `foreign_key` - Sets the foreign key, this should map to a field on the other schema.
+
 
 ```golang
 // Assume the following tables.

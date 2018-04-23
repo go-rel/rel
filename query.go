@@ -419,14 +419,7 @@ func (query Query) Preload(record interface{}, field string) error {
 	ids := []interface{}{}
 
 	for _, pre := range preload {
-		fv := pre.schema.FieldByIndex(refIndex)
-		var id interface{}
-
-		if fv.Kind() == reflect.Ptr {
-			id = fv.Elem().Interface()
-		} else {
-			id = fv.Interface()
-		}
+		id := getPreloadID(pre.schema.FieldByIndex(refIndex))
 
 		// reset to zero if slice.
 		if pre.field.Kind() == reflect.Slice || pre.field.Kind() == reflect.Array {
@@ -461,16 +454,9 @@ func (query Query) Preload(record interface{}, field string) error {
 	result = result.Elem()
 	for i := 0; i < result.Len(); i++ {
 		curr := result.Index(i)
-		fv := curr.FieldByIndex(fkIndex)
+		id := getPreloadID(curr.FieldByIndex(fkIndex))
 
-		var key interface{}
-		if fv.Kind() == reflect.Ptr {
-			key = fv.Elem().Interface()
-		} else {
-			key = fv.Interface()
-		}
-
-		for _, addr := range addrs[key] {
+		for _, addr := range addrs[id] {
 			if addr.Kind() == reflect.Slice {
 				addr.Set(reflect.Append(addr, curr))
 			} else {
@@ -570,4 +556,12 @@ func getPreloadInfo(rt reflect.Type, field string) ([]int, []int, string) {
 	}
 
 	return refIndex, fkIndex, column
+}
+
+func getPreloadID(fv reflect.Value) interface{} {
+	if fv.Kind() == reflect.Ptr {
+		return fv.Elem().Interface()
+	}
+
+	return fv.Interface()
 }

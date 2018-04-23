@@ -66,6 +66,9 @@ func TestSpecs(t *testing.T) {
 	specs.QueryJoin(t, repo)
 	specs.QueryNotFound(t, repo)
 
+	// Preload specs
+	specs.Preload(t, repo)
+
 	// Count Specs
 	specs.Count(t, repo)
 

@@ -26,7 +26,7 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 
 	rv := reflect.ValueOf(value)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		panic("value must be pointer")
+		panic("grimoire: record parameter must be a pointer")
 	}
 
 	count := int64(0)

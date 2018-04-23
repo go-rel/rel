@@ -21,6 +21,7 @@ type User struct {
 // Address defines addresses schema.
 type Address struct {
 	ID        int64
+	User      User
 	UserID    *int64
 	Address   string
 	CreatedAt time.Time

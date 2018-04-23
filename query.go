@@ -428,6 +428,11 @@ func (query Query) Preload(record interface{}, field string) error {
 			id = fv.Interface()
 		}
 
+		// reset to zero if slice.
+		if pre.field.Kind() == reflect.Slice || pre.field.Kind() == reflect.Array {
+			pre.field.Set(reflect.Zero(pre.field.Type()))
+		}
+
 		addrs[id] = append(addrs[id], pre.field)
 
 		// add to ids if not yet added.

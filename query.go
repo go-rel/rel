@@ -465,9 +465,9 @@ func (query Query) Preload(record interface{}, field string) error {
 
 		var key interface{}
 		if fv.Kind() == reflect.Ptr {
-			key = curr.FieldByIndex(fkIndex).Elem().Interface()
+			key = fv.Elem().Interface()
 		} else {
-			key = curr.FieldByIndex(fkIndex).Interface()
+			key = fv.Interface()
 		}
 
 		for _, addr := range addrs[key] {

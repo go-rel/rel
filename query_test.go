@@ -28,7 +28,7 @@ type Transaction struct {
 
 type Address struct {
 	ID     int
-	UserID int
+	UserID *int
 	User   *User
 }
 
@@ -1032,7 +1032,7 @@ func TestPreloadHasOne(t *testing.T) {
 
 	user := User{ID: 10}
 	result := []Address{
-		{ID: 100, UserID: 10},
+		{ID: 100, UserID: &user.ID},
 	}
 
 	query := repo.From("addresses")
@@ -1051,8 +1051,8 @@ func TestPreloadSliceHasOne(t *testing.T) {
 
 	users := []User{{ID: 10}, {ID: 20}}
 	result := []Address{
-		{ID: 100, UserID: 10},
-		{ID: 200, UserID: 20},
+		{ID: 100, UserID: &users[0].ID},
+		{ID: 200, UserID: &users[1].ID},
 	}
 
 	query := repo.From("addresses")
@@ -1075,7 +1075,7 @@ func TestPreloadNestedHasOne(t *testing.T) {
 	}
 
 	result := []Address{
-		{ID: 100, UserID: 10},
+		{ID: 100, UserID: &transaction.User.ID},
 	}
 
 	query := repo.From("addresses")
@@ -1098,8 +1098,8 @@ func TestPreloadSliceNestedHasOne(t *testing.T) {
 	}
 
 	result := []Address{
-		{ID: 100, UserID: 10},
-		{ID: 200, UserID: 20},
+		{ID: 100, UserID: &transactions[0].User.ID},
+		{ID: 200, UserID: &transactions[1].User.ID},
 	}
 
 	query := repo.From("addresses")
@@ -1208,7 +1208,7 @@ func TestPreloadBelongsTo(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transaction := Transaction{BuyerID: 10}
-	address := Address{UserID: 10}
+	address := Address{UserID: &transaction.BuyerID}
 	result := []User{{ID: 10}}
 
 	query := repo.From("users")
@@ -1231,7 +1231,11 @@ func TestPreloadSliceBelongsTo(t *testing.T) {
 	repo := Repo{adapter: mock}
 
 	transactions := []Transaction{{BuyerID: 10}, {BuyerID: 20}}
-	addresses := []Address{{UserID: 10}, {UserID: 20}}
+	addresses := []Address{
+		{UserID: &transactions[0].BuyerID},
+		{UserID: &transactions[1].BuyerID},
+	}
+
 	result := []User{{ID: 10}, {ID: 20}}
 
 	query := repo.From("users")

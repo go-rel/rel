@@ -1,7 +1,7 @@
 # grimoire
 [![GoDoc](https://godoc.org/github.com/Fs02/grimoire?status.svg)](https://godoc.org/github.com/Fs02/grimoire) [![Build Status](https://travis-ci.org/Fs02/grimoire.svg?branch=master)](https://travis-ci.org/Fs02/grimoire) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/grimoire)](https://goreportcard.com/report/github.com/Fs02/grimoire) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/grimoire/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/grimoire/test_coverage)
 
-Grimoire is a database access layer and validation for go. Grimoire is not an ORM but it gives a nice way to deal with relations.
+Grimoire is a flexible ORM for golang. It features flexible query API and builtin validation. It currently supports MySQL, PostgreSQL and SQLite3 but a custom adapter can be implemented easily using the Adapter interface.
 
 Features:
 

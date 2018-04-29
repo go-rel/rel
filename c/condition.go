@@ -1,3 +1,4 @@
+// Package c defines function for building condition in query.
 package c
 
 // ConditionType defines enumeration of all supported condition types.

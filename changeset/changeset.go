@@ -1,11 +1,11 @@
-// Package changeset allow filtering, casting and validation when manipulating structs.
+// Package changeset used to cast and validate data before saving it to the database.
 package changeset
 
 import (
 	"reflect"
 )
 
-// Changeset allow filtering, casting and validation when manipulating structs.
+// Changeset used to cast and validate data before saving it to the database.
 type Changeset struct {
 	errors  []error
 	entity  interface{}

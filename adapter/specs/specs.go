@@ -1,3 +1,4 @@
+// Package specs defines test specifications for grimoire's adapter.
 package specs
 
 import (

@@ -1,3 +1,4 @@
+// Package sql is general sql adapter that wraps database/sql.
 package sql
 
 import (

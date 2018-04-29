@@ -1,3 +1,15 @@
+// Package postgres wraps postgres (pq) driver as an adapter for grimoire.
+//
+// Usage:
+//	// open postgres connection.
+//	adapter, err := postgres.Open("postgres://postgres@localhost/grimoire_test?sslmode=disable")
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer adapter.Close()
+//
+//	// initialize grimoire's repo.
+//	repo := grimoire.New(adapter)
 package postgres
 
 import (
@@ -40,7 +52,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 	return result.ID, err
 }
 
-// InsertAll inserts all record to database and returns its ids.
+// InsertAll inserts multiple records to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
 	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
 

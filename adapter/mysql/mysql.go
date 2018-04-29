@@ -1,3 +1,15 @@
+// Package mysql wraps mysql driver as an adapter for grimoire.
+//
+// Usage:
+//	// open mysql connection.
+//	adapter, err := mysql.Open("root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local")
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer adapter.Close()
+//
+//	// initialize grimoire's repo.
+//	repo := grimoire.New(adapter)
 package mysql
 
 import (

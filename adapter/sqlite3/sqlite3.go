@@ -1,3 +1,15 @@
+// Package sqlite3 wraps go-sqlite3 driver as an adapter for grimoire.
+//
+// Usage:
+//	// open sqlite3 connection.
+//	adapter, err := sqlite3.Open("dev.db")
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer adapter.Close()
+//
+//	// initialize grimoire's repo.
+//	repo := grimoire.New(adapter)
 package sqlite3
 
 import (

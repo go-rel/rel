@@ -1,3 +1,4 @@
+// Package errors wraps driver and changeset error as a grimoire's error.
 package errors
 
 // UnexpectedErrorCode defines default code for Unexpected Errors.

@@ -332,7 +332,7 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 }
 
 // Save a record to database.
-// If condition exist, put will try to update the record, otherwise it'll insert it.
+// If condition exist, it will try to update the record, otherwise it'll insert it.
 // Save ignores id from record.
 func (query Query) Save(record interface{}) error {
 	rv := reflect.ValueOf(record)

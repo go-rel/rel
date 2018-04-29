@@ -369,6 +369,15 @@ func TestQueryFind(t *testing.T) {
 	})
 }
 
+func TestQueryFindBy(t *testing.T) {
+	assert.Equal(t, repo.From("users").FindBy("email", "user@email.com"), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"users.*"},
+		Condition:  And(Eq(I("users.email"), "user@email.com")),
+	})
+}
+
 func TestQuerySet(t *testing.T) {
 	assert.Equal(t, repo.From("users").Set("field", 1), Query{
 		repo:       &repo,

@@ -119,7 +119,12 @@ func (query Query) Limit(limit int) Query {
 // Find adds where id=? into query.
 // This is short cut for Where(Eq(I("id"), 1))
 func (query Query) Find(id interface{}) Query {
-	return query.Where(c.Eq(c.I(query.Collection+".id"), id))
+	return query.FindBy("id", id)
+}
+
+// FindBy adds where col=? into query.
+func (query Query) FindBy(col string, val interface{}) Query {
+	return query.Where(c.Eq(c.I(query.Collection+"."+col), val))
 }
 
 // Set value for insert or update operation that will replace changeset value.

@@ -25,35 +25,35 @@ func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 
 	switch v := val.(type) {
 	case string:
-		invalid = len(v) <= min
+		invalid = len(v) < min
 	case []interface{}:
-		invalid = len(v) <= min
+		invalid = len(v) < min
 	case int:
-		invalid = v <= min
+		invalid = v < min
 	case int8:
-		invalid = v <= int8(min)
+		invalid = v < int8(min)
 	case int16:
-		invalid = v <= int16(min)
+		invalid = v < int16(min)
 	case int32:
-		invalid = v <= int32(min)
+		invalid = v < int32(min)
 	case int64:
-		invalid = v <= int64(min)
+		invalid = v < int64(min)
 	case uint:
-		invalid = v <= uint(min)
+		invalid = v < uint(min)
 	case uint8:
-		invalid = v <= uint8(min)
+		invalid = v < uint8(min)
 	case uint16:
-		invalid = v <= uint16(min)
+		invalid = v < uint16(min)
 	case uint32:
-		invalid = v <= uint32(min)
+		invalid = v < uint32(min)
 	case uint64:
-		invalid = v <= uint64(min)
+		invalid = v < uint64(min)
 	case uintptr:
-		invalid = v <= uintptr(min)
+		invalid = v < uintptr(min)
 	case float32:
-		invalid = v <= float32(min)
+		invalid = v < float32(min)
 	case float64:
-		invalid = v <= float64(min)
+		invalid = v < float64(min)
 	}
 
 	if invalid {

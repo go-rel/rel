@@ -17,7 +17,7 @@ var DuplicateErrorCode = 3
 type Error struct {
 	Message string `json:"message"`
 	Field   string `json:"field,omitempty"`
-	Code    int    `json:"json,omitempty"`
+	Code    int    `json:"code,omitempty"`
 }
 
 // Error prints error message.

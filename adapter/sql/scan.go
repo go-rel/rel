@@ -37,7 +37,7 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 
 	if !isScanner {
 		if isSlice {
-			rv.Set(reflect.Zero(rv.Type()))
+			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
 			index = fieldIndex(rv.Type().Elem())
 		} else {
 			index = fieldIndex(rv.Type())

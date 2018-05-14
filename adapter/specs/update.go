@@ -7,16 +7,17 @@ import (
 	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 // Update tests update specifications.
 func Update(t *testing.T, repo grimoire.Repo) {
 	user := User{Name: "update"}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	address := Address{Address: "update"}
-	assert.Nil(t, repo.From(addresses).Save(&address))
+	repo.From(addresses).MustSave(&address)
 
 	tests := []struct {
 		query  grimoire.Query
@@ -47,10 +48,10 @@ func Update(t *testing.T, repo grimoire.Repo) {
 // UpdateWhere tests update specifications.
 func UpdateWhere(t *testing.T, repo grimoire.Repo) {
 	user := User{Name: "update all"}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	address := Address{Address: "update all"}
-	assert.Nil(t, repo.From(addresses).Save(&address))
+	repo.From(addresses).MustSave(&address)
 
 	tests := []struct {
 		query  grimoire.Query
@@ -78,10 +79,10 @@ func UpdateWhere(t *testing.T, repo grimoire.Repo) {
 // UpdateSet tests update specifications using Set query.
 func UpdateSet(t *testing.T, repo grimoire.Repo) {
 	user := User{Name: "update"}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	address := Address{Address: "update"}
-	assert.Nil(t, repo.From(addresses).Save(&address))
+	repo.From(addresses).MustSave(&address)
 
 	tests := []struct {
 		query  grimoire.Query
@@ -100,6 +101,29 @@ func UpdateSet(t *testing.T, repo grimoire.Repo) {
 		t.Run("Update|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Update(nil))
 			assert.Nil(t, test.query.Update(test.record))
+		})
+	}
+}
+
+// UpdateConstraint tests update constraint specifications.
+func UpdateConstraint(t *testing.T, repo grimoire.Repo) {
+	user := User{}
+	repo.From(users).MustSave(&user)
+
+	repo.From(users).Set("slug", "update-taken").MustInsert(nil)
+
+	tests := []struct {
+		name  string
+		query grimoire.Query
+		field string
+		code  int
+	}{
+		{"UniqueConstraintError", repo.From(users).Find(user.ID).Set("slug", "update-taken"), "slug", errors.UniqueConstraintErrorCode},
+	}
+
+	for _, test := range tests {
+		t.Run("UpdateConstraint|"+test.name, func(t *testing.T) {
+			checkConstraint(t, test.query.Insert(nil), test.code, test.field)
 		})
 	}
 }

@@ -13,7 +13,7 @@ import (
 func Count(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
 	user := User{Name: "name1", Gender: "male", Age: 10}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	tests := []grimoire.Query{
 		repo.From(users).Where(c.Eq(id, user.ID)),

@@ -7,8 +7,6 @@ import (
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
-	"github.com/Fs02/grimoire/errors"
-	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,12 +24,14 @@ func init() {
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		slug VARCHAR(30) DEFAULT NULL,
 		name VARCHAR(30) NOT NULL,
 		gender VARCHAR(10) NOT NULL,
 		age INT NOT NULL,
 		note varchar(50),
 		created_at DATETIME,
-		updated_at DATETIME
+		updated_at DATETIME,
+		UNIQUE (slug)
 	);`, nil)
 	paranoid.Panic(err)
 
@@ -77,11 +77,13 @@ func TestSpecs(t *testing.T) {
 	specs.Insert(t, repo)
 	specs.InsertAll(t, repo)
 	specs.InsertSet(t, repo)
+	specs.InsertConstraint(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)
 	specs.UpdateWhere(t, repo)
 	specs.UpdateSet(t, repo)
+	specs.UpdateConstraint(t, repo)
 
 	// Put Specs
 	specs.SaveInsert(t, repo)
@@ -155,18 +157,4 @@ func TestAdapterExecError(t *testing.T) {
 
 	_, _, err = adapter.Exec("error", nil)
 	assert.NotNil(t, err)
-}
-
-func TestErrorFunc(t *testing.T) {
-	// error nil
-	assert.Nil(t, errorFunc(nil))
-
-	// 1062 error
-	rawerr := &mysql.MySQLError{Message: "duplicate", Number: 1062}
-	duperr := errors.DuplicateError(rawerr.Message, "")
-	assert.Equal(t, duperr, errorFunc(rawerr))
-
-	// other errors
-	err := errors.UnexpectedError("error")
-	assert.Equal(t, err, errorFunc(err))
 }

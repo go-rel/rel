@@ -14,6 +14,7 @@ package sqlite3
 
 import (
 	db "database/sql"
+	"strings"
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
@@ -47,7 +48,7 @@ func errorFunc(err error) error {
 	if err == nil {
 		return nil
 	} else if e, ok := err.(sqlite3.Error); ok && e.ExtendedCode == sqlite3.ErrConstraintUnique {
-		return errors.DuplicateError(e.Error(), "")
+		return errors.UniqueConstraintError(e.Error(), strings.Split(e.Error(), "failed: ")[1])
 	}
 
 	return err

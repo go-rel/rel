@@ -19,6 +19,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/internal"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -57,7 +58,7 @@ func errorFunc(err error) error {
 	if err == nil {
 		return nil
 	} else if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
-		return errors.DuplicateError(e.Message, "")
+		return errors.UniqueConstraintError(e.Message, internal.ExtractString(e.Message, "key '", "'"))
 	}
 
 	return err

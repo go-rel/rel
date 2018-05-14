@@ -12,7 +12,7 @@ import (
 func Preload(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
 	user := User{Name: "preload", Gender: "male", Age: 10}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	userAddresses := []Address{
 		{Address: "preload1", UserID: &user.ID},
@@ -20,9 +20,9 @@ func Preload(t *testing.T, repo grimoire.Repo) {
 		{Address: "preload3", UserID: &user.ID},
 	}
 
-	assert.Nil(t, repo.From(addresses).Save(&userAddresses[0]))
-	assert.Nil(t, repo.From(addresses).Save(&userAddresses[1]))
-	assert.Nil(t, repo.From(addresses).Save(&userAddresses[2]))
+	repo.From(addresses).MustSave(&userAddresses[0])
+	repo.From(addresses).MustSave(&userAddresses[1])
+	repo.From(addresses).MustSave(&userAddresses[2])
 
 	assert.Nil(t, user.Addresses)
 

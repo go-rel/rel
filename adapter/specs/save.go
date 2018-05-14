@@ -49,9 +49,9 @@ func SaveInsertAll(t *testing.T, repo grimoire.Repo) {
 // SaveUpdate tests update specifications.
 func SaveUpdate(t *testing.T, repo grimoire.Repo) {
 	record := User{Name: "save update", Age: 100}
-	assert.Nil(t, repo.From(users).Save(&record))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "save update", Age: 100}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "save update", Age: 100}))
+	repo.From(users).MustSave(&record)
+	repo.From(users).MustSave(&User{Name: "save update", Age: 100})
+	repo.From(users).MustSave(&User{Name: "save update", Age: 100})
 
 	tests := []grimoire.Query{
 		repo.From(users).Find(record.ID),

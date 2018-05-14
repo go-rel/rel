@@ -127,7 +127,7 @@ func TestAdapterTransactionRollback(t *testing.T) {
 	defer adapter.Close()
 
 	err = grimoire.New(adapter).Transaction(func(repo grimoire.Repo) error {
-		return errors.DuplicateError("", "")
+		return errors.UniqueConstraintError("", "")
 	})
 
 	assert.NotNil(t, err)

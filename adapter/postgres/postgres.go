@@ -18,6 +18,7 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/internal"
 	"github.com/lib/pq"
 )
 
@@ -89,7 +90,7 @@ func errorFunc(err error) error {
 	if err == nil {
 		return nil
 	} else if e, ok := err.(*pq.Error); ok && e.Code == "23505" {
-		return errors.DuplicateError(e.Message, e.Column)
+		return errors.UniqueConstraintError(e.Message, internal.ExtractString(e.Message, "constraint \"", "\""))
 	}
 
 	return err

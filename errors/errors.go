@@ -10,8 +10,8 @@ var ChangesetErrorCode = 1
 // NotFoundErrorCode defines default code for NotFound Errors.
 var NotFoundErrorCode = 2
 
-// DuplicateErrorCode defines default code for Duplicate Errors.
-var DuplicateErrorCode = 3
+// UniqueConstraintErrorCode defines default code for Duplicate Errors.
+var UniqueConstraintErrorCode = 3
 
 // Error defines information about grimoire's error.
 type Error struct {
@@ -40,9 +40,9 @@ func (e Error) NotFoundError() bool {
 	return e.Code == NotFoundErrorCode
 }
 
-// DuplicateError returns true if error is an DuplicateError.
-func (e Error) DuplicateError() bool {
-	return e.Code == DuplicateErrorCode
+// UniqueConstraintError returns true if error is an UniqueConstraintError.
+func (e Error) UniqueConstraintError() bool {
+	return e.Code == UniqueConstraintErrorCode
 }
 
 // New creates an error with custom image, field and error code.
@@ -75,12 +75,12 @@ func ChangesetError(message string, field string) Error {
 	}
 }
 
-// DuplicateError creates a duplicate error with custom message.
-func DuplicateError(message string, field string) Error {
+// UniqueConstraintError creates a duplicate error with custom message.
+func UniqueConstraintError(message string, field string) Error {
 	return Error{
 		Message: message,
 		Field:   field,
-		Code:    DuplicateErrorCode,
+		Code:    UniqueConstraintErrorCode,
 	}
 }
 

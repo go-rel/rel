@@ -14,16 +14,16 @@ import (
 func Query(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
 	user := User{Name: "name1", Gender: "male", Age: 10}
-	assert.Nil(t, repo.From(users).Save(&user))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "name2", Gender: "male", Age: 20}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "name3", Gender: "male", Age: 30}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "name4", Gender: "female", Age: 40}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "name5", Gender: "female", Age: 50}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "name6", Gender: "female", Age: 60}))
+	repo.From(users).MustSave(&user)
+	repo.From(users).MustSave(&User{Name: "name2", Gender: "male", Age: 20})
+	repo.From(users).MustSave(&User{Name: "name3", Gender: "male", Age: 30})
+	repo.From(users).MustSave(&User{Name: "name4", Gender: "female", Age: 40})
+	repo.From(users).MustSave(&User{Name: "name5", Gender: "female", Age: 50})
+	repo.From(users).MustSave(&User{Name: "name6", Gender: "female", Age: 60})
 
-	assert.Nil(t, repo.From(addresses).Save(&Address{Address: "address1", UserID: &user.ID}))
-	assert.Nil(t, repo.From(addresses).Save(&Address{Address: "address2", UserID: &user.ID}))
-	assert.Nil(t, repo.From(addresses).Save(&Address{Address: "address3", UserID: &user.ID}))
+	repo.From(addresses).MustSave(&Address{Address: "address1", UserID: &user.ID})
+	repo.From(addresses).MustSave(&Address{Address: "address2", UserID: &user.ID})
+	repo.From(addresses).MustSave(&Address{Address: "address3", UserID: &user.ID})
 
 	tests := []grimoire.Query{
 		repo.From(users).Where(c.Eq(id, user.ID)),

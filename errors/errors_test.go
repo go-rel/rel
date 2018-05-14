@@ -43,12 +43,12 @@ func TestChangesetError(t *testing.T) {
 	assert.True(t, err.ChangesetError())
 }
 
-func TestDuplicateError(t *testing.T) {
-	err := DuplicateError("error", "field")
+func TestUniqueConstraintError(t *testing.T) {
+	err := UniqueConstraintError("error", "field")
 
 	assert.Equal(t, "error", err.Error())
 	assert.Equal(t, "field", err.Field)
-	assert.True(t, err.DuplicateError())
+	assert.True(t, err.UniqueConstraintError())
 }
 
 func TestWrap(t *testing.T) {

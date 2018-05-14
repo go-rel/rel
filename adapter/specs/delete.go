@@ -12,10 +12,10 @@ import (
 // Delete tests delete specifications.
 func Delete(t *testing.T, repo grimoire.Repo) {
 	record := User{Name: "delete", Age: 100}
-	assert.Nil(t, repo.From(users).Save(&record))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "delete", Age: 100}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "delete", Age: 100}))
-	assert.Nil(t, repo.From(users).Save(&User{Name: "other delete", Age: 110}))
+	repo.From(users).MustSave(&record)
+	repo.From(users).MustSave(&User{Name: "delete", Age: 100})
+	repo.From(users).MustSave(&User{Name: "delete", Age: 100})
+	repo.From(users).MustSave(&User{Name: "other delete", Age: 110})
 
 	tests := []grimoire.Query{
 		repo.From(users).Find(record.ID),

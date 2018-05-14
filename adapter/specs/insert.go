@@ -8,13 +8,14 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 // Insert tests insert specifications.
 func Insert(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	tests := []struct {
 		query  grimoire.Query
@@ -50,7 +51,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 // InsertAll tests insert multiple specifications.
 func InsertAll(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 
 	tests := []struct {
 		query  grimoire.Query
@@ -85,7 +86,7 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 // InsertSet tests insert specifications only using Set query.
 func InsertSet(t *testing.T, repo grimoire.Repo) {
 	user := User{}
-	assert.Nil(t, repo.From(users).Save(&user))
+	repo.From(users).MustSave(&user)
 	now := time.Now()
 
 	tests := []struct {
@@ -107,6 +108,26 @@ func InsertSet(t *testing.T, repo grimoire.Repo) {
 		t.Run("InsertSet|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Insert(nil))
 			assert.Nil(t, test.query.Insert(test.record))
+		})
+	}
+}
+
+// InsertConstraint tests insert constraint specifications.
+func InsertConstraint(t *testing.T, repo grimoire.Repo) {
+	repo.From(users).Set("slug", "insert-taken").MustInsert(nil)
+
+	tests := []struct {
+		name  string
+		query grimoire.Query
+		field string
+		code  int
+	}{
+		{"UniqueConstraintError", repo.From(users).Set("slug", "insert-taken"), "slug", errors.UniqueConstraintErrorCode},
+	}
+
+	for _, test := range tests {
+		t.Run("InsertConstraint|"+test.name, func(t *testing.T) {
+			checkConstraint(t, test.query.Insert(nil), test.code, test.field)
 		})
 	}
 }

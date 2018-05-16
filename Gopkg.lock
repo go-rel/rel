@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/Fs02/go-paranoid"
   packages = ["."]
-  revision = "430ccdaa33c0ad89e6cdbc1e5e187a53656eb561"
+  revision = "ab50069def7d4ec973f1ebd67541b3e311ea66df"
 
 [[projects]]
   branch = "master"
@@ -24,6 +24,21 @@
   packages = ["."]
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
   version = "v1.3"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+
+[[projects]]
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
+  version = "v1.6.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -49,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f666274ddfb929c6b29c9108e829d843027d39e2bff1322664a3d5beeab4fadf"
+  inputs-digest = "6d96fe931e91e47df9f060936e3967ac0b0795b21c9d94f0866bb0b9f711c106"
   solver-name = "gps-cdcl"
   solver-version = 1

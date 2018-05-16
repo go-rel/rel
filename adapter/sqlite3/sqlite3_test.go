@@ -12,15 +12,13 @@ import (
 
 func init() {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, nil)
-	paranoid.Panic(err)
+	paranoid.Panic(err, "failed when dropping addesses table")
 	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, nil)
-	paranoid.Panic(err)
+	paranoid.Panic(err, "failed when dropping users table")
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id INTEGER PRIMARY KEY,
@@ -33,7 +31,7 @@ func init() {
 		updated_at DATETIME,
 		UNIQUE (slug)
 	);`, nil)
-	paranoid.Panic(err)
+	paranoid.Panic(err, "failed when creating users table")
 
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id INTEGER PRIMARY KEY,
@@ -43,7 +41,7 @@ func init() {
 		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	);`, nil)
-	paranoid.Panic(err)
+	paranoid.Panic(err, "failed when creating addresses table")
 }
 
 func dsn() string {
@@ -56,10 +54,9 @@ func dsn() string {
 
 func TestSpecs(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
+
 	repo := grimoire.New(adapter)
 
 	// Query Specs
@@ -99,9 +96,7 @@ func TestSpecs(t *testing.T) {
 
 func TestAdapterInsertAllError(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	fields := []string{"notexist"}
@@ -117,9 +112,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 
 func TestAdapterTransactionCommitError(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Commit())
@@ -127,9 +120,7 @@ func TestAdapterTransactionCommitError(t *testing.T) {
 
 func TestAdapterTransactionRollbackError(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Rollback())
@@ -137,9 +128,7 @@ func TestAdapterTransactionRollbackError(t *testing.T) {
 
 func TestAdapterQueryError(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	out := struct{}{}
@@ -150,9 +139,7 @@ func TestAdapterQueryError(t *testing.T) {
 
 func TestAdapterExecError(t *testing.T) {
 	adapter, err := Open(dsn())
-	if err != nil {
-		panic(err)
-	}
+	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	_, _, err = adapter.Exec("error", nil)

@@ -49,7 +49,7 @@ func incrementFunc(adapter sql.Adapter) int {
 	} else {
 		err = adapter.DB.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	}
-	paranoid.Panic(err)
+	paranoid.Panic(err, "grimoire: MySQL failed to get auto_increment_increment variable")
 
 	return increment
 }

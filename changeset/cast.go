@@ -27,12 +27,23 @@ func Cast(entity interface{}, params map[string]interface{}, fields []string, op
 		val, pexist := params[f]
 		typ, texist := ch.types[f]
 		if pexist && texist {
-			if reflect.TypeOf(val).ConvertibleTo(typ) {
-				ch.changes[f] = val
+			if val != (interface{})(nil) {
+				valTyp := reflect.TypeOf(val)
+				if valTyp.Kind() == reflect.Ptr {
+					valTyp = valTyp.Elem()
+				}
+
+				if valTyp.ConvertibleTo(typ) {
+					ch.changes[f] = val
+					continue
+				}
 			} else {
-				msg := strings.Replace(options.message, "{field}", f, 1)
-				AddError(ch, f, msg)
+				ch.changes[f] = reflect.Zero(reflect.PtrTo(typ)).Interface()
+				continue
 			}
+
+			msg := strings.Replace(options.message, "{field}", f, 1)
+			AddError(ch, f, msg)
 		}
 	}
 

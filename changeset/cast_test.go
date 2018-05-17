@@ -461,6 +461,266 @@ func TestCastPtrWithValue(t *testing.T) {
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
+func TestCastPtrWithNilValue(t *testing.T) {
+	var (
+		vbool    = true
+		vint     = int(1)
+		vint8    = int8(1)
+		vint16   = int16(1)
+		vint32   = int32(1)
+		vint64   = int64(1)
+		vuint    = uint(1)
+		vuint8   = uint8(1)
+		vuint16  = uint16(1)
+		vuint32  = uint32(1)
+		vuint64  = uint64(1)
+		vuintptr = uintptr(1)
+		vfloat32 = float32(1)
+		vfloat64 = float64(1)
+		vstring  = "1"
+	)
+	entity := struct {
+		Field1  *bool
+		Field2  *int
+		Field3  *int8
+		Field4  *int16
+		Field5  *int32
+		Field6  *int64
+		Field7  *uint
+		Field8  *uint8
+		Field9  *uint16
+		Field10 *uint32
+		Field11 *uint64
+		Field12 *uintptr
+		Field13 *float32
+		Field14 *float64
+		Field15 *string
+	}{
+		&vbool,
+		&vint,
+		&vint8,
+		&vint16,
+		&vint32,
+		&vint64,
+		&vuint,
+		&vuint8,
+		&vuint16,
+		&vuint32,
+		&vuint64,
+		&vuintptr,
+		&vfloat32,
+		&vfloat64,
+		&vstring,
+	}
+
+	params := map[string]interface{}{
+		"field1":  nil,
+		"field2":  nil,
+		"field3":  nil,
+		"field4":  nil,
+		"field5":  nil,
+		"field6":  nil,
+		"field7":  nil,
+		"field8":  nil,
+		"field9":  nil,
+		"field10": nil,
+		"field11": nil,
+		"field12": nil,
+		"field13": nil,
+		"field14": nil,
+		"field15": nil,
+	}
+
+	expectedChanges := map[string]interface{}{
+		"field1":  (*bool)(nil),
+		"field2":  (*int)(nil),
+		"field3":  (*int8)(nil),
+		"field4":  (*int16)(nil),
+		"field5":  (*int32)(nil),
+		"field6":  (*int64)(nil),
+		"field7":  (*uint)(nil),
+		"field8":  (*uint8)(nil),
+		"field9":  (*uint16)(nil),
+		"field10": (*uint32)(nil),
+		"field11": (*uint64)(nil),
+		"field12": (*uintptr)(nil),
+		"field13": (*float32)(nil),
+		"field14": (*float64)(nil),
+		"field15": (*string)(nil),
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1":  true,
+		"field2":  1,
+		"field3":  int8(1),
+		"field4":  int16(1),
+		"field5":  int32(1),
+		"field6":  int64(1),
+		"field7":  uint(1),
+		"field8":  uint8(1),
+		"field9":  uint16(1),
+		"field10": uint32(1),
+		"field11": uint64(1),
+		"field12": uintptr(1),
+		"field13": float32(1),
+		"field14": float64(1),
+		"field15": "1",
+	}
+
+	ch := Cast(entity, params, []string{
+		"field1",
+		"field2",
+		"field3",
+		"field4",
+		"field5",
+		"field6",
+		"field7",
+		"field8",
+		"field9",
+		"field10",
+		"field11",
+		"field12",
+		"field13",
+		"field14",
+		"field15",
+	})
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedTypes, ch.types)
+}
+
+func TestCastPtrWithTypedNilValue(t *testing.T) {
+	var (
+		vbool    = true
+		vint     = int(1)
+		vint8    = int8(1)
+		vint16   = int16(1)
+		vint32   = int32(1)
+		vint64   = int64(1)
+		vuint    = uint(1)
+		vuint8   = uint8(1)
+		vuint16  = uint16(1)
+		vuint32  = uint32(1)
+		vuint64  = uint64(1)
+		vuintptr = uintptr(1)
+		vfloat32 = float32(1)
+		vfloat64 = float64(1)
+		vstring  = "1"
+	)
+	entity := struct {
+		Field1  *bool
+		Field2  *int
+		Field3  *int8
+		Field4  *int16
+		Field5  *int32
+		Field6  *int64
+		Field7  *uint
+		Field8  *uint8
+		Field9  *uint16
+		Field10 *uint32
+		Field11 *uint64
+		Field12 *uintptr
+		Field13 *float32
+		Field14 *float64
+		Field15 *string
+	}{
+		&vbool,
+		&vint,
+		&vint8,
+		&vint16,
+		&vint32,
+		&vint64,
+		&vuint,
+		&vuint8,
+		&vuint16,
+		&vuint32,
+		&vuint64,
+		&vuintptr,
+		&vfloat32,
+		&vfloat64,
+		&vstring,
+	}
+
+	params := map[string]interface{}{
+		"field1":  (*bool)(nil),
+		"field2":  (*int)(nil),
+		"field3":  (*int8)(nil),
+		"field4":  (*int16)(nil),
+		"field5":  (*int32)(nil),
+		"field6":  (*int64)(nil),
+		"field7":  (*uint)(nil),
+		"field8":  (*uint8)(nil),
+		"field9":  (*uint16)(nil),
+		"field10": (*uint32)(nil),
+		"field11": (*uint64)(nil),
+		"field12": (*uintptr)(nil),
+		"field13": (*float32)(nil),
+		"field14": (*float64)(nil),
+		"field15": (*string)(nil),
+	}
+
+	expectedChanges := map[string]interface{}{
+		"field1":  (*bool)(nil),
+		"field2":  (*int)(nil),
+		"field3":  (*int8)(nil),
+		"field4":  (*int16)(nil),
+		"field5":  (*int32)(nil),
+		"field6":  (*int64)(nil),
+		"field7":  (*uint)(nil),
+		"field8":  (*uint8)(nil),
+		"field9":  (*uint16)(nil),
+		"field10": (*uint32)(nil),
+		"field11": (*uint64)(nil),
+		"field12": (*uintptr)(nil),
+		"field13": (*float32)(nil),
+		"field14": (*float64)(nil),
+		"field15": (*string)(nil),
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1":  true,
+		"field2":  1,
+		"field3":  int8(1),
+		"field4":  int16(1),
+		"field5":  int32(1),
+		"field6":  int64(1),
+		"field7":  uint(1),
+		"field8":  uint8(1),
+		"field9":  uint16(1),
+		"field10": uint32(1),
+		"field11": uint64(1),
+		"field12": uintptr(1),
+		"field13": float32(1),
+		"field14": float64(1),
+		"field15": "1",
+	}
+
+	ch := Cast(entity, params, []string{
+		"field1",
+		"field2",
+		"field3",
+		"field4",
+		"field5",
+		"field6",
+		"field7",
+		"field8",
+		"field9",
+		"field10",
+		"field11",
+		"field12",
+		"field13",
+		"field14",
+		"field15",
+	})
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedTypes, ch.types)
+}
+
 var sliceParams = map[string]interface{}{
 	"field1":  []bool{true},
 	"field2":  []int{2},

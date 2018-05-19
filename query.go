@@ -351,7 +351,7 @@ func (query Query) Save(record interface{}) error {
 			chs := []*changeset.Changeset{}
 
 			for i := 0; i < rv.Len(); i++ {
-				ch := changeset.Change(rv.Index(i).Interface())
+				ch := changeset.Convert(rv.Index(i).Interface())
 				changeset.DeleteChange(ch, "id")
 				chs = append(chs, ch)
 			}
@@ -360,14 +360,14 @@ func (query Query) Save(record interface{}) error {
 		}
 
 		// Update only with first record definition.
-		ch := changeset.Change(rv.Index(0).Interface())
+		ch := changeset.Convert(rv.Index(0).Interface())
 		changeset.DeleteChange(ch, "id")
 		changeset.DeleteChange(ch, "created_at")
 		return query.Update(record, ch)
 	}
 
 	// Put single records
-	ch := changeset.Change(record)
+	ch := changeset.Convert(record)
 	changeset.DeleteChange(ch, "id")
 
 	if query.Condition.None() {

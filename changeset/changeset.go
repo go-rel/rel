@@ -8,7 +8,6 @@ import (
 // Changeset used to cast and validate data before saving it to the database.
 type Changeset struct {
 	errors  []error
-	entity  interface{}
 	params  map[string]interface{}
 	changes map[string]interface{}
 	values  map[string]interface{}

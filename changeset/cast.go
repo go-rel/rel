@@ -10,58 +10,77 @@ import (
 // CastErrorMessage is the default error message for Cast.
 var CastErrorMessage = "{field} is invalid"
 
-// Cast params as changes for the given entity according to the given fields. Returns a new changeset.
-func Cast(entity interface{}, params map[string]interface{}, fields []string, opts ...Option) *Changeset {
+// Cast params as changes for the given data according to the permitted fields. Returns a new changeset.
+// params will only be added as changes if it does not have the same value as the field in the data.
+func Cast(data interface{}, params map[string]interface{}, fields []string, opts ...Option) *Changeset {
 	options := Options{
 		message: CastErrorMessage,
 	}
 	options.apply(opts)
 
-	ch := &Changeset{}
-	ch.entity = entity
-	ch.params = params
-	ch.changes = make(map[string]interface{})
-	ch.values, ch.types = mapSchema(ch.entity)
+	var ch *Changeset
+	if existingCh, ok := data.(Changeset); ok {
+		ch = &existingCh
+	} else if existingCh, ok := data.(*Changeset); ok {
+		ch = existingCh
+	} else {
+		ch = &Changeset{}
+		ch.params = params
+		ch.changes = make(map[string]interface{})
+		ch.values, ch.types = mapSchema(data)
+	}
 
 	for _, f := range fields {
-		val, pexist := params[f]
-		typ, texist := ch.types[f]
-		if pexist && texist {
-			if val != (interface{})(nil) {
-				valTyp := reflect.TypeOf(val)
-				if valTyp.Kind() == reflect.Ptr {
-					valTyp = valTyp.Elem()
-				}
-
-				if valTyp.ConvertibleTo(typ) {
-					ch.changes[f] = val
-					continue
-				}
-			} else {
-				ch.changes[f] = reflect.Zero(reflect.PtrTo(typ)).Interface()
-				continue
-			}
-
-			msg := strings.Replace(options.message, "{field}", f, 1)
-			AddError(ch, f, msg)
-		}
+		castField(ch, f, params, options)
 	}
 
 	return ch
 }
 
-func mapSchema(entity interface{}) (map[string]interface{}, map[string]reflect.Type) {
+func castField(ch *Changeset, field string, params map[string]interface{}, options Options) {
+	par, pexist := params[field]
+	val, vexist := ch.values[field]
+	typ, texist := ch.types[field]
+	if pexist && texist {
+		if vexist && typ.Kind() != reflect.Slice && par == val {
+			// do nothing is params value is equal to struct data.
+			return
+		} else if par != (interface{})(nil) {
+			// cast value from param if not nil.
+			parTyp := reflect.TypeOf(par)
+			if parTyp.Kind() == reflect.Ptr {
+				parTyp = parTyp.Elem()
+			}
+
+			if parTyp.ConvertibleTo(typ) {
+				ch.changes[field] = par
+				return
+			}
+		} else {
+			// create nil for the respected type if current value is not nil.
+			if ch.values[field] != nil {
+				ch.changes[field] = reflect.Zero(reflect.PtrTo(typ)).Interface()
+			}
+			return
+		}
+
+		msg := strings.Replace(options.message, "{field}", field, 1)
+		AddError(ch, field, msg)
+	}
+}
+
+func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type) {
 	mvalues := make(map[string]interface{})
 	mtypes := make(map[string]reflect.Type)
 
-	rv := reflect.ValueOf(entity)
+	rv := reflect.ValueOf(data)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
 	rt := rv.Type()
 
 	if rv.Kind() != reflect.Struct {
-		panic("entity must be a struct")
+		panic("data must be a struct")
 	}
 
 	for i := 0; i < rv.NumField(); i++ {

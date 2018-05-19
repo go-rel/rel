@@ -63,13 +63,13 @@ func castOne(ch *Changeset, field string, typ reflect.Type, par interface{}, fn 
 }
 
 func castMany(ch *Changeset, field string, typ reflect.Type, params interface{}, fn ChangeFunc) bool {
-	entity := reflect.Zero(typ.Elem()).Interface()
+	data := reflect.Zero(typ.Elem()).Interface()
 
 	if spar, ok := params.([]map[string]interface{}); ok {
 		chs := make([]*Changeset, 0, len(spar))
 
 		for i, par := range spar {
-			innerch := fn(entity, par)
+			innerch := fn(data, par)
 			chs = append(chs, innerch)
 
 			// add errors to main errors
@@ -87,7 +87,7 @@ func castMany(ch *Changeset, field string, typ reflect.Type, params interface{},
 				return false
 			}
 
-			innerch := fn(entity, p)
+			innerch := fn(data, p)
 			chs = append(chs, innerch)
 
 			// add errors to main errors

@@ -64,7 +64,7 @@ func TestAdapterInsert(t *testing.T) {
 	result := struct {
 		Name string
 	}{}
-	ch := changeset.Change(result)
+	ch := changeset.Convert(result)
 	assert.Nil(t, grimoire.New(adapter).From("test").Insert(&result, ch))
 	assert.Nil(t, grimoire.New(adapter).From("test").Insert(nil, ch, ch))
 }
@@ -77,7 +77,7 @@ func TestAdapterUpdate(t *testing.T) {
 	result := struct {
 		Name string
 	}{}
-	ch := changeset.Change(result)
+	ch := changeset.Convert(result)
 
 	assert.Nil(t, grimoire.New(adapter).From("test").Update(nil, ch))
 }
@@ -98,7 +98,7 @@ func TestAdapterTransactionCommit(t *testing.T) {
 	result := struct {
 		Name string
 	}{}
-	ch := changeset.Change(result)
+	ch := changeset.Convert(result)
 
 	err = grimoire.New(adapter).Transaction(func(repo grimoire.Repo) error {
 		repo.From("test").MustInsert(&result, ch)

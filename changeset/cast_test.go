@@ -59,7 +59,7 @@ func ExampleCast_invalidTypeWithCustomError() {
 }
 
 func TestCast(t *testing.T) {
-	var entity struct {
+	var data struct {
 		Field1 int `db:"field1"`
 		Field2 string
 		Field3 bool
@@ -90,13 +90,13 @@ func TestCast(t *testing.T) {
 		"field3": false,
 	}
 
-	ch := Cast(entity, params, []string{"field1", "field2", "field3"})
+	ch := Cast(data, params, []string{"field1", "field2", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 
-	ch = Cast(&entity, params, []string{"field1", "field2", "field3"})
+	ch = Cast(&data, params, []string{"field1", "field2", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
@@ -106,8 +106,93 @@ func TestCast(t *testing.T) {
 	assert.NotNil(t, ch.Values())
 }
 
+func TestCastExistingChangeset(t *testing.T) {
+	var data struct {
+		Field1 int `db:"field1"`
+		Field2 string
+		Field3 bool
+	}
+
+	params := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": true,
+		"field4": "ignore please",
+	}
+
+	expectedChanges := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": true,
+	}
+
+	expectedTypes := map[string]reflect.Type{
+		"field1": reflect.TypeOf(0),
+		"field2": reflect.TypeOf(""),
+		"field3": reflect.TypeOf(false),
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1": 0,
+		"field2": "",
+		"field3": false,
+	}
+
+	ch := Cast(data, params, []string{})
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, 0, len(ch.Changes()))
+
+	ch = Cast(ch, params, []string{"field1", "field2"})
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, 2, len(ch.Changes()))
+
+	ch = Cast(*ch, params, []string{"field1", "field3"})
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, 3, len(ch.Changes()))
+	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedValues, ch.values)
+}
+
+func TestCastUnchanged(t *testing.T) {
+	var data struct {
+		Field1 int `db:"field1"`
+		Field2 string
+		Field3 bool
+		Field4 *bool
+	}
+
+	params := map[string]interface{}{
+		"field1": 0,
+		"field2": "",
+		"field3": false,
+		"field4": nil,
+	}
+
+	expectedChanges := map[string]interface{}{}
+
+	expectedTypes := map[string]reflect.Type{
+		"field1": reflect.TypeOf(0),
+		"field2": reflect.TypeOf(""),
+		"field3": reflect.TypeOf(false),
+		"field4": reflect.TypeOf(false),
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1": 0,
+		"field2": "",
+		"field3": false,
+	}
+
+	ch := Cast(data, params, []string{"field1", "field2", "field3", "field4"})
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedValues, ch.values)
+}
+
 func TestCastError(t *testing.T) {
-	var entity struct {
+	var data struct {
 		Field1 int
 	}
 
@@ -115,7 +200,7 @@ func TestCastError(t *testing.T) {
 		"field1": "1",
 	}
 
-	ch := Cast(entity, params, []string{"field1"})
+	ch := Cast(data, params, []string{"field1"})
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, "field1 is invalid", ch.Error().Error())
 }
@@ -126,7 +211,7 @@ func TestCastPanic(t *testing.T) {
 	}
 
 	assert.Panics(t, func() {
-		Cast("entity", params, []string{"field1"})
+		Cast("data", params, []string{"field1"})
 	})
 }
 
@@ -203,7 +288,7 @@ var expectedTypes = map[string]reflect.Type{
 }
 
 func TestCastBasic(t *testing.T) {
-	var entity struct {
+	var data struct {
 		Field1  bool
 		Field2  int
 		Field3  int8
@@ -221,7 +306,7 @@ func TestCastBasic(t *testing.T) {
 		Field15 string
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -246,7 +331,7 @@ func TestCastBasic(t *testing.T) {
 }
 
 func TestCastBasicWithValue(t *testing.T) {
-	entity := struct {
+	data := struct {
 		Field1  bool
 		Field2  int
 		Field3  int8
@@ -263,7 +348,7 @@ func TestCastBasicWithValue(t *testing.T) {
 		Field14 float64
 		Field15 string
 	}{
-		true,
+		false,
 		1,
 		int8(1),
 		int16(1),
@@ -281,7 +366,7 @@ func TestCastBasicWithValue(t *testing.T) {
 	}
 
 	expectedValues := map[string]interface{}{
-		"field1":  true,
+		"field1":  false,
 		"field2":  1,
 		"field3":  int8(1),
 		"field4":  int16(1),
@@ -298,7 +383,7 @@ func TestCastBasicWithValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -323,7 +408,7 @@ func TestCastBasicWithValue(t *testing.T) {
 }
 
 func TestCastPtr(t *testing.T) {
-	var entity struct {
+	var data struct {
 		Field1  *bool
 		Field2  *int
 		Field3  *int8
@@ -341,7 +426,7 @@ func TestCastPtr(t *testing.T) {
 		Field15 *string
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -359,17 +444,15 @@ func TestCastPtr(t *testing.T) {
 		"field15",
 	})
 
-	expectedValues := map[string]interface{}{}
-
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, map[string]interface{}{}, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
 func TestCastPtrWithValue(t *testing.T) {
 	var (
-		vbool    = true
+		vbool    = false
 		vint     = int(1)
 		vint8    = int8(1)
 		vint16   = int16(1)
@@ -385,7 +468,7 @@ func TestCastPtrWithValue(t *testing.T) {
 		vfloat64 = float64(1)
 		vstring  = "1"
 	)
-	entity := struct {
+	data := struct {
 		Field1  *bool
 		Field2  *int
 		Field3  *int8
@@ -420,7 +503,7 @@ func TestCastPtrWithValue(t *testing.T) {
 	}
 
 	expectedValues := map[string]interface{}{
-		"field1":  true,
+		"field1":  false,
 		"field2":  1,
 		"field3":  int8(1),
 		"field4":  int16(1),
@@ -437,7 +520,7 @@ func TestCastPtrWithValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -479,7 +562,7 @@ func TestCastPtrWithNilValue(t *testing.T) {
 		vfloat64 = float64(1)
 		vstring  = "1"
 	)
-	entity := struct {
+	data := struct {
 		Field1  *bool
 		Field2  *int
 		Field3  *int8
@@ -567,7 +650,7 @@ func TestCastPtrWithNilValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -609,7 +692,7 @@ func TestCastPtrWithTypedNilValue(t *testing.T) {
 		vfloat64 = float64(1)
 		vstring  = "1"
 	)
-	entity := struct {
+	data := struct {
 		Field1  *bool
 		Field2  *int
 		Field3  *int8
@@ -697,7 +780,7 @@ func TestCastPtrWithTypedNilValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(entity, params, []string{
+	ch := Cast(data, params, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -776,7 +859,7 @@ var sliceExpectedTypes = map[string]reflect.Type{
 }
 
 func TestCastSlice(t *testing.T) {
-	var entity struct {
+	var data struct {
 		Field1  []bool
 		Field2  []int
 		Field3  []int8
@@ -812,7 +895,7 @@ func TestCastSlice(t *testing.T) {
 		"field15": []string(nil),
 	}
 
-	ch := Cast(entity, sliceParams, []string{
+	ch := Cast(data, sliceParams, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -837,7 +920,7 @@ func TestCastSlice(t *testing.T) {
 }
 
 func TestCastSliceWithValue(t *testing.T) {
-	entity := struct {
+	data := struct {
 		Field1  []bool
 		Field2  []int
 		Field3  []int8
@@ -889,7 +972,7 @@ func TestCastSliceWithValue(t *testing.T) {
 		"field15": []string{"1"},
 	}
 
-	ch := Cast(entity, sliceParams, []string{
+	ch := Cast(data, sliceParams, []string{
 		"field1",
 		"field2",
 		"field3",

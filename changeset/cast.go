@@ -41,32 +41,41 @@ func castField(ch *Changeset, field string, params map[string]interface{}, optio
 	par, pexist := params[field]
 	val, vexist := ch.values[field]
 	typ, texist := ch.types[field]
-	if pexist && texist {
-		if vexist && typ.Kind() != reflect.Slice && par == val {
-			// do nothing is params value is equal to struct data.
-			return
-		} else if par != (interface{})(nil) {
-			// cast value from param if not nil.
-			parTyp := reflect.TypeOf(par)
-			if parTyp.Kind() == reflect.Ptr {
-				parTyp = parTyp.Elem()
-			}
 
-			if parTyp.ConvertibleTo(typ) {
-				ch.changes[field] = par
-				return
-			}
-		} else {
-			// create nil for the respected type if current value is not nil.
-			if ch.values[field] != nil {
+	if !pexist || !texist {
+		return
+	}
+
+	if par != (interface{})(nil) {
+		// cast value from param if not nil.
+		parTyp := reflect.TypeOf(par)
+		parVal := reflect.ValueOf(par)
+		if parTyp.Kind() == reflect.Ptr {
+			parTyp = parTyp.Elem()
+			parVal = parVal.Elem()
+		}
+
+		if parTyp.ConvertibleTo(typ) {
+			if parVal.IsValid() {
+				cpar := parVal.Convert(typ).Interface()
+				if typ.Kind() == reflect.Slice || !vexist || (vexist && cpar != val) {
+					ch.changes[field] = cpar
+				}
+			} else {
 				ch.changes[field] = reflect.Zero(reflect.PtrTo(typ)).Interface()
 			}
 			return
 		}
-
-		msg := strings.Replace(options.message, "{field}", field, 1)
-		AddError(ch, field, msg)
+	} else {
+		// create nil for the respected type if current value is not nil.
+		if ch.values[field] != nil {
+			ch.changes[field] = reflect.Zero(reflect.PtrTo(typ)).Interface()
+		}
+		return
 	}
+
+	msg := strings.Replace(options.message, "{field}", field, 1)
+	AddError(ch, field, msg)
 }
 
 func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type) {

@@ -32,6 +32,11 @@ type Address struct {
 	User   *User
 }
 
+type Owner struct {
+	User   *User
+	UserID *int
+}
+
 func TestQuerySelect(t *testing.T) {
 	assert.Equal(t, repo.From("users").Select("*"), Query{
 		repo:       &repo,
@@ -1231,6 +1236,45 @@ func TestPreloadBelongsTo(t *testing.T) {
 	assert.Nil(t, query.Preload(&address, "User"))
 	assert.Equal(t, result[0], *address.User)
 	assert.NotPanics(t, func() { query.MustPreload(&address, "User") })
+
+	mock.AssertExpectations(t)
+}
+
+func TestPreloadPtr(t *testing.T) {
+	repo := Repo{}
+	query := repo.From("owners")
+
+	owner := Owner{}
+
+	assert.Nil(t, query.Preload(&owner, "User"))
+	assert.Nil(t, owner.User)
+	assert.Nil(t, owner.UserID)
+}
+
+func TestPreloadSlicePtr(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+	id := 1
+
+	owners := []Owner{
+		{}, // nil
+		{
+			UserID: &id,
+		},
+	}
+
+	result := []User{{ID: 1}}
+
+	query := repo.From("owners")
+
+	mock.Result(result).On("All", query.Where(In("id", 1)), &[]User{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&owners, "User"))
+	assert.Nil(t, owners[0].User)
+	assert.Nil(t, owners[0].UserID)
+
+	assert.Equal(t, result[0], *owners[1].User)
+	assert.Equal(t, result[0].ID, *owners[1].UserID)
 
 	mock.AssertExpectations(t)
 }

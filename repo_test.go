@@ -10,7 +10,11 @@ import (
 var repo = Repo{}
 
 func TestNew(t *testing.T) {
-	assert.NotNil(t, New(new(TestAdapter)))
+	adapter := new(TestAdapter)
+	repo := New(adapter)
+
+	assert.NotNil(t, repo)
+	assert.Equal(t, adapter, repo.Adapter())
 }
 
 func TestRepoSetLogger(t *testing.T) {

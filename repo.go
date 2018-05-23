@@ -18,6 +18,11 @@ func New(adapter Adapter) Repo {
 	}
 }
 
+// Adapter returns adapter of repo.
+func (repo *Repo) Adapter() Adapter {
+	return repo.adapter
+}
+
 // SetLogger replace default logger with custom logger.
 func (repo *Repo) SetLogger(logger ...Logger) {
 	repo.logger = logger

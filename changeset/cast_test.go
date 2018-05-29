@@ -63,13 +63,15 @@ func TestCast(t *testing.T) {
 		Field1 int `db:"field1"`
 		Field2 string
 		Field3 bool
+		Field4 bool `db:"-"`
 	}
 
 	params := map[string]interface{}{
 		"field1": 1,
 		"field2": "2",
 		"field3": true,
-		"field4": "ignore please",
+		"field4": true,
+		"field5": "ignore please",
 	}
 
 	expectedChanges := map[string]interface{}{
@@ -90,13 +92,13 @@ func TestCast(t *testing.T) {
 		"field3": false,
 	}
 
-	ch := Cast(data, params, []string{"field1", "field2", "field3"})
+	ch := Cast(data, params, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 
-	ch = Cast(&data, params, []string{"field1", "field2", "field3"})
+	ch = Cast(&data, params, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)

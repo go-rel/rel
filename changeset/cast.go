@@ -97,7 +97,10 @@ func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Typ
 		ft := rt.Field(i)
 
 		var name string
-		if tag := ft.Tag.Get("db"); tag != "" && tag != "-" {
+		if tag := ft.Tag.Get("db"); tag != "" {
+			if tag == "-" {
+				continue
+			}
 			name = tag
 		} else {
 			name = snakecase.SnakeCase(ft.Name)

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,6 @@ import (
 // User defines users schema.
 type User struct {
 	ID        int64
-	Slug      *string
 	Name      string
 	Gender    string
 	Age       int
@@ -34,10 +34,18 @@ type Address struct {
 	UpdatedAt time.Time
 }
 
+// Extra defines baz schema.
+type Extra struct {
+	ID    uint
+	Slug  *string
+	Score int
+}
+
 // User table identifiers
 const (
 	users     = "users"
 	addresses = "addresses"
+	extras    = "extras"
 	id        = c.I("id")
 	name      = c.I("name")
 	gender    = c.I("gender")
@@ -47,9 +55,11 @@ const (
 	address   = c.I("address")
 )
 
-func checkConstraint(t *testing.T, err error, code int, field string) {
+var builder = sql.NewBuilder("?", false, false)
+
+func assertConstraint(t *testing.T, err error, kind errors.Kind, field string) {
 	assert.NotNil(t, err)
 	gerr, _ := err.(errors.Error)
 	assert.True(t, strings.Contains(gerr.Field, field))
-	assert.Equal(t, code, gerr.Code)
+	assert.Equal(t, kind, gerr.Kind())
 }

@@ -4,7 +4,7 @@ import (
 	db "database/sql"
 	"testing"
 
-	paranoid "github.com/Fs02/go-paranoid"
+	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
@@ -14,12 +14,13 @@ import (
 
 func open() (*Adapter, error) {
 	var err error
-	adapter := &Adapter{
-		Placeholder:   "?",
-		Ordinal:       false,
-		IncrementFunc: func(Adapter) int { return 1 },
-		ErrorFunc:     func(err error) error { return err },
-	}
+	adapter := New(
+		func(err error) error { return err },
+		func(Adapter) int { return 1 },
+		Placeholder("?"),
+		Ordinal(false),
+		InsertDefaultValues(true),
+	)
 
 	// simplified tests using sqlite backend.
 	adapter.DB, err = db.Open("sqlite3", "file::memory:?mode=memory&cache=shared")
@@ -34,11 +35,11 @@ func open() (*Adapter, error) {
 	return adapter, err
 }
 
-func TestAdapterNew(t *testing.T) {
-	assert.NotNil(t, New("?", false, nil, nil))
+func TestNew(t *testing.T) {
+	assert.NotNil(t, New(nil, nil))
 }
 
-func TestAdapterCount(t *testing.T) {
+func TestAdapter_Count(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -47,7 +48,7 @@ func TestAdapterCount(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestAdapterAll(t *testing.T) {
+func TestAdapter_All(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -56,7 +57,7 @@ func TestAdapterAll(t *testing.T) {
 	assert.Nil(t, grimoire.New(adapter).From("test").All(&result))
 }
 
-func TestAdapterInsert(t *testing.T) {
+func TestAdapter_Insert(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -69,7 +70,7 @@ func TestAdapterInsert(t *testing.T) {
 	assert.Nil(t, grimoire.New(adapter).From("test").Insert(nil, ch, ch))
 }
 
-func TestAdapterUpdate(t *testing.T) {
+func TestAdapter_Update(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -82,7 +83,7 @@ func TestAdapterUpdate(t *testing.T) {
 	assert.Nil(t, grimoire.New(adapter).From("test").Update(nil, ch))
 }
 
-func TestAdapterDelete(t *testing.T) {
+func TestAdapter_Delete(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -90,7 +91,7 @@ func TestAdapterDelete(t *testing.T) {
 	assert.Nil(t, grimoire.New(adapter).From("test").Delete())
 }
 
-func TestAdapterTransactionCommit(t *testing.T) {
+func TestAdapter_Transaction_commit(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -108,19 +109,19 @@ func TestAdapterTransactionCommit(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestAdapterTransactionRollback(t *testing.T) {
+func TestAdapter_Transaction_rollback(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
 	err = grimoire.New(adapter).Transaction(func(repo grimoire.Repo) error {
-		return errors.UniqueConstraintError("", "")
+		return errors.New("", "", errors.UniqueConstraint)
 	})
 
 	assert.NotNil(t, err)
 }
 
-func TestAdapterInsertAllError(t *testing.T) {
+func TestAdapter_InsertAll_error(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -136,7 +137,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapterTransactionCommitError(t *testing.T) {
+func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -144,7 +145,7 @@ func TestAdapterTransactionCommitError(t *testing.T) {
 	assert.NotNil(t, adapter.Commit())
 }
 
-func TestAdapterTransactionRollbackError(t *testing.T) {
+func TestAdapter_Transaction_rollbackError(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -152,7 +153,7 @@ func TestAdapterTransactionRollbackError(t *testing.T) {
 	assert.NotNil(t, adapter.Rollback())
 }
 
-func TestAdapterQueryError(t *testing.T) {
+func TestAdapter_Query_error(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -163,7 +164,7 @@ func TestAdapterQueryError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapterExecError(t *testing.T) {
+func TestAdapter_Exec_error(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()

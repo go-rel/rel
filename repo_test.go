@@ -17,14 +17,14 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, adapter, repo.Adapter())
 }
 
-func TestRepoSetLogger(t *testing.T) {
+func TestRepo_SetLogger(t *testing.T) {
 	repo := Repo{}
 	assert.Nil(t, repo.logger)
 	repo.SetLogger(DefaultLogger)
 	assert.NotNil(t, repo.logger)
 }
 
-func TestRepoFrom(t *testing.T) {
+func TestRepo_From(t *testing.T) {
 	assert.Equal(t, repo.From("users"), Query{
 		repo:       &repo,
 		Collection: "users",
@@ -32,7 +32,7 @@ func TestRepoFrom(t *testing.T) {
 	})
 }
 
-func TestRepoTransaction(t *testing.T) {
+func TestRepo_Transaction(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
 		On("Commit").Return(nil)
@@ -46,62 +46,62 @@ func TestRepoTransaction(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
-func TestTransactionBeginError(t *testing.T) {
+func TestRepo_Transaction_beginError(t *testing.T) {
 	mock := new(TestAdapter)
-	mock.On("Begin").Return(errors.UnexpectedError("error"))
+	mock.On("Begin").Return(errors.NewUnexpected("error"))
 
 	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
 		// doing good things
 		return nil
 	})
 
-	assert.Equal(t, errors.UnexpectedError("error"), err)
+	assert.Equal(t, errors.NewUnexpected("error"), err)
 	mock.AssertExpectations(t)
 }
 
-func TestTransactionCommitError(t *testing.T) {
+func TestRepo_Transaction_commitError(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
-		On("Commit").Return(errors.UnexpectedError("error"))
+		On("Commit").Return(errors.NewUnexpected("error"))
 
 	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
 		// doing good things
 		return nil
 	})
 
-	assert.Equal(t, errors.UnexpectedError("error"), err)
+	assert.Equal(t, errors.NewUnexpected("error"), err)
 	mock.AssertExpectations(t)
 }
 
-func TestTransactionReturnErrorAndRollback(t *testing.T) {
+func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
 
 	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
 		// doing good things
-		return errors.UnexpectedError("error")
+		return errors.NewUnexpected("error")
 	})
 
-	assert.Equal(t, errors.UnexpectedError("error"), err)
+	assert.Equal(t, errors.NewUnexpected("error"), err)
 	mock.AssertExpectations(t)
 }
 
-func TestTransactionPanicWithKnownErrorAndRollback(t *testing.T) {
+func TestRepo_Transaction_panicWithKnownErrorAndRollback(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
 
 	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
 		// doing good things
-		panic(errors.NotFoundError("error"))
+		panic(errors.New("error", "", errors.NotFound))
 	})
 
-	assert.Equal(t, errors.NotFoundError("error"), err)
+	assert.Equal(t, errors.New("error", "", errors.NotFound), err)
 	mock.AssertExpectations(t)
 }
 
-func TestTransactionPanicAndRollback(t *testing.T) {
+func TestRepo_Transaction_panicAndRollback(t *testing.T) {
 	mock := new(TestAdapter)
 	mock.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
@@ -109,7 +109,7 @@ func TestTransactionPanicAndRollback(t *testing.T) {
 	assert.Panics(t, func() {
 		Repo{adapter: mock}.Transaction(func(r Repo) error {
 			// doing good things
-			panic(errors.UnexpectedError("error"))
+			panic(errors.NewUnexpected("error"))
 		})
 	})
 

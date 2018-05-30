@@ -97,7 +97,7 @@ func TestScan(t *testing.T) {
 	assert.Equal(t, User{uint(10), "string", "string", "string", "", Custom{}}, user)
 }
 
-func TestScanColumnError(t *testing.T) {
+func TestScan_columnError(t *testing.T) {
 	rows := createRows()
 	rows.On("Columns").Return(errors.New("error"))
 
@@ -107,7 +107,7 @@ func TestScanColumnError(t *testing.T) {
 	assert.Equal(t, int64(0), count)
 }
 
-func TestScanScanError(t *testing.T) {
+func TestScan_scanError(t *testing.T) {
 	rows := createRows()
 	rows.On("Columns").Return(nil)
 	rows.On("Scan").Return(errors.New("error"))
@@ -118,7 +118,7 @@ func TestScanScanError(t *testing.T) {
 	assert.Equal(t, int64(0), count)
 }
 
-func TestScanPanicWhenNotPointer(t *testing.T) {
+func TestScan_panicWhenNotPointer(t *testing.T) {
 	rows := createRows()
 	rows.On("Columns").Return(nil)
 
@@ -128,7 +128,7 @@ func TestScanPanicWhenNotPointer(t *testing.T) {
 	})
 }
 
-func TestScanSlice(t *testing.T) {
+func TestScan_slice(t *testing.T) {
 	rows := createRows()
 	rows.On("Columns").Return(nil)
 	rows.On("Scan").Return(nil)
@@ -141,7 +141,7 @@ func TestScanSlice(t *testing.T) {
 	assert.Equal(t, User{uint(10), "string", "string", "string", "", Custom{}}, users[0])
 }
 
-func TestScanScanner(t *testing.T) {
+func TestScan_scanner(t *testing.T) {
 	rows := createRows()
 	rows.On("Columns").Return(nil)
 	rows.On("Scan").Return(nil)

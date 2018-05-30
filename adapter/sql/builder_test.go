@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuilderFind(t *testing.T) {
+func TestBuilder_Find(t *testing.T) {
 	users := grimoire.Query{
 		Collection: "users",
 		Fields:     []string{"*"},
@@ -64,14 +64,14 @@ func TestBuilderFind(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("?", false).Find(tt.Query)
+			qs, args := NewBuilder("?", false, false).Find(tt.Query)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderFindOrdinal(t *testing.T) {
+func TestBuilder_Find_ordinal(t *testing.T) {
 	users := grimoire.Query{
 		Collection: "users",
 		Fields:     []string{"*"},
@@ -126,31 +126,31 @@ func TestBuilderFindOrdinal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("$", true).Find(tt.Query)
+			qs, args := NewBuilder("$", true, true).Find(tt.Query)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderInsert(t *testing.T) {
+func TestBuilder_Insert(t *testing.T) {
 	changes := map[string]interface{}{
 		"name": "foo",
 	}
 	args := []interface{}{"foo"}
 
-	qs, qargs := NewBuilder("?", false).Insert("users", changes)
+	qs, qargs := NewBuilder("?", false, false).Insert("users", changes)
 	assert.Equal(t, "INSERT INTO users (name) VALUES (?);", qs)
 	assert.Equal(t, args, qargs)
 
-	qs, qargs = NewBuilder("$", true).Returning("id").Insert("users", changes)
+	qs, qargs = NewBuilder("$", true, true).Returning("id").Insert("users", changes)
 	assert.Equal(t, "INSERT INTO users (name) VALUES ($1) RETURNING id;", qs)
 	assert.Equal(t, args, qargs)
 
 	// test for multiple changes since map is randomly ordered
 	changes["age"] = 10
 	changes["agree"] = true
-	qs, _ = NewBuilder("?", false).Insert("users", changes)
+	qs, _ = NewBuilder("?", false, false).Insert("users", changes)
 
 	assert.True(t, strings.HasPrefix(qs, "INSERT INTO users ("))
 	assert.True(t, strings.Contains(qs, "name"))
@@ -159,7 +159,20 @@ func TestBuilderInsert(t *testing.T) {
 	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
-func TestBuilderInsertAll(t *testing.T) {
+func TestBuilder_Insert_defaultValues(t *testing.T) {
+	changes := map[string]interface{}{}
+	args := []interface{}{}
+
+	qs, qargs := NewBuilder("?", false, false).Insert("users", changes)
+	assert.Equal(t, "INSERT INTO users () VALUES ();", qs)
+	assert.Equal(t, args, qargs)
+
+	qs, qargs = NewBuilder("$", false, true).Returning("id").Insert("users", changes)
+	assert.Equal(t, "INSERT INTO users DEFAULT VALUES RETURNING id;", qs)
+	assert.Equal(t, args, qargs)
+}
+
+func TestBuilder_InsertAll(t *testing.T) {
 	fields := []string{"name"}
 	allchanges := []map[string]interface{}{
 		{"name": "foo"},
@@ -167,23 +180,23 @@ func TestBuilderInsertAll(t *testing.T) {
 		{"name": "boo"},
 	}
 
-	statement, args := NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	statement, args := NewBuilder("?", false, false).InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name) VALUES (?),(DEFAULT),(?);", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// ordinal
-	statement, args = NewBuilder("$", true).Returning("id").InsertAll("users", fields, allchanges)
+	statement, args = NewBuilder("$", true, true).Returning("id").InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name) VALUES ($1),(DEFAULT),($2) RETURNING id;", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
 	fields = append(fields, "age")
-	statement, args = NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	statement, args = NewBuilder("?", false, false).InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name,age) VALUES (?,DEFAULT),(DEFAULT,?),(?,DEFAULT);", statement)
 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
 	// ordinal
-	statement, args = NewBuilder("$", true).Returning("id").InsertAll("users", fields, allchanges)
+	statement, args = NewBuilder("$", true, true).Returning("id").InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT) RETURNING id;", statement)
 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
@@ -194,46 +207,46 @@ func TestBuilderInsertAll(t *testing.T) {
 		{"name": "boo", "age": 20},
 	}
 
-	statement, args = NewBuilder("?", false).InsertAll("users", fields, allchanges)
+	statement, args = NewBuilder("?", false, false).InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name,age) VALUES (?,?),(?,?),(?,?);", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
 
 	// ordinal
-	statement, args = NewBuilder("$", true).InsertAll("users", fields, allchanges)
+	statement, args = NewBuilder("$", true, true).InsertAll("users", fields, allchanges)
 	assert.Equal(t, "INSERT INTO users (name,age) VALUES ($1,$2),($3,$4),($5,$6);", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
 }
 
-func TestBuilderUdate(t *testing.T) {
+func TestBuilder_Udate(t *testing.T) {
 	changes := map[string]interface{}{
 		"name": "foo",
 	}
 	args := []interface{}{"foo"}
 	cond := And()
 
-	qs, qargs := NewBuilder("?", false).Update("users", changes, cond)
+	qs, qargs := NewBuilder("?", false, false).Update("users", changes, cond)
 	assert.Equal(t, "UPDATE users SET name=?;", qs)
 	assert.Equal(t, args, qargs)
 
-	qs, qargs = NewBuilder("$", true).Update("users", changes, cond)
+	qs, qargs = NewBuilder("$", true, true).Update("users", changes, cond)
 	assert.Equal(t, "UPDATE users SET name=$1;", qs)
 	assert.Equal(t, args, qargs)
 
 	args = []interface{}{"foo", 1}
 	cond = Eq(I("id"), 1)
 
-	qs, qargs = NewBuilder("?", false).Update("users", changes, cond)
+	qs, qargs = NewBuilder("?", false, false).Update("users", changes, cond)
 	assert.Equal(t, "UPDATE users SET name=? WHERE id=?;", qs)
 	assert.Equal(t, args, qargs)
 
-	qs, qargs = NewBuilder("$", true).Update("users", changes, cond)
+	qs, qargs = NewBuilder("$", true, true).Update("users", changes, cond)
 	assert.Equal(t, "UPDATE users SET name=$1 WHERE id=$2;", qs)
 	assert.Equal(t, args, qargs)
 
 	// test for multiple changes since map is randomly ordered
 	changes["age"] = 10
 	changes["agree"] = true
-	qs, _ = NewBuilder("$", true).Update("users", changes, And())
+	qs, _ = NewBuilder("$", true, true).Update("users", changes, And())
 
 	assert.True(t, strings.HasPrefix(qs, "UPDATE users SET "))
 	assert.True(t, strings.Contains(qs, "name"))
@@ -242,33 +255,33 @@ func TestBuilderUdate(t *testing.T) {
 	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
-func TestBuilderDelete(t *testing.T) {
-	qs, args := NewBuilder("?", false).Delete("users", And())
+func TestBuilder_Delete(t *testing.T) {
+	qs, args := NewBuilder("?", false, false).Delete("users", And())
 	assert.Equal(t, "DELETE FROM users;", qs)
 	assert.Equal(t, []interface{}(nil), args)
 
-	qs, args = NewBuilder("?", false).Delete("users", Eq(I("id"), 1))
+	qs, args = NewBuilder("?", false, false).Delete("users", Eq(I("id"), 1))
 	assert.Equal(t, "DELETE FROM users WHERE id=?;", qs)
 	assert.Equal(t, []interface{}{1}, args)
 
-	qs, args = NewBuilder("$", true).Delete("users", Eq(I("id"), 1))
+	qs, args = NewBuilder("$", true, true).Delete("users", Eq(I("id"), 1))
 	assert.Equal(t, "DELETE FROM users WHERE id=$1;", qs)
 	assert.Equal(t, []interface{}{1}, args)
 }
 
-func TestBuilderSelect(t *testing.T) {
-	assert.Equal(t, "SELECT *", NewBuilder("?", false).fields(false, "*"))
-	assert.Equal(t, "SELECT id, name", NewBuilder("?", false).fields(false, "id", "name"))
+func TestBuilder_Select(t *testing.T) {
+	assert.Equal(t, "SELECT *", NewBuilder("?", false, false).fields(false, "*"))
+	assert.Equal(t, "SELECT id, name", NewBuilder("?", false, false).fields(false, "id", "name"))
 
-	assert.Equal(t, "SELECT DISTINCT *", NewBuilder("?", false).fields(true, "*"))
-	assert.Equal(t, "SELECT DISTINCT id, name", NewBuilder("?", false).fields(true, "id", "name"))
+	assert.Equal(t, "SELECT DISTINCT *", NewBuilder("?", false, false).fields(true, "*"))
+	assert.Equal(t, "SELECT DISTINCT id, name", NewBuilder("?", false, false).fields(true, "id", "name"))
 }
 
-func TestBuilderFrom(t *testing.T) {
-	assert.Equal(t, "FROM users", NewBuilder("?", false).from("users"))
+func TestBuilder_From(t *testing.T) {
+	assert.Equal(t, "FROM users", NewBuilder("?", false, false).from("users"))
 }
 
-func TestBuilderJoin(t *testing.T) {
+func TestBuilder_Join(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -299,14 +312,14 @@ func TestBuilderJoin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("?", false).join(tt.JoinClause...)
+			qs, args := NewBuilder("?", false, false).join(tt.JoinClause...)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderWhere(t *testing.T) {
+func TestBuilder_Where(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -331,14 +344,14 @@ func TestBuilderWhere(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("?", false).where(tt.Condition)
+			qs, args := NewBuilder("?", false, false).where(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderWhereOrdinal(t *testing.T) {
+func TestBuilder_Where_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -363,20 +376,20 @@ func TestBuilderWhereOrdinal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("$", true).where(tt.Condition)
+			qs, args := NewBuilder("$", true, true).where(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderGroupBy(t *testing.T) {
-	assert.Equal(t, "", NewBuilder("?", false).groupBy())
-	assert.Equal(t, "GROUP BY city", NewBuilder("?", false).groupBy("city"))
-	assert.Equal(t, "GROUP BY city, nation", NewBuilder("?", false).groupBy("city", "nation"))
+func TestBuilder_GroupBy(t *testing.T) {
+	assert.Equal(t, "", NewBuilder("?", false, false).groupBy())
+	assert.Equal(t, "GROUP BY city", NewBuilder("?", false, false).groupBy("city"))
+	assert.Equal(t, "GROUP BY city, nation", NewBuilder("?", false, false).groupBy("city", "nation"))
 }
 
-func TestBuilderHaving(t *testing.T) {
+func TestBuilder_Having(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -401,14 +414,14 @@ func TestBuilderHaving(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("?", false).having(tt.Condition)
+			qs, args := NewBuilder("?", false, false).having(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderHavingOrdinal(t *testing.T) {
+func TestBuilder_Having_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -433,30 +446,30 @@ func TestBuilderHavingOrdinal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("$", true).having(tt.Condition)
+			qs, args := NewBuilder("$", true, true).having(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderOrderBy(t *testing.T) {
-	assert.Equal(t, "", NewBuilder("?", false).orderBy())
-	assert.Equal(t, "ORDER BY name ASC", NewBuilder("?", false).orderBy(Asc("name")))
-	assert.Equal(t, "ORDER BY name ASC, created_at DESC", NewBuilder("?", false).orderBy(Asc("name"), Desc("created_at")))
+func TestBuilder_OrderBy(t *testing.T) {
+	assert.Equal(t, "", NewBuilder("?", false, false).orderBy())
+	assert.Equal(t, "ORDER BY name ASC", NewBuilder("?", false, false).orderBy(Asc("name")))
+	assert.Equal(t, "ORDER BY name ASC, created_at DESC", NewBuilder("?", false, false).orderBy(Asc("name"), Desc("created_at")))
 }
 
-func TestBuilderOffset(t *testing.T) {
-	assert.Equal(t, "", NewBuilder("?", false).offset(0))
-	assert.Equal(t, "OFFSET 10", NewBuilder("?", false).offset(10))
+func TestBuilder_Offset(t *testing.T) {
+	assert.Equal(t, "", NewBuilder("?", false, false).offset(0))
+	assert.Equal(t, "OFFSET 10", NewBuilder("?", false, false).offset(10))
 }
 
-func TestBuilderLimit(t *testing.T) {
-	assert.Equal(t, "", NewBuilder("?", false).limit(0))
-	assert.Equal(t, "LIMIT 10", NewBuilder("?", false).limit(10))
+func TestBuilder_Limit(t *testing.T) {
+	assert.Equal(t, "", NewBuilder("?", false, false).limit(0))
+	assert.Equal(t, "LIMIT 10", NewBuilder("?", false, false).limit(10))
 }
 
-func TestBuilderCondition(t *testing.T) {
+func TestBuilder_Condition(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -681,14 +694,14 @@ func TestBuilderCondition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("?", false).condition(tt.Condition)
+			qs, args := NewBuilder("?", false, false).condition(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})
 	}
 }
 
-func TestBuilderConditionOrdinal(t *testing.T) {
+func TestBuilder_Condition_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -913,7 +926,7 @@ func TestBuilderConditionOrdinal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder("$", true).condition(tt.Condition)
+			qs, args := NewBuilder("$", true, true).condition(tt.Condition)
 			assert.Equal(t, tt.QueryString, qs)
 			assert.Equal(t, tt.Args, args)
 		})

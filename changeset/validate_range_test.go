@@ -40,7 +40,7 @@ func TestValidateRange(t *testing.T) {
 	}
 }
 
-func TestValidateRangeError(t *testing.T) {
+func TestValidateRange_error(t *testing.T) {
 	tests := []interface{}{
 		"long text",
 		[]interface{}{"a", "b", "c", "d", "e", "f"},
@@ -74,7 +74,7 @@ func TestValidateRangeError(t *testing.T) {
 	}
 }
 
-func TestValidateRangeMissing(t *testing.T) {
+func TestValidateRange_missing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateRange(ch, "field", 5, 15)
 	assert.Nil(t, ch.Errors())

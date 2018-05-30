@@ -7,11 +7,12 @@ import (
 
 // Changeset used to cast and validate data before saving it to the database.
 type Changeset struct {
-	errors  []error
-	params  map[string]interface{}
-	changes map[string]interface{}
-	values  map[string]interface{}
-	types   map[string]reflect.Type
+	errors      []error
+	params      map[string]interface{}
+	changes     map[string]interface{}
+	values      map[string]interface{}
+	types       map[string]reflect.Type
+	constraints Constraints
 }
 
 // Errors of changeset.
@@ -40,4 +41,9 @@ func (changeset *Changeset) Values() map[string]interface{} {
 // Types of changeset.
 func (changeset *Changeset) Types() map[string]reflect.Type {
 	return changeset.types
+}
+
+// Constraints of changeset.
+func (changeset *Changeset) Constraints() Constraints {
+	return changeset.constraints
 }

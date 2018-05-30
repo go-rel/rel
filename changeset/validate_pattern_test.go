@@ -29,7 +29,7 @@ func TestValidatePattern(t *testing.T) {
 	}
 }
 
-func TestValidatePatternError(t *testing.T) {
+func TestValidatePattern_error(t *testing.T) {
 	ch := &Changeset{
 		changes: map[string]interface{}{
 			"field": "seafood",
@@ -41,7 +41,7 @@ func TestValidatePatternError(t *testing.T) {
 	assert.Equal(t, "field's format is invalid", ch.Error().Error())
 }
 
-func TestValidatePatternMissing(t *testing.T) {
+func TestValidatePattern_missing(t *testing.T) {
 	ch := &Changeset{}
 	ValidatePattern(ch, "field", "foo.*")
 	assert.Nil(t, ch.Errors())

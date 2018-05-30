@@ -22,18 +22,22 @@ import (
 	"github.com/lib/pq"
 )
 
-// Adapter definition for mysql database.
+// Adapter definition for postgrees database.
 type Adapter struct {
 	*sql.Adapter
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
 
-// Open mysql connection using dsn.
+// Open postgrees connection using dsn.
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New("$", true, errorFunc, nil)}
+	adapter := &Adapter{sql.New(errorFunc, nil,
+		sql.Placeholder("$"),
+		sql.Ordinal(true),
+		sql.InsertDefaultValues(true)),
+	}
 	adapter.DB, err = db.Open("postgres", dsn)
 
 	return adapter, err
@@ -41,7 +45,7 @@ func Open(dsn string) (*Adapter, error) {
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal, adapter.InsertDefaultValues).
 		Returning("id").
 		Insert(query.Collection, changes)
 
@@ -55,7 +59,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 
 // InsertAll inserts multiple records to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal).Returning("id").InsertAll(query.Collection, fields, allchanges)
+	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal, adapter.InsertDefaultValues).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
@@ -89,8 +93,17 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 func errorFunc(err error) error {
 	if err == nil {
 		return nil
-	} else if e, ok := err.(*pq.Error); ok && e.Code == "23505" {
-		return errors.UniqueConstraintError(e.Message, internal.ExtractString(e.Message, "constraint \"", "\""))
+	}
+
+	if e, ok := err.(*pq.Error); ok {
+		switch e.Code {
+		case "23505":
+			return errors.New(e.Message, internal.ExtractString(e.Message, "constraint \"", "\""), errors.UniqueConstraint)
+		case "23503":
+			return errors.New(e.Message, internal.ExtractString(e.Message, "constraint \"", "\""), errors.ForeignKeyConstraint)
+		case "23514":
+			return errors.New(e.Message, internal.ExtractString(e.Message, "constraint \"", "\""), errors.CheckConstraint)
+		}
 	}
 
 	return err

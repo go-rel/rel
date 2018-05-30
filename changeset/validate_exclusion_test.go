@@ -28,7 +28,7 @@ func TestValidateExclusion(t *testing.T) {
 	}
 }
 
-func TestValidateExclusionError(t *testing.T) {
+func TestValidateExclusion_error(t *testing.T) {
 	tests := []interface{}{
 		1,
 		2.0,
@@ -50,7 +50,7 @@ func TestValidateExclusionError(t *testing.T) {
 	}
 }
 
-func TestValidateExclusionMissing(t *testing.T) {
+func TestValidateExclusion_missing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateExclusion(ch, "field", []interface{}{5})
 	assert.Nil(t, ch.Errors())

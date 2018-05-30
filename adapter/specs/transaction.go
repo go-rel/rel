@@ -34,8 +34,8 @@ func Transaction(t *testing.T, repo grimoire.Repo) {
 	}{
 		{"QueryAll", queryAll, nil},
 		{"InsertWithAssoc", insertWithAssoc, nil},
-		{"InsertWithAssocError", insertWithAssocError, errors.NotFoundError("let's rollback")},
-		{"InsertWithAssocPanic", insertWithAssocPanic, errors.NotFoundError("let's rollback")},
+		{"InsertWithAssocError", insertWithAssocError, errors.New("let's rollback", "", errors.NotFound)},
+		{"InsertWithAssocPanic", insertWithAssocPanic, errors.New("let's rollback", "", errors.NotFound)},
 		{"ReplaceAssoc", replaceAssoc, nil},
 	}
 
@@ -86,7 +86,7 @@ func insertWithAssocError(t *testing.T) func(repo grimoire.Repo) error {
 		repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
 
 		// should rollback
-		return errors.NotFoundError("let's rollback")
+		return errors.New("let's rollback", "", errors.NotFound)
 	}
 }
 
@@ -103,7 +103,7 @@ func insertWithAssocPanic(t *testing.T) func(repo grimoire.Repo) error {
 		repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
 
 		// should rollback
-		panic(errors.NotFoundError("let's rollback"))
+		panic(errors.New("let's rollback", "", errors.NotFound))
 	}
 }
 

@@ -11,11 +11,11 @@ import (
 func TestDefaultLogger(t *testing.T) {
 	assert.NotPanics(t, func() {
 		DefaultLogger("", time.Second, nil)
-		DefaultLogger("", time.Second, errors.UnexpectedError("error"))
+		DefaultLogger("", time.Second, errors.NewUnexpected("error"))
 	})
 }
 
-func TestLogger(t *testing.T) {
+func TestLog(t *testing.T) {
 	assert.NotPanics(t, func() {
 		Log([]Logger{DefaultLogger}, "", time.Second, nil)
 	})

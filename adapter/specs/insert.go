@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/changeset"
-	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +32,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
+		statement, _ := builder.Insert(test.query.Collection, ch.Changes())
 
 		t.Run("Insert|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -71,7 +69,7 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, ch.Changes())
+		statement, _ := builder.Insert(test.query.Collection, ch.Changes())
 
 		t.Run("InsertAll|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -103,31 +101,11 @@ func InsertSet(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, test := range tests {
-		statement, _ := sql.NewBuilder("?", false).Insert(test.query.Collection, test.query.Changes)
+		statement, _ := builder.Insert(test.query.Collection, test.query.Changes)
 
 		t.Run("InsertSet|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Insert(nil))
 			assert.Nil(t, test.query.Insert(test.record))
-		})
-	}
-}
-
-// InsertConstraint tests insert constraint specifications.
-func InsertConstraint(t *testing.T, repo grimoire.Repo) {
-	repo.From(users).Set("slug", "insert-taken").MustInsert(nil)
-
-	tests := []struct {
-		name  string
-		query grimoire.Query
-		field string
-		code  int
-	}{
-		{"UniqueConstraintError", repo.From(users).Set("slug", "insert-taken"), "slug", errors.UniqueConstraintErrorCode},
-	}
-
-	for _, test := range tests {
-		t.Run("InsertConstraint|"+test.name, func(t *testing.T) {
-			checkConstraint(t, test.query.Insert(nil), test.code, test.field)
 		})
 	}
 }

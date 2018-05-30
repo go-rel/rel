@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +39,7 @@ func Count(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sql.NewBuilder("?", false).Find(query.Select("COUNT(*) AS count"))
+		statement, _ := builder.Find(query.Select("COUNT(*) AS count"))
 		t.Run("Count|"+statement, func(t *testing.T) {
 			_, err := query.Count()
 			assert.Nil(t, err)

@@ -11,10 +11,11 @@ import (
 
 // Builder defines information of query builder.
 type Builder struct {
-	Placeholder string
-	Ordinal     bool
-	ReturnField string
-	count       int
+	Placeholder         string
+	Ordinal             bool
+	ReturnField         string
+	InsertDefaultValues bool
+	count               int
 }
 
 // Find generates query for select.
@@ -83,30 +84,35 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 
 	buffer.WriteString("INSERT INTO ")
 	buffer.WriteString(collection)
-	buffer.WriteString(" (")
 
-	curr := 0
-	for field, value := range changes {
-		buffer.WriteString(field)
-		args = append(args, value)
+	if len(changes) == 0 && builder.InsertDefaultValues {
+		buffer.WriteString(" DEFAULT VALUES")
+	} else {
+		buffer.WriteString(" (")
 
-		if curr < length-1 {
-			buffer.WriteString(",")
+		curr := 0
+		for field, value := range changes {
+			buffer.WriteString(field)
+			args = append(args, value)
+
+			if curr < length-1 {
+				buffer.WriteString(",")
+			}
+
+			curr++
 		}
+		buffer.WriteString(") VALUES ")
 
-		curr++
-	}
-	buffer.WriteString(") VALUES ")
+		buffer.WriteString("(")
+		for i := 0; i < length; i++ {
+			buffer.WriteString(builder.ph())
 
-	buffer.WriteString("(")
-	for i := 0; i < length; i++ {
-		buffer.WriteString(builder.ph())
-
-		if i < length-1 {
-			buffer.WriteString(",")
+			if i < length-1 {
+				buffer.WriteString(",")
+			}
 		}
+		buffer.WriteString(")")
 	}
-	buffer.WriteString(")")
 
 	if builder.ReturnField != "" {
 		buffer.WriteString(" RETURNING ")
@@ -443,9 +449,10 @@ func (builder *Builder) Returning(field string) *Builder {
 }
 
 // NewBuilder create new SQL builder.
-func NewBuilder(placeholder string, ordinal bool) *Builder {
+func NewBuilder(placeholder string, ordinal bool, insertDefaultValues bool) *Builder {
 	return &Builder{
-		Placeholder: placeholder,
-		Ordinal:     ordinal,
+		Placeholder:         placeholder,
+		Ordinal:             ordinal,
+		InsertDefaultValues: insertDefaultValues,
 	}
 }

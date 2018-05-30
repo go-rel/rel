@@ -33,7 +33,10 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New("?", false, errorFunc, incrementFunc)}
+	adapter := &Adapter{sql.New(errorFunc, incrementFunc,
+		sql.Placeholder("?"),
+		sql.InsertDefaultValues(true)),
+	}
 	adapter.DB, err = db.Open("sqlite3", dsn)
 
 	return adapter, err
@@ -47,9 +50,15 @@ func incrementFunc(adapter sql.Adapter) int {
 func errorFunc(err error) error {
 	if err == nil {
 		return nil
-	} else if e, ok := err.(sqlite3.Error); ok && e.ExtendedCode == sqlite3.ErrConstraintUnique {
-		return errors.UniqueConstraintError(e.Error(), strings.Split(e.Error(), "failed: ")[1])
 	}
 
-	return err
+	e, _ := err.(sqlite3.Error)
+	switch e.ExtendedCode {
+	case sqlite3.ErrConstraintUnique:
+		return errors.New(e.Error(), strings.Split(e.Error(), "failed: ")[1], errors.UniqueConstraint)
+	case sqlite3.ErrConstraintCheck:
+		return errors.New(e.Error(), strings.Split(e.Error(), "failed: ")[1], errors.CheckConstraint)
+	default:
+		return err
+	}
 }

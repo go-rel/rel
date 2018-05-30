@@ -11,7 +11,7 @@ var cond2 = Ne(I("name"), "foo")
 var cond3 = Gt(I("score"), 80)
 var cond4 = Lt(I("avg"), 10)
 
-func TestConditionNone(t *testing.T) {
+func TestCondition_None(t *testing.T) {
 	assert.True(t, Condition{}.None())
 	assert.True(t, And().None())
 	assert.True(t, Not().None())
@@ -21,7 +21,7 @@ func TestConditionNone(t *testing.T) {
 	assert.False(t, cond1.None())
 }
 
-func TestConditionAnd(t *testing.T) {
+func TestCondition_And(t *testing.T) {
 	tests := []struct {
 		Case      string
 		Operation Condition
@@ -91,7 +91,7 @@ func TestConditionAnd(t *testing.T) {
 	}
 }
 
-func TestConditionOr(t *testing.T) {
+func TestCondition_Or(t *testing.T) {
 	tests := []struct {
 		Case      string
 		Operation Condition

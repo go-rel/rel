@@ -15,8 +15,10 @@ func init() {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
+	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS extras;`, nil)
+	paranoid.Panic(err, "failed when dropping extras table")
 	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, nil)
-	paranoid.Panic(err, "failed when dropping addesses table")
+	paranoid.Panic(err, "failed when dropping addresses table")
 	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err, "failed when dropping users table")
 
@@ -42,17 +44,27 @@ func init() {
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	);`, nil)
 	paranoid.Panic(err, "failed when creating addresses table")
+
+	_, _, err = adapter.Exec(`CREATE TABLE extras (
+		id INTEGER PRIMARY KEY,
+		slug VARCHAR(30) DEFAULT NULL UNIQUE,
+		user_id INTEGER,
+		score INTEGER DEFAULT 0,
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		CONSTRAINT extras_score_check CHECK (score>=0 AND score<=100)
+	);`, nil)
+	paranoid.Panic(err, "failed when creating extras table")
 }
 
 func dsn() string {
 	if os.Getenv("SQLITE3_DATABASE") != "" {
-		return os.Getenv("SQLITE3_DATABASE")
+		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1"
 	}
 
-	return "./grimoire_test.db"
+	return "./grimoire_test.db?_foreign_keys=1"
 }
 
-func TestSpecs(t *testing.T) {
+func TestAdapter__specs(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -74,13 +86,11 @@ func TestSpecs(t *testing.T) {
 	specs.Insert(t, repo)
 	specs.InsertAll(t, repo)
 	specs.InsertSet(t, repo)
-	specs.InsertConstraint(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)
 	specs.UpdateWhere(t, repo)
 	specs.UpdateSet(t, repo)
-	specs.UpdateConstraint(t, repo)
 
 	// Put Specs
 	specs.SaveInsert(t, repo)
@@ -92,9 +102,14 @@ func TestSpecs(t *testing.T) {
 
 	// Transaction specs
 	specs.Transaction(t, repo)
+
+	// Constraint specs
+	// - foreign key constraint is not supported because of lack of information in the error message.
+	specs.UniqueConstraint(t, repo)
+	specs.CheckConstraint(t, repo)
 }
 
-func TestAdapterInsertAllError(t *testing.T) {
+func TestAdapter_InsertAll_error(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -110,7 +125,7 @@ func TestAdapterInsertAllError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapterTransactionCommitError(t *testing.T) {
+func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -118,7 +133,7 @@ func TestAdapterTransactionCommitError(t *testing.T) {
 	assert.NotNil(t, adapter.Commit())
 }
 
-func TestAdapterTransactionRollbackError(t *testing.T) {
+func TestAdapter_Transaction_rollbackError(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -126,7 +141,7 @@ func TestAdapterTransactionRollbackError(t *testing.T) {
 	assert.NotNil(t, adapter.Rollback())
 }
 
-func TestAdapterQueryError(t *testing.T) {
+func TestAdapter_Query_error(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -137,7 +152,7 @@ func TestAdapterQueryError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapterExecError(t *testing.T) {
+func TestAdapter_Exec_error(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()

@@ -32,7 +32,7 @@ func TestValidateRegexp(t *testing.T) {
 	}
 }
 
-func TestValidateRegexpError(t *testing.T) {
+func TestValidateRegexp_error(t *testing.T) {
 	ch := &Changeset{
 		changes: map[string]interface{}{
 			"field": "seafood",
@@ -44,7 +44,7 @@ func TestValidateRegexpError(t *testing.T) {
 	assert.Equal(t, "field's format is invalid", ch.Error().Error())
 }
 
-func TestValidateRegexpMissing(t *testing.T) {
+func TestValidateRegexp_missing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateRegexp(ch, "field", regexp.MustCompile(`foo.*`))
 	assert.Nil(t, ch.Errors())

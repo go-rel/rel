@@ -13,7 +13,7 @@ type Inner struct {
 	Field5 string
 }
 
-func TestCastAssocOne(t *testing.T) {
+func TestCastAssoc_one(t *testing.T) {
 	var inner Inner
 	var data struct {
 		Field1 int
@@ -62,7 +62,7 @@ func TestCastAssocOne(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
-func TestCastAssocOnePointer(t *testing.T) {
+func TestCastAssoc_onePointer(t *testing.T) {
 	var inner Inner
 	var data struct {
 		Field1 int
@@ -110,7 +110,7 @@ func TestCastAssocOnePointer(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
-func TestCastAssocOneErrorParamsNotAMap(t *testing.T) {
+func TestCastAssoc_oneErrorParamsNotAMap(t *testing.T) {
 	var data struct {
 		Field1 int
 		Field2 string
@@ -135,7 +135,7 @@ func TestCastAssocOneErrorParamsNotAMap(t *testing.T) {
 	assert.Equal(t, "field3 is invalid", ch.Error().Error())
 }
 
-func TestCastAssocOneInnerChangesetError(t *testing.T) {
+func TestCastAssoc_oneInnerChangesetError(t *testing.T) {
 	var data struct {
 		Field1 int
 		Field2 string
@@ -163,7 +163,7 @@ func TestCastAssocOneInnerChangesetError(t *testing.T) {
 	assert.Equal(t, "field3.field4", ch.Error().(errors.Error).Field)
 }
 
-func TestCastAssocMany(t *testing.T) {
+func TestCastAssoc_many(t *testing.T) {
 	var inner Inner
 	var data struct {
 		Field1 int
@@ -247,7 +247,7 @@ func TestCastAssocMany(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
-func TestCastAssocManyPointer(t *testing.T) {
+func TestCastAssoc_manyPointer(t *testing.T) {
 	var inner Inner
 	var data struct {
 		Field1 int
@@ -328,7 +328,7 @@ func TestCastAssocManyPointer(t *testing.T) {
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
-func TestCastAssocManyErrorParamsNotASliceOfAMap(t *testing.T) {
+func TestCastAssoc_manyErrorParamsNotASliceOfAMap(t *testing.T) {
 	var data struct {
 		Field1 int
 		Field2 string
@@ -353,7 +353,7 @@ func TestCastAssocManyErrorParamsNotASliceOfAMap(t *testing.T) {
 	assert.Equal(t, "field3 is invalid", ch.Error().Error())
 }
 
-func TestCastAssocManyErrorMixed(t *testing.T) {
+func TestCastAssoc_manyErrorMixed(t *testing.T) {
 	var data struct {
 		Field1 int
 		Field2 string
@@ -384,7 +384,7 @@ func TestCastAssocManyErrorMixed(t *testing.T) {
 	assert.Equal(t, "field3 is invalid", ch.Error().Error())
 }
 
-func TestCastAssocManyInnerChangesetError(t *testing.T) {
+func TestCastAssoc_manyInnerChangesetError(t *testing.T) {
 	var data struct {
 		Field1 int
 		Field2 string

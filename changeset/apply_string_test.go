@@ -25,7 +25,7 @@ func TestApplyString(t *testing.T) {
 	assert.Equal(t, "Gophers!!!", ch.Changes()["name"])
 }
 
-func TestApplyStringIgnored(t *testing.T) {
+func TestApplyString_ignored(t *testing.T) {
 	type User struct {
 		Name int
 	}

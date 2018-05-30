@@ -28,7 +28,7 @@ func TestValidateInclusion(t *testing.T) {
 	}
 }
 
-func TestValidateInclusionError(t *testing.T) {
+func TestValidateInclusion_error(t *testing.T) {
 	tests := []interface{}{
 		1,
 		1.0,
@@ -50,7 +50,7 @@ func TestValidateInclusionError(t *testing.T) {
 	}
 }
 
-func TestValidateInclusionMissing(t *testing.T) {
+func TestValidateInclusion_missing(t *testing.T) {
 	ch := &Changeset{}
 	ValidateInclusion(ch, "field", []interface{}{5})
 	assert.Nil(t, ch.Errors())

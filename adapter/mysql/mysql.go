@@ -34,7 +34,7 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New("?", false, errorFunc, incrementFunc)}
+	adapter := &Adapter{sql.New(errorFunc, incrementFunc, sql.Placeholder("?"))}
 	adapter.DB, err = db.Open("mysql", dsn)
 
 	return adapter, err
@@ -57,8 +57,15 @@ func incrementFunc(adapter sql.Adapter) int {
 func errorFunc(err error) error {
 	if err == nil {
 		return nil
-	} else if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 {
-		return errors.UniqueConstraintError(e.Message, internal.ExtractString(e.Message, "key '", "'"))
+	}
+
+	if e, ok := err.(*mysql.MySQLError); ok {
+		switch e.Number {
+		case 1062:
+			return errors.New(e.Message, internal.ExtractString(e.Message, "key '", "'"), errors.UniqueConstraint)
+		case 1452:
+			return errors.New(e.Message, internal.ExtractString(e.Message, "CONSTRAINT `", "`"), errors.ForeignKeyConstraint)
+		}
 	}
 
 	return err

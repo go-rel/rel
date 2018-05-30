@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +58,7 @@ func SaveUpdate(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sql.NewBuilder("?", false).Update(query.Collection, map[string]interface{}{}, query.Condition)
+		statement, _ := builder.Update(query.Collection, map[string]interface{}{}, query.Condition)
 		t.Run("SaveUpdate|"+statement, func(t *testing.T) {
 			var result []User
 			assert.Nil(t, query.All(&result))

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +23,7 @@ func Delete(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, query := range tests {
-		statement, _ := sql.NewBuilder("?", false).Delete(query.Collection, query.Condition)
+		statement, _ := builder.Delete(query.Collection, query.Condition)
 		t.Run("Delete|"+statement, func(t *testing.T) {
 			var result []User
 			assert.Nil(t, query.All(&result))

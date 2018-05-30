@@ -39,7 +39,7 @@ func TestPutChange(t *testing.T) {
 	assert.Equal(t, 10, ch.Changes()["field1"])
 }
 
-func TestPutChangeNil(t *testing.T) {
+func TestPutChange_nil(t *testing.T) {
 	var a struct {
 		Nullable *bool
 	}
@@ -51,7 +51,7 @@ func TestPutChangeNil(t *testing.T) {
 	assert.Equal(t, (*bool)(nil), ch.Changes()["nullable"])
 }
 
-func TestPutChangeTypedNil(t *testing.T) {
+func TestPutChange_typedNil(t *testing.T) {
 	var a struct {
 		Nullable *bool
 	}

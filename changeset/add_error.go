@@ -9,5 +9,5 @@ import (
 //	changeset.AddError(ch, "field", "error")
 //	ch.Errors() // []errors.Error{{Field: "field", Message: "error"}}
 func AddError(ch *Changeset, field string, message string) {
-	ch.errors = append(ch.errors, errors.ChangesetError(message, field))
+	ch.errors = append(ch.errors, errors.New(message, field, errors.Changeset))
 }

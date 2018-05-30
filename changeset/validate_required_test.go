@@ -21,7 +21,7 @@ func TestValidateRequired(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 }
 
-func TestValidateRequiredError(t *testing.T) {
+func TestValidateRequired_error(t *testing.T) {
 	ch := &Changeset{
 		changes: map[string]interface{}{
 			"field1": nil,

@@ -51,7 +51,7 @@ func (repo Repo) Transaction(fn func(Repo) error) error {
 			if p := recover(); p != nil {
 				txRepo.adapter.Rollback()
 
-				if e, ok := p.(errors.Error); ok && !e.UnexpectedError() {
+				if e, ok := p.(errors.Error); ok && e.Kind() != errors.Unexpected {
 					err = e
 				} else {
 					panic(p) // re-throw panic after Rollback

@@ -4,10 +4,8 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
 	"github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
-	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +32,7 @@ func Update(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
+		statement, _ := builder.Update(test.query.Collection, ch.Changes(), test.query.Condition)
 
 		t.Run("Update|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
@@ -65,9 +63,9 @@ func UpdateWhere(t *testing.T, repo grimoire.Repo) {
 
 	for _, test := range tests {
 		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, ch.Changes(), test.query.Condition)
+		statement, _ := builder.Update(test.query.Collection, ch.Changes(), test.query.Condition)
 
-		t.Run("Update|"+statement, func(t *testing.T) {
+		t.Run("UpdateWhere|"+statement, func(t *testing.T) {
 			assert.Nil(t, ch.Error())
 
 			assert.Nil(t, test.query.Update(nil, ch))
@@ -96,34 +94,11 @@ func UpdateSet(t *testing.T, repo grimoire.Repo) {
 	}
 
 	for _, test := range tests {
-		statement, _ := sql.NewBuilder("?", false).Update(test.query.Collection, test.query.Changes, test.query.Condition)
+		statement, _ := builder.Update(test.query.Collection, test.query.Changes, test.query.Condition)
 
-		t.Run("Update|"+statement, func(t *testing.T) {
+		t.Run("UpdateSet|"+statement, func(t *testing.T) {
 			assert.Nil(t, test.query.Update(nil))
 			assert.Nil(t, test.query.Update(test.record))
-		})
-	}
-}
-
-// UpdateConstraint tests update constraint specifications.
-func UpdateConstraint(t *testing.T, repo grimoire.Repo) {
-	user := User{}
-	repo.From(users).MustSave(&user)
-
-	repo.From(users).Set("slug", "update-taken").MustInsert(nil)
-
-	tests := []struct {
-		name  string
-		query grimoire.Query
-		field string
-		code  int
-	}{
-		{"UniqueConstraintError", repo.From(users).Find(user.ID).Set("slug", "update-taken"), "slug", errors.UniqueConstraintErrorCode},
-	}
-
-	for _, test := range tests {
-		t.Run("UpdateConstraint|"+test.name, func(t *testing.T) {
-			checkConstraint(t, test.query.Insert(nil), test.code, test.field)
 		})
 	}
 }

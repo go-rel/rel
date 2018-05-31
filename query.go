@@ -312,6 +312,7 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 
 		if _, exist := query.Changes[f]; exist {
 			fields = append(fields, f)
+			continue
 		}
 
 		for _, ch := range chs {

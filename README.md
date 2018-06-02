@@ -84,6 +84,10 @@ func main() {
 }
 ```
 
+## Examples
+
+- [Todo API](https://github.com/Fs02/grimoire-todo-example)
+
 ## Documentation
 
 See: [https://fs02.github.io/grimoire](https://fs02.github.io/grimoire)

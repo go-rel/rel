@@ -453,18 +453,46 @@ func TestQuery_All(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestQuery_Aggregate(t *testing.T) {
+	mock := new(TestAdapter)
+	query := Repo{adapter: mock}.From("users")
+	query.AggregateMode = "count"
+	query.AggregateField = "*"
+
+	var out struct {
+		Count int
+	}
+
+	mock.On("Aggregate", query, &out).Return(nil)
+
+	err := query.Aggregate("count", "*", &out)
+	assert.Nil(t, err)
+
+	assert.NotPanics(t, func() {
+		query.MustAggregate("count", "*", &out)
+	})
+
+	mock.AssertExpectations(t)
+}
+
 func TestQuery_Count(t *testing.T) {
 	mock := new(TestAdapter)
 	query := Repo{adapter: mock}.From("users")
+	query.AggregateMode = "count"
+	query.AggregateField = "*"
 
-	mock.On("Count", query).Return(10, nil)
+	var out struct {
+		Count int
+	}
+
+	mock.On("Aggregate", query, &out).Return(nil)
 
 	count, err := query.Count()
 	assert.Nil(t, err)
-	assert.Equal(t, 10, count)
+	assert.Equal(t, 0, count)
 
 	assert.NotPanics(t, func() {
-		assert.Equal(t, 10, query.MustCount())
+		assert.Equal(t, 0, query.MustCount())
 	})
 
 	mock.AssertExpectations(t)

@@ -33,10 +33,16 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New(errorFunc, nil,
-		sql.Placeholder("$"),
-		sql.Ordinal(true),
-		sql.InsertDefaultValues(true)),
+	adapter := &Adapter{
+		Adapter: &sql.Adapter{
+			Config: &sql.Config{
+				Placeholder:         "$",
+				EscapeChar:          "\"",
+				Ordinal:             true,
+				InsertDefaultValues: true,
+				ErrorFunc:           errorFunc,
+			},
+		},
 	}
 	adapter.DB, err = db.Open("postgres", dsn)
 
@@ -45,9 +51,7 @@ func Open(dsn string) (*Adapter, error) {
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal, adapter.InsertDefaultValues).
-		Returning("id").
-		Insert(query.Collection, changes)
+	statement, args := sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Collection, changes)
 
 	var result struct {
 		ID int64
@@ -59,7 +63,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interfac
 
 // InsertAll inserts multiple records to database and returns its ids.
 func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
-	statement, args := sql.NewBuilder(adapter.Placeholder, adapter.Ordinal, adapter.InsertDefaultValues).Returning("id").InsertAll(query.Collection, fields, allchanges)
+	statement, args := sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Collection, fields, allchanges)
 
 	var result []struct {
 		ID int64
@@ -81,11 +85,8 @@ func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
 
 	return &Adapter{
 		&sql.Adapter{
-			Placeholder:   adapter.Placeholder,
-			Ordinal:       adapter.Ordinal,
-			IncrementFunc: adapter.IncrementFunc,
-			ErrorFunc:     adapter.ErrorFunc,
-			Tx:            Tx,
+			Config: adapter.Config,
+			Tx:     Tx,
 		},
 	}, err
 }

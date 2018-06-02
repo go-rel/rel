@@ -34,7 +34,16 @@ var _ grimoire.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
-	adapter := &Adapter{sql.New(errorFunc, incrementFunc, sql.Placeholder("?"))}
+	adapter := &Adapter{
+		Adapter: &sql.Adapter{
+			Config: &sql.Config{
+				Placeholder:   "?",
+				EscapeChar:    "`",
+				IncrementFunc: incrementFunc,
+				ErrorFunc:     errorFunc,
+			},
+		},
+	}
 	adapter.DB, err = db.Open("mysql", dsn)
 
 	return adapter, err

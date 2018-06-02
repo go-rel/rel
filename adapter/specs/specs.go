@@ -55,7 +55,10 @@ const (
 	address   = c.I("address")
 )
 
-var builder = sql.NewBuilder("?", false, false)
+var builder = sql.NewBuilder(&sql.Config{
+	Placeholder: "?",
+	EscapeChar:  "`",
+})
 
 func assertConstraint(t *testing.T, err error, kind errors.Kind, field string) {
 	assert.NotNil(t, err)

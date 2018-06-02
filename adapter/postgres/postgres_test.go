@@ -61,7 +61,7 @@ func dsn() string {
 	return "postgres://postgres@localhost/grimoire_test?sslmode=disable"
 }
 
-func TestAdapter__specs(t *testing.T) {
+func TestAdapter_specs(t *testing.T) {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
@@ -76,8 +76,8 @@ func TestAdapter__specs(t *testing.T) {
 	// Preload specs
 	specs.Preload(t, repo)
 
-	// Count Specs
-	specs.Count(t, repo)
+	// Aggregate Specs
+	specs.Aggregate(t, repo)
 
 	// Insert Specs
 	specs.Insert(t, repo)

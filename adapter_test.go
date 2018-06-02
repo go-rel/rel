@@ -21,9 +21,9 @@ func (adapter TestAdapter) Close() error {
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Count(query Query, logger ...Logger) (int, error) {
-	args := adapter.Called(query)
-	return args.Int(0), args.Error(1)
+func (adapter TestAdapter) Aggregate(query Query, out interface{}, logger ...Logger) error {
+	args := adapter.Called(query, out)
+	return args.Error(0)
 }
 
 func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (int, error) {

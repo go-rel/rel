@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Count tests count specifications.
-func Count(t *testing.T, repo grimoire.Repo) {
+// Aggregate tests count specifications.
+func Aggregate(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
 	user := User{Name: "name1", Gender: "male", Age: 10}
 	repo.From(users).MustSave(&user)
@@ -36,12 +36,24 @@ func Count(t *testing.T, repo grimoire.Repo) {
 		repo.From(users).Where(c.NotLike(name, "noname%")),
 		repo.From(users).Where(c.Fragment("id > 0")),
 		repo.From(users).Where(c.Not(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10))),
+		repo.From(users).Group("gender"),
+		repo.From(users).Group("age").Having(c.Gt(age, 10)),
 	}
 
 	for _, query := range tests {
-		statement, _ := builder.Find(query.Select("COUNT(*) AS count"))
-		t.Run("Count|"+statement, func(t *testing.T) {
-			_, err := query.Count()
+		field := "*"
+		if len(query.GroupFields) != 0 {
+			field = query.GroupFields[0]
+		}
+
+		statement, _ := builder.Find(query.Select(field, "count("+field+") AS sum"))
+		t.Run("Aggregate|"+statement, func(t *testing.T) {
+			var out []struct {
+				Count int
+			}
+
+			err := query.Aggregate("count", field, &out)
+			assert.True(t, len(out) > 0)
 			assert.Nil(t, err)
 		})
 	}

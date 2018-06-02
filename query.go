@@ -17,6 +17,8 @@ type Query struct {
 	repo            *Repo
 	Collection      string
 	Fields          []string
+	AggregateField  string
+	AggregateMode   string
 	AsDistinct      bool
 	JoinClause      []c.Join
 	Condition       c.Condition
@@ -169,10 +171,27 @@ func (query Query) MustAll(record interface{}) {
 	must(query.All(record))
 }
 
+// Aggregate calculate aggregate over the given field.
+func (query Query) Aggregate(mode string, field string, out interface{}) error {
+	query.AggregateMode = mode
+	query.AggregateField = field
+	return query.repo.adapter.Aggregate(query, out, query.repo.logger...)
+}
+
+// MustAggregate calculate aggregate over the given field.
+// It'll panic if any error eccured.
+func (query Query) MustAggregate(mode string, field string, out interface{}) {
+	must(query.Aggregate(mode, field, out))
+}
+
 // Count retrieves count of results that match the query.
 func (query Query) Count() (int, error) {
-	count, err := query.repo.adapter.Count(query, query.repo.logger...)
-	return count, err
+	var out struct {
+		Count int
+	}
+
+	err := query.Aggregate("count", "*", &out)
+	return out.Count, err
 }
 
 // MustCount retrieves count of results that match the query.

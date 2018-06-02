@@ -40,7 +40,8 @@ type Product struct {
 	UpdatedAt time.Time
 }
 
-func ProductChangeset(product interface{}, params map[string]interface{}) *changeset.Changeset {
+// ChangeProduct prepares data before database operation.
+func ChangeProduct(product interface{}, params map[string]interface{}) *changeset.Changeset {
 	ch := changeset.Cast(product, params, []string{"name", "price"})
 	changeset.ValidateRequired(ch, []string{"name", "price"})
 	changeset.ValidateMin(ch, "price", 100)
@@ -61,7 +62,7 @@ func main() {
 	var product Product
 
 	// Changeset is used when creating or updating your data.
-	ch := ProductChangeset(product, map[string]interface{}{
+	ch := ChangeProduct(product, map[string]interface{}{
 		"name": "shampoo",
 		"price": 1000
 	})

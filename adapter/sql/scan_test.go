@@ -25,6 +25,7 @@ type User struct {
 	OtherInfo string
 	OtherName string `db:"real_name"`
 	Ignore    string `db:"-"`
+	PtrString *string
 	Custom    Custom
 }
 
@@ -45,10 +46,12 @@ func (r *testRows) Scan(dest ...interface{}) error {
 			}
 
 			switch dest[i].(type) {
-			case *uint:
-				*(dest[i].(*uint)) = r.values[i].(uint)
-			case *string:
-				*(dest[i].(*string)) = r.values[i].(string)
+			case **uint:
+				**(dest[i].(**uint)) = r.values[i].(uint)
+			case **string:
+				if *(dest[i].(**string)) != nil {
+					**(dest[i].(**string)) = r.values[i].(string)
+				}
 			default:
 				// Do nothing.
 			}
@@ -81,6 +84,7 @@ func createRows() *testRows {
 	rows.addValue("other_info", "string")
 	rows.addValue("real_name", "string")
 	rows.addValue("ignore", "string")
+	rows.addValue("ptr_string", "string")
 
 	return rows
 }
@@ -94,7 +98,7 @@ func TestScan(t *testing.T) {
 	count, err := Scan(&user, rows)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), count)
-	assert.Equal(t, User{uint(10), "string", "string", "string", "", Custom{}}, user)
+	assert.Equal(t, User{uint(10), "string", "string", "string", "", nil, Custom{}}, user)
 }
 
 func TestScan_columnError(t *testing.T) {
@@ -138,7 +142,7 @@ func TestScan_slice(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), count)
 	assert.Equal(t, 1, len(users))
-	assert.Equal(t, User{uint(10), "string", "string", "string", "", Custom{}}, users[0])
+	assert.Equal(t, User{uint(10), "string", "string", "string", "", nil, Custom{}}, users[0])
 }
 
 func TestScan_scanner(t *testing.T) {
@@ -157,14 +161,15 @@ func TestFieldPtr(t *testing.T) {
 	rv := reflect.ValueOf(&user).Elem()
 	index := fieldIndex(rv.Type())
 	columns := []string{"id", "name", "fake1", "other_info", "real_name", "fake2"}
-	intefaces := fieldPtr(rv, index, columns)
+	ptr, reset := fieldPtr(rv, index, columns)
 
-	reflect.ValueOf(intefaces[0]).Elem().SetUint(10)
-	reflect.ValueOf(intefaces[1]).Elem().SetString("string")
-	reflect.ValueOf(intefaces[3]).Elem().SetString("string")
-	reflect.ValueOf(intefaces[4]).Elem().SetString("string")
+	reflect.ValueOf(ptr[0]).Elem().Elem().SetUint(10)
+	reflect.ValueOf(ptr[1]).Elem().Elem().SetString("string")
+	reflect.ValueOf(ptr[3]).Elem().Elem().SetString("string")
+	reflect.ValueOf(ptr[4]).Elem().Elem().SetString("string")
 
-	assert.Equal(t, User{uint(10), "string", "string", "string", "", Custom{}}, user)
+	assert.Equal(t, User{uint(10), "string", "string", "string", "", nil, Custom{}}, user)
+	assert.Equal(t, 4, len(reset))
 }
 
 func TestFieldIndex(t *testing.T) {

@@ -53,10 +53,11 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 		}
 
 		var ptr []interface{}
+		var reset map[int]reflect.Value
 		if isScanner {
 			ptr = []interface{}{elem.Addr().Interface()}
 		} else {
-			ptr = fieldPtr(elem, index, columns)
+			ptr, reset = fieldPtr(elem, index, columns)
 		}
 
 		err = rows.Scan(ptr...)
@@ -65,6 +66,12 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 		}
 
 		count++
+
+		for index, field := range reset {
+			if v := reflect.ValueOf(ptr[index]).Elem().Elem(); v.IsValid() {
+				field.Set(v)
+			}
+		}
 
 		if isSlice {
 			rv.Set(reflect.Append(rv, elem))
@@ -76,19 +83,28 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 	return count, nil
 }
 
-func fieldPtr(rv reflect.Value, index map[string]int, columns []string) []interface{} {
+func fieldPtr(rv reflect.Value, index map[string]int, columns []string) ([]interface{}, map[int]reflect.Value) {
 	var ptr []interface{}
+	reset := make(map[int]reflect.Value)
 
 	dummy := sql.RawBytes{}
-	for _, col := range columns {
+	for i, col := range columns {
 		if id, exist := index[col]; exist {
-			ptr = append(ptr, rv.Field(id).Addr().Interface())
+			field := rv.Field(id)
+			if field.Kind() == reflect.Ptr {
+				ptr = append(ptr, field.Addr().Interface())
+			} else {
+				nrv := reflect.New(reflect.PtrTo(field.Type()))
+				nrv.Elem().Set(field.Addr())
+				ptr = append(ptr, nrv.Interface())
+				reset[i] = field
+			}
 		} else {
 			ptr = append(ptr, &dummy)
 		}
 	}
 
-	return ptr
+	return ptr, reset
 }
 
 func fieldIndex(rt reflect.Type) map[string]int {

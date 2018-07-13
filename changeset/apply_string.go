@@ -6,7 +6,7 @@ import (
 
 // ApplyString apply a function for string value.
 func ApplyString(ch *Changeset, field string, fn func(string) string) {
-	if ch.types[field].Kind() == reflect.String {
-		ch.changes[field] = fn(ch.changes[field].(string))
+	if val, ok := ch.changes[field]; ok && ch.types[field].Kind() == reflect.String {
+		ch.changes[field] = fn(val.(string))
 	}
 }

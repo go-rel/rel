@@ -1219,6 +1219,19 @@ func TestQuery_Preload_nestedHasMany(t *testing.T) {
 	mock.AssertExpectations(t)
 }
 
+func TestQuery_Preload_nestedNullHasMany(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	address := Address{User: nil}
+
+	query := repo.From("transactions")
+
+	assert.Nil(t, query.Preload(&address, "User.Transactions"))
+	assert.NotPanics(t, func() { query.MustPreload(&address, "User.Transactions") })
+	mock.AssertExpectations(t)
+}
+
 func TestQuery_Preload_nestedSliceHasMany(t *testing.T) {
 	mock := new(TestAdapter)
 	repo := Repo{adapter: mock}
@@ -1242,6 +1255,36 @@ func TestQuery_Preload_nestedSliceHasMany(t *testing.T) {
 	assert.Nil(t, query.Preload(&addresses, "User.Transactions"))
 	assert.Equal(t, result[:2], addresses[0].User.Transactions)
 	assert.Equal(t, result[2:], addresses[1].User.Transactions)
+	assert.NotPanics(t, func() { query.MustPreload(&addresses, "User.Transactions") })
+	mock.AssertExpectations(t)
+}
+
+func TestQuery_Preload_nestedNullSliceHasMany(t *testing.T) {
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
+
+	addresses := []Address{
+		{User: &User{ID: 10}},
+		{User: nil},
+		{User: &User{ID: 15}},
+	}
+
+	result := []Transaction{
+		{ID: 5, BuyerID: 10},
+		{ID: 10, BuyerID: 10},
+		{ID: 15, BuyerID: 15},
+	}
+
+	query := repo.From("transactions")
+
+	mock.Result(result).On("All", query.Where(In("user_id", 10, 15)), &[]Transaction{}).Return(2, nil)
+
+	assert.Nil(t, query.Preload(&addresses, "User.Transactions"))
+
+	assert.Equal(t, 2, len(addresses[0].User.Transactions))
+	assert.Nil(t, addresses[1].User)
+	assert.Equal(t, 1, len(addresses[2].User.Transactions))
+
 	assert.NotPanics(t, func() { query.MustPreload(&addresses, "User.Transactions") })
 	mock.AssertExpectations(t)
 }

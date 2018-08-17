@@ -501,6 +501,10 @@ func traversePreloadTarget(rv reflect.Value, path []string) []preloadTarget {
 	}
 
 	if fv.Kind() == reflect.Ptr && len(path) != 1 {
+		if fv.IsNil() {
+			return result
+		}
+
 		fv = fv.Elem()
 	}
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,20 +19,20 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 	tests := []struct {
 		query  grimoire.Query
 		record interface{}
-		params map[string]interface{}
+		input  params.Params
 	}{
-		{repo.From(users), &User{}, map[string]interface{}{}},
-		{repo.From(users), &User{}, map[string]interface{}{"name": "insert", "age": 100}},
-		{repo.From(users), &User{}, map[string]interface{}{"name": "insert", "age": 100, "note": "note"}},
-		{repo.From(users), &User{}, map[string]interface{}{"note": "note"}},
-		{repo.From(addresses), &Address{}, map[string]interface{}{}},
-		{repo.From(addresses), &Address{}, map[string]interface{}{"address": "address"}},
-		{repo.From(addresses), &Address{}, map[string]interface{}{"user_id": user.ID}},
-		{repo.From(addresses), &Address{}, map[string]interface{}{"address": "address", "user_id": user.ID}},
+		{repo.From(users), &User{}, params.Map{}},
+		{repo.From(users), &User{}, params.Map{"name": "insert", "age": 100}},
+		{repo.From(users), &User{}, params.Map{"name": "insert", "age": 100, "note": "note"}},
+		{repo.From(users), &User{}, params.Map{"note": "note"}},
+		{repo.From(addresses), &Address{}, params.Map{}},
+		{repo.From(addresses), &Address{}, params.Map{"address": "address"}},
+		{repo.From(addresses), &Address{}, params.Map{"user_id": user.ID}},
+		{repo.From(addresses), &Address{}, params.Map{"address": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {
-		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
+		ch := changeset.Cast(test.record, test.input, []string{"name", "age", "note", "address", "user_id"})
 		statement, _ := builder.Insert(test.query.Collection, ch.Changes())
 
 		t.Run("Insert|"+statement, func(t *testing.T) {
@@ -55,16 +56,16 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 		query  grimoire.Query
 		schema interface{}
 		record interface{}
-		params map[string]interface{}
+		params params.Params
 	}{
-		{repo.From(users), User{}, &[]User{}, map[string]interface{}{}},
-		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"name": "insert", "age": 100}},
-		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"name": "insert", "age": 100, "note": "note"}},
-		{repo.From(users), User{}, &[]User{}, map[string]interface{}{"note": "note"}},
-		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{}},
-		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"address": "address"}},
-		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"user_id": user.ID}},
-		{repo.From(addresses), &Address{}, &[]Address{}, map[string]interface{}{"address": "address", "user_id": user.ID}},
+		{repo.From(users), User{}, &[]User{}, params.Map{}},
+		{repo.From(users), User{}, &[]User{}, params.Map{"name": "insert", "age": 100}},
+		{repo.From(users), User{}, &[]User{}, params.Map{"name": "insert", "age": 100, "note": "note"}},
+		{repo.From(users), User{}, &[]User{}, params.Map{"note": "note"}},
+		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{}},
+		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"address": "address"}},
+		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"user_id": user.ID}},
+		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"address": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {

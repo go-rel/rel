@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,11 +14,11 @@ func TestApplyString(t *testing.T) {
 	}
 
 	user := User{}
-	params := map[string]interface{}{
+	input := params.Map{
 		"name": "¡¡¡Hello, Gophers!!!",
 	}
 
-	ch := Cast(user, params, []string{"name"})
+	ch := Cast(user, input, []string{"name"})
 	ApplyString(ch, "name", func(s string) string {
 		return strings.TrimPrefix(s, "¡¡¡Hello, ")
 	})
@@ -31,11 +32,11 @@ func TestApplyString_ignored(t *testing.T) {
 	}
 
 	user := User{}
-	params := map[string]interface{}{
+	input := params.Map{
 		"name": 1,
 	}
 
-	ch := Cast(user, params, []string{"name"})
+	ch := Cast(user, input, []string{"name"})
 	ApplyString(ch, "name", func(s string) string {
 		return strings.TrimPrefix(s, "¡¡¡Hello, ")
 	})

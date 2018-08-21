@@ -3,12 +3,14 @@ package changeset
 
 import (
 	"reflect"
+
+	"github.com/Fs02/grimoire/params"
 )
 
 // Changeset used to cast and validate data before saving it to the database.
 type Changeset struct {
 	errors      []error
-	params      map[string]interface{}
+	params      params.Params
 	changes     map[string]interface{}
 	values      map[string]interface{}
 	types       map[string]reflect.Type

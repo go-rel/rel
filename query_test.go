@@ -8,6 +8,7 @@ import (
 	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -500,7 +501,7 @@ func TestQuery_Count(t *testing.T) {
 
 func createChangeset() (*changeset.Changeset, User) {
 	user := User{}
-	ch := changeset.Cast(user, map[string]interface{}{
+	ch := changeset.Cast(user, params.Map{
 		"name": "name",
 	}, []string{"name"})
 
@@ -676,19 +677,19 @@ func TestQuery_Insert_assocOne(t *testing.T) {
 		User User
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"id": 1,
-		"user": map[string]interface{}{
+		"user": params.Map{
 			"name": "name",
 		},
 	}
 
-	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
-		ch := changeset.Cast(entity, params, []string{"name"})
+	userChangeset := func(entity interface{}, input params.Params) *changeset.Changeset {
+		ch := changeset.Cast(entity, input, []string{"name"})
 		return ch
 	}
 
-	ch := changeset.Cast(card, params, []string{"id"})
+	ch := changeset.Cast(card, input, []string{"id"})
 	changeset.CastAssoc(ch, "user", userChangeset)
 
 	mock := new(TestAdapter)
@@ -712,9 +713,9 @@ func TestQuery_Insert_assocMany(t *testing.T) {
 		Users []User
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"name": "name",
-		"users": []map[string]interface{}{
+		"users": []params.Map{
 			{
 				"name": "name1",
 			},
@@ -724,12 +725,12 @@ func TestQuery_Insert_assocMany(t *testing.T) {
 		},
 	}
 
-	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
-		ch := changeset.Cast(entity, params, []string{"name"})
+	userChangeset := func(entity interface{}, input params.Params) *changeset.Changeset {
+		ch := changeset.Cast(entity, input, []string{"name"})
 		return ch
 	}
 
-	ch := changeset.Cast(group, params, []string{"name"})
+	ch := changeset.Cast(group, input, []string{"name"})
 	changeset.CastAssoc(ch, "users", userChangeset)
 
 	mock := new(TestAdapter)
@@ -859,19 +860,19 @@ func TestQuery_Update_assocOne(t *testing.T) {
 		User User
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"id": 1,
-		"user": map[string]interface{}{
+		"user": params.Map{
 			"name": "name",
 		},
 	}
 
-	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
-		ch := changeset.Cast(entity, params, []string{"name"})
+	userChangeset := func(entity interface{}, input params.Params) *changeset.Changeset {
+		ch := changeset.Cast(entity, input, []string{"name"})
 		return ch
 	}
 
-	ch := changeset.Cast(card, params, []string{"id"})
+	ch := changeset.Cast(card, input, []string{"id"})
 	changeset.CastAssoc(ch, "user", userChangeset)
 
 	changes := map[string]interface{}{
@@ -895,21 +896,21 @@ func TestQuery_Update_assocMany(t *testing.T) {
 		Users []User
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"name": "name",
-		"user": []map[string]interface{}{
+		"user": []params.Map{
 			{
 				"name": "name",
 			},
 		},
 	}
 
-	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
-		ch := changeset.Cast(entity, params, []string{"name"})
+	userChangeset := func(entity interface{}, input params.Params) *changeset.Changeset {
+		ch := changeset.Cast(entity, input, []string{"name"})
 		return ch
 	}
 
-	ch := changeset.Cast(group, params, []string{"name"})
+	ch := changeset.Cast(group, input, []string{"name"})
 	changeset.CastAssoc(ch, "users", userChangeset)
 
 	changes := map[string]interface{}{
@@ -1049,21 +1050,21 @@ func TestGetFields(t *testing.T) {
 	}
 
 	query := Repo{}.From("users")
-	params := map[string]interface{}{
+	input := params.Map{
 		"name": "name",
-		"users": []map[string]interface{}{
+		"users": []params.Map{
 			{
 				"name": "name1",
 			},
 		},
 	}
 
-	userChangeset := func(entity interface{}, params map[string]interface{}) *changeset.Changeset {
-		ch := changeset.Cast(entity, params, []string{"name"})
+	userChangeset := func(entity interface{}, input params.Params) *changeset.Changeset {
+		ch := changeset.Cast(entity, input, []string{"name"})
 		return ch
 	}
 
-	ch := changeset.Cast(group, params, []string{"name"})
+	ch := changeset.Cast(group, input, []string{"name"})
 	changeset.CastAssoc(ch, "users", userChangeset)
 
 	assert.Equal(t, []string{"name"}, getFields(query, []*changeset.Changeset{ch}))

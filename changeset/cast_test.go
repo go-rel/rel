@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,12 +16,12 @@ func ExampleCast() {
 	}
 
 	user := User{}
-	params := map[string]interface{}{
+	input := params.Map{
 		"id":   1,
 		"name": "name",
 	}
 
-	ch := Cast(user, params, []string{"name"})
+	ch := Cast(user, input, []string{"name"})
 	fmt.Println(ch.Changes())
 	// Output: map[name:name]
 }
@@ -32,15 +33,16 @@ func ExampleCast_invalidType() {
 	}
 
 	user := User{}
-	params := map[string]interface{}{
+	input := params.Map{
 		"id":   1,
 		"name": true,
 	}
 
-	ch := Cast(user, params, []string{"name"})
+	ch := Cast(user, input, []string{"name"})
 	fmt.Println(ch.Error())
 	// Output: name is invalid
 }
+
 func ExampleCast_invalidTypeWithCustomError() {
 	type User struct {
 		ID   int
@@ -48,12 +50,12 @@ func ExampleCast_invalidTypeWithCustomError() {
 	}
 
 	user := User{}
-	params := map[string]interface{}{
+	input := params.Map{
 		"id":   1,
 		"name": true,
 	}
 
-	ch := Cast(user, params, []string{"name"}, Message("{field} tidak valid"))
+	ch := Cast(user, input, []string{"name"}, Message("{field} tidak valid"))
 	fmt.Println(ch.Error())
 	// Output: name tidak valid
 }
@@ -66,7 +68,7 @@ func TestCast(t *testing.T) {
 		Field4 bool `db:"-"`
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1": 1,
 		"field2": "2",
 		"field3": true,
@@ -92,13 +94,13 @@ func TestCast(t *testing.T) {
 		"field3": false,
 	}
 
-	ch := Cast(data, params, []string{"field1", "field2", "field3", "field4"})
+	ch := Cast(data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 
-	ch = Cast(&data, params, []string{"field1", "field2", "field3", "field4"})
+	ch = Cast(&data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
@@ -115,7 +117,7 @@ func TestCast_existingChangeset(t *testing.T) {
 		Field3 bool
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1": 1,
 		"field2": "2",
 		"field3": true,
@@ -140,15 +142,15 @@ func TestCast_existingChangeset(t *testing.T) {
 		"field3": false,
 	}
 
-	ch := Cast(data, params, []string{})
+	ch := Cast(data, input, []string{})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, 0, len(ch.Changes()))
 
-	ch = Cast(ch, params, []string{"field1", "field2"})
+	ch = Cast(ch, input, []string{"field1", "field2"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, 2, len(ch.Changes()))
 
-	ch = Cast(*ch, params, []string{"field1", "field3"})
+	ch = Cast(*ch, input, []string{"field1", "field3"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, 3, len(ch.Changes()))
 	assert.Equal(t, expectedChanges, ch.Changes())
@@ -164,7 +166,7 @@ func TestCast_unchanged(t *testing.T) {
 		Field4 *bool
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1": 0,
 		"field2": "",
 		"field3": false,
@@ -186,7 +188,7 @@ func TestCast_unchanged(t *testing.T) {
 		"field3": false,
 	}
 
-	ch := Cast(data, params, []string{"field1", "field2", "field3", "field4"})
+	ch := Cast(data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedChanges, ch.Changes())
 	assert.Equal(t, expectedTypes, ch.types)
@@ -198,26 +200,26 @@ func TestCast_error(t *testing.T) {
 		Field1 int
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1": "1",
 	}
 
-	ch := Cast(data, params, []string{"field1"})
+	ch := Cast(data, input, []string{"field1"})
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, "field1 is invalid", ch.Error().Error())
 }
 
 func TestCast_panic(t *testing.T) {
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1": "1",
 	}
 
 	assert.Panics(t, func() {
-		Cast("data", params, []string{"field1"})
+		Cast("data", input, []string{"field1"})
 	})
 }
 
-var params = map[string]interface{}{
+var input = params.Map{
 	"field1":  true,
 	"field2":  2,
 	"field3":  3,
@@ -308,7 +310,7 @@ func TestCast_basic(t *testing.T) {
 		Field15 string
 	}
 
-	ch := Cast(data, params, []string{
+	ch := Cast(data, input, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -385,7 +387,7 @@ func TestCast_basicWithValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(data, params, []string{
+	ch := Cast(data, input, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -428,7 +430,7 @@ func TestCast_ptr(t *testing.T) {
 		Field15 *string
 	}
 
-	ch := Cast(data, params, []string{
+	ch := Cast(data, input, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -522,7 +524,7 @@ func TestCast_ptrWithValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(data, params, []string{
+	ch := Cast(data, input, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -598,7 +600,7 @@ func TestCast_ptrWithNilValue(t *testing.T) {
 		&vstring,
 	}
 
-	params := map[string]interface{}{
+	input := params.Map{
 		"field1":  nil,
 		"field2":  nil,
 		"field3":  nil,
@@ -617,21 +619,21 @@ func TestCast_ptrWithNilValue(t *testing.T) {
 	}
 
 	expectedChanges := map[string]interface{}{
-		"field1":  (*bool)(nil),
-		"field2":  (*int)(nil),
-		"field3":  (*int8)(nil),
-		"field4":  (*int16)(nil),
-		"field5":  (*int32)(nil),
-		"field6":  (*int64)(nil),
-		"field7":  (*uint)(nil),
-		"field8":  (*uint8)(nil),
-		"field9":  (*uint16)(nil),
-		"field10": (*uint32)(nil),
-		"field11": (*uint64)(nil),
-		"field12": (*uintptr)(nil),
-		"field13": (*float32)(nil),
-		"field14": (*float64)(nil),
-		"field15": (*string)(nil),
+		"field1":  nil,
+		"field2":  nil,
+		"field3":  nil,
+		"field4":  nil,
+		"field5":  nil,
+		"field6":  nil,
+		"field7":  nil,
+		"field8":  nil,
+		"field9":  nil,
+		"field10": nil,
+		"field11": nil,
+		"field12": nil,
+		"field13": nil,
+		"field14": nil,
+		"field15": nil,
 	}
 
 	expectedValues := map[string]interface{}{
@@ -652,7 +654,7 @@ func TestCast_ptrWithNilValue(t *testing.T) {
 		"field15": "1",
 	}
 
-	ch := Cast(data, params, []string{
+	ch := Cast(data, input, []string{
 		"field1",
 		"field2",
 		"field3",
@@ -676,137 +678,7 @@ func TestCast_ptrWithNilValue(t *testing.T) {
 	assert.Equal(t, expectedTypes, ch.types)
 }
 
-func TestCast_ptrWithTypedNilValue(t *testing.T) {
-	var (
-		vbool    = true
-		vint     = int(1)
-		vint8    = int8(1)
-		vint16   = int16(1)
-		vint32   = int32(1)
-		vint64   = int64(1)
-		vuint    = uint(1)
-		vuint8   = uint8(1)
-		vuint16  = uint16(1)
-		vuint32  = uint32(1)
-		vuint64  = uint64(1)
-		vuintptr = uintptr(1)
-		vfloat32 = float32(1)
-		vfloat64 = float64(1)
-		vstring  = "1"
-	)
-	data := struct {
-		Field1  *bool
-		Field2  *int
-		Field3  *int8
-		Field4  *int16
-		Field5  *int32
-		Field6  *int64
-		Field7  *uint
-		Field8  *uint8
-		Field9  *uint16
-		Field10 *uint32
-		Field11 *uint64
-		Field12 *uintptr
-		Field13 *float32
-		Field14 *float64
-		Field15 *string
-	}{
-		&vbool,
-		&vint,
-		&vint8,
-		&vint16,
-		&vint32,
-		&vint64,
-		&vuint,
-		&vuint8,
-		&vuint16,
-		&vuint32,
-		&vuint64,
-		&vuintptr,
-		&vfloat32,
-		&vfloat64,
-		&vstring,
-	}
-
-	params := map[string]interface{}{
-		"field1":  (*bool)(nil),
-		"field2":  (*int)(nil),
-		"field3":  (*int8)(nil),
-		"field4":  (*int16)(nil),
-		"field5":  (*int32)(nil),
-		"field6":  (*int64)(nil),
-		"field7":  (*uint)(nil),
-		"field8":  (*uint8)(nil),
-		"field9":  (*uint16)(nil),
-		"field10": (*uint32)(nil),
-		"field11": (*uint64)(nil),
-		"field12": (*uintptr)(nil),
-		"field13": (*float32)(nil),
-		"field14": (*float64)(nil),
-		"field15": (*string)(nil),
-	}
-
-	expectedChanges := map[string]interface{}{
-		"field1":  (*bool)(nil),
-		"field2":  (*int)(nil),
-		"field3":  (*int8)(nil),
-		"field4":  (*int16)(nil),
-		"field5":  (*int32)(nil),
-		"field6":  (*int64)(nil),
-		"field7":  (*uint)(nil),
-		"field8":  (*uint8)(nil),
-		"field9":  (*uint16)(nil),
-		"field10": (*uint32)(nil),
-		"field11": (*uint64)(nil),
-		"field12": (*uintptr)(nil),
-		"field13": (*float32)(nil),
-		"field14": (*float64)(nil),
-		"field15": (*string)(nil),
-	}
-
-	expectedValues := map[string]interface{}{
-		"field1":  true,
-		"field2":  1,
-		"field3":  int8(1),
-		"field4":  int16(1),
-		"field5":  int32(1),
-		"field6":  int64(1),
-		"field7":  uint(1),
-		"field8":  uint8(1),
-		"field9":  uint16(1),
-		"field10": uint32(1),
-		"field11": uint64(1),
-		"field12": uintptr(1),
-		"field13": float32(1),
-		"field14": float64(1),
-		"field15": "1",
-	}
-
-	ch := Cast(data, params, []string{
-		"field1",
-		"field2",
-		"field3",
-		"field4",
-		"field5",
-		"field6",
-		"field7",
-		"field8",
-		"field9",
-		"field10",
-		"field11",
-		"field12",
-		"field13",
-		"field14",
-		"field15",
-	})
-
-	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
-	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedTypes, ch.types)
-}
-
-var sliceParams = map[string]interface{}{
+var sliceParams = params.Map{
 	"field1":  []bool{true},
 	"field2":  []int{2},
 	"field3":  []int8{3},

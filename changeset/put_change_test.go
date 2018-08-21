@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,7 +45,7 @@ func TestPutChange_nil(t *testing.T) {
 		Nullable *bool
 	}
 
-	ch := Cast(a, map[string]interface{}{}, []string{})
+	ch := Cast(a, params.Map{}, []string{})
 	PutChange(ch, "nullable", nil)
 
 	assert.Nil(t, ch.Error())
@@ -56,7 +57,7 @@ func TestPutChange_typedNil(t *testing.T) {
 		Nullable *bool
 	}
 
-	ch := Cast(a, map[string]interface{}{}, []string{})
+	ch := Cast(a, params.Map{}, []string{})
 	PutChange(ch, "nullable", (*bool)(nil))
 
 	assert.Nil(t, ch.Error())

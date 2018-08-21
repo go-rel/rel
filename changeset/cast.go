@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Fs02/grimoire/params"
 	"github.com/azer/snakecase"
 )
 
@@ -12,7 +13,7 @@ var CastErrorMessage = "{field} is invalid"
 
 // Cast params as changes for the given data according to the permitted fields. Returns a new changeset.
 // params will only be added as changes if it does not have the same value as the field in the data.
-func Cast(data interface{}, params map[string]interface{}, fields []string, opts ...Option) *Changeset {
+func Cast(data interface{}, params params.Params, fields []string, opts ...Option) *Changeset {
 	options := Options{
 		message: CastErrorMessage,
 	}
@@ -30,52 +31,25 @@ func Cast(data interface{}, params map[string]interface{}, fields []string, opts
 		ch.values, ch.types = mapSchema(data)
 	}
 
-	for _, f := range fields {
-		castField(ch, f, params, options)
+	for _, field := range fields {
+		typ, texist := ch.types[field]
+		currentValue, vexist := ch.values[field]
+
+		if !params.Exists(field) || !texist {
+			continue
+		}
+
+		if value, valid := params.GetWithType(field, typ); valid {
+			if (typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array) || (!vexist && value != nil) || (vexist && currentValue != value) {
+				ch.changes[field] = value
+			}
+		} else {
+			msg := strings.Replace(options.message, "{field}", field, 1)
+			AddError(ch, field, msg)
+		}
 	}
 
 	return ch
-}
-
-func castField(ch *Changeset, field string, params map[string]interface{}, options Options) {
-	par, pexist := params[field]
-	val, vexist := ch.values[field]
-	typ, texist := ch.types[field]
-
-	if !pexist || !texist {
-		return
-	}
-
-	if par != (interface{})(nil) {
-		// cast value from param if not nil.
-		parTyp := reflect.TypeOf(par)
-		parVal := reflect.ValueOf(par)
-		if parTyp.Kind() == reflect.Ptr {
-			parTyp = parTyp.Elem()
-			parVal = parVal.Elem()
-		}
-
-		if parTyp.ConvertibleTo(typ) {
-			if parVal.IsValid() {
-				cpar := parVal.Convert(typ).Interface()
-				if typ.Kind() == reflect.Slice || !vexist || (vexist && cpar != val) {
-					ch.changes[field] = cpar
-				}
-			} else {
-				ch.changes[field] = reflect.Zero(reflect.PtrTo(typ)).Interface()
-			}
-			return
-		}
-	} else {
-		// create nil for the respected type if current value is not nil.
-		if ch.values[field] != nil {
-			ch.changes[field] = reflect.Zero(reflect.PtrTo(typ)).Interface()
-		}
-		return
-	}
-
-	msg := strings.Replace(options.message, "{field}", field, 1)
-	AddError(ch, field, msg)
 }
 
 func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type) {

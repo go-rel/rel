@@ -1,28 +1,4 @@
-# grimoire
-[![GoDoc](https://godoc.org/github.com/Fs02/grimoire?status.svg)](https://godoc.org/github.com/Fs02/grimoire) [![Build Status](https://travis-ci.org/Fs02/grimoire.svg?branch=master)](https://travis-ci.org/Fs02/grimoire) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/grimoire)](https://goreportcard.com/report/github.com/Fs02/grimoire) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/grimoire/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/grimoire/test_coverage)
-
-Grimoire is a database access layer inspired by Ecto's changeset system. It features flexible query API and builtin validation. It currently supports MySQL, PostgreSQL and SQLite3 but a custom adapter can be implemented easily using the Adapter interface.
-
-Features:
-
-- Query Builder
-- Association Preloading
-- Struct style create and update
-- Changeset Style create and update
-- Builtin validation using changeset
-- Multi adapter support
-- Logger
-
-## Install
-
-```bash
-go get github.com/Fs02/grimoire
-```
-
-## Quick Start
-
-```golang
-package main
+package grimoire_test
 
 import (
 	"time"
@@ -50,7 +26,7 @@ func ChangeProduct(product interface{}, params params.Params) *changeset.Changes
 	return ch
 }
 
-func main() {
+func Example() {
 	// initialize mysql adapter.
 	adapter, err := mysql.Open("root@(127.0.0.1:3306)/db?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
@@ -100,18 +76,3 @@ func main() {
 	// Delete Product with id=1.
 	repo.From("products").Find(1).MustDelete()
 }
-```
-
-## Examples
-
-- [Todo API](https://github.com/Fs02/grimoire-todo-example)
-
-## Documentation
-
-Guides: [https://fs02.github.io/grimoire](https://fs02.github.io/grimoire)
-
-API Documentation: [https://godoc.org/github.com/Fs02/grimoire](https://godoc.org/github.com/Fs02/grimoire)
-
-## License
-
-Released under the [MIT License](https://github.com/Fs02/grimoire/blob/master/LICENSE)

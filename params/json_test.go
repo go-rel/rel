@@ -69,6 +69,13 @@ func TestJSON_GetWithType(t *testing.T) {
 			valid: false,
 		},
 		{
+			name:  "incorrect type Number",
+			field: "incorrect type",
+			typ:   reflect.TypeOf(Number(0)),
+			value: nil,
+			valid: false,
+		},
+		{
 			name:  "boolean",
 			field: "boolean",
 			typ:   reflect.TypeOf(true),
@@ -234,6 +241,20 @@ func TestJSON_GetWithType(t *testing.T) {
 			field: "number slice",
 			typ:   reflect.TypeOf([]uintptr{}),
 			value: []uintptr{1, 2},
+			valid: true,
+		},
+		{
+			name:  "type Number",
+			field: "number",
+			typ:   reflect.TypeOf(Number(0)),
+			value: Number(1),
+			valid: true,
+		},
+		{
+			name:  "type Number slice",
+			field: "number slice",
+			typ:   reflect.TypeOf([]Number{}),
+			value: []Number{1, 2},
 			valid: true,
 		},
 		{

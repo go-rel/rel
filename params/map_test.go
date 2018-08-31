@@ -22,67 +22,106 @@ func TestMap_Get(t *testing.T) {
 
 func TestMap_GetWithType(t *testing.T) {
 	p := params.Map{
-		"nil":                      (*bool)(nil),
-		"incorrect type":           "some string",
-		"correct type":             true,
-		"slice":                    []bool{true, false},
-		"slice of interface":       []interface{}{true, false},
-		"slice of interface mixed": []interface{}{true, 0},
+		"nil":                       (*bool)(nil),
+		"incorrect type":            "some string",
+		"correct type":              true,
+		"slice":                     []bool{true, false},
+		"slice of interface":        []interface{}{true, false},
+		"slice of interface mixed":  []interface{}{true, 0},
+		"number":                    1,
+		"number slice":              []int{1, 2},
+		"number slice of interface": []interface{}{1, 2},
 	}
 
 	tests := []struct {
 		name  string
+		field string
 		typ   reflect.Type
 		value interface{}
 		valid bool
 	}{
 		{
 			name:  "not exist",
+			field: "not exist",
 			typ:   reflect.TypeOf(true),
 			value: nil,
 			valid: true,
 		},
 		{
 			name:  "nil",
+			field: "nil",
 			typ:   reflect.TypeOf(true),
 			value: nil,
 			valid: true,
 		},
 		{
 			name:  "incorrect type",
+			field: "incorrect type",
 			typ:   reflect.TypeOf(true),
 			value: nil,
 			valid: false,
 		},
 		{
+			name:  "incorrect type Number",
+			field: "incorrect type",
+			typ:   reflect.TypeOf(Number(0)),
+			value: nil,
+			valid: false,
+		},
+		{
 			name:  "correct type",
+			field: "correct type",
 			typ:   reflect.TypeOf(true),
 			value: true,
 			valid: true,
 		},
 		{
 			name:  "slice",
+			field: "slice",
 			typ:   reflect.TypeOf([]bool{}),
 			value: []bool{true, false},
 			valid: true,
 		},
 		{
 			name:  "slice of interface",
+			field: "slice of interface",
 			typ:   reflect.TypeOf([]bool{}),
 			value: []bool{true, false},
 			valid: true,
 		},
 		{
 			name:  "slice of interface mixed",
+			field: "slice of interface mixed",
 			typ:   reflect.TypeOf([]bool{}),
 			value: nil,
 			valid: false,
+		},
+		{
+			name:  "type Number",
+			field: "number",
+			typ:   reflect.TypeOf(Number(0)),
+			value: Number(1),
+			valid: true,
+		},
+		{
+			name:  "type Number slice",
+			field: "number slice",
+			typ:   reflect.TypeOf([]Number{}),
+			value: []Number{1, 2},
+			valid: true,
+		},
+		{
+			name:  "type Number slice of interface",
+			field: "number slice of interface",
+			typ:   reflect.TypeOf([]Number{}),
+			value: []Number{1, 2},
+			valid: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			value, valid := p.GetWithType(tt.name, tt.typ)
+			value, valid := p.GetWithType(tt.field, tt.typ)
 			assert.Equal(t, tt.value, value)
 			assert.Equal(t, tt.valid, valid)
 		})

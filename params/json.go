@@ -23,7 +23,7 @@ func (json *JSON) Exists(name string) bool {
 
 // Get returns value as interface.
 // returns nil if value doens't exists.
-func (json JSON) Get(name string) interface{} {
+func (json *JSON) Get(name string) interface{} {
 	return json.Result.Get(name).Value()
 }
 
@@ -81,6 +81,16 @@ func (json *JSON) GetParamsSlice(name string) ([]Params, bool) {
 }
 
 func (json *JSON) convert(value gjson.Result, typ reflect.Type) (interface{}, bool) {
+	// handle type alias
+	if typ.PkgPath() != "" && typ.Kind() != reflect.Struct && typ.Kind() != reflect.Slice && typ.Kind() != reflect.Array {
+		rv := reflect.ValueOf(value.Value())
+		if !rv.Type().ConvertibleTo(typ) {
+			return nil, false
+		}
+
+		return rv.Convert(typ).Interface(), true
+	}
+
 	switch value.Type {
 	case gjson.Null:
 		return nil, true

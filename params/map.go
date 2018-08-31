@@ -42,14 +42,18 @@ func (m Map) GetWithType(name string, typ reflect.Type) (interface{}, bool) {
 		return nil, true
 	}
 
-	if typ.Kind() == reflect.Slice && (rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array) && rt.Elem().Kind() == reflect.Interface {
+	if typ.Kind() == reflect.Slice && (rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array) {
 		result := reflect.MakeSlice(typ, rv.Len(), rv.Len())
 		elemTyp := typ.Elem()
 
 		for i := 0; i < rv.Len(); i++ {
 			elem := rv.Index(i)
-			if elem.Elem().Type().ConvertibleTo(elemTyp) {
-				result.Index(i).Set(elem.Elem().Convert(elemTyp))
+			if elem.Kind() == reflect.Interface {
+				elem = elem.Elem()
+			}
+
+			if elem.Type().ConvertibleTo(elemTyp) {
+				result.Index(i).Set(elem.Convert(elemTyp))
 			} else {
 				return nil, false
 			}

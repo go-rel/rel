@@ -300,7 +300,7 @@ func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
 func cloneChangeset(out map[string]interface{}, changes map[string]interface{}) {
 	for k, v := range changes {
 		// skip if not scannable
-		if !internal.Scannable(reflect.TypeOf(v)) {
+		if v == nil || !internal.Scannable(reflect.TypeOf(v)) {
 			continue
 		}
 

@@ -1,7 +1,7 @@
 # grimoire
 [![GoDoc](https://godoc.org/github.com/Fs02/grimoire?status.svg)](https://godoc.org/github.com/Fs02/grimoire) [![Build Status](https://travis-ci.org/Fs02/grimoire.svg?branch=master)](https://travis-ci.org/Fs02/grimoire) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/grimoire)](https://goreportcard.com/report/github.com/Fs02/grimoire) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/grimoire/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/grimoire/test_coverage)
 
-Grimoire is a database access layer inspired by Ecto's changeset system. It features flexible query API and builtin validation. It currently supports MySQL, PostgreSQL and SQLite3 but a custom adapter can be implemented easily using the Adapter interface.
+Grimoire is a database access layer inspired by Ecto. It features a flexible query API and built-in validation. It currently supports MySQL, PostgreSQL, and SQLite3 but a custom adapter can be implemented easily using the Adapter interface.
 
 Features:
 
@@ -12,6 +12,10 @@ Features:
 - Builtin validation using changeset
 - Multi adapter support
 - Logger
+
+## Motivation
+
+Common go ORM accepts struct as a value for modifying records which has a problem of unable to differentiate between an empty, nil, or undefined value. It's a tricky problem especially when you want to have an endpoint that supports partial updates. Grimoire attempts to solve that problem by integrating Changeset system inspired from Elixir's Ecto. Changeset is a form like entity which allows us to not only solve that problem but also help us with casting, validations, and constraints check.
 
 ## Install
 

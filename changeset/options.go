@@ -2,10 +2,11 @@ package changeset
 
 // Options applicable to changeset.
 type Options struct {
-	message string
-	code    int
-	name    string
-	exact   bool
+	message    string
+	code       int
+	name       string
+	exact      bool
+	changeOnly bool
 }
 
 // Option for changeset operation.
@@ -42,5 +43,12 @@ func Name(name string) Option {
 func Exact(exact bool) Option {
 	return func(opts *Options) {
 		opts.exact = exact
+	}
+}
+
+// ChangeOnly is used to define if validate is only check change
+func ChangeOnly(changeOnly bool) Option {
+	return func(opts *Options) {
+		opts.changeOnly = changeOnly
 	}
 }

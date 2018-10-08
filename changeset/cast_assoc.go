@@ -11,6 +11,7 @@ import (
 
 // CastAssocErrorMessage is the default error message for CastAssoc.
 var CastAssocErrorMessage = "{field} is invalid"
+var CastAssocRequiredMessage = "{field} is required"
 
 // ChangeFunc is changeset function.
 type ChangeFunc func(interface{}, params.Params) *Changeset
@@ -35,6 +36,13 @@ func CastAssoc(ch *Changeset, field string, fn ChangeFunc, opts ...Option) {
 	}
 
 	if !valid {
+		msg := strings.Replace(options.message, "{field}", field, 1)
+		AddError(ch, field, msg)
+	}
+
+	_, found := ch.changes[field]
+	if options.required && !found {
+		options.message = CastAssocRequiredMessage
 		msg := strings.Replace(options.message, "{field}", field, 1)
 		AddError(ch, field, msg)
 	}

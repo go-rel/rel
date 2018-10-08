@@ -368,3 +368,45 @@ func TestCastAssoc_manyInnerChangesetError(t *testing.T) {
 	assert.Equal(t, "field4 is invalid", ch.Error().Error())
 	assert.Equal(t, "field3[0].field4", ch.Error().(errors.Error).Field)
 }
+
+func TestCastAssoc_optionRequired(t *testing.T) {
+	var data struct {
+		Field1 int
+		Field2 string
+		Field3 []Inner
+	}
+
+	changeInner := func(data interface{}, input params.Params) *Changeset {
+		ch := Cast(data, input, []string{"field4", "field5"})
+		return ch
+	}
+
+	invalidInput := params.Map{
+		"field1": 1,
+		"field2": "2",
+	}
+
+	validInput := params.Map{
+		"field1": 1,
+		"field2": "2",
+		"field3": []params.Map{
+			{
+				"field4": 14,
+				"field5": "15",
+			},
+			{
+				"field4": 24,
+				"field5": "25",
+			},
+		},
+	}
+
+	invalidCh := Cast(data, invalidInput, []string{"field1", "field2"})
+	CastAssoc(invalidCh, "field3", changeInner, Required(true))
+
+	validCh := Cast(data, validInput, []string{"field1", "field2"})
+	CastAssoc(validCh, "field3", changeInner, Required(true))
+
+	assert.NotNil(t, invalidCh.Errors())
+	assert.Nil(t, validCh.Errors())
+}

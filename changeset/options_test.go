@@ -14,6 +14,7 @@ func TestOptions(t *testing.T) {
 		Name("name_fk"),
 		Exact(true),
 		ChangeOnly(true),
+		Required(true),
 	})
 
 	assert.Equal(t, "message", opts.message)
@@ -21,4 +22,5 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, "name_fk", opts.name)
 	assert.Equal(t, true, opts.exact)
 	assert.Equal(t, true, opts.changeOnly)
+	assert.Equal(t, true, opts.required)
 }

@@ -7,6 +7,7 @@ type Options struct {
 	name       string
 	exact      bool
 	changeOnly bool
+	required   bool
 }
 
 // Option for changeset operation.
@@ -50,5 +51,11 @@ func Exact(exact bool) Option {
 func ChangeOnly(changeOnly bool) Option {
 	return func(opts *Options) {
 		opts.changeOnly = changeOnly
+	}
+}
+
+func Required(required bool) Option {
+	return func(opts *Options) {
+		opts.required = required
 	}
 }

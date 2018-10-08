@@ -28,6 +28,8 @@ func ValidateMin(ch *Changeset, field string, min int, opts ...Option) {
 		invalid = len(v) < min
 	case []interface{}:
 		invalid = len(v) < min
+	case []*Changeset:
+		invalid = len(v) < min
 	case int:
 		invalid = v < min
 	case int8:

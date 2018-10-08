@@ -4,3 +4,4 @@ coverage.out
 *.db
 .vscode/
 debug.test
+.idea/

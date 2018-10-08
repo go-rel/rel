@@ -28,6 +28,8 @@ func ValidateMax(ch *Changeset, field string, max int, opts ...Option) {
 		invalid = len(v) > max
 	case []interface{}:
 		invalid = len(v) > max
+	case []*Changeset:
+		invalid = len(v) > max
 	case int:
 		invalid = v > max
 	case int8:

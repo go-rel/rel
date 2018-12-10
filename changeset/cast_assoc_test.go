@@ -63,6 +63,55 @@ func TestCastAssoc_one(t *testing.T) {
 	assert.Equal(t, expectedChanges, ch.Changes())
 }
 
+func TestCastAssoc_oneDifferentSourceField(t *testing.T) {
+	var inner Inner
+	var data struct {
+		Field1 int
+		Field2 string
+		Field3 Inner
+	}
+
+	changeInner := func(data interface{}, input params.Params) *Changeset {
+		ch := Cast(data, input, []string{"field4", "field5"})
+		return ch
+	}
+
+	input := params.Map{
+		"field1": 1,
+		"field2": "2",
+		"fieldX": params.Map{
+			"field4": 4,
+			"field5": "5",
+		},
+	}
+
+	expectedChanges := map[string]interface{}{
+		"field1": 1,
+		"field2": "2",
+		"field3": changeInner(inner, input["fieldX"].(params.Map)),
+	}
+
+	expectedTypes := map[string]reflect.Type{
+		"field1": reflect.TypeOf(0),
+		"field2": reflect.TypeOf(""),
+		"field3": reflect.TypeOf(inner),
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1": 0,
+		"field2": "",
+		"field3": inner,
+	}
+
+	ch := Cast(data, input, []string{"field1", "field2"})
+	CastAssoc(ch, "field3", changeInner, SourceField("fieldX"))
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedTypes, ch.types)
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedChanges, ch.Changes())
+}
+
 func TestCastAssoc_onePointer(t *testing.T) {
 	var inner Inner
 	var data struct {

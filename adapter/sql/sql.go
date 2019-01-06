@@ -3,6 +3,7 @@ package sql
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 
 	"github.com/Fs02/grimoire"
@@ -21,9 +22,10 @@ type Config struct {
 
 // Adapter definition for mysql database.
 type Adapter struct {
-	Config *Config
-	DB     *sql.DB
-	Tx     *sql.Tx
+	Config    *Config
+	DB        *sql.DB
+	Tx        *sql.Tx
+	savepoint int
 }
 
 var _ grimoire.Adapter = (*Adapter)(nil)
@@ -92,31 +94,52 @@ func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger)
 
 // Begin begins a new transaction.
 func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
-	Tx, err := adapter.DB.Begin()
+	var tx *sql.Tx
+	var savepoint int
+	var err error
+
+	if adapter.Tx != nil {
+		tx = adapter.Tx
+		savepoint = adapter.savepoint + 1
+		_, _, err = adapter.Exec("SAVEPOINT s"+strconv.Itoa(savepoint)+";", []interface{}{})
+	} else {
+		tx, err = adapter.DB.Begin()
+	}
 
 	return &Adapter{
-		Config: adapter.Config,
-		Tx:     Tx,
+		Config:    adapter.Config,
+		Tx:        tx,
+		savepoint: savepoint,
 	}, err
 }
 
 // Commit commits current transaction.
 func (adapter *Adapter) Commit() error {
+	var err error
+
 	if adapter.Tx == nil {
-		return errors.NewUnexpected("not in transaction")
+		err = errors.NewUnexpected("unable to commit outside transaction")
+	} else if adapter.savepoint > 0 {
+		_, _, err = adapter.Exec("RELEASE SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+	} else {
+		err = adapter.Tx.Commit()
 	}
 
-	err := adapter.Tx.Commit()
 	return adapter.Config.ErrorFunc(err)
 }
 
 // Rollback revert current transaction.
 func (adapter *Adapter) Rollback() error {
+	var err error
+
 	if adapter.Tx == nil {
-		return errors.NewUnexpected("not in transaction")
+		err = errors.NewUnexpected("unable to rollback outside transaction")
+	} else if adapter.savepoint > 0 {
+		_, _, err = adapter.Exec("ROLLBACK TO SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+	} else {
+		err = adapter.Tx.Rollback()
 	}
 
-	err := adapter.Tx.Rollback()
 	return adapter.Config.ErrorFunc(err)
 }
 

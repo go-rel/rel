@@ -81,13 +81,10 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 
 // Begin begins a new transaction.
 func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
-	Tx, err := adapter.DB.Begin()
+	newAdapter, err := adapter.Adapter.Begin()
 
 	return &Adapter{
-		&sql.Adapter{
-			Config: adapter.Config,
-			Tx:     Tx,
-		},
+		Adapter: newAdapter.(*sql.Adapter),
 	}, err
 }
 

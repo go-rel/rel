@@ -38,6 +38,10 @@ func Transaction(t *testing.T, repo grimoire.Repo) {
 		{"InsertWithAssocError", insertWithAssocError, errors.New("let's rollback", "", errors.NotFound)},
 		{"InsertWithAssocPanic", insertWithAssocPanic, errors.New("let's rollback", "", errors.NotFound)},
 		{"ReplaceAssoc", replaceAssoc, nil},
+		{"NestedInsertWithAssoc", nestedInsertWithAssoc, nil},
+		{"NestedInsertWithAssocError", nestedInsertWithAssocError, errors.New("let's rollback", "", errors.NotFound)},
+		{"NestedInsertWithAssocPanic", nestedInsertWithAssocPanic, errors.New("let's rollback", "", errors.NotFound)},
+		{"NestedReplaceAssoc", nestedReplaceAssoc, nil},
 	}
 
 	for _, tt := range tests {
@@ -123,6 +127,85 @@ func replaceAssoc(t *testing.T) func(repo grimoire.Repo) error {
 		repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
 
 		return nil
+	}
+}
+
+func nestedInsertWithAssoc(t *testing.T) func(repo grimoire.Repo) error {
+	user := User{}
+
+	ch := changeUser(user, input)
+	assert.Nil(t, ch.Error())
+
+	// transaction block
+	return func(repo grimoire.Repo) error {
+		repo.From("users").MustInsert(&user, ch)
+
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+			repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+			return nil
+		})
+	}
+}
+
+func nestedInsertWithAssocError(t *testing.T) func(repo grimoire.Repo) error {
+	user := User{}
+
+	ch := changeUser(user, input)
+	assert.Nil(t, ch.Error())
+
+	// transaction block
+	return func(repo grimoire.Repo) error {
+		repo.From("users").MustInsert(&user, ch)
+
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+			repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+			// should rollback
+			return errors.New("let's rollback", "", errors.NotFound)
+		})
+	}
+}
+
+func nestedInsertWithAssocPanic(t *testing.T) func(repo grimoire.Repo) error {
+	user := User{}
+
+	ch := changeUser(user, input)
+	assert.Nil(t, ch.Error())
+
+	// transaction block
+	return func(repo grimoire.Repo) error {
+		repo.From("users").MustInsert(&user, ch)
+
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+			repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+			// should rollback
+			panic(errors.New("let's rollback", "", errors.NotFound))
+		})
+	}
+}
+
+func nestedReplaceAssoc(t *testing.T) func(repo grimoire.Repo) error {
+	user := User{}
+
+	ch := changeUser(user, input)
+	assert.Nil(t, ch.Error())
+
+	// transaction block
+	return func(repo grimoire.Repo) error {
+		repo.From("users").MustOne(&user)
+		addresses := ch.Changes()["addresses"].([]*changeset.Changeset)
+
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			repo.From("addresses").Where(c.Eq(c.I("user_id"), user.ID)).MustDelete()
+			repo.From("addresses").Set("user_id", user.ID).MustInsert(&user.Addresses, addresses...)
+
+			return nil
+		})
 	}
 }
 

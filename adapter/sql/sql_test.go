@@ -121,6 +121,40 @@ func TestAdapter_Transaction_rollback(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestAdapter_Transaction_nestedCommit(t *testing.T) {
+	adapter, err := open()
+	paranoid.Panic(err, "failed to open database connection")
+	defer adapter.Close()
+
+	result := struct {
+		Name string
+	}{}
+	ch := changeset.Convert(result)
+
+	err = grimoire.New(adapter).Transaction(func(repo grimoire.Repo) error {
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			repo.From("test").MustInsert(&result, ch)
+			return nil
+		})
+	})
+
+	assert.Nil(t, err)
+}
+
+func TestAdapter_Transaction_nestedRollback(t *testing.T) {
+	adapter, err := open()
+	paranoid.Panic(err, "failed to open database connection")
+	defer adapter.Close()
+
+	err = grimoire.New(adapter).Transaction(func(repo grimoire.Repo) error {
+		return repo.Transaction(func(repo grimoire.Repo) error {
+			return errors.New("", "", errors.UniqueConstraint)
+		})
+	})
+
+	assert.NotNil(t, err)
+}
+
 func TestAdapter_InsertAll_error(t *testing.T) {
 	adapter, err := open()
 	paranoid.Panic(err, "failed to open database connection")

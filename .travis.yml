@@ -3,24 +3,36 @@ env:
     - CC_TEST_REPORTER_ID=42ba59b516289c90de75bec1e73dcf75e601d150b271e8762cee9efcb8d70282
     - MYSQL_DATABASE=root@(127.0.0.1:3306)/grimoire_test
     - POSTGRESQL_DATABASE=postgres://postgres@localhost/grimoire_test?sslmode=disable
+
 language: go
 go:
+  - "1.9.x"
   - "1.10.x"
-  - "1.11.x"
+
+matrix:
+  include:
+    - go: "1.11.x"
+      env: COVER=-coverprofile=c.out
+
 services:
   - mysql
   - postgresql
+
 before_install:
   - mysql -e 'CREATE DATABASE grimoire_test;'
   - psql -c 'create database grimoire_test;' -U postgres
+
 install:
   - go get -u github.com/golang/dep/cmd/dep
+
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
+
 script:
   - dep ensure
-  - go test -coverprofile=c.out ./...
+  - go test -race $COVER ./...
+
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

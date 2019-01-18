@@ -30,6 +30,20 @@ func (changeset *Changeset) Error() error {
 	return nil
 }
 
+// Get a change from changeset.
+func (changeset *Changeset) Get(field string) interface{} {
+	return changeset.changes[field]
+}
+
+// Fetch a change or value from changeset.
+func (changeset *Changeset) Fetch(field string) interface{} {
+	if change, ok := changeset.changes[field]; ok {
+		return change
+	}
+
+	return changeset.values[field]
+}
+
 // Changes of changeset.
 func (changeset *Changeset) Changes() map[string]interface{} {
 	return changeset.changes

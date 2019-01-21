@@ -4,7 +4,7 @@ package changeset
 func Change(schema interface{}) *Changeset {
 	ch := &Changeset{}
 	ch.changes = make(map[string]interface{})
-	ch.values, ch.types = mapSchema(schema)
+	ch.values, ch.types, _ = mapSchema(schema)
 
 	return ch
 }

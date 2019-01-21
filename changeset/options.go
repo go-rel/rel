@@ -9,6 +9,7 @@ type Options struct {
 	changeOnly  bool
 	required    bool
 	sourceField string
+	emptyValues []interface{}
 }
 
 // Option for changeset operation.
@@ -55,15 +56,24 @@ func ChangeOnly(changeOnly bool) Option {
 	}
 }
 
+// Required is used to define whether an assoc needs to be required or not.
 func Required(required bool) Option {
 	return func(opts *Options) {
 		opts.required = required
 	}
 }
 
-// Source to define used field name in params.
+// SourceField to define used field name in params.
 func SourceField(field string) Option {
 	return func(opts *Options) {
 		opts.sourceField = field
+	}
+}
+
+// EmptyValues defines list of empty values when casting.
+// default to [""]
+func EmptyValues(values ...interface{}) Option {
+	return func(opts *Options) {
+		opts.emptyValues = values
 	}
 }

@@ -16,6 +16,7 @@ func TestOptions(t *testing.T) {
 		ChangeOnly(true),
 		Required(true),
 		SourceField("src"),
+		EmptyValues("", 0),
 	})
 
 	assert.Equal(t, "message", opts.message)
@@ -25,4 +26,5 @@ func TestOptions(t *testing.T) {
 	assert.Equal(t, true, opts.changeOnly)
 	assert.Equal(t, true, opts.required)
 	assert.Equal(t, "src", opts.sourceField)
+	assert.Equal(t, []interface{}{"", 0}, opts.emptyValues)
 }

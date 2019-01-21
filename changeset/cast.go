@@ -15,11 +15,13 @@ var CastErrorMessage = "{field} is invalid"
 // params will only be added as changes if it does not have the same value as the field in the data.
 func Cast(data interface{}, params params.Params, fields []string, opts ...Option) *Changeset {
 	options := Options{
-		message: CastErrorMessage,
+		message:     CastErrorMessage,
+		emptyValues: []interface{}{""},
 	}
 	options.apply(opts)
 
 	var ch *Changeset
+	var zero bool
 	if existingCh, ok := data.(Changeset); ok {
 		ch = &existingCh
 	} else if existingCh, ok := data.(*Changeset); ok {
@@ -28,20 +30,26 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 		ch = &Changeset{}
 		ch.params = params
 		ch.changes = make(map[string]interface{})
-		ch.values, ch.types = mapSchema(data)
+		ch.values, ch.types, zero = mapSchema(data)
 	}
 
 	for _, field := range fields {
 		typ, texist := ch.types[field]
-		currentValue, vexist := ch.values[field]
 
 		if !params.Exists(field) || !texist {
 			continue
 		}
 
-		if value, valid := params.GetWithType(field, typ); valid {
-			if (typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array) || (!vexist && value != nil) || (vexist && currentValue != value) {
-				ch.changes[field] = value
+		// ignore if it's an empty value
+		if contains(options.emptyValues, params.Get(field)) {
+			continue
+		}
+
+		if change, valid := params.GetWithType(field, typ); valid {
+			value, vexist := ch.values[field]
+
+			if (typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array) || (zero && change != nil) || (!vexist && change != nil) || (vexist && value != change) {
+				ch.changes[field] = change
 			}
 		} else {
 			msg := strings.Replace(options.message, "{field}", field, 1)
@@ -52,9 +60,10 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 	return ch
 }
 
-func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type) {
+func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type, bool) {
 	mvalues := make(map[string]interface{})
 	mtypes := make(map[string]reflect.Type)
+	zero := true
 
 	rv := reflect.ValueOf(data)
 	if rv.Kind() == reflect.Ptr {
@@ -92,7 +101,42 @@ func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Typ
 			mtypes[name] = fv.Type()
 			mvalues[name] = fv.Interface()
 		}
+
+		if zero {
+			zero = isZero(fv)
+		}
 	}
 
-	return mvalues, mtypes
+	return mvalues, mtypes, zero
+}
+
+func contains(vs []interface{}, v interface{}) bool {
+	for i := range vs {
+		if vs[i] == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isZero shallowly check wether a field in struct is zero or not
+func isZero(rv reflect.Value) bool {
+	zero := true
+	switch rv.Kind() {
+	case reflect.Bool:
+		zero = !rv.Bool()
+	case reflect.Float32, reflect.Float64:
+		zero = rv.Float() == 0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		zero = rv.Int() == 0
+	case reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		zero = rv.IsNil()
+	case reflect.String:
+		zero = rv.String() == ""
+	case reflect.Uint, reflect.Uintptr, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		zero = rv.Uint() == 0
+	}
+
+	return zero
 }

@@ -159,17 +159,22 @@ func TestCast_existingChangeset(t *testing.T) {
 }
 
 func TestCast_unchanged(t *testing.T) {
-	var data struct {
+	data := struct {
 		Field1 int `db:"field1"`
 		Field2 string
 		Field3 bool
 		Field4 *bool
+	}{
+		Field1: 1,
+		Field2: "1",
+		Field3: true,
+		Field4: nil,
 	}
 
 	input := params.Map{
-		"field1": 0,
-		"field2": "",
-		"field3": false,
+		"field1": 1,
+		"field2": "1",
+		"field3": true,
 		"field4": nil,
 	}
 
@@ -183,9 +188,9 @@ func TestCast_unchanged(t *testing.T) {
 	}
 
 	expectedValues := map[string]interface{}{
-		"field1": 0,
-		"field2": "",
-		"field3": false,
+		"field1": 1,
+		"field2": "1",
+		"field3": true,
 	}
 
 	ch := Cast(data, input, []string{"field1", "field2", "field3", "field4"})
@@ -385,6 +390,103 @@ func TestCast_basicWithValue(t *testing.T) {
 		"field13": float32(1),
 		"field14": float64(1),
 		"field15": "1",
+	}
+
+	ch := Cast(data, input, []string{
+		"field1",
+		"field2",
+		"field3",
+		"field4",
+		"field5",
+		"field6",
+		"field7",
+		"field8",
+		"field9",
+		"field10",
+		"field11",
+		"field12",
+		"field13",
+		"field14",
+		"field15",
+	})
+
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedValues, ch.values)
+	assert.Equal(t, expectedTypes, ch.types)
+}
+
+func TestCast_basicZeroValue(t *testing.T) {
+	data := struct {
+		Field1  bool
+		Field2  int
+		Field3  int8
+		Field4  int16
+		Field5  int32
+		Field6  int64
+		Field7  uint
+		Field8  uint8
+		Field9  uint16
+		Field10 uint32
+		Field11 uint64
+		Field12 uintptr
+		Field13 float32
+		Field14 float64
+		Field15 string
+	}{}
+
+	var input = params.Map{
+		"field1":  false,
+		"field2":  0,
+		"field3":  0,
+		"field4":  0,
+		"field5":  0,
+		"field6":  0,
+		"field7":  0,
+		"field8":  0,
+		"field9":  0,
+		"field10": 0,
+		"field11": 0,
+		"field12": 0,
+		"field13": 0,
+		"field14": 0,
+		"field15": "",
+	}
+
+	expectedValues := map[string]interface{}{
+		"field1":  false,
+		"field2":  0,
+		"field3":  int8(0),
+		"field4":  int16(0),
+		"field5":  int32(0),
+		"field6":  int64(0),
+		"field7":  uint(0),
+		"field8":  uint8(0),
+		"field9":  uint16(0),
+		"field10": uint32(0),
+		"field11": uint64(0),
+		"field12": uintptr(0),
+		"field13": float32(0),
+		"field14": float64(0),
+		"field15": "",
+	}
+
+	// Empty string is ignored because it's default of empty values
+	expectedChanges := map[string]interface{}{
+		"field1":  false,
+		"field2":  0,
+		"field3":  int8(0),
+		"field4":  int16(0),
+		"field5":  int32(0),
+		"field6":  int64(0),
+		"field7":  uint(0),
+		"field8":  uint8(0),
+		"field9":  uint16(0),
+		"field10": uint32(0),
+		"field11": uint64(0),
+		"field12": uintptr(0),
+		"field13": float32(0),
+		"field14": float64(0),
 	}
 
 	ch := Cast(data, input, []string{

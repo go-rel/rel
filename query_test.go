@@ -1314,7 +1314,8 @@ func TestQuery_Preload_belongsTo(t *testing.T) {
 }
 
 func TestQuery_Preload_ptr(t *testing.T) {
-	repo := Repo{}
+	mock := new(TestAdapter)
+	repo := Repo{adapter: mock}
 	query := repo.From("owners")
 
 	owner := Owner{}
@@ -1322,6 +1323,17 @@ func TestQuery_Preload_ptr(t *testing.T) {
 	assert.Nil(t, query.Preload(&owner, "User"))
 	assert.Nil(t, owner.User)
 	assert.Nil(t, owner.UserID)
+
+	id := 1
+	owner = Owner{UserID: &id}
+	result := []User{{ID: id}}
+	mock.Result(result).On("All", query.Where(In("id", id)), &[]User{}).Return(1, nil)
+
+	assert.Nil(t, query.Preload(&owner, "User"))
+	assert.Equal(t, result[0], *owner.User)
+	assert.Equal(t, &id, owner.UserID)
+
+	mock.AssertExpectations(t)
 }
 
 func TestQuery_Preload_slicePtr(t *testing.T) {

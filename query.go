@@ -468,6 +468,10 @@ func (query Query) Preload(record interface{}, field string) error {
 		for _, addr := range addrs[id] {
 			if addr.Kind() == reflect.Slice {
 				addr.Set(reflect.Append(addr, curr))
+			} else if addr.Kind() == reflect.Ptr {
+				currP := reflect.New(curr.Type())
+				currP.Elem().Set(curr)
+				addr.Set(currP)
 			} else {
 				addr.Set(curr)
 			}
@@ -580,15 +584,6 @@ func collectPreloadTarget(preload []preloadTarget, refIndex []int) (map[interfac
 		}
 
 		id := getPreloadID(refv)
-
-		// Create if ptr
-		if fv.Kind() == reflect.Ptr {
-			typ := fv.Type().Elem()
-			fv.Set(reflect.New(typ))
-
-			fv = fv.Elem()
-			preload[i].field = fv
-		}
 
 		// reset to zero if slice.
 		if fv.Kind() == reflect.Slice || fv.Kind() == reflect.Array {

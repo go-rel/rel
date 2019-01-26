@@ -30,5 +30,11 @@ func TestChange(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedValues, ch.Values())
 	assert.Equal(t, expectedTypes, ch.Types())
-	assert.Equal(t, 0, len(ch.Changes()))
+	assert.Equal(t, map[string]interface{}{}, ch.Changes())
+
+	ch = Change(data, map[string]interface{}{"field1": 2})
+	assert.Nil(t, ch.Errors())
+	assert.Equal(t, expectedValues, ch.Values())
+	assert.Equal(t, expectedTypes, ch.Types())
+	assert.Equal(t, map[string]interface{}{"field1": 2}, ch.Changes())
 }

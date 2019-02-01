@@ -56,7 +56,7 @@ func queryAll(t *testing.T) func(repo grimoire.Repo) error {
 
 	// transaction block
 	return func(repo grimoire.Repo) error {
-		repo.From("users").All(&users)
+		repo.From("users").Lock().All(&users)
 
 		return nil
 	}

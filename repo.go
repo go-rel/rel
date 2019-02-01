@@ -6,8 +6,9 @@ import (
 
 // Repo defines grimoire repository.
 type Repo struct {
-	adapter Adapter
-	logger  []Logger
+	adapter       Adapter
+	logger        []Logger
+	inTransaction bool
 }
 
 // New create new repo using adapter.
@@ -45,6 +46,7 @@ func (repo Repo) Transaction(fn func(Repo) error) error {
 	}
 
 	txRepo := New(adp)
+	txRepo.inTransaction = true
 
 	func() {
 		defer func() {

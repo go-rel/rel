@@ -360,6 +360,37 @@ func TestQuery_Limit(t *testing.T) {
 	})
 }
 
+func TestQuery_Lock_outsideTransaction(t *testing.T) {
+	assert.Equal(t, repo.From("users").Lock(), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"users.*"},
+	})
+
+	assert.Equal(t, repo.From("users").Lock("FOR SHARE"), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"users.*"},
+	})
+}
+
+func TestQuery_Lock_insideTransaction(t *testing.T) {
+	repo := Repo{inTransaction: true}
+	assert.Equal(t, repo.From("users").Lock(), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"users.*"},
+		LockClause: "FOR UPDATE",
+	})
+
+	assert.Equal(t, repo.From("users").Lock("FOR SHARE"), Query{
+		repo:       &repo,
+		Collection: "users",
+		Fields:     []string{"users.*"},
+		LockClause: "FOR SHARE",
+	})
+}
+
 func TestQuery_Find(t *testing.T) {
 	assert.Equal(t, repo.From("users").Find(1), Query{
 		repo:       &repo,

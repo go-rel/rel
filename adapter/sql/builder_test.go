@@ -1163,3 +1163,19 @@ func TestBuilder_Condition_ordinal(t *testing.T) {
 		})
 	}
 }
+
+func TestBuilder_Lock(t *testing.T) {
+	query := grimoire.Query{
+		Collection: "users",
+		Fields:     []string{"*"},
+		LockClause: "FOR UPDATE",
+	}
+
+	qs, args := NewBuilder(&Config{
+		Placeholder: "?",
+		EscapeChar:  "`",
+	}).Find(query)
+
+	assert.Equal(t, "SELECT * FROM `users` FOR UPDATE;", qs)
+	assert.Nil(t, args)
+}

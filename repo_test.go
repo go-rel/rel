@@ -37,11 +37,14 @@ func TestRepo_Transaction(t *testing.T) {
 	mock.On("Begin").Return(nil).
 		On("Commit").Return(nil)
 
-	err := Repo{adapter: mock}.Transaction(func(r Repo) error {
-		// doing good things
+	repo := Repo{adapter: mock}
+
+	err := repo.Transaction(func(repo Repo) error {
+		assert.True(t, repo.inTransaction)
 		return nil
 	})
 
+	assert.False(t, repo.inTransaction)
 	assert.Nil(t, err)
 	mock.AssertExpectations(t)
 }

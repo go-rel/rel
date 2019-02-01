@@ -27,6 +27,7 @@ type Query struct {
 	OrderClause     []c.Order
 	OffsetResult    int
 	LimitResult     int
+	LockClause      string
 	Changes         map[string]interface{}
 }
 
@@ -114,6 +115,22 @@ func (query Query) Offset(offset int) Query {
 // Limit result returned by database.
 func (query Query) Limit(limit int) Query {
 	query.LimitResult = limit
+	return query
+}
+
+// Lock query using pessimistic locking.
+// Lock expression can be specified as first parameter, default to FOR UPDATE.
+func (query Query) Lock(lock ...string) Query {
+	if !query.repo.inTransaction {
+		return query
+	}
+
+	if len(lock) > 0 {
+		query.LockClause = lock[0]
+	} else {
+		query.LockClause = "FOR UPDATE"
+	}
+
 	return query
 }
 

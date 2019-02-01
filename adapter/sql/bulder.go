@@ -79,6 +79,11 @@ func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {
 		buffer.WriteString(s)
 	}
 
+	if q.LockClause != "" {
+		buffer.WriteString(" ")
+		buffer.WriteString(q.LockClause)
+	}
+
 	buffer.WriteString(";")
 
 	return buffer.String(), args

@@ -28,7 +28,7 @@ func TestNot(t *testing.T) {
 func TestEq(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.EqOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value"},
 	}, Eq("field", "value"))
 }
@@ -36,7 +36,7 @@ func TestEq(t *testing.T) {
 func TestNe(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.NeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value"},
 	}, Ne("field", "value"))
 }
@@ -44,7 +44,7 @@ func TestNe(t *testing.T) {
 func TestLt(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.LtOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, Lt("field", 10))
 }
@@ -52,7 +52,7 @@ func TestLt(t *testing.T) {
 func TestLte(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.LteOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, Lte("field", 10))
 }
@@ -60,7 +60,7 @@ func TestLte(t *testing.T) {
 func TestFilter_Gt(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.GtOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, Gt("field", 10))
 }
@@ -68,29 +68,29 @@ func TestFilter_Gt(t *testing.T) {
 func TestGte(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.GteOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, Gte("field", 10))
 }
 
 func TestNil(t *testing.T) {
 	assert.Equal(t, query.Filter{
-		Type:   query.NilOp,
-		Column: "field",
+		Type:  query.NilOp,
+		Field: "field",
 	}, Nil("field"))
 }
 
 func TestNotNil(t *testing.T) {
 	assert.Equal(t, query.Filter{
-		Type:   query.NotNilOp,
-		Column: "field",
+		Type:  query.NotNilOp,
+		Field: "field",
 	}, NotNil("field"))
 }
 
 func TestIn(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.InOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
 	}, In("field", "value1", "value2"))
 }
@@ -98,7 +98,7 @@ func TestIn(t *testing.T) {
 func TestNin(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.NinOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
 	}, Nin("field", "value1", "value2"))
 }
@@ -106,7 +106,7 @@ func TestNin(t *testing.T) {
 func TestLike(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.LikeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"%expr%"},
 	}, Like("field", "%expr%"))
 }
@@ -114,7 +114,7 @@ func TestLike(t *testing.T) {
 func TestNotLike(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.NotLikeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"%expr%"},
 	}, NotLike("field", "%expr%"))
 }
@@ -122,7 +122,7 @@ func TestNotLike(t *testing.T) {
 func TestFragment(t *testing.T) {
 	assert.Equal(t, query.Filter{
 		Type:   query.FragmentOp,
-		Column: "expr",
+		Field:  "expr",
 		Values: []interface{}{"value"},
 	}, Fragment("expr", "value"))
 }

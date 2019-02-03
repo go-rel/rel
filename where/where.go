@@ -21,64 +21,64 @@ func Not(inner ...query.Filter) query.Filter {
 	return query.FilterNot(inner...)
 }
 
-// Eq expression column equal to value.
-func Eq(column string, value interface{}) query.Filter {
-	return query.FilterEq(column, value)
+// Eq expression field equal to value.
+func Eq(field string, value interface{}) query.Filter {
+	return query.FilterEq(field, value)
 }
 
 // Ne compares that left value is not equal to right value.
-func Ne(column string, value interface{}) query.Filter {
-	return query.FilterNe(column, value)
+func Ne(field string, value interface{}) query.Filter {
+	return query.FilterNe(field, value)
 }
 
 // Lt compares that left value is less than to right value.
-func Lt(column string, value interface{}) query.Filter {
-	return query.FilterLt(column, value)
+func Lt(field string, value interface{}) query.Filter {
+	return query.FilterLt(field, value)
 }
 
 // Lte compares that left value is less than or equal to right value.
-func Lte(column string, value interface{}) query.Filter {
-	return query.FilterLte(column, value)
+func Lte(field string, value interface{}) query.Filter {
+	return query.FilterLte(field, value)
 }
 
 // Gt compares that left value is greater than to right value.
-func Gt(column string, value interface{}) query.Filter {
-	return query.FilterGt(column, value)
+func Gt(field string, value interface{}) query.Filter {
+	return query.FilterGt(field, value)
 }
 
 // Gte compares that left value is greater than or equal to right value.
-func Gte(column string, value interface{}) query.Filter {
-	return query.FilterGte(column, value)
+func Gte(field string, value interface{}) query.Filter {
+	return query.FilterGte(field, value)
 }
 
-// Nil check whether column is nil.
-func Nil(column string) query.Filter {
-	return query.FilterNil(column)
+// Nil check whether field is nil.
+func Nil(field string) query.Filter {
+	return query.FilterNil(field)
 }
 
-// NotNil check whether column is not nil.
-func NotNil(column string) query.Filter {
-	return query.FilterNotNil(column)
+// NotNil check whether field is not nil.
+func NotNil(field string) query.Filter {
+	return query.FilterNotNil(field)
 }
 
-// In check whethers value of the column is included in values.
-func In(column string, values ...interface{}) query.Filter {
-	return query.FilterIn(column, values...)
+// In check whethers value of the field is included in values.
+func In(field string, values ...interface{}) query.Filter {
+	return query.FilterIn(field, values...)
 }
 
-// Nin check whethers value of the column is not included in values.
-func Nin(column string, values ...interface{}) query.Filter {
-	return query.FilterNin(column, values...)
+// Nin check whethers value of the field is not included in values.
+func Nin(field string, values ...interface{}) query.Filter {
+	return query.FilterNin(field, values...)
 }
 
-// Like compares value of column to match string pattern.
-func Like(column string, pattern string) query.Filter {
-	return query.FilterLike(column, pattern)
+// Like compares value of field to match string pattern.
+func Like(field string, pattern string) query.Filter {
+	return query.FilterLike(field, pattern)
 }
 
-// NotLike compares value of column to not match string pattern.
-func NotLike(column string, pattern string) query.Filter {
-	return query.FilterNotLike(column, pattern)
+// NotLike compares value of field to not match string pattern.
+func NotLike(field string, pattern string) query.Filter {
+	return query.FilterNotLike(field, pattern)
 }
 
 // Fragment add custom filter.

@@ -48,7 +48,7 @@ const (
 // Filter defines details of a coundition type.
 type Filter struct {
 	Type   FilterOp
-	Column string
+	Field  string
 	Values []interface{}
 	Inner  []Filter
 }
@@ -108,63 +108,63 @@ func (f Filter) or(other Filter) Filter {
 }
 
 // AndEq append equal expression using and.
-func (f Filter) AndEq(column string, value interface{}) Filter {
-	return f.and(FilterEq(column, value))
+func (f Filter) AndEq(field string, value interface{}) Filter {
+	return f.and(FilterEq(field, value))
 }
 
 // AndNe append not equal expression using and.
-func (f Filter) AndNe(column string, value interface{}) Filter {
-	return f.and(FilterNe(column, value))
+func (f Filter) AndNe(field string, value interface{}) Filter {
+	return f.and(FilterNe(field, value))
 }
 
 // AndLt append lesser than expression using and.
-func (f Filter) AndLt(column string, value interface{}) Filter {
-	return f.and(FilterLt(column, value))
+func (f Filter) AndLt(field string, value interface{}) Filter {
+	return f.and(FilterLt(field, value))
 }
 
 // AndLte append lesser than or equal expression using and.
-func (f Filter) AndLte(column string, value interface{}) Filter {
-	return f.and(FilterLte(column, value))
+func (f Filter) AndLte(field string, value interface{}) Filter {
+	return f.and(FilterLte(field, value))
 }
 
 // AndGt append greater than expression using and.
-func (f Filter) AndGt(column string, value interface{}) Filter {
-	return f.and(FilterGt(column, value))
+func (f Filter) AndGt(field string, value interface{}) Filter {
+	return f.and(FilterGt(field, value))
 }
 
 // AndGte append greater than or equal expression using and.
-func (f Filter) AndGte(column string, value interface{}) Filter {
-	return f.and(FilterGte(column, value))
+func (f Filter) AndGte(field string, value interface{}) Filter {
+	return f.and(FilterGte(field, value))
 }
 
 // AndNil append is nil expression using and.
-func (f Filter) AndNil(column string) Filter {
-	return f.and(FilterNil(column))
+func (f Filter) AndNil(field string) Filter {
+	return f.and(FilterNil(field))
 }
 
 // AndNotNil append is not nil expression using and.
-func (f Filter) AndNotNil(column string) Filter {
-	return f.and(FilterNotNil(column))
+func (f Filter) AndNotNil(field string) Filter {
+	return f.and(FilterNotNil(field))
 }
 
 // AndIn append is in expression using and.
-func (f Filter) AndIn(column string, values ...interface{}) Filter {
-	return f.and(FilterIn(column, values...))
+func (f Filter) AndIn(field string, values ...interface{}) Filter {
+	return f.and(FilterIn(field, values...))
 }
 
 // AndNin append is not in expression using and.
-func (f Filter) AndNin(column string, values ...interface{}) Filter {
-	return f.and(FilterNin(column, values...))
+func (f Filter) AndNin(field string, values ...interface{}) Filter {
+	return f.and(FilterNin(field, values...))
 }
 
 // AndLike append like expression using and.
-func (f Filter) AndLike(column string, pattern string) Filter {
-	return f.and(FilterLike(column, pattern))
+func (f Filter) AndLike(field string, pattern string) Filter {
+	return f.and(FilterLike(field, pattern))
 }
 
 // AndNotLike append not like expression using and.
-func (f Filter) AndNotLike(column string, pattern string) Filter {
-	return f.and(FilterNotLike(column, pattern))
+func (f Filter) AndNotLike(field string, pattern string) Filter {
+	return f.and(FilterNotLike(field, pattern))
 }
 
 // AndFragment append fragment using and.
@@ -173,63 +173,63 @@ func (f Filter) AndFragment(expr string, values ...interface{}) Filter {
 }
 
 // OrEq append equal expression using or.
-func (f Filter) OrEq(column string, value interface{}) Filter {
-	return f.or(FilterEq(column, value))
+func (f Filter) OrEq(field string, value interface{}) Filter {
+	return f.or(FilterEq(field, value))
 }
 
 // OrNe append not equal expression using or.
-func (f Filter) OrNe(column string, value interface{}) Filter {
-	return f.or(FilterNe(column, value))
+func (f Filter) OrNe(field string, value interface{}) Filter {
+	return f.or(FilterNe(field, value))
 }
 
 // OrLt append lesser than expression using or.
-func (f Filter) OrLt(column string, value interface{}) Filter {
-	return f.or(FilterLt(column, value))
+func (f Filter) OrLt(field string, value interface{}) Filter {
+	return f.or(FilterLt(field, value))
 }
 
 // OrLte append lesser than or equal expression using or.
-func (f Filter) OrLte(column string, value interface{}) Filter {
-	return f.or(FilterLte(column, value))
+func (f Filter) OrLte(field string, value interface{}) Filter {
+	return f.or(FilterLte(field, value))
 }
 
 // OrGt append greater than expression using or.
-func (f Filter) OrGt(column string, value interface{}) Filter {
-	return f.or(FilterGt(column, value))
+func (f Filter) OrGt(field string, value interface{}) Filter {
+	return f.or(FilterGt(field, value))
 }
 
 // OrGte append greater than or equal expression using or.
-func (f Filter) OrGte(column string, value interface{}) Filter {
-	return f.or(FilterGte(column, value))
+func (f Filter) OrGte(field string, value interface{}) Filter {
+	return f.or(FilterGte(field, value))
 }
 
 // OrNil append is nil expression using or.
-func (f Filter) OrNil(column string) Filter {
-	return f.or(FilterNil(column))
+func (f Filter) OrNil(field string) Filter {
+	return f.or(FilterNil(field))
 }
 
 // OrNotNil append is not nil expression using or.
-func (f Filter) OrNotNil(column string) Filter {
-	return f.or(FilterNotNil(column))
+func (f Filter) OrNotNil(field string) Filter {
+	return f.or(FilterNotNil(field))
 }
 
 // OrIn append is in expression using or.
-func (f Filter) OrIn(column string, values ...interface{}) Filter {
-	return f.or(FilterIn(column, values...))
+func (f Filter) OrIn(field string, values ...interface{}) Filter {
+	return f.or(FilterIn(field, values...))
 }
 
 // OrNin append is not in expression using or.
-func (f Filter) OrNin(column string, values ...interface{}) Filter {
-	return f.or(FilterNin(column, values...))
+func (f Filter) OrNin(field string, values ...interface{}) Filter {
+	return f.or(FilterNin(field, values...))
 }
 
 // OrLike append like expression using or.
-func (f Filter) OrLike(column string, pattern string) Filter {
-	return f.or(FilterLike(column, pattern))
+func (f Filter) OrLike(field string, pattern string) Filter {
+	return f.or(FilterLike(field, pattern))
 }
 
 // OrNotLike append not like expression using or.
-func (f Filter) OrNotLike(column string, pattern string) Filter {
-	return f.or(FilterNotLike(column, pattern))
+func (f Filter) OrNotLike(field string, pattern string) Filter {
+	return f.or(FilterNotLike(field, pattern))
 }
 
 // OrFragment append fragment using or.
@@ -300,108 +300,108 @@ func FilterNot(inner ...Filter) Filter {
 	}
 }
 
-// FilterEq expression column equal to value.
-func FilterEq(column string, value interface{}) Filter {
+// FilterEq expression field equal to value.
+func FilterEq(field string, value interface{}) Filter {
 	return Filter{
 		Type:   EqOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
 // FilterNe compares that left value is not equal to right value.
-func FilterNe(column string, value interface{}) Filter {
+func FilterNe(field string, value interface{}) Filter {
 	return Filter{
 		Type:   NeOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
 // FilterLt compares that left value is less than to right value.
-func FilterLt(column string, value interface{}) Filter {
+func FilterLt(field string, value interface{}) Filter {
 	return Filter{
 		Type:   LtOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
 // FilterLte compares that left value is less than or equal to right value.
-func FilterLte(column string, value interface{}) Filter {
+func FilterLte(field string, value interface{}) Filter {
 	return Filter{
 		Type:   LteOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
 // FilterGt compares that left value is greater than to right value.
-func FilterGt(column string, value interface{}) Filter {
+func FilterGt(field string, value interface{}) Filter {
 	return Filter{
 		Type:   GtOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
 // FilterGte compares that left value is greater than or equal to right value.
-func FilterGte(column string, value interface{}) Filter {
+func FilterGte(field string, value interface{}) Filter {
 	return Filter{
 		Type:   GteOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{value},
 	}
 }
 
-// FilterNil check whether column is nil.
-func FilterNil(column string) Filter {
+// FilterNil check whether field is nil.
+func FilterNil(field string) Filter {
 	return Filter{
-		Type:   NilOp,
-		Column: column,
+		Type:  NilOp,
+		Field: field,
 	}
 }
 
-// FilterNotNil check whether column is not nil.
-func FilterNotNil(column string) Filter {
+// FilterNotNil check whether field is not nil.
+func FilterNotNil(field string) Filter {
 	return Filter{
-		Type:   NotNilOp,
-		Column: column,
+		Type:  NotNilOp,
+		Field: field,
 	}
 }
 
-// FilterIn check whethers value of the column is included in values.
-func FilterIn(column string, values ...interface{}) Filter {
+// FilterIn check whethers value of the field is included in values.
+func FilterIn(field string, values ...interface{}) Filter {
 	return Filter{
 		Type:   InOp,
-		Column: column,
+		Field:  field,
 		Values: values,
 	}
 }
 
-// FilterNin check whethers value of the column is not included in values.
-func FilterNin(column string, values ...interface{}) Filter {
+// FilterNin check whethers value of the field is not included in values.
+func FilterNin(field string, values ...interface{}) Filter {
 	return Filter{
 		Type:   NinOp,
-		Column: column,
+		Field:  field,
 		Values: values,
 	}
 }
 
-// FilterLike compares value of column to match string pattern.
-func FilterLike(column string, pattern string) Filter {
+// FilterLike compares value of field to match string pattern.
+func FilterLike(field string, pattern string) Filter {
 	return Filter{
 		Type:   LikeOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{pattern},
 	}
 }
 
-// FilterNotLike compares value of column to not match string pattern.
-func FilterNotLike(column string, pattern string) Filter {
+// FilterNotLike compares value of field to not match string pattern.
+func FilterNotLike(field string, pattern string) Filter {
 	return Filter{
 		Type:   NotLikeOp,
-		Column: column,
+		Field:  field,
 		Values: []interface{}{pattern},
 	}
 }
@@ -410,7 +410,7 @@ func FilterNotLike(column string, pattern string) Filter {
 func FilterFragment(expr string, values ...interface{}) Filter {
 	return Filter{
 		Type:   FragmentOp,
-		Column: expr,
+		Field:  expr,
 		Values: values,
 	}
 }

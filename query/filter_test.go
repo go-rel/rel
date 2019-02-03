@@ -443,7 +443,7 @@ func TestFilter_AndEq(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   EqOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -455,7 +455,7 @@ func TestFilter_AndNe(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -467,7 +467,7 @@ func TestFilter_AndLt(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LtOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -479,7 +479,7 @@ func TestFilter_AndLte(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LteOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -491,7 +491,7 @@ func TestFilter_AndFilter_Gt(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   GtOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -503,7 +503,7 @@ func TestFilter_AndGte(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   GteOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -514,8 +514,8 @@ func TestFilter_AndNil(t *testing.T) {
 	assert.Equal(t, Filter{
 		Inner: []Filter{
 			{
-				Type:   NilOp,
-				Column: "field",
+				Type:  NilOp,
+				Field: "field",
 			},
 		},
 	}, Filter{}.AndNil("field"))
@@ -525,8 +525,8 @@ func TestFilter_AndNotNil(t *testing.T) {
 	assert.Equal(t, Filter{
 		Inner: []Filter{
 			{
-				Type:   NotNilOp,
-				Column: "field",
+				Type:  NotNilOp,
+				Field: "field",
 			},
 		},
 	}, Filter{}.AndNotNil("field"))
@@ -537,7 +537,7 @@ func TestFilter_AndIn(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   InOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
@@ -549,7 +549,7 @@ func TestFilter_AndNin(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NinOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
@@ -561,7 +561,7 @@ func TestFilter_AndLike(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LikeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
@@ -573,7 +573,7 @@ func TestFilter_AndNotLike(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NotLikeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
@@ -585,7 +585,7 @@ func TestFilter_AndFragment(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   FragmentOp,
-				Column: "expr",
+				Field:  "expr",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -598,7 +598,7 @@ func TestFilter_OrEq(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   EqOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -611,7 +611,7 @@ func TestFilter_OrNe(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -624,7 +624,7 @@ func TestFilter_OrLt(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LtOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -637,7 +637,7 @@ func TestFilter_OrLte(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LteOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -650,7 +650,7 @@ func TestFilter_OrFilter_Gt(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   GtOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -663,7 +663,7 @@ func TestFilter_OrGte(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   GteOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
@@ -675,8 +675,8 @@ func TestFilter_OrNil(t *testing.T) {
 		Type: OrOp,
 		Inner: []Filter{
 			{
-				Type:   NilOp,
-				Column: "field",
+				Type:  NilOp,
+				Field: "field",
 			},
 		},
 	}, Filter{}.OrNil("field"))
@@ -687,8 +687,8 @@ func TestFilter_OrNotNil(t *testing.T) {
 		Type: OrOp,
 		Inner: []Filter{
 			{
-				Type:   NotNilOp,
-				Column: "field",
+				Type:  NotNilOp,
+				Field: "field",
 			},
 		},
 	}, Filter{}.OrNotNil("field"))
@@ -700,7 +700,7 @@ func TestFilter_OrIn(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   InOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
@@ -713,7 +713,7 @@ func TestFilter_OrNin(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NinOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
@@ -726,7 +726,7 @@ func TestFilter_OrLike(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   LikeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
@@ -739,7 +739,7 @@ func TestFilter_OrNotLike(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   NotLikeOp,
-				Column: "field",
+				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
@@ -752,7 +752,7 @@ func TestFilter_OrFragment(t *testing.T) {
 		Inner: []Filter{
 			{
 				Type:   FragmentOp,
-				Column: "expr",
+				Field:  "expr",
 				Values: []interface{}{"value"},
 			},
 		},
@@ -762,7 +762,7 @@ func TestFilter_OrFragment(t *testing.T) {
 func TestFilterEq(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   EqOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value"},
 	}, FilterEq("field", "value"))
 }
@@ -770,7 +770,7 @@ func TestFilterEq(t *testing.T) {
 func TestFilterNe(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   NeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value"},
 	}, FilterNe("field", "value"))
 }
@@ -778,7 +778,7 @@ func TestFilterNe(t *testing.T) {
 func TestFilterLt(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   LtOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, FilterLt("field", 10))
 }
@@ -786,7 +786,7 @@ func TestFilterLt(t *testing.T) {
 func TestFilterLte(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   LteOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, FilterLte("field", 10))
 }
@@ -794,7 +794,7 @@ func TestFilterLte(t *testing.T) {
 func TestFilterFilter_Gt(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   GtOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, FilterGt("field", 10))
 }
@@ -802,29 +802,29 @@ func TestFilterFilter_Gt(t *testing.T) {
 func TestFilterGte(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   GteOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{10},
 	}, FilterGte("field", 10))
 }
 
 func TestFilterNil(t *testing.T) {
 	assert.Equal(t, Filter{
-		Type:   NilOp,
-		Column: "field",
+		Type:  NilOp,
+		Field: "field",
 	}, FilterNil("field"))
 }
 
 func TestFilterNotNil(t *testing.T) {
 	assert.Equal(t, Filter{
-		Type:   NotNilOp,
-		Column: "field",
+		Type:  NotNilOp,
+		Field: "field",
 	}, FilterNotNil("field"))
 }
 
 func TestFilterIn(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   InOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
 	}, FilterIn("field", "value1", "value2"))
 }
@@ -832,7 +832,7 @@ func TestFilterIn(t *testing.T) {
 func TestFilterNin(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   NinOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
 	}, FilterNin("field", "value1", "value2"))
 }
@@ -840,7 +840,7 @@ func TestFilterNin(t *testing.T) {
 func TestFilterLike(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   LikeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"%expr%"},
 	}, FilterLike("field", "%expr%"))
 }
@@ -848,7 +848,7 @@ func TestFilterLike(t *testing.T) {
 func TestFilterNotLike(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   NotLikeOp,
-		Column: "field",
+		Field:  "field",
 		Values: []interface{}{"%expr%"},
 	}, FilterNotLike("field", "%expr%"))
 }
@@ -856,7 +856,7 @@ func TestFilterNotLike(t *testing.T) {
 func TestFilterFragment(t *testing.T) {
 	assert.Equal(t, Filter{
 		Type:   FragmentOp,
-		Column: "expr",
+		Field:  "expr",
 		Values: []interface{}{"value"},
 	}, FilterFragment("expr", "value"))
 }

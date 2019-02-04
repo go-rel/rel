@@ -2,11 +2,29 @@ package query
 
 type Query struct {
 	built        bool
+	JoinClause   []Join
 	WhereClause  Filter
 	GroupClause  Group
 	SortClause   []Sort
 	OffsetClause Offset
 	LimitClause  Limit
+}
+
+// Join current collection with other collection.
+func (query Query) Join(collection string) Query {
+	return query.JoinOn(collection, "", "")
+}
+
+// Join current collection with other collection.
+func (query Query) JoinOn(collection string, from string, to string) Query {
+	return query.JoinWith("JOIN", collection, from, to)
+}
+
+// JoinWith current collection with other collection with custom join mode.
+func (query Query) JoinWith(mode string, collection string, from string, to string) Query {
+	JoinWith(mode, collection, from, to).Build(&query)
+
+	return query
 }
 
 func (query Query) Where(filters ...Filter) Query {

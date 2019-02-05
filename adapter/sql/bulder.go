@@ -10,6 +10,9 @@ import (
 	"github.com/Fs02/grimoire/c"
 )
 
+// UnescapeCharacter disable field escaping when it starts with this character.
+var UnescapeCharacter byte = '^'
+
 var fieldCache sync.Map
 
 // Builder defines information of query builder.
@@ -513,10 +516,9 @@ func (builder *Builder) escape(field string) string {
 		return escapedField.(string)
 	}
 
-	start := strings.IndexRune(field, '(')
-	end := strings.IndexRune(field, ')')
-
-	if start >= 0 && end >= 0 && end > start {
+	if len(field) > 0 && field[0] == UnescapeCharacter {
+		escapedField = field[1:]
+	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
 		escapedField = field[:start+1] + builder.escape(field[start+1:end]) + field[end:]
 	} else if strings.HasSuffix(field, "*") {
 		escapedField = builder.config.EscapeChar + strings.Replace(field, ".", builder.config.EscapeChar+".", 1)

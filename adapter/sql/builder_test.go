@@ -36,6 +36,11 @@ func TestBuilder_Find(t *testing.T) {
 			users.Select("id", "name"),
 		},
 		{
+			"SELECT `id`,FIELD(`gender`, \"male\") AS `order` FROM `users` ORDER BY `order` ASC;",
+			nil,
+			users.Select("id", "^FIELD(`gender`, \"male\") AS `order`").Order(Asc("order")),
+		},
+		{
 			"SELECT * FROM `users` JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
 			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),

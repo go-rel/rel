@@ -185,7 +185,11 @@ func TestBuilder_Aggregate(t *testing.T) {
 
 	qs, args = builder.Aggregate(users)
 	assert.Nil(t, args)
-	assert.Equal(t, "SELECT `transactions`.`total`,sum(`transactions`.`total`) AS sum FROM `users`;", qs)
+	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
+
+	qs, args = builder.Aggregate(users.Group("gender"))
+	assert.Nil(t, args)
+	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
 }
 
 func TestBuilder_Insert(t *testing.T) {

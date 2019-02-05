@@ -28,13 +28,9 @@ func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 // Aggregate generates query for aggregation.
 func (builder *Builder) Aggregate(q grimoire.Query) (string, []interface{}) {
 	qs, args := builder.query(q)
+	field := q.AggregateMode + "(" + q.AggregateField + ") AS " + q.AggregateMode
 
-	if q.AggregateMode == "count" && q.AggregateField == "*" {
-		return builder.fields(false, "count(*) AS count") + qs, args
-	}
-
-	field := q.AggregateMode + "(" + q.AggregateField + ")" + " AS " + q.AggregateMode
-	return builder.fields(false, q.AggregateField, field) + qs, args
+	return builder.fields(false, append(q.GroupFields, field)...) + qs, args
 }
 
 func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {

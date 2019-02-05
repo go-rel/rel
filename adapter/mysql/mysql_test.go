@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Fs02/go-paranoid"
+	paranoid "github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/specs"
 	"github.com/stretchr/testify/assert"
@@ -23,9 +23,9 @@ func init() {
 
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		name VARCHAR(30) NOT NULL,
-		gender VARCHAR(10) NOT NULL,
-		age INT NOT NULL,
+		name VARCHAR(30) NOT NULL DEFAULT '',
+		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
 		created_at DATETIME,
 		updated_at DATETIME
@@ -35,7 +35,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		user_id INT UNSIGNED,
-		address VARCHAR(60) NOT NULL,
+		address VARCHAR(60) NOT NULL DEFAULT '',
 		created_at DATETIME,
 		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)

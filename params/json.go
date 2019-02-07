@@ -8,13 +8,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var timeType = reflect.TypeOf(time.Time{})
-
 // JSON is param type for json document.
 type JSON struct {
 	gjson.Result
 	results sync.Map
 }
+
+var _ Params = (*JSON)(nil)
 
 // Exists returns true if key exists.
 func (json *JSON) Exists(name string) bool {

@@ -1,152 +1,153 @@
-package query
+package query_test
 
 import (
 	"testing"
 
+	"github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/assert"
 )
 
-var result Filter
+var result query.FilterClause
 
-func BenchmarkFilter_chain1(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_chain1(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterEq("id", 1)
+		f = query.FilterEq("id", 1)
 	}
 	result = f
 }
 
-func BenchmarkFilter_chain2(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_chain2(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterEq("id", 1).AndNe("name", "foo")
+		f = query.FilterEq("id", 1).AndNe("name", "foo")
 	}
 	result = f
 }
 
-func BenchmarkFilter_chain3(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_chain3(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80)
+		f = query.FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80)
 	}
 	result = f
 }
 
-func BenchmarkFilter_chain4(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_chain4(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10)
+		f = query.FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10)
 	}
 	result = f
 }
 
-func BenchmarkFilter_slice1(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_slice1(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterAnd(FilterEq("id", 1))
+		f = query.FilterAnd(query.FilterEq("id", 1))
 	}
 	result = f
 }
 
-func BenchmarkFilter_slice2(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_slice2(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterAnd(FilterEq("id", 1), FilterNe("name", "foo"))
+		f = query.FilterAnd(query.FilterEq("id", 1), query.FilterNe("name", "foo"))
 	}
 	result = f
 }
 
-func BenchmarkFilter_slice3(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_slice3(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterAnd(FilterEq("id", 1), FilterNe("name", "foo"), FilterGt("score", 80))
+		f = query.FilterAnd(query.FilterEq("id", 1), query.FilterNe("name", "foo"), query.FilterGt("score", 80))
 	}
 	result = f
 }
 
-func BenchmarkFilter_slice4(b *testing.B) {
-	var f Filter
+func BenchmarkFilterClause_slice4(b *testing.B) {
+	var f query.FilterClause
 	for n := 0; n < b.N; n++ {
-		f = FilterAnd(FilterEq("id", 1), FilterNe("name", "foo"), FilterGt("score", 80), FilterLt("avg", 10))
+		f = query.FilterAnd(query.FilterEq("id", 1), query.FilterNe("name", "foo"), query.FilterGt("score", 80), query.FilterLt("avg", 10))
 	}
 	result = f
 }
 
-var filter1 = FilterEq("id", 1)
-var filter2 = FilterNe("name", "foo")
-var filter3 = FilterGt("score", 80)
-var filter4 = FilterLt("avg", 10)
+var filter1 = query.FilterEq("id", 1)
+var filter2 = query.FilterNe("name", "foo")
+var filter3 = query.FilterGt("score", 80)
+var filter4 = query.FilterLt("avg", 10)
 
-func TestFilter_None(t *testing.T) {
-	assert.True(t, Filter{}.None())
-	assert.True(t, FilterAnd().None())
-	assert.True(t, FilterNot().None())
+func TestFilterClause_None(t *testing.T) {
+	assert.True(t, query.FilterClause{}.None())
+	assert.True(t, query.FilterAnd().None())
+	assert.True(t, query.FilterNot().None())
 
-	assert.False(t, FilterAnd(filter1).None())
-	assert.False(t, FilterAnd(filter1, filter2).None())
+	assert.False(t, query.FilterAnd(filter1).None())
+	assert.False(t, query.FilterAnd(filter1, filter2).None())
 	assert.False(t, filter1.None())
 }
 
-func TestFilter_And(t *testing.T) {
+func TestFilterClause_And(t *testing.T) {
 	tests := []struct {
 		Case      string
-		Operation Filter
-		Result    Filter
+		Operation query.FilterClause
+		Result    query.FilterClause
 	}{
 		{
-			`Filter{}.And()`,
-			Filter{}.And(),
-			FilterAnd(),
+			`query.FilterClause{}.And()`,
+			query.FilterClause{}.And(),
+			query.FilterAnd(),
 		},
 		{
-			`Filter{}.And(filter1)`,
-			Filter{}.And(filter1),
+			`query.FilterClause{}.And(filter1)`,
+			query.FilterClause{}.And(filter1),
 			filter1,
 		},
 		{
-			`Filter{}.And(filter1).And()`,
-			Filter{}.And(filter1).And(),
+			`query.FilterClause{}.And(filter1).And()`,
+			query.FilterClause{}.And(filter1).And(),
 			filter1,
 		},
 		{
-			`Filter{}.And(filter1, filter2)`,
-			Filter{}.And(filter1, filter2),
-			FilterAnd(filter1, filter2),
+			`query.FilterClause{}.And(filter1, filter2)`,
+			query.FilterClause{}.And(filter1, filter2),
+			query.FilterAnd(filter1, filter2),
 		},
 		{
-			`Filter{}.And(filter1, filter2).And()`,
-			Filter{}.And(filter1, filter2).And(),
-			FilterAnd(filter1, filter2),
+			`query.FilterClause{}.And(filter1, filter2).And()`,
+			query.FilterClause{}.And(filter1, filter2).And(),
+			query.FilterAnd(filter1, filter2),
 		},
 		{
-			`Filter{}.And(filter1, filter2, filter3)`,
-			Filter{}.And(filter1, filter2, filter3),
-			FilterAnd(filter1, filter2, filter3),
+			`query.FilterClause{}.And(filter1, filter2, filter3)`,
+			query.FilterClause{}.And(filter1, filter2, filter3),
+			query.FilterAnd(filter1, filter2, filter3),
 		},
 		{
-			`Filter{}.And(filter1, filter2, filter3).And()`,
-			Filter{}.And(filter1, filter2, filter3).And(),
-			FilterAnd(filter1, filter2, filter3),
+			`query.FilterClause{}.And(filter1, filter2, filter3).And()`,
+			query.FilterClause{}.And(filter1, filter2, filter3).And(),
+			query.FilterAnd(filter1, filter2, filter3),
 		},
 		{
 			`filter1.And(filter2)`,
 			filter1.And(filter2),
-			FilterAnd(filter1, filter2),
+			query.FilterAnd(filter1, filter2),
 		},
 		{
 			`filter1.And(filter2).And()`,
 			filter1.And(filter2).And(),
-			FilterAnd(filter1, filter2),
+			query.FilterAnd(filter1, filter2),
 		},
 		{
 			`filter1.And(filter2).And(filter3)`,
 			filter1.And(filter2).And(filter3),
-			FilterAnd(filter1, filter2, filter3),
+			query.FilterAnd(filter1, filter2, filter3),
 		},
 		{
 			`filter1.And(filter2).And(filter3).And()`,
 			filter1.And(filter2).And(filter3).And(),
-			FilterAnd(filter1, filter2, filter3),
+			query.FilterAnd(filter1, filter2, filter3),
 		},
 	}
 
@@ -157,66 +158,66 @@ func TestFilter_And(t *testing.T) {
 	}
 }
 
-func TestFilter_Or(t *testing.T) {
+func TestFilterClause_Or(t *testing.T) {
 	tests := []struct {
 		Case      string
-		Operation Filter
-		Result    Filter
+		Operation query.FilterClause
+		Result    query.FilterClause
 	}{
 		{
-			`Filter{}.Or()`,
-			Filter{}.Or(),
-			FilterOr(),
+			`query.FilterClause{}.Or()`,
+			query.FilterClause{}.Or(),
+			query.FilterOr(),
 		},
 		{
-			`Filter{}.Or(filter1)`,
-			Filter{}.Or(filter1),
+			`query.FilterClause{}.Or(filter1)`,
+			query.FilterClause{}.Or(filter1),
 			filter1,
 		},
 		{
-			`Filter{}.Or(filter1).Or()`,
-			Filter{}.Or(filter1).Or(),
+			`query.FilterClause{}.Or(filter1).Or()`,
+			query.FilterClause{}.Or(filter1).Or(),
 			filter1,
 		},
 		{
-			`Filter{}.Or(filter1, filter2)`,
-			Filter{}.Or(filter1, filter2),
-			FilterOr(filter1, filter2),
+			`query.FilterClause{}.Or(filter1, filter2)`,
+			query.FilterClause{}.Or(filter1, filter2),
+			query.FilterOr(filter1, filter2),
 		},
 		{
-			`Filter{}.Or(filter1, filter2).Or()`,
-			Filter{}.Or(filter1, filter2).Or(),
-			FilterOr(filter1, filter2),
+			`query.FilterClause{}.Or(filter1, filter2).Or()`,
+			query.FilterClause{}.Or(filter1, filter2).Or(),
+			query.FilterOr(filter1, filter2),
 		},
 		{
-			`Filter{}.Or(filter1, filter2, filter3)`,
-			Filter{}.Or(filter1, filter2, filter3),
-			FilterOr(filter1, filter2, filter3),
+			`query.FilterClause{}.Or(filter1, filter2, filter3)`,
+			query.FilterClause{}.Or(filter1, filter2, filter3),
+			query.FilterOr(filter1, filter2, filter3),
 		},
 		{
-			`Filter{}.Or(filter1, filter2, filter3).Or()`,
-			Filter{}.Or(filter1, filter2, filter3).Or(),
-			FilterOr(filter1, filter2, filter3),
+			`query.FilterClause{}.Or(filter1, filter2, filter3).Or()`,
+			query.FilterClause{}.Or(filter1, filter2, filter3).Or(),
+			query.FilterOr(filter1, filter2, filter3),
 		},
 		{
 			`filter1.Or(filter2)`,
 			filter1.Or(filter2),
-			FilterOr(filter1, filter2),
+			query.FilterOr(filter1, filter2),
 		},
 		{
 			`filter1.Or(filter2).Or()`,
 			filter1.Or(filter2).Or(),
-			FilterOr(filter1, filter2),
+			query.FilterOr(filter1, filter2),
 		},
 		{
 			`filter1.Or(filter2).Or(filter3)`,
 			filter1.Or(filter2).Or(filter3),
-			FilterOr(filter1, filter2, filter3),
+			query.FilterOr(filter1, filter2, filter3),
 		},
 		{
 			`filter1.Or(filter2).Or(filter3).Or()`,
 			filter1.Or(filter2).Or(filter3).Or(),
-			FilterOr(filter1, filter2, filter3),
+			query.FilterOr(filter1, filter2, filter3),
 		},
 	}
 
@@ -230,68 +231,68 @@ func TestFilter_Or(t *testing.T) {
 func TestFilterAnd(t *testing.T) {
 	tests := []struct {
 		Case      string
-		Operation Filter
-		Result    Filter
+		Operation query.FilterClause
+		Result    query.FilterClause
 	}{
 		{
-			`FilterAnd()`,
-			FilterAnd(),
-			Filter{Type: AndOp},
+			`query.FilterAnd()`,
+			query.FilterAnd(),
+			query.FilterClause{Type: query.AndOp},
 		},
 		{
-			`FilterAnd(filter1)`,
-			FilterAnd(filter1),
+			`query.FilterAnd(filter1)`,
+			query.FilterAnd(filter1),
 			filter1,
 		},
 		{
-			`FilterAnd(filter1, filter2)`,
-			FilterAnd(filter1, filter2),
-			Filter{
-				Type:  AndOp,
-				Inner: []Filter{filter1, filter2},
+			`query.FilterAnd(filter1, filter2)`,
+			query.FilterAnd(filter1, filter2),
+			query.FilterClause{
+				Type:  query.AndOp,
+				Inner: []query.FilterClause{filter1, filter2},
 			},
 		},
 		{
-			`FilterAnd(filter1, FilterOr(filter2, filter3))`,
-			FilterAnd(filter1, FilterOr(filter2, filter3)),
-			Filter{
-				Type: AndOp,
-				Inner: []Filter{
+			`query.FilterAnd(filter1, query.FilterOr(filter2, filter3))`,
+			query.FilterAnd(filter1, query.FilterOr(filter2, filter3)),
+			query.FilterClause{
+				Type: query.AndOp,
+				Inner: []query.FilterClause{
 					filter1,
 					{
-						Type:  OrOp,
-						Inner: []Filter{filter2, filter3},
+						Type:  query.OrOp,
+						Inner: []query.FilterClause{filter2, filter3},
 					},
 				},
 			},
 		},
 		{
-			`FilterAnd(FilterOr(filter1, filter2), filter3)`,
-			FilterAnd(FilterOr(filter1, filter2), filter3),
-			Filter{
-				Type: AndOp,
-				Inner: []Filter{
+			`query.FilterAnd(query.FilterOr(filter1, filter2), filter3)`,
+			query.FilterAnd(query.FilterOr(filter1, filter2), filter3),
+			query.FilterClause{
+				Type: query.AndOp,
+				Inner: []query.FilterClause{
 					{
-						Type:  OrOp,
-						Inner: []Filter{filter1, filter2},
+						Type:  query.OrOp,
+						Inner: []query.FilterClause{filter1, filter2},
 					},
 					filter3,
 				},
 			},
 		},
 		{
-			`FilterAnd(FilterOr(filter1, filter2), FilterOr(filter3, filter4))`,
-			FilterAnd(FilterOr(filter1, filter2), FilterOr(filter3, filter4)),
-			Filter{
-				Type: AndOp,
-				Inner: []Filter{
+			`query.FilterAnd(query.FilterOr(filter1, filter2), query.FilterOr(filter3, filter4))`,
+			query.FilterAnd(query.FilterOr(filter1, filter2), query.FilterOr(filter3, filter4)),
+			query.FilterClause{
+				Type: query.AndOp,
+				Inner: []query.FilterClause{
 					{
-						Type:  OrOp,
-						Inner: []Filter{filter1, filter2},
+						Type:  query.OrOp,
+						Inner: []query.FilterClause{filter1, filter2},
 					},
 					{
-						Type:  OrOp,
-						Inner: []Filter{filter3, filter4},
+						Type:  query.OrOp,
+						Inner: []query.FilterClause{filter3, filter4},
 					},
 				},
 			},
@@ -308,68 +309,68 @@ func TestFilterAnd(t *testing.T) {
 func TestFilterOr(t *testing.T) {
 	tests := []struct {
 		Case      string
-		Operation Filter
-		Result    Filter
+		Operation query.FilterClause
+		Result    query.FilterClause
 	}{
 		{
-			`FilterOr()`,
-			FilterOr(),
-			Filter{Type: OrOp},
+			`query.FilterOr()`,
+			query.FilterOr(),
+			query.FilterClause{Type: query.OrOp},
 		},
 		{
-			`FilterOr(filter1)`,
-			FilterOr(filter1),
+			`query.FilterOr(filter1)`,
+			query.FilterOr(filter1),
 			filter1,
 		},
 		{
-			`FilterOr(filter1, filter2)`,
-			FilterOr(filter1, filter2),
-			Filter{
-				Type:  OrOp,
-				Inner: []Filter{filter1, filter2},
+			`query.FilterOr(filter1, filter2)`,
+			query.FilterOr(filter1, filter2),
+			query.FilterClause{
+				Type:  query.OrOp,
+				Inner: []query.FilterClause{filter1, filter2},
 			},
 		},
 		{
-			`FilterOr(filter1, FilterAnd(filter2, filter3))`,
-			FilterOr(filter1, FilterAnd(filter2, filter3)),
-			Filter{
-				Type: OrOp,
-				Inner: []Filter{
+			`query.FilterOr(filter1, query.FilterAnd(filter2, filter3))`,
+			query.FilterOr(filter1, query.FilterAnd(filter2, filter3)),
+			query.FilterClause{
+				Type: query.OrOp,
+				Inner: []query.FilterClause{
 					filter1,
 					{
-						Type:  AndOp,
-						Inner: []Filter{filter2, filter3},
+						Type:  query.AndOp,
+						Inner: []query.FilterClause{filter2, filter3},
 					},
 				},
 			},
 		},
 		{
-			`FilterOr(FilterAnd(filter1, filter2), filter3)`,
-			FilterOr(FilterAnd(filter1, filter2), filter3),
-			Filter{
-				Type: OrOp,
-				Inner: []Filter{
+			`query.FilterOr(query.FilterAnd(filter1, filter2), filter3)`,
+			query.FilterOr(query.FilterAnd(filter1, filter2), filter3),
+			query.FilterClause{
+				Type: query.OrOp,
+				Inner: []query.FilterClause{
 					{
-						Type:  AndOp,
-						Inner: []Filter{filter1, filter2},
+						Type:  query.AndOp,
+						Inner: []query.FilterClause{filter1, filter2},
 					},
 					filter3,
 				},
 			},
 		},
 		{
-			`FilterOr(FilterAnd(filter1, filter2), FilterAnd(filter3, filter4))`,
-			FilterOr(FilterAnd(filter1, filter2), FilterAnd(filter3, filter4)),
-			Filter{
-				Type: OrOp,
-				Inner: []Filter{
+			`query.FilterOr(query.FilterAnd(filter1, filter2), query.FilterAnd(filter3, filter4))`,
+			query.FilterOr(query.FilterAnd(filter1, filter2), query.FilterAnd(filter3, filter4)),
+			query.FilterClause{
+				Type: query.OrOp,
+				Inner: []query.FilterClause{
 					{
-						Type:  AndOp,
-						Inner: []Filter{filter1, filter2},
+						Type:  query.AndOp,
+						Inner: []query.FilterClause{filter1, filter2},
 					},
 					{
-						Type:  AndOp,
-						Inner: []Filter{filter3, filter4},
+						Type:  query.AndOp,
+						Inner: []query.FilterClause{filter3, filter4},
 					},
 				},
 			},
@@ -383,480 +384,480 @@ func TestFilterOr(t *testing.T) {
 	}
 }
 
-func TestFilter_Not(t *testing.T) {
+func TestFilterClause_Not(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Input    FilterOp
-		Expected FilterOp
+		Input    query.FilterOp
+		Expected query.FilterOp
 	}{
 		{
 			`Not Eq`,
-			EqOp,
-			NeOp,
+			query.EqOp,
+			query.NeOp,
 		},
 		{
 			`Not Lt`,
-			LtOp,
-			GteOp,
+			query.LtOp,
+			query.GteOp,
 		},
 		{
 			`Not Lte`,
-			LteOp,
-			GtOp,
+			query.LteOp,
+			query.GtOp,
 		},
 		{
 			`Not Gt`,
-			GtOp,
-			LteOp,
+			query.GtOp,
+			query.LteOp,
 		},
 		{
 			`Not Gte`,
-			GteOp,
-			LtOp,
+			query.GteOp,
+			query.LtOp,
 		},
 		{
 			`Not Nil`,
-			NilOp,
-			NotNilOp,
+			query.NilOp,
+			query.NotNilOp,
 		},
 		{
 			`Not In`,
-			InOp,
-			NinOp,
+			query.InOp,
+			query.NinOp,
 		},
 		{
 			`Not Like`,
-			LikeOp,
-			NotLikeOp,
+			query.LikeOp,
+			query.NotLikeOp,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Expected, FilterNot(Filter{Type: tt.Input}).Type)
+			assert.Equal(t, tt.Expected, query.FilterNot(query.FilterClause{Type: tt.Input}).Type)
 		})
 	}
 }
 
-func TestFilter_AndEq(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndEq(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   EqOp,
+				Type:   query.EqOp,
 				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.AndEq("field", "value"))
+	}, query.FilterClause{}.AndEq("field", "value"))
 }
 
-func TestFilter_AndNe(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndNe(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   NeOp,
+				Type:   query.NeOp,
 				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.AndNe("field", "value"))
+	}, query.FilterClause{}.AndNe("field", "value"))
 }
 
-func TestFilter_AndLt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndLt(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   LtOp,
+				Type:   query.LtOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.AndLt("field", 10))
+	}, query.FilterClause{}.AndLt("field", 10))
 }
 
-func TestFilter_AndLte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndLte(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   LteOp,
+				Type:   query.LteOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.AndLte("field", 10))
+	}, query.FilterClause{}.AndLte("field", 10))
 }
 
-func TestFilter_AndFilter_Gt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndGt(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   GtOp,
+				Type:   query.GtOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.AndGt("field", 10))
+	}, query.FilterClause{}.AndGt("field", 10))
 }
 
-func TestFilter_AndGte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndGte(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   GteOp,
+				Type:   query.GteOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.AndGte("field", 10))
+	}, query.FilterClause{}.AndGte("field", 10))
 }
 
-func TestFilter_AndNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndNil(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:  NilOp,
+				Type:  query.NilOp,
 				Field: "field",
 			},
 		},
-	}, Filter{}.AndNil("field"))
+	}, query.FilterClause{}.AndNil("field"))
 }
 
-func TestFilter_AndNotNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndNotNil(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:  NotNilOp,
+				Type:  query.NotNilOp,
 				Field: "field",
 			},
 		},
-	}, Filter{}.AndNotNil("field"))
+	}, query.FilterClause{}.AndNotNil("field"))
 }
 
-func TestFilter_AndIn(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndIn(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   InOp,
+				Type:   query.InOp,
 				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
-	}, Filter{}.AndIn("field", "value1", "value2"))
+	}, query.FilterClause{}.AndIn("field", "value1", "value2"))
 }
 
-func TestFilter_AndNin(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndNin(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   NinOp,
+				Type:   query.NinOp,
 				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
-	}, Filter{}.AndNin("field", "value1", "value2"))
+	}, query.FilterClause{}.AndNin("field", "value1", "value2"))
 }
 
-func TestFilter_AndLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndLike(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   LikeOp,
+				Type:   query.LikeOp,
 				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
-	}, Filter{}.AndLike("field", "%expr%"))
+	}, query.FilterClause{}.AndLike("field", "%expr%"))
 }
 
-func TestFilter_AndNotLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndNotLike(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   NotLikeOp,
+				Type:   query.NotLikeOp,
 				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
-	}, Filter{}.AndNotLike("field", "%expr%"))
+	}, query.FilterClause{}.AndNotLike("field", "%expr%"))
 }
 
-func TestFilter_AndFragment(t *testing.T) {
-	assert.Equal(t, Filter{
-		Inner: []Filter{
+func TestFilterClause_AndFragment(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Inner: []query.FilterClause{
 			{
-				Type:   FragmentOp,
+				Type:   query.FragmentOp,
 				Field:  "expr",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.AndFragment("expr", "value"))
+	}, query.FilterClause{}.AndFragment("expr", "value"))
 }
 
-func TestFilter_OrEq(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrEq(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   EqOp,
+				Type:   query.EqOp,
 				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.OrEq("field", "value"))
+	}, query.FilterClause{}.OrEq("field", "value"))
 }
 
-func TestFilter_OrNe(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrNe(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   NeOp,
+				Type:   query.NeOp,
 				Field:  "field",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.OrNe("field", "value"))
+	}, query.FilterClause{}.OrNe("field", "value"))
 }
 
-func TestFilter_OrLt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrLt(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   LtOp,
+				Type:   query.LtOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.OrLt("field", 10))
+	}, query.FilterClause{}.OrLt("field", 10))
 }
 
-func TestFilter_OrLte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrLte(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   LteOp,
+				Type:   query.LteOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.OrLte("field", 10))
+	}, query.FilterClause{}.OrLte("field", 10))
 }
 
-func TestFilter_OrFilter_Gt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrGt(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   GtOp,
+				Type:   query.GtOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.OrGt("field", 10))
+	}, query.FilterClause{}.OrGt("field", 10))
 }
 
-func TestFilter_OrGte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrGte(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   GteOp,
+				Type:   query.GteOp,
 				Field:  "field",
 				Values: []interface{}{10},
 			},
 		},
-	}, Filter{}.OrGte("field", 10))
+	}, query.FilterClause{}.OrGte("field", 10))
 }
 
-func TestFilter_OrNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrNil(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:  NilOp,
+				Type:  query.NilOp,
 				Field: "field",
 			},
 		},
-	}, Filter{}.OrNil("field"))
+	}, query.FilterClause{}.OrNil("field"))
 }
 
-func TestFilter_OrNotNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrNotNil(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:  NotNilOp,
+				Type:  query.NotNilOp,
 				Field: "field",
 			},
 		},
-	}, Filter{}.OrNotNil("field"))
+	}, query.FilterClause{}.OrNotNil("field"))
 }
 
-func TestFilter_OrIn(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrIn(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   InOp,
+				Type:   query.InOp,
 				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
-	}, Filter{}.OrIn("field", "value1", "value2"))
+	}, query.FilterClause{}.OrIn("field", "value1", "value2"))
 }
 
-func TestFilter_OrNin(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrNin(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   NinOp,
+				Type:   query.NinOp,
 				Field:  "field",
 				Values: []interface{}{"value1", "value2"},
 			},
 		},
-	}, Filter{}.OrNin("field", "value1", "value2"))
+	}, query.FilterClause{}.OrNin("field", "value1", "value2"))
 }
 
-func TestFilter_OrLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrLike(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   LikeOp,
+				Type:   query.LikeOp,
 				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
-	}, Filter{}.OrLike("field", "%expr%"))
+	}, query.FilterClause{}.OrLike("field", "%expr%"))
 }
 
-func TestFilter_OrNotLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrNotLike(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   NotLikeOp,
+				Type:   query.NotLikeOp,
 				Field:  "field",
 				Values: []interface{}{"%expr%"},
 			},
 		},
-	}, Filter{}.OrNotLike("field", "%expr%"))
+	}, query.FilterClause{}.OrNotLike("field", "%expr%"))
 }
 
-func TestFilter_OrFragment(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type: OrOp,
-		Inner: []Filter{
+func TestFilterClause_OrFragment(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type: query.OrOp,
+		Inner: []query.FilterClause{
 			{
-				Type:   FragmentOp,
+				Type:   query.FragmentOp,
 				Field:  "expr",
 				Values: []interface{}{"value"},
 			},
 		},
-	}, Filter{}.OrFragment("expr", "value"))
+	}, query.FilterClause{}.OrFragment("expr", "value"))
 }
 
 func TestFilterEq(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   EqOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.EqOp,
 		Field:  "field",
 		Values: []interface{}{"value"},
-	}, FilterEq("field", "value"))
+	}, query.FilterEq("field", "value"))
 }
 
-func TestFilterNe(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   NeOp,
+func FilterNe(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type:   query.NeOp,
 		Field:  "field",
 		Values: []interface{}{"value"},
-	}, FilterNe("field", "value"))
+	}, query.FilterNe("field", "value"))
 }
 
 func TestFilterLt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   LtOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.LtOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, FilterLt("field", 10))
+	}, query.FilterLt("field", 10))
 }
 
 func TestFilterLte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   LteOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.LteOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, FilterLte("field", 10))
+	}, query.FilterLte("field", 10))
 }
 
-func TestFilterFilter_Gt(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   GtOp,
+func TestFilterClauseGt(t *testing.T) {
+	assert.Equal(t, query.FilterClause{
+		Type:   query.GtOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, FilterGt("field", 10))
+	}, query.FilterGt("field", 10))
 }
 
 func TestFilterGte(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   GteOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.GteOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, FilterGte("field", 10))
+	}, query.FilterGte("field", 10))
 }
 
 func TestFilterNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:  NilOp,
+	assert.Equal(t, query.FilterClause{
+		Type:  query.NilOp,
 		Field: "field",
-	}, FilterNil("field"))
+	}, query.FilterNil("field"))
 }
 
 func TestFilterNotNil(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:  NotNilOp,
+	assert.Equal(t, query.FilterClause{
+		Type:  query.NotNilOp,
 		Field: "field",
-	}, FilterNotNil("field"))
+	}, query.FilterNotNil("field"))
 }
 
 func TestFilterIn(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   InOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.InOp,
 		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
-	}, FilterIn("field", "value1", "value2"))
+	}, query.FilterIn("field", "value1", "value2"))
 }
 
 func TestFilterNin(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   NinOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.NinOp,
 		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
-	}, FilterNin("field", "value1", "value2"))
+	}, query.FilterNin("field", "value1", "value2"))
 }
 
 func TestFilterLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   LikeOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.LikeOp,
 		Field:  "field",
 		Values: []interface{}{"%expr%"},
-	}, FilterLike("field", "%expr%"))
+	}, query.FilterLike("field", "%expr%"))
 }
 
 func TestFilterNotLike(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   NotLikeOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.NotLikeOp,
 		Field:  "field",
 		Values: []interface{}{"%expr%"},
-	}, FilterNotLike("field", "%expr%"))
+	}, query.FilterNotLike("field", "%expr%"))
 }
 
 func TestFilterFragment(t *testing.T) {
-	assert.Equal(t, Filter{
-		Type:   FragmentOp,
+	assert.Equal(t, query.FilterClause{
+		Type:   query.FragmentOp,
 		Field:  "expr",
 		Values: []interface{}{"value"},
-	}, FilterFragment("expr", "value"))
+	}, query.FilterFragment("expr", "value"))
 }

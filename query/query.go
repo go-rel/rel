@@ -59,7 +59,7 @@ func (q Query) Group(fields ...string) Query {
 }
 
 func (q Query) Having(filters ...FilterClause) Query {
-	q.GroupClause.Filters = filters
+	q.GroupClause.Filter = q.GroupClause.Filter.And(filters...)
 	return q
 }
 

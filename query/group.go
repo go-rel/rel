@@ -1,8 +1,8 @@
 package query
 
 type GroupClause struct {
-	Fields  []string
-	Filters []FilterClause
+	Fields []string
+	Filter FilterClause
 }
 
 func (g GroupClause) Build(query *Query) {
@@ -10,7 +10,7 @@ func (g GroupClause) Build(query *Query) {
 }
 
 func (g GroupClause) Having(filters ...FilterClause) GroupClause {
-	g.Filters = filters
+	g.Filter = g.Filter.And(filters...)
 	return g
 }
 

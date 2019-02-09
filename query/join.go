@@ -30,42 +30,42 @@ func JoinFragment(expr string, args ...interface{}) JoinClause {
 	}
 }
 
-// func Join(collection string) JoinClause {
-// 	return JoinWith("JOIN", collection, "", "")
-// }
+func Join(collection string) JoinClause {
+	return JoinWith("JOIN", collection, "", "")
+}
 
 func JoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("JOIN", collection, from, to)
 }
 
-func JoinInner(collection string) JoinClause {
-	return JoinInnerOn(collection, "", "")
+func InnerJoin(collection string) JoinClause {
+	return InnerJoinOn(collection, "", "")
 }
 
-func JoinInnerOn(collection string, from string, to string) JoinClause {
+func InnerJoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("INNER JOIN", collection, from, to)
 }
 
-func JoinLeft(collection string) JoinClause {
-	return JoinLeftOn(collection, "", "")
+func LeftJoin(collection string) JoinClause {
+	return LeftJoinOn(collection, "", "")
 }
 
-func JoinLeftOn(collection string, from string, to string) JoinClause {
+func LeftJoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("LEFT JOIN", collection, from, to)
 }
 
-func JoinRight(collection string) JoinClause {
-	return JoinRightOn(collection, "", "")
+func RightJoin(collection string) JoinClause {
+	return RightJoinOn(collection, "", "")
 }
 
-func JoinRightOn(collection string, from string, to string) JoinClause {
+func RightJoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("RIGHT JOIN", collection, from, to)
 }
 
-func JoinFull(collection string) JoinClause {
-	return JoinFullOn(collection, "", "")
+func FullJoin(collection string) JoinClause {
+	return FullJoinOn(collection, "", "")
 }
 
-func JoinFullOn(collection string, from string, to string) JoinClause {
+func FullJoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("FULL JOIN", collection, from, to)
 }

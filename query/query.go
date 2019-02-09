@@ -10,8 +10,8 @@ type Query struct {
 	WhereClause     FilterClause
 	GroupClause     GroupClause
 	SortClause      []SortClause
-	OffsetClause    OffsetClause
-	LimitClause     LimitClause
+	OffsetClause    Offset
+	LimitClause     Limit
 }
 
 // Select filter fields to be selected from database.
@@ -88,13 +88,13 @@ func (q Query) SortDesc(fields ...string) Query {
 }
 
 // Offset the result returned by database.
-func (q Query) Offset(offset OffsetClause) Query {
+func (q Query) Offset(offset Offset) Query {
 	q.OffsetClause = offset
 	return q
 }
 
 // Limit result returned by database.
-func (q Query) Limit(limit LimitClause) Query {
+func (q Query) Limit(limit Limit) Query {
 	q.LimitClause = limit
 	return q
 }

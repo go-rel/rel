@@ -1,7 +1,7 @@
 package query
 
-type OffsetClause int
+type Offset int
 
-func (o OffsetClause) Build(query *Query) {
+func (o Offset) Build(query *Query) {
 	query.OffsetClause = o
 }

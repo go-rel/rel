@@ -1,7 +1,7 @@
 package query
 
-type LimitClause int
+type Limit int
 
-func (l LimitClause) Build(query *Query) {
+func (l Limit) Build(query *Query) {
 	query.LimitClause = l
 }

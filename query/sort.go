@@ -1,37 +1,37 @@
 package query
 
-// Sort defines sort information of query.
-type Sort struct {
+// SortClause defines sort information of query.
+type SortClause struct {
 	Field string
 	Sort  int
 }
 
-func (sort Sort) Build(query *Query) {
-	query.SortClause = append(query.SortClause, sort)
+func (s SortClause) Build(query *Query) {
+	query.SortClause = append(query.SortClause, s)
+}
+
+// Asc returns true if sort is ascending.
+func (s SortClause) Asc() bool {
+	return s.Sort >= 0
+}
+
+// Desc returns true if s is descending.
+func (s SortClause) Desc() bool {
+	return s.Sort < 0
 }
 
 // SortAsc sorts field with ascending sort.
-func SortAsc(field string) Sort {
-	return Sort{
+func SortAsc(field string) SortClause {
+	return SortClause{
 		Field: field,
 		Sort:  1,
 	}
 }
 
 // SortDesc sorts field with descending sort.
-func SortDesc(field string) Sort {
-	return Sort{
+func SortDesc(field string) SortClause {
+	return SortClause{
 		Field: field,
 		Sort:  -1,
 	}
-}
-
-// Asc returns true if sort is ascending.
-func (sort Sort) Asc() bool {
-	return sort.Sort >= 0
-}
-
-// Desc returns true if sort is descending.
-func (sort Sort) Desc() bool {
-	return sort.Sort < 0
 }

@@ -1,7 +1,7 @@
 package query
 
-// Join defines join information in query.
-type Join struct {
+// JoinClause defines join information in query.
+type JoinClause struct {
 	Mode       string
 	Collection string
 	From       string
@@ -9,13 +9,13 @@ type Join struct {
 	Arguments  []interface{}
 }
 
-func (join Join) Build(query *Query) {
+func (j JoinClause) Build(query *Query) {
 	// TODO: infer from and to when not specified
-	query.JoinClause = append(query.JoinClause, join)
+	query.JoinClause = append(query.JoinClause, j)
 }
 
-func JoinWith(mode string, collection string, from string, to string) Join {
-	return Join{
+func JoinWith(mode string, collection string, from string, to string) JoinClause {
+	return JoinClause{
 		Mode:       mode,
 		Collection: collection,
 		From:       from,
@@ -23,49 +23,49 @@ func JoinWith(mode string, collection string, from string, to string) Join {
 	}
 }
 
-func JoinFragment(expr string, args ...interface{}) Join {
-	return Join{
+func JoinFragment(expr string, args ...interface{}) JoinClause {
+	return JoinClause{
 		Mode:      expr,
 		Arguments: args,
 	}
 }
 
-// func Join(collection string) Join {
+// func Join(collection string) JoinClause {
 // 	return JoinWith("JOIN", collection, "", "")
 // }
 
-func JoinOn(collection string, from string, to string) Join {
+func JoinOn(collection string, from string, to string) JoinClause {
 	return JoinWith("JOIN", collection, from, to)
 }
 
-func JoinInner(collection string) Join {
+func JoinInner(collection string) JoinClause {
 	return JoinInnerOn(collection, "", "")
 }
 
-func JoinInnerOn(collection string, from string, to string) Join {
+func JoinInnerOn(collection string, from string, to string) JoinClause {
 	return JoinWith("INNER JOIN", collection, from, to)
 }
 
-func JoinLeft(collection string) Join {
+func JoinLeft(collection string) JoinClause {
 	return JoinLeftOn(collection, "", "")
 }
 
-func JoinLeftOn(collection string, from string, to string) Join {
+func JoinLeftOn(collection string, from string, to string) JoinClause {
 	return JoinWith("LEFT JOIN", collection, from, to)
 }
 
-func JoinRight(collection string) Join {
+func JoinRight(collection string) JoinClause {
 	return JoinRightOn(collection, "", "")
 }
 
-func JoinRightOn(collection string, from string, to string) Join {
+func JoinRightOn(collection string, from string, to string) JoinClause {
 	return JoinWith("RIGHT JOIN", collection, from, to)
 }
 
-func JoinFull(collection string) Join {
+func JoinFull(collection string) JoinClause {
 	return JoinFullOn(collection, "", "")
 }
 
-func JoinFullOn(collection string, from string, to string) Join {
+func JoinFullOn(collection string, from string, to string) JoinClause {
 	return JoinWith("FULL JOIN", collection, from, to)
 }

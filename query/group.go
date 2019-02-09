@@ -1,25 +1,25 @@
 package query
 
-type Group struct {
+type GroupClause struct {
 	Fields  []string
-	Filters []Filter
+	Filters []FilterClause
 }
 
-func (group Group) Build(query *Query) {
-	query.GroupClause = group
+func (g GroupClause) Build(query *Query) {
+	query.GroupClause = g
 }
 
-func (group Group) Having(filters ...Filter) Group {
-	group.Filters = filters
-	return group
+func (g GroupClause) Having(filters ...FilterClause) GroupClause {
+	g.Filters = filters
+	return g
 }
 
-func (group Group) Where(filters ...Filter) Group {
-	return group.Having(filters...)
+func (g GroupClause) Where(filters ...FilterClause) GroupClause {
+	return g.Having(filters...)
 }
 
-func GroupBy(fields ...string) Group {
-	return Group{
+func Group(fields ...string) GroupClause {
+	return GroupClause{
 		Fields: fields,
 	}
 }

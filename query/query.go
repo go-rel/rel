@@ -19,6 +19,16 @@ func (q Query) Select(fields ...string) Query {
 	return q
 }
 
+func (q Query) From(collection string) Query {
+	q.Collection = collection
+
+	if len(q.SelectClause.Fields) == 0 {
+		q.SelectClause = NewSelect(collection + ".*")
+	}
+
+	return q
+}
+
 func (q Query) Distinct() Query {
 	q.SelectClause.OnlyDistinct = true
 	return q
@@ -116,7 +126,30 @@ func From(collection string) Query {
 	}
 }
 
-// TODO Join entry
+// Join current collection with other collection.
+func Join(collection string) Query {
+	return JoinOn(collection, "", "")
+}
+
+// JoinOn current collection with other collection.
+func JoinOn(collection string, from string, to string) Query {
+	return JoinWith("JOIN", collection, from, to)
+}
+
+// JoinWith current collection with other collection with custom join mode.
+func JoinWith(mode string, collection string, from string, to string) Query {
+	var q Query
+	NewJoinWith(mode, collection, from, to).Build(&q) // TODO: ensure this always called last
+
+	return q
+}
+
+func JoinFragment(expr string, args ...interface{}) Query {
+	var q Query
+	NewJoinFragment(expr, args...).Build(&q) // TODO: ensure this always called last
+
+	return q
+}
 
 func Where(filters ...FilterClause) Query {
 	return Query{
@@ -124,10 +157,8 @@ func Where(filters ...FilterClause) Query {
 	}
 }
 
-// func Group(fields ...string) Query {
-// 	return Query{
-// 		GroupClause: GroupClause{
-// 			Fields: fields,
-// 		},
-// 	}
-// }
+func Group(fields ...string) Query {
+	return Query{
+		GroupClause: NewGroup(fields...),
+	}
+}

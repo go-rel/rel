@@ -15,9 +15,3 @@ func NewSelect(fields ...string) SelectClause {
 		Fields: fields,
 	}
 }
-
-func Distinct() SelectClause {
-	return SelectClause{
-		OnlyDistinct: true,
-	}
-}

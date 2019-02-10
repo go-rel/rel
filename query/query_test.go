@@ -35,7 +35,7 @@ func TestQuery_Distinct(t *testing.T) {
 }
 
 func TestQuery_Join(t *testing.T) {
-	assert.Equal(t, query.Query{
+	result := query.Query{
 		Collection: "users",
 		SelectClause: query.SelectClause{
 			Fields: []string{"users.*"},
@@ -48,11 +48,14 @@ func TestQuery_Join(t *testing.T) {
 				To:         "transactions.id",
 			},
 		},
-	}, query.From("users").Join("transactions"))
+	}
+
+	assert.Equal(t, result, query.From("users").Join("transactions"))
+	assert.Equal(t, result, query.Join("transactions").From("users"))
 }
 
 func TestQuery_JoinOn(t *testing.T) {
-	assert.Equal(t, query.Query{
+	result := query.Query{
 		Collection: "users",
 		SelectClause: query.SelectClause{
 			Fields: []string{"users.*"},
@@ -65,11 +68,14 @@ func TestQuery_JoinOn(t *testing.T) {
 				To:         "transactions.id",
 			},
 		},
-	}, query.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
+	}
+
+	assert.Equal(t, result, query.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
+	assert.Equal(t, result, query.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
 }
 
 func TestQuery_JoinFragment(t *testing.T) {
-	assert.Equal(t, query.Query{
+	result := query.Query{
 		Collection: "users",
 		SelectClause: query.SelectClause{
 			Fields: []string{"users.*"},
@@ -80,7 +86,10 @@ func TestQuery_JoinFragment(t *testing.T) {
 				Arguments: []interface{}{1},
 			},
 		},
-	}, query.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
+	}
+
+	assert.Equal(t, result, query.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
+	assert.Equal(t, result, query.JoinFragment("JOIN transactions ON transacations.id=?", 1).From("users"))
 }
 
 func TestQuery_Where(t *testing.T) {
@@ -249,7 +258,7 @@ func TestQuery_OrWhere(t *testing.T) {
 }
 
 func TestQuery_Group(t *testing.T) {
-	assert.Equal(t, query.From("users").Group("active", "plan"), query.Query{
+	result := query.Query{
 		Collection: "users",
 		SelectClause: query.SelectClause{
 			Fields: []string{"users.*"},
@@ -257,7 +266,10 @@ func TestQuery_Group(t *testing.T) {
 		GroupClause: query.GroupClause{
 			Fields: []string{"active", "plan"},
 		},
-	})
+	}
+
+	assert.Equal(t, result, query.From("users").Group("active", "plan"))
+	assert.Equal(t, result, query.Group("active", "plan").From("users"))
 }
 
 func TestQuery_Having(t *testing.T) {

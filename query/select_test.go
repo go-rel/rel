@@ -14,7 +14,7 @@ func TestSelect(t *testing.T) {
 	}, query.NewSelect("id", "name"))
 }
 
-func TestSelectDistinct(t *testing.T) {
+func TestSelect_Distinct(t *testing.T) {
 	assert.Equal(t, query.SelectClause{
 		OnlyDistinct: true,
 		Fields:       []string{"id", "name"},

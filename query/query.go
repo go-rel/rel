@@ -15,7 +15,7 @@ type Query struct {
 
 // Select filter fields to be selected from database.
 func (q Query) Select(fields ...string) Query {
-	q.SelectClause = Select(fields...)
+	q.SelectClause = NewSelect(fields...)
 	return q
 }
 
@@ -36,13 +36,13 @@ func (q Query) JoinOn(collection string, from string, to string) Query {
 
 // JoinWith current collection with other collection with custom join mode.
 func (q Query) JoinWith(mode string, collection string, from string, to string) Query {
-	JoinWith(mode, collection, from, to).Build(&q)
+	NewJoinWith(mode, collection, from, to).Build(&q) // TODO: ensure this always called last
 
 	return q
 }
 
 func (q Query) JoinFragment(expr string, args ...interface{}) Query {
-	JoinFragment(expr, args...).Build(&q)
+	NewJoinFragment(expr, args...).Build(&q) // TODO: ensure this always called last
 
 	return q
 }
@@ -79,7 +79,7 @@ func (q Query) Sort(fields ...string) Query {
 func (q Query) SortAsc(fields ...string) Query {
 	sorts := make([]SortClause, len(fields))
 	for i := range fields {
-		sorts[i] = SortAsc(fields[i])
+		sorts[i] = NewSortAsc(fields[i])
 	}
 
 	q.SortClause = append(q.SortClause, sorts...)
@@ -89,7 +89,7 @@ func (q Query) SortAsc(fields ...string) Query {
 func (q Query) SortDesc(fields ...string) Query {
 	sorts := make([]SortClause, len(fields))
 	for i := range fields {
-		sorts[i] = SortDesc(fields[i])
+		sorts[i] = NewSortDesc(fields[i])
 	}
 
 	q.SortClause = append(q.SortClause, sorts...)
@@ -112,7 +112,7 @@ func (q Query) Limit(limit Limit) Query {
 func From(collection string) Query {
 	return Query{
 		Collection:   collection,
-		SelectClause: Select(collection + ".*"),
+		SelectClause: NewSelect(collection + ".*"),
 	}
 }
 

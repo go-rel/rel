@@ -10,7 +10,7 @@ func (s SelectClause) Distinct() SelectClause {
 	return s
 }
 
-func Select(fields ...string) SelectClause {
+func NewSelect(fields ...string) SelectClause {
 	return SelectClause{
 		Fields: fields,
 	}

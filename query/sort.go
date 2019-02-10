@@ -20,16 +20,16 @@ func (s SortClause) Desc() bool {
 	return s.Sort < 0
 }
 
-// SortAsc sorts field with ascending sort.
-func SortAsc(field string) SortClause {
+// NewSortAsc sorts field with ascending sort.
+func NewSortAsc(field string) SortClause {
 	return SortClause{
 		Field: field,
 		Sort:  1,
 	}
 }
 
-// SortDesc sorts field with descending sort.
-func SortDesc(field string) SortClause {
+// NewSortDesc sorts field with descending sort.
+func NewSortDesc(field string) SortClause {
 	return SortClause{
 		Field: field,
 		Sort:  -1,

@@ -27,7 +27,7 @@ func (g GroupClause) OrWhere(filters ...FilterClause) GroupClause {
 	return g.OrHaving(filters...)
 }
 
-func Group(fields ...string) GroupClause {
+func NewGroup(fields ...string) GroupClause {
 	return GroupClause{
 		Fields: fields,
 	}

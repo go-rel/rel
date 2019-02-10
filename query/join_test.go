@@ -13,21 +13,21 @@ func TestJoinWith(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.JoinWith("JOIN", "transactions", "user_id", "id"))
+	}, query.NewJoinWith("JOIN", "transactions", "user_id", "id"))
 }
 
 func TestJoinFragment(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:      "JOIN transactions ON id=?",
 		Arguments: []interface{}{1},
-	}, query.JoinFragment("JOIN transactions ON id=?", 1))
+	}, query.NewJoinFragment("JOIN transactions ON id=?", 1))
 }
 
 func TestJoin(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:       "JOIN",
 		Collection: "transactions",
-	}, query.Join("transactions"))
+	}, query.NewJoin("transactions"))
 }
 
 func TestJoinOn(t *testing.T) {
@@ -36,14 +36,14 @@ func TestJoinOn(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.JoinOn("transactions", "user_id", "id"))
+	}, query.NewJoinOn("transactions", "user_id", "id"))
 }
 
 func TestInnerJoin(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:       "INNER JOIN",
 		Collection: "transactions",
-	}, query.InnerJoin("transactions"))
+	}, query.NewInnerJoin("transactions"))
 }
 
 func TestInnerJoinOn(t *testing.T) {
@@ -52,14 +52,14 @@ func TestInnerJoinOn(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.InnerJoinOn("transactions", "user_id", "id"))
+	}, query.NewInnerJoinOn("transactions", "user_id", "id"))
 }
 
 func TestLeftJoin(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:       "LEFT JOIN",
 		Collection: "transactions",
-	}, query.LeftJoin("transactions"))
+	}, query.NewLeftJoin("transactions"))
 }
 
 func TestLeftJoinOn(t *testing.T) {
@@ -68,14 +68,14 @@ func TestLeftJoinOn(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.LeftJoinOn("transactions", "user_id", "id"))
+	}, query.NewLeftJoinOn("transactions", "user_id", "id"))
 }
 
 func TestRightJoin(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:       "RIGHT JOIN",
 		Collection: "transactions",
-	}, query.RightJoin("transactions"))
+	}, query.NewRightJoin("transactions"))
 }
 
 func TestRightJoinOn(t *testing.T) {
@@ -84,14 +84,14 @@ func TestRightJoinOn(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.RightJoinOn("transactions", "user_id", "id"))
+	}, query.NewRightJoinOn("transactions", "user_id", "id"))
 }
 
 func TestFullJoin(t *testing.T) {
 	assert.Equal(t, query.JoinClause{
 		Mode:       "FULL JOIN",
 		Collection: "transactions",
-	}, query.FullJoin("transactions"))
+	}, query.NewFullJoin("transactions"))
 }
 
 func TestFullJoinOn(t *testing.T) {
@@ -100,5 +100,5 @@ func TestFullJoinOn(t *testing.T) {
 		Collection: "transactions",
 		From:       "user_id",
 		To:         "id",
-	}, query.FullJoinOn("transactions", "user_id", "id"))
+	}, query.NewFullJoinOn("transactions", "user_id", "id"))
 }

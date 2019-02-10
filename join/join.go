@@ -5,41 +5,41 @@ import (
 )
 
 func Join(collection string) query.JoinClause {
-	return query.Join(collection)
+	return query.NewJoin(collection)
 }
 
 func On(collection string, from string, to string) query.JoinClause {
-	return query.JoinOn(collection, from, to)
+	return query.NewJoinOn(collection, from, to)
 }
 
 func Inner(collection string) query.JoinClause {
-	return query.InnerJoin(collection)
+	return query.NewInnerJoin(collection)
 }
 
 func InnerOn(collection string, from string, to string) query.JoinClause {
-	return query.InnerJoinOn(collection, from, to)
+	return query.NewInnerJoinOn(collection, from, to)
 }
 
 func Left(collection string) query.JoinClause {
-	return query.LeftJoin(collection)
+	return query.NewLeftJoin(collection)
 }
 
 func LeftOn(collection string, from string, to string) query.JoinClause {
-	return query.LeftJoinOn(collection, from, to)
+	return query.NewLeftJoinOn(collection, from, to)
 }
 
 func Right(collection string) query.JoinClause {
-	return query.RightJoin(collection)
+	return query.NewRightJoin(collection)
 }
 
 func RightOn(collection string, from string, to string) query.JoinClause {
-	return query.RightJoinOn(collection, from, to)
+	return query.NewRightJoinOn(collection, from, to)
 }
 
 func Full(collection string) query.JoinClause {
-	return query.FullJoin(collection)
+	return query.NewFullJoin(collection)
 }
 
 func FullOn(collection string, from string, to string) query.JoinClause {
-	return query.FullJoinOn(collection, from, to)
+	return query.NewFullJoinOn(collection, from, to)
 }

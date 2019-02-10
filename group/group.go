@@ -5,7 +5,7 @@ import (
 )
 
 func By(fields ...string) query.GroupClause {
-	return query.Group(fields...)
+	return query.NewGroup(fields...)
 }
 
 func Fields(fields ...string) query.GroupClause {

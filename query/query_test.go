@@ -35,21 +35,20 @@ func TestQuery_Distinct(t *testing.T) {
 }
 
 func TestQuery_Join(t *testing.T) {
-	// assert.Equal(t, query.From("users").Join("transactions"), Query{
-	// 	repo:       &repo,
-	// 	Collection: "users",
-	// 	Fields:     []string{"users.*"},
-	// 	JoinClause: []Join{
-	// 		{
-	// 			Mode:       "JOIN",
-	// 			Collection: "transactions",
-	// 			Condition: And(Eq(
-	// 				I("users.transaction_id"),
-	// 				I("transactions.id"),
-	// 			)),
-	// 		},
-	// 	},
-	// })
+	assert.Equal(t, query.Query{
+		Collection: "users",
+		SelectClause: query.SelectClause{
+			Fields: []string{"users.*"},
+		},
+		JoinClause: []query.JoinClause{
+			{
+				Mode:       "JOIN",
+				Collection: "transactions",
+				From:       "users.transaction_id",
+				To:         "transactions.id",
+			},
+		},
+	}, query.From("users").Join("transactions"))
 }
 
 func TestQuery_JoinOn(t *testing.T) {

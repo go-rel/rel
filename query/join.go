@@ -1,5 +1,9 @@
 package query
 
+import (
+	"strings"
+)
+
 // JoinClause defines join information in query.
 type JoinClause struct {
 	Mode       string
@@ -10,7 +14,11 @@ type JoinClause struct {
 }
 
 func (j JoinClause) Build(query *Query) {
-	// TODO: infer from and to when not specified
+	if j.Arguments == nil && (j.From == "" || j.To == "") {
+		j.From = query.Collection + "." + strings.TrimSuffix(j.Collection, "s") + "_id"
+		j.To = j.Collection + ".id"
+	}
+
 	query.JoinClause = append(query.JoinClause, j)
 }
 

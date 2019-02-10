@@ -14,8 +14,17 @@ func (g GroupClause) Having(filters ...FilterClause) GroupClause {
 	return g
 }
 
+func (g GroupClause) OrHaving(filters ...FilterClause) GroupClause {
+	g.Filter = g.Filter.Or(FilterAnd(filters...))
+	return g
+}
+
 func (g GroupClause) Where(filters ...FilterClause) GroupClause {
 	return g.Having(filters...)
+}
+
+func (g GroupClause) OrWhere(filters ...FilterClause) GroupClause {
+	return g.OrHaving(filters...)
 }
 
 func Group(fields ...string) GroupClause {

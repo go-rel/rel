@@ -9,14 +9,14 @@ import (
 
 func TestSelect(t *testing.T) {
 	assert.Equal(t, query.SelectClause{
-		Distinct: false,
-		Fields:   []string{"id", "name"},
+		OnlyDistinct: false,
+		Fields:       []string{"id", "name"},
 	}, query.Select("id", "name"))
 }
 
 func TestSelectDistinct(t *testing.T) {
 	assert.Equal(t, query.SelectClause{
-		Distinct: true,
-		Fields:   []string{"id", "name"},
-	}, query.SelectDistinct("id", "name"))
+		OnlyDistinct: true,
+		Fields:       []string{"id", "name"},
+	}, query.Select("id", "name").Distinct())
 }

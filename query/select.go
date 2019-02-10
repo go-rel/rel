@@ -1,8 +1,13 @@
 package query
 
 type SelectClause struct {
-	Distinct bool
-	Fields   []string
+	OnlyDistinct bool
+	Fields       []string
+}
+
+func (s SelectClause) Distinct() SelectClause {
+	s.OnlyDistinct = true
+	return s
 }
 
 func Select(fields ...string) SelectClause {
@@ -11,9 +16,8 @@ func Select(fields ...string) SelectClause {
 	}
 }
 
-func SelectDistinct(fields ...string) SelectClause {
+func Distinct() SelectClause {
 	return SelectClause{
-		Distinct: true,
-		Fields:   fields,
+		OnlyDistinct: true,
 	}
 }

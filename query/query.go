@@ -41,6 +41,12 @@ func (q Query) JoinWith(mode string, collection string, from string, to string) 
 	return q
 }
 
+func (q Query) JoinFragment(expr string, args ...interface{}) Query {
+	JoinFragment(expr, args...).Build(&q)
+
+	return q
+}
+
 func (q Query) Where(filters ...FilterClause) Query {
 	q.WhereClause = q.WhereClause.And(filters...)
 	return q

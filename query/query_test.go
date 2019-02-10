@@ -34,42 +34,55 @@ func TestQuery_Distinct(t *testing.T) {
 	}, query.From("users").Distinct())
 }
 
-// func TestQuery_Join(t *testing.T) {
-// 	assert.Equal(t, query.From("users").Join("transactions"), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 		JoinClause: []Join{
-// 			{
-// 				Mode:       "JOIN",
-// 				Collection: "transactions",
-// 				Condition: And(Eq(
-// 					I("users.transaction_id"),
-// 					I("transactions.id"),
-// 				)),
-// 			},
-// 		},
-// 	})
+func TestQuery_Join(t *testing.T) {
+	// assert.Equal(t, query.From("users").Join("transactions"), Query{
+	// 	repo:       &repo,
+	// 	Collection: "users",
+	// 	Fields:     []string{"users.*"},
+	// 	JoinClause: []Join{
+	// 		{
+	// 			Mode:       "JOIN",
+	// 			Collection: "transactions",
+	// 			Condition: And(Eq(
+	// 				I("users.transaction_id"),
+	// 				I("transactions.id"),
+	// 			)),
+	// 		},
+	// 	},
+	// })
+}
 
-// 	assert.Equal(t, query.From("users").Join("transactions", Eq(
-// 		I("users.transaction_id"),
-// 		I("transactions.id"),
-// 	)), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 		JoinClause: []Join{
-// 			{
-// 				Mode:       "JOIN",
-// 				Collection: "transactions",
-// 				Condition: And(Eq(
-// 					I("users.transaction_id"),
-// 					I("transactions.id"),
-// 				)),
-// 			},
-// 		},
-// 	})
-// }
+func TestQuery_JoinOn(t *testing.T) {
+	assert.Equal(t, query.Query{
+		Collection: "users",
+		SelectClause: query.SelectClause{
+			Fields: []string{"users.*"},
+		},
+		JoinClause: []query.JoinClause{
+			{
+				Mode:       "JOIN",
+				Collection: "transactions",
+				From:       "users.transaction_id",
+				To:         "transactions.id",
+			},
+		},
+	}, query.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
+}
+
+func TestQuery_JoinFragment(t *testing.T) {
+	assert.Equal(t, query.Query{
+		Collection: "users",
+		SelectClause: query.SelectClause{
+			Fields: []string{"users.*"},
+		},
+		JoinClause: []query.JoinClause{
+			{
+				Mode:      "JOIN transactions ON transacations.id=?",
+				Arguments: []interface{}{1},
+			},
+		},
+	}, query.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
+}
 
 func TestQuery_Where(t *testing.T) {
 	tests := []struct {

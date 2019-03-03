@@ -53,6 +53,10 @@ type FilterClause struct {
 	Inner  []FilterClause
 }
 
+func (f FilterClause) Build(query *Query) {
+	query.WhereClause = query.WhereClause.And(f)
+}
+
 // None returns true if no filter is specified.
 func (f FilterClause) None() bool {
 	return (f.Type == AndOp ||

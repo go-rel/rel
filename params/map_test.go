@@ -3,6 +3,7 @@ package params_test
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,20 @@ func TestMap_GetWithType(t *testing.T) {
 			name:  "not exist",
 			field: "not exist",
 			typ:   reflect.TypeOf(true),
+			value: nil,
+			valid: true,
+		},
+		{
+			name:  "not exist alias",
+			field: "not exist alias",
+			typ:   reflect.TypeOf(Number(0)),
+			value: nil,
+			valid: true,
+		},
+		{
+			name:  "not exist struct",
+			field: "not exist struct",
+			typ:   reflect.TypeOf(time.Time{}),
 			value: nil,
 			valid: true,
 		},

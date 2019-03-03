@@ -65,6 +65,20 @@ func TestForm_GetWithType(t *testing.T) {
 			valid: true,
 		},
 		{
+			name:  "not exist alias",
+			field: "not exist alias",
+			typ:   reflect.TypeOf(Number(0)),
+			value: nil,
+			valid: true,
+		},
+		{
+			name:  "not exist struct",
+			field: "not exist struct",
+			typ:   reflect.TypeOf(time.Time{}),
+			value: nil,
+			valid: true,
+		},
+		{
 			name:  "nil",
 			field: "nil",
 			typ:   reflect.TypeOf(true),

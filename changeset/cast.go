@@ -21,7 +21,6 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 	options.apply(opts)
 
 	var ch *Changeset
-	var zero bool
 	if existingCh, ok := data.(Changeset); ok {
 		ch = &existingCh
 	} else if existingCh, ok := data.(*Changeset); ok {
@@ -30,7 +29,7 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 		ch = &Changeset{}
 		ch.params = params
 		ch.changes = make(map[string]interface{})
-		ch.values, ch.types, zero = mapSchema(data)
+		ch.values, ch.types, ch.zero = mapSchema(data)
 	}
 
 	for _, field := range fields {
@@ -48,7 +47,7 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 		if change, valid := params.GetWithType(field, typ); valid {
 			value, vexist := ch.values[field]
 
-			if (typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array) || (zero && change != nil) || (!vexist && change != nil) || (vexist && value != change) {
+			if (typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array) || (ch.zero && change != nil) || (!vexist && change != nil) || (vexist && value != change) {
 				ch.changes[field] = change
 			}
 		} else {

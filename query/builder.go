@@ -5,11 +5,13 @@ type Builder interface {
 }
 
 func Build(builders ...Builder) Query {
-	var query Query
-	for _, builder := range builders {
-		builder.Build(&query)
-		query.built = true
+	q := Query{
+		empty: true,
 	}
 
-	return query
+	for _, builder := range builders {
+		builder.Build(&q)
+	}
+
+	return q
 }

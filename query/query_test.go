@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestQuery_Build(t *testing.T) {
+	q := query.From("users").Select("*")
+	assert.Equal(t, q, query.Build(q))
+}
+
 func TestQuery_Select(t *testing.T) {
 	assert.Equal(t, query.Query{
 		Collection: "users",

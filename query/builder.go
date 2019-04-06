@@ -11,6 +11,11 @@ func Build(builders ...Builder) Query {
 
 	for _, builder := range builders {
 		builder.Build(&q)
+		q.empty = false
+	}
+
+	for i := range q.JoinClause {
+		q.JoinClause[i].buildJoin(q)
 	}
 
 	return q

@@ -14,12 +14,14 @@ type JoinClause struct {
 }
 
 func (j JoinClause) Build(query *Query) {
+	query.JoinClause = append(query.JoinClause, j)
+}
+
+func (j *JoinClause) buildJoin(query Query) {
 	if j.Arguments == nil && (j.From == "" || j.To == "") {
 		j.From = query.Collection + "." + strings.TrimSuffix(j.Collection, "s") + "_id"
 		j.To = j.Collection + ".id"
 	}
-
-	query.JoinClause = append(query.JoinClause, j)
 }
 
 func NewJoinWith(mode string, collection string, from string, to string) JoinClause {

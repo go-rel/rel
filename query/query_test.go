@@ -55,8 +55,8 @@ func TestQuery_Join(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, query.From("users").Join("transactions"))
-	assert.Equal(t, result, query.Join("transactions").From("users"))
+	assert.Equal(t, result, query.Build(query.From("users").Join("transactions")))
+	assert.Equal(t, result, query.Build(query.Join("transactions").From("users")))
 }
 
 func TestQuery_JoinOn(t *testing.T) {

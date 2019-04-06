@@ -430,6 +430,11 @@ func TestFilterClause_Not(t *testing.T) {
 			query.LikeOp,
 			query.NotLikeOp,
 		},
+		{
+			`And Op`,
+			query.AndOp,
+			query.NotOp,
+		},
 	}
 
 	for _, tt := range tests {

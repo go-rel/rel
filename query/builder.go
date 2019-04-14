@@ -4,7 +4,7 @@ type Builder interface {
 	Build(*Query)
 }
 
-func Build(builders ...Builder) Query {
+func Build(collection string, builders ...Builder) Query {
 	q := Query{
 		empty: true,
 	}

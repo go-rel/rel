@@ -156,163 +156,163 @@ func (query Query) Set(field string, value interface{}) Query {
 }
 
 // One retrieves one result that match the query.
-// If no result found, it'll return not found error.
-func (query Query) One(record interface{}) error {
-	query.LimitResult = 1
-	count, err := query.repo.adapter.All(query, record, query.repo.logger...)
+// // If no result found, it'll return not found error.
+// func (query Query) One(record interface{}) error {
+// 	query.LimitResult = 1
+// 	count, err := query.repo.adapter.All(query, record, query.repo.logger...)
 
-	if err != nil {
-		return transformError(err)
-	} else if count == 0 {
-		return errors.New("no result found", "", errors.NotFound)
-	} else {
-		return nil
-	}
-}
+// 	if err != nil {
+// 		return transformError(err)
+// 	} else if count == 0 {
+// 		return errors.New("no result found", "", errors.NotFound)
+// 	} else {
+// 		return nil
+// 	}
+// }
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
-func (query Query) MustOne(record interface{}) {
-	must(query.One(record))
-}
+// func (query Query) MustOne(record interface{}) {
+// 	must(query.One(record))
+// }
 
 // All retrieves all results that match the query.
-func (query Query) All(record interface{}) error {
-	_, err := query.repo.adapter.All(query, record, query.repo.logger...)
-	return err
-}
+// func (query Query) All(record interface{}) error {
+// 	_, err := query.repo.adapter.All(query, record, query.repo.logger...)
+// 	return err
+// }
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
-func (query Query) MustAll(record interface{}) {
-	must(query.All(record))
-}
+// func (query Query) MustAll(record interface{}) {
+// 	must(query.All(record))
+// }
 
 // Aggregate calculate aggregate over the given field.
-func (query Query) Aggregate(mode string, field string, out interface{}) error {
-	query.AggregateMode = mode
-	query.AggregateField = field
-	return query.repo.adapter.Aggregate(query, out, query.repo.logger...)
-}
+// func (query Query) Aggregate(mode string, field string, out interface{}) error {
+// 	query.AggregateMode = mode
+// 	query.AggregateField = field
+// 	return query.repo.adapter.Aggregate(query, out, query.repo.logger...)
+// }
 
-// MustAggregate calculate aggregate over the given field.
-// It'll panic if any error eccured.
-func (query Query) MustAggregate(mode string, field string, out interface{}) {
-	must(query.Aggregate(mode, field, out))
-}
+// // MustAggregate calculate aggregate over the given field.
+// // It'll panic if any error eccured.
+// func (query Query) MustAggregate(mode string, field string, out interface{}) {
+// 	must(query.Aggregate(mode, field, out))
+// }
 
 // Count retrieves count of results that match the query.
-func (query Query) Count() (int, error) {
-	var out struct {
-		Count int
-	}
+// func (query Query) Count() (int, error) {
+// 	var out struct {
+// 		Count int
+// 	}
 
-	err := query.Aggregate("count", "*", &out)
-	return out.Count, err
-}
+// 	err := query.Aggregate("count", "*", &out)
+// 	return out.Count, err
+// }
 
-// MustCount retrieves count of results that match the query.
-// It'll panic if any error eccured.
-func (query Query) MustCount() int {
-	count, err := query.Count()
-	must(err)
-	return count
-}
+// // MustCount retrieves count of results that match the query.
+// // It'll panic if any error eccured.
+// func (query Query) MustCount() int {
+// 	count, err := query.Count()
+// 	must(err)
+// 	return count
+// }
 
-// Insert records to database.
-func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
-	var err error
-	var ids []interface{}
+// // Insert records to database.
+// func (query Query) Insert(record interface{}, chs ...*changeset.Changeset) error {
+// 	var err error
+// 	var ids []interface{}
 
-	if len(chs) == 1 {
-		// single insert
-		ch := chs[0]
-		changes := make(map[string]interface{})
-		cloneChangeset(changes, ch.Changes())
-		putTimestamp(changes, "created_at", ch.Types())
-		putTimestamp(changes, "updated_at", ch.Types())
-		cloneQuery(changes, query.Changes)
+// 	if len(chs) == 1 {
+// 		// single insert
+// 		ch := chs[0]
+// 		changes := make(map[string]interface{})
+// 		cloneChangeset(changes, ch.Changes())
+// 		putTimestamp(changes, "created_at", ch.Types())
+// 		putTimestamp(changes, "updated_at", ch.Types())
+// 		cloneQuery(changes, query.Changes)
 
-		var id interface{}
-		id, err = query.repo.adapter.Insert(query, changes, query.repo.logger...)
-		ids = append(ids, id)
-	} else if len(chs) > 1 {
-		// multiple insert
-		fields := getFields(query, chs)
+// 		var id interface{}
+// 		id, err = query.repo.adapter.Insert(query, changes, query.repo.logger...)
+// 		ids = append(ids, id)
+// 	} else if len(chs) > 1 {
+// 		// multiple insert
+// 		fields := getFields(query, chs)
 
-		allchanges := make([]map[string]interface{}, len(chs))
-		for i, ch := range chs {
-			changes := make(map[string]interface{})
-			cloneChangeset(changes, ch.Changes())
-			putTimestamp(changes, "created_at", ch.Types())
-			putTimestamp(changes, "updated_at", ch.Types())
-			cloneQuery(changes, query.Changes)
+// 		allchanges := make([]map[string]interface{}, len(chs))
+// 		for i, ch := range chs {
+// 			changes := make(map[string]interface{})
+// 			cloneChangeset(changes, ch.Changes())
+// 			putTimestamp(changes, "created_at", ch.Types())
+// 			putTimestamp(changes, "updated_at", ch.Types())
+// 			cloneQuery(changes, query.Changes)
 
-			allchanges[i] = changes
-		}
+// 			allchanges[i] = changes
+// 		}
 
-		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges, query.repo.logger...)
-	} else if len(query.Changes) > 0 {
-		// set only
-		var id interface{}
-		id, err = query.repo.adapter.Insert(query, query.Changes, query.repo.logger...)
-		ids = append(ids, id)
-	}
+// 		ids, err = query.repo.adapter.InsertAll(query, fields, allchanges, query.repo.logger...)
+// 	} else if len(query.Changes) > 0 {
+// 		// set only
+// 		var id interface{}
+// 		id, err = query.repo.adapter.Insert(query, query.Changes, query.repo.logger...)
+// 		ids = append(ids, id)
+// 	}
 
-	if err != nil {
-		return transformError(err, chs...)
-	} else if record == nil || len(ids) == 0 {
-		return nil
-	} else if len(ids) == 1 {
-		return transformError(query.Find(ids[0]).One(record))
-	}
+// 	if err != nil {
+// 		return transformError(err, chs...)
+// 	} else if record == nil || len(ids) == 0 {
+// 		return nil
+// 	} else if len(ids) == 1 {
+// 		return transformError(query.Find(ids[0]).One(record))
+// 	}
 
-	return transformError(query.Where(c.In(c.I("id"), ids...)).All(record))
-}
+// 	return transformError(query.Where(c.In(c.I("id"), ids...)).All(record))
+// }
 
-// MustInsert records to database.
-// It'll panic if any error occurred.
-func (query Query) MustInsert(record interface{}, chs ...*changeset.Changeset) {
-	must(query.Insert(record, chs...))
-}
+// // MustInsert records to database.
+// // It'll panic if any error occurred.
+// func (query Query) MustInsert(record interface{}, chs ...*changeset.Changeset) {
+// 	must(query.Insert(record, chs...))
+// }
 
 // Update records in database.
 // It'll panic if any error occurred.
-func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error {
-	changes := make(map[string]interface{})
+// func (query Query) Update(record interface{}, chs ...*changeset.Changeset) error {
+// 	changes := make(map[string]interface{})
 
-	// only take the first changeset if any
-	if len(chs) != 0 {
-		cloneChangeset(changes, chs[0].Changes())
-		putTimestamp(changes, "updated_at", chs[0].Types())
-	}
+// 	// only take the first changeset if any
+// 	if len(chs) != 0 {
+// 		cloneChangeset(changes, chs[0].Changes())
+// 		putTimestamp(changes, "updated_at", chs[0].Types())
+// 	}
 
-	cloneQuery(changes, query.Changes)
+// 	cloneQuery(changes, query.Changes)
 
-	// nothing to update
-	if len(changes) == 0 {
-		return nil
-	}
+// 	// nothing to update
+// 	if len(changes) == 0 {
+// 		return nil
+// 	}
 
-	// perform update
-	err := query.repo.adapter.Update(query, changes, query.repo.logger...)
-	if err != nil {
-		return transformError(err, chs...)
-	}
+// 	// perform update
+// 	err := query.repo.adapter.Update(query, changes, query.repo.logger...)
+// 	if err != nil {
+// 		return transformError(err, chs...)
+// 	}
 
-	// should not fetch updated record(s) if not necessery
-	if record != nil {
-		return transformError(query.All(record))
-	}
+// 	// should not fetch updated record(s) if not necessery
+// 	if record != nil {
+// 		return transformError(query.All(record))
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// MustUpdate records in database.
-// It'll panic if any error occurred.
-func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
-	must(query.Update(record, chs...))
-}
+// // MustUpdate records in database.
+// // It'll panic if any error occurred.
+// func (query Query) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
+// 	must(query.Update(record, chs...))
+// }
 
 func cloneChangeset(out map[string]interface{}, changes map[string]interface{}) {
 	for k, v := range changes {
@@ -337,7 +337,7 @@ func putTimestamp(out map[string]interface{}, field string, types map[string]ref
 	}
 }
 
-func getFields(query Query, chs []*changeset.Changeset) []string {
+func getFields(chs []*changeset.Changeset) []string {
 	fields := make([]string, 0, len(chs[0].Types()))
 
 	for f := range chs[0].Types() {
@@ -346,10 +346,10 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 			continue
 		}
 
-		if _, exist := query.Changes[f]; exist {
-			fields = append(fields, f)
-			continue
-		}
+		// if _, exist := query.Changes[f]; exist {
+		// 	fields = append(fields, f)
+		// 	continue
+		// }
 
 		for _, ch := range chs {
 			if _, exist := ch.Changes()[f]; exist {
@@ -370,139 +370,139 @@ func getFields(query Query, chs []*changeset.Changeset) []string {
 // Save a record to database.
 // If condition exist, it will try to update the record, otherwise it'll insert it.
 // Save ignores id from record.
-func (query Query) Save(record interface{}) error {
-	rv := reflect.ValueOf(record)
-	rt := rv.Type()
-	if rt.Kind() == reflect.Ptr && rt.Elem().Kind() == reflect.Slice {
-		// Put multiple records
-		rv = rv.Elem()
+// func (query Query) Save(record interface{}) error {
+// 	rv := reflect.ValueOf(record)
+// 	rt := rv.Type()
+// 	if rt.Kind() == reflect.Ptr && rt.Elem().Kind() == reflect.Slice {
+// 		// Put multiple records
+// 		rv = rv.Elem()
 
-		// if it's an empty slice, do nothing
-		if rv.Len() == 0 {
-			return nil
-		}
+// 		// if it's an empty slice, do nothing
+// 		if rv.Len() == 0 {
+// 			return nil
+// 		}
 
-		if query.Condition.None() {
-			// InsertAll
-			chs := []*changeset.Changeset{}
+// 		if query.Condition.None() {
+// 			// InsertAll
+// 			chs := []*changeset.Changeset{}
 
-			for i := 0; i < rv.Len(); i++ {
-				ch := changeset.Convert(rv.Index(i).Interface())
-				changeset.DeleteChange(ch, "id")
-				chs = append(chs, ch)
-			}
+// 			for i := 0; i < rv.Len(); i++ {
+// 				ch := changeset.Convert(rv.Index(i).Interface())
+// 				changeset.DeleteChange(ch, "id")
+// 				chs = append(chs, ch)
+// 			}
 
-			return query.Insert(record, chs...)
-		}
+// 			return query.Insert(record, chs...)
+// 		}
 
-		// Update only with first record definition.
-		ch := changeset.Convert(rv.Index(0).Interface())
-		changeset.DeleteChange(ch, "id")
-		changeset.DeleteChange(ch, "created_at")
-		return query.Update(record, ch)
-	}
+// 		// Update only with first record definition.
+// 		ch := changeset.Convert(rv.Index(0).Interface())
+// 		changeset.DeleteChange(ch, "id")
+// 		changeset.DeleteChange(ch, "created_at")
+// 		return query.Update(record, ch)
+// 	}
 
-	// Put single records
-	ch := changeset.Convert(record)
-	changeset.DeleteChange(ch, "id")
+// 	// Put single records
+// 	ch := changeset.Convert(record)
+// 	changeset.DeleteChange(ch, "id")
 
-	if query.Condition.None() {
-		return query.Insert(record, ch)
-	}
+// 	if query.Condition.None() {
+// 		return query.Insert(record, ch)
+// 	}
 
-	// remove created_at from changeset
-	changeset.DeleteChange(ch, "created_at")
+// 	// remove created_at from changeset
+// 	changeset.DeleteChange(ch, "created_at")
 
-	return query.Update(record, ch)
-}
+// 	return query.Update(record, ch)
+// }
 
-// MustSave puts a record to database.
-// It'll panic if any error eccured.
-func (query Query) MustSave(record interface{}) {
-	must(query.Save(record))
-}
+// // MustSave puts a record to database.
+// // It'll panic if any error eccured.
+// func (query Query) MustSave(record interface{}) {
+// 	must(query.Save(record))
+// }
 
 // Delete deletes all results that match the query.
-func (query Query) Delete() error {
-	return transformError(query.repo.adapter.Delete(query, query.repo.logger...))
-}
+// func (query Query) Delete() error {
+// 	return transformError(query.repo.adapter.Delete(query, query.repo.logger...))
+// }
 
 // MustDelete deletes all results that match the query.
 // It'll panic if any error eccured.
-func (query Query) MustDelete() {
-	must(query.Delete())
-}
+// func (query Query) MustDelete() {
+// 	must(query.Delete())
+// }
 
 type preloadTarget struct {
 	schema reflect.Value
 	field  reflect.Value
 }
 
-// Preload loads association with given query.
-func (query Query) Preload(record interface{}, field string) error {
-	path := strings.Split(field, ".")
+// // Preload loads association with given query.
+// func (query Query) Preload(record interface{}, field string) error {
+// 	path := strings.Split(field, ".")
 
-	rv := reflect.ValueOf(record)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		panic("grimoire: record parameter must be a pointer.")
-	}
+// 	rv := reflect.ValueOf(record)
+// 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+// 		panic("grimoire: record parameter must be a pointer.")
+// 	}
 
-	preload := traversePreloadTarget(rv.Elem(), path)
-	if len(preload) == 0 {
-		return nil
-	}
+// 	preload := traversePreloadTarget(rv.Elem(), path)
+// 	if len(preload) == 0 {
+// 		return nil
+// 	}
 
-	schemaType := preload[0].schema.Type()
-	refIndex, fkIndex, column := getPreloadInfo(schemaType, path[len(path)-1])
+// 	schemaType := preload[0].schema.Type()
+// 	refIndex, fkIndex, column := getPreloadInfo(schemaType, path[len(path)-1])
 
-	addrs, ids := collectPreloadTarget(preload, refIndex)
-	if len(ids) == 0 {
-		return nil
-	}
+// 	addrs, ids := collectPreloadTarget(preload, refIndex)
+// 	if len(ids) == 0 {
+// 		return nil
+// 	}
 
-	// prepare temp result variable for querying
-	rt := preload[0].field.Type()
-	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array || rt.Kind() == reflect.Ptr {
-		rt = rt.Elem()
-	}
+// 	// prepare temp result variable for querying
+// 	rt := preload[0].field.Type()
+// 	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array || rt.Kind() == reflect.Ptr {
+// 		rt = rt.Elem()
+// 	}
 
-	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids))
-	result := reflect.New(slice.Type())
-	result.Elem().Set(slice)
+// 	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids))
+// 	result := reflect.New(slice.Type())
+// 	result.Elem().Set(slice)
 
-	// query all records using collected ids.
-	err := query.Where(c.In(c.I(column), ids...)).All(result.Interface())
-	if err != nil {
-		return err
-	}
+// 	// query all records using collected ids.
+// 	err := query.Where(c.In(c.I(column), ids...)).All(result.Interface())
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// map results.
-	result = result.Elem()
-	for i := 0; i < result.Len(); i++ {
-		curr := result.Index(i)
-		id := getPreloadID(curr.FieldByIndex(fkIndex))
+// 	// map results.
+// 	result = result.Elem()
+// 	for i := 0; i < result.Len(); i++ {
+// 		curr := result.Index(i)
+// 		id := getPreloadID(curr.FieldByIndex(fkIndex))
 
-		for _, addr := range addrs[id] {
-			if addr.Kind() == reflect.Slice {
-				addr.Set(reflect.Append(addr, curr))
-			} else if addr.Kind() == reflect.Ptr {
-				currP := reflect.New(curr.Type())
-				currP.Elem().Set(curr)
-				addr.Set(currP)
-			} else {
-				addr.Set(curr)
-			}
-		}
-	}
+// 		for _, addr := range addrs[id] {
+// 			if addr.Kind() == reflect.Slice {
+// 				addr.Set(reflect.Append(addr, curr))
+// 			} else if addr.Kind() == reflect.Ptr {
+// 				currP := reflect.New(curr.Type())
+// 				currP.Elem().Set(curr)
+// 				addr.Set(currP)
+// 			} else {
+// 				addr.Set(curr)
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// MustPreload loads association with given query.
-// It'll panic if any error occurred.
-func (query Query) MustPreload(record interface{}, field string) {
-	must(query.Preload(record, field))
-}
+// // MustPreload loads association with given query.
+// // It'll panic if any error occurred.
+// func (query Query) MustPreload(record interface{}, field string) {
+// 	must(query.Preload(record, field))
+// }
 
 func traversePreloadTarget(rv reflect.Value, path []string) []preloadTarget {
 	result := []preloadTarget{}

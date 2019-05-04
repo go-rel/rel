@@ -6,6 +6,7 @@ import (
 
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/internal"
 	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/where"
 )
@@ -37,8 +38,8 @@ func (r *Repo) SetLogger(logger ...Logger) {
 
 // Aggregate calculate aggregate over the given field.
 func (r Repo) Aggregate(record interface{}, mode string, field string, out interface{}, queries ...query.Builder) error {
-	collection := getTableName(record)
-	q := query.Build(collection, queries...)
+	table := internal.InferTableName(record)
+	q := query.Build(table, queries...)
 	return r.adapter.Aggregate(q, out, mode, field, r.logger...)
 }
 
@@ -69,8 +70,8 @@ func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
 func (r Repo) One(record interface{}, queries ...query.Builder) error {
-	collection := getTableName(record)
-	q := query.Build(collection, queries...).Limit(1)
+	table := internal.InferTableName(record)
+	q := query.Build(table, queries...).Limit(1)
 
 	count, err := r.adapter.All(q, record, r.logger...)
 
@@ -91,8 +92,8 @@ func (r Repo) MustOne(record interface{}, queries ...query.Builder) {
 
 // All retrieves all results that match the query.
 func (r Repo) All(record interface{}, queries ...query.Builder) error {
-	collection := getTableName(record)
-	q := query.Build(collection, queries...)
+	table := internal.InferTableName(record)
+	q := query.Build(table, queries...)
 	_, err := r.adapter.All(q, record, r.logger...)
 	return err
 }
@@ -108,10 +109,10 @@ func (r Repo) Insert(record interface{}, chs ...*changeset.Changeset) error {
 	var err error
 	var ids []interface{}
 
-	collection := getTableName(record)
+	table := internal.InferTableName(record)
 	primaryKey, _ := getPrimaryKey(record, false)
 
-	q := query.Build(collection)
+	q := query.Build(table)
 
 	if len(chs) == 1 {
 		// single insert
@@ -169,7 +170,7 @@ func (r Repo) MustInsert(record interface{}, chs ...*changeset.Changeset) {
 // It'll panic if any error occurred.
 func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
 	// TODO: perform reference check on library level for record instead of adapter level
-	// TODO: support not returning via changeset collection inference
+	// TODO: support not returning via changeset table inference
 	if record == nil || len(ch.Changes()) == 0 {
 		return nil
 	}
@@ -177,10 +178,10 @@ func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
 	changes := ch.Changes()
 	putTimestamp(changes, "updated_at", ch.Types())
 
-	collection := getTableName(record)
+	table := internal.InferTableName(record)
 	primaryKey, primaryValue := getPrimaryKey(record, false)
 
-	q := query.Build(collection, where.Eq(primaryKey, primaryValue))
+	q := query.Build(table, where.Eq(primaryKey, primaryValue))
 
 	// perform update
 	err := r.adapter.Update(q, changes, r.logger...)
@@ -199,10 +200,10 @@ func (r Repo) MustUpdate(record interface{}, chs *changeset.Changeset) {
 
 // Delete deletes all results that match the query.
 func (r Repo) Delete(record interface{}) error {
-	collection := getTableName(record)
+	table := internal.InferTableName(record)
 	primaryKey, primaryValue := getPrimaryKey(record, true)
 
-	q := query.Build(collection, where.Eq(primaryKey, primaryValue))
+	q := query.Build(table, where.Eq(primaryKey, primaryValue))
 
 	return transformError(r.adapter.Delete(q, r.logger...))
 }

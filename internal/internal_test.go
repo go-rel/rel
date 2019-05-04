@@ -1,6 +1,5 @@
 package internal
 
-
 type CustomSchema struct {
 	UUID string
 }

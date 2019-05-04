@@ -20,7 +20,7 @@ func TestInferPrimaryKey(t *testing.T) {
 	assert.False(t, cached)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record)
+	field, value := InferPrimaryKey(record, true)
 	assert.Equal(t, "id", field)
 	assert.Equal(t, uint(1), value)
 
@@ -31,7 +31,7 @@ func TestInferPrimaryKey(t *testing.T) {
 	record.ID = 2
 
 	// infer primary key using cache
-	field, value = InferPrimaryKey(record)
+	field, value = InferPrimaryKey(record, true)
 	assert.Equal(t, "id", field)
 	assert.Equal(t, uint(2), value)
 }
@@ -47,7 +47,7 @@ func TestInferPrimaryKey_usingInterface(t *testing.T) {
 	assert.False(t, cached)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record)
+	field, value := InferPrimaryKey(record, true)
 	assert.Equal(t, "uuid", field)
 	assert.Equal(t, record.UUID, value)
 
@@ -66,7 +66,7 @@ func TestInferPrimaryKey_usingTag(t *testing.T) {
 	}
 
 	// infer primary key
-	field, value := InferPrimaryKey(record)
+	field, value := InferPrimaryKey(record, true)
 	assert.Equal(t, "external_id", field)
 	assert.Equal(t, 12345, value)
 }
@@ -81,7 +81,7 @@ func TestInferPrimaryKey_usingTagAmdCustomName(t *testing.T) {
 	}
 
 	// infer primary key
-	field, value := InferPrimaryKey(record)
+	field, value := InferPrimaryKey(record, true)
 	assert.Equal(t, "partner_id", field)
 	assert.Equal(t, 1111, value)
 }
@@ -93,6 +93,6 @@ func TestInferPrimaryKey_notFound(t *testing.T) {
 	}{}
 
 	assert.Panics(t, func() {
-		InferPrimaryKey(record)
+		InferPrimaryKey(record, true)
 	})
 }

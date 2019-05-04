@@ -19,13 +19,12 @@ type primaryKeyData struct {
 
 var primaryKeysCache sync.Map
 
-func InferPrimaryKey(record interface{}) (string, interface{}) {
+func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{}) {
 	if pk, ok := record.(primaryKey); ok {
 		return pk.PrimaryKey()
 	}
 
-	rv := reflectInternalStruct(record)
-	rt := rv.Type()
+	rt := reflectTypePtr(record)
 
 	result, cached := primaryKeysCache.Load(rt)
 	if !cached {
@@ -39,7 +38,15 @@ func InferPrimaryKey(record interface{}) (string, interface{}) {
 	}
 
 	pkey := result.(primaryKeyData)
-	return pkey.field, rv.Field(pkey.index).Interface()
+	field := pkey.field
+	value := interface{}(nil)
+
+	if returnValue {
+		rv := reflectValuePtr(record)
+		value = rv.Field(pkey.index).Interface()
+	}
+
+	return field, value
 }
 
 func searchPrimaryKey(rt reflect.Type) (string, int) {

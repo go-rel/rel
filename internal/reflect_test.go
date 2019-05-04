@@ -41,13 +41,24 @@ func TestReflectInternalType(t *testing.T) {
 	)
 }
 
-func TestReflectInternalStruct(t *testing.T) {
+func TestReflectTypePtr(t *testing.T) {
 	type User struct{}
 
-	assert.Equal(t, User{}, reflectInternalStruct(User{}).Interface())
-	assert.Equal(t, User{}, reflectInternalStruct(&User{}).Interface())
+	assert.Equal(t, reflect.TypeOf(User{}), reflectTypePtr(User{}))
+	assert.Equal(t, reflect.TypeOf(User{}), reflectTypePtr(&User{}))
 
 	assert.Panics(t, func() {
-		reflectInternalStruct("not struct")
+		reflectTypePtr("not struct")
+	})
+}
+
+func TestReflectValuePtr(t *testing.T) {
+	type User struct{}
+
+	assert.Equal(t, User{}, reflectValuePtr(User{}).Interface())
+	assert.Equal(t, User{}, reflectValuePtr(&User{}).Interface())
+
+	assert.Panics(t, func() {
+		reflectValuePtr("not struct")
 	})
 }

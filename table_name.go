@@ -9,5 +9,5 @@ func getTableName(record interface{}) string {
 		return tn.TableName()
 	}
 
-	return "" // TODO
+	return "users" // TODO
 }

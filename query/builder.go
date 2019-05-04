@@ -18,5 +18,10 @@ func Build(collection string, builders ...Builder) Query {
 		q.JoinClause[i].buildJoin(q)
 	}
 
+	if q.Collection == "" {
+		q.Collection = collection
+		q.empty = false
+	}
+
 	return q
 }

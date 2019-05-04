@@ -4,8 +4,8 @@ import "github.com/Fs02/grimoire/query"
 
 // Adapter interface
 type Adapter interface {
-	All(query.Query, interface{}, ...Logger) (int, error)
 	Aggregate(query.Query, interface{}, string, string, ...Logger) error
+	All(query.Query, interface{}, ...Logger) (int, error)
 	Insert(query.Query, map[string]interface{}, ...Logger) (interface{}, error)
 	InsertAll(query.Query, []string, []map[string]interface{}, ...Logger) ([]interface{}, error)
 	Update(query.Query, map[string]interface{}, ...Logger) error

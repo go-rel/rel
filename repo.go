@@ -70,8 +70,7 @@ func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
 // If no result found, it'll return not found error.
 func (r Repo) One(record interface{}, queries ...query.Builder) error {
 	collection := getTableName(record)
-	q := query.Build(collection, queries...)
-	q.Limit(1)
+	q := query.Build(collection, queries...).Limit(1)
 
 	count, err := r.adapter.All(q, record, r.logger...)
 
@@ -166,22 +165,17 @@ func (r Repo) MustInsert(record interface{}, chs ...*changeset.Changeset) {
 	must(r.Insert(record, chs...))
 }
 
-func (r Repo) Update(record interface{}, chs ...*changeset.Changeset) error {
-	changes := make(map[string]interface{})
-
-	// only take the first changeset if any
-	if len(chs) != 0 {
-		changes = chs[0].Changes()
-		// cloneChangeset(changes, chs[0].Changes())
-		putTimestamp(changes, "updated_at", chs[0].Types())
-	}
-
-	// cloneQuery(changes, query.Changes)
-
-	// nothing to update
-	if len(changes) == 0 {
+// Update records in database.
+// It'll panic if any error occurred.
+func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
+	// TODO: perform reference check on library level for record instead of adapter level
+	// TODO: support not returning via changeset collection inference
+	if record == nil || len(ch.Changes()) == 0 {
 		return nil
 	}
+
+	changes := ch.Changes()
+	putTimestamp(changes, "updated_at", ch.Types())
 
 	collection := getTableName(record)
 	primaryKey, primaryValue := getPrimaryKey(record, false)
@@ -191,42 +185,32 @@ func (r Repo) Update(record interface{}, chs ...*changeset.Changeset) error {
 	// perform update
 	err := r.adapter.Update(q, changes, r.logger...)
 	if err != nil {
-		return transformError(err, chs...)
+		return transformError(err, ch)
 	}
 
-	// should not fetch updated record(s) if not necessery
-	if record != nil {
-		return transformError(r.One(record, q))
-	}
-
-	return nil
+	return r.One(record, q)
 }
 
 // MustUpdate records in database.
 // It'll panic if any error occurred.
-func (r Repo) MustUpdate(record interface{}, chs ...*changeset.Changeset) {
-	must(r.Update(record, chs...))
+func (r Repo) MustUpdate(record interface{}, chs *changeset.Changeset) {
+	must(r.Update(record, chs))
 }
 
 // Delete deletes all results that match the query.
-func (r Repo) Delete(record interface{}, queries ...query.Builder) error {
-	var q query.Query
+func (r Repo) Delete(record interface{}) error {
 	collection := getTableName(record)
+	primaryKey, primaryValue := getPrimaryKey(record, true)
 
-	if len(queries) == 0 {
-		primaryKey, primaryValue := getPrimaryKey(record, true)
-		q = query.Build(collection, where.Eq(primaryKey, primaryValue)) // TODO: handle delete all, primary value is zero
-	} else {
-		q = query.Build(collection, queries...)
-	}
+	q := query.Build(collection, where.Eq(primaryKey, primaryValue))
 
 	return transformError(r.adapter.Delete(q, r.logger...))
 }
 
 // MustDelete deletes all results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustDelete(record interface{}, queries ...query.Builder) {
-	must(r.Delete(record, queries...))
+func (r Repo) MustDelete(record interface{}) {
+	must(r.Delete(record))
 }
 
 // Preload loads association with given query.

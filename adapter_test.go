@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -11,22 +12,22 @@ type TestAdapter struct {
 
 var _ Adapter = (*TestAdapter)(nil)
 
-func (adapter TestAdapter) Open(dsn string) error {
+func (adapter *TestAdapter) Open(dsn string) error {
 	args := adapter.Called(dsn)
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Close() error {
+func (adapter *TestAdapter) Close() error {
 	args := adapter.Called()
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Aggregate(query Query, out interface{}, logger ...Logger) error {
-	args := adapter.Called(query, out)
+func (adapter *TestAdapter) Aggregate(query query.Query, out interface{}, mode string, field string, logger ...Logger) error {
+	args := adapter.Called(query, out, mode, field)
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (int, error) {
+func (adapter *TestAdapter) All(query query.Query, doc interface{}, logger ...Logger) (int, error) {
 	args := adapter.Called(query, doc)
 
 	if adapter.result != nil {
@@ -45,37 +46,37 @@ func (adapter TestAdapter) All(query Query, doc interface{}, logger ...Logger) (
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter TestAdapter) Insert(query Query, ch map[string]interface{}, logger ...Logger) (interface{}, error) {
+func (adapter *TestAdapter) Insert(query query.Query, ch map[string]interface{}, logger ...Logger) (interface{}, error) {
 	args := adapter.Called(query, ch)
 	return args.Get(0), args.Error(1)
 }
 
-func (adapter TestAdapter) InsertAll(query Query, fields []string, chs []map[string]interface{}, logger ...Logger) ([]interface{}, error) {
+func (adapter *TestAdapter) InsertAll(query query.Query, fields []string, chs []map[string]interface{}, logger ...Logger) ([]interface{}, error) {
 	args := adapter.Called(query, chs)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (adapter TestAdapter) Update(query Query, ch map[string]interface{}, logger ...Logger) error {
+func (adapter *TestAdapter) Update(query query.Query, ch map[string]interface{}, logger ...Logger) error {
 	args := adapter.Called(query, ch)
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Delete(query Query, logger ...Logger) error {
+func (adapter *TestAdapter) Delete(query query.Query, logger ...Logger) error {
 	args := adapter.Called(query)
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Begin() (Adapter, error) {
+func (adapter *TestAdapter) Begin() (Adapter, error) {
 	args := adapter.Called()
 	return adapter, args.Error(0)
 }
 
-func (adapter TestAdapter) Commit() error {
+func (adapter *TestAdapter) Commit() error {
 	args := adapter.Called()
 	return args.Error(0)
 }
 
-func (adapter TestAdapter) Rollback() error {
+func (adapter *TestAdapter) Rollback() error {
 	args := adapter.Called()
 	return args.Error(0)
 }

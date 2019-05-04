@@ -55,9 +55,11 @@ func (q Query) Select(fields ...string) Query {
 func (q Query) From(collection string) Query {
 	q.Collection = collection
 
-	if len(q.SelectClause.Fields) == 0 {
-		q.SelectClause = NewSelect(collection + ".*")
-	}
+	// TODO: no select default to select all
+
+	// if len(q.SelectClause.Fields) == 0 {
+	// 	q.SelectClause = NewSelect(collection + ".*")
+	// }
 
 	// if len(q.JoinClause) > 0 {
 	// 	for i := range q.JoinClause {
@@ -160,8 +162,7 @@ func (q Query) Limit(limit Limit) Query {
 // From create query for collection.
 func From(collection string) Query {
 	return Query{
-		Collection:   collection,
-		SelectClause: NewSelect(collection + ".*"),
+		Collection: collection,
 	}
 }
 

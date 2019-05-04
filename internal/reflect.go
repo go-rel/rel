@@ -13,3 +13,16 @@ func reflectInternalType(record interface{}) reflect.Type {
 
 	return rt
 }
+
+func reflectInternalStruct(record interface{}) reflect.Value {
+	rv := reflect.ValueOf(record)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+
+	if rv.Kind() != reflect.Struct {
+		panic("data must be a struct")
+	}
+
+	return rv
+}

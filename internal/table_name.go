@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-var tableNameCache sync.Map
+var tableNamesCache sync.Map
 
 type tableName interface {
 	TableName() string
@@ -20,13 +20,13 @@ func InferTableName(record interface{}) string {
 	}
 
 	typ := reflectInternalType(record)
-	if name, ok := tableNameCache.Load(typ); ok {
+	if name, cached := tableNamesCache.Load(typ); cached {
 		return name.(string)
 	}
 
 	name := inflection.Plural(typ.Name())
 	name = snakecase.SnakeCase(name)
-	tableNameCache.Store(typ, name)
+	tableNamesCache.Store(typ, name)
 
 	return name
 }

@@ -19,7 +19,7 @@ func TestInferTableName(t *testing.T) {
 
 	// should not be cached yet
 	typ := reflectInternalType(user)
-	_, cached := tableNameCache.Load(typ)
+	_, cached := tableNamesCache.Load(typ)
 	assert.False(t, cached)
 
 	// infer table name
@@ -27,7 +27,7 @@ func TestInferTableName(t *testing.T) {
 	assert.Equal(t, "users", name)
 
 	// cached
-	_, cached = tableNameCache.Load(typ)
+	_, cached = tableNamesCache.Load(typ)
 	assert.True(t, cached)
 
 	// infer table name using cache
@@ -40,7 +40,7 @@ func TestInferTableName_withInterface(t *testing.T) {
 
 	// should not be cached yet
 	typ := reflectInternalType(user)
-	_, cached := tableNameCache.Load(typ)
+	_, cached := tableNamesCache.Load(typ)
 	assert.False(t, cached)
 
 	// infer table name
@@ -48,6 +48,6 @@ func TestInferTableName_withInterface(t *testing.T) {
 	assert.Equal(t, "users", name)
 
 	// never cache
-	_, cached = tableNameCache.Load(typ)
+	_, cached = tableNamesCache.Load(typ)
 	assert.False(t, cached)
 }

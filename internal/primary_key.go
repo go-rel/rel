@@ -49,10 +49,10 @@ func searchPrimaryKey(rt reflect.Type) (string, int) {
 	for i := 0; i < rt.NumField(); i++ {
 		sf := rt.Field(i)
 
-		if tag := sf.Tag.Get("db"); strings.HasPrefix(tag, ",primary") {
+		if tag := sf.Tag.Get("db"); strings.HasSuffix(tag, ",primary") {
 			index = i
 			if len(tag) > 8 { // has custom field name
-				field = tag[:8]
+				field = tag[:len(tag)-8]
 			} else {
 				field = snakecase.SnakeCase(sf.Name)
 			}
@@ -65,6 +65,10 @@ func searchPrimaryKey(rt reflect.Type) (string, int) {
 			index = i
 			field = "id"
 		}
+	}
+
+	if field == "" {
+		panic("grimoire: failed to infer primary key for type " + rt.String())
 	}
 
 	return field, index

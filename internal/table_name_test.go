@@ -6,24 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct{}
-
-type UserWithTableName struct{}
-
-func (u UserWithTableName) TableName() string {
-	return "users"
-}
-
 func TestInferTableName(t *testing.T) {
-	user := User{}
+	type User struct{}
+	record := User{}
 
 	// should not be cached yet
-	typ := reflectInternalType(user)
+	typ := reflectInternalType(record)
 	_, cached := tableNamesCache.Load(typ)
 	assert.False(t, cached)
 
 	// infer table name
-	name := InferTableName(user)
+	name := InferTableName(record)
 	assert.Equal(t, "users", name)
 
 	// cached
@@ -31,20 +24,20 @@ func TestInferTableName(t *testing.T) {
 	assert.True(t, cached)
 
 	// infer table name using cache
-	name = InferTableName(user)
+	name = InferTableName(record)
 	assert.Equal(t, "users", name)
 }
 
-func TestInferTableName_withInterface(t *testing.T) {
-	user := UserWithTableName{}
+func TestInferTableName_usingInterface(t *testing.T) {
+	record := CustomSchema{}
 
 	// should not be cached yet
-	typ := reflectInternalType(user)
+	typ := reflectInternalType(record)
 	_, cached := tableNamesCache.Load(typ)
 	assert.False(t, cached)
 
 	// infer table name
-	name := InferTableName(user)
+	name := InferTableName(record)
 	assert.Equal(t, "users", name)
 
 	// never cache

@@ -35,6 +35,10 @@ func (c CustomSchema) Values() []interface{} {
 	return []interface{}{c.UUID, c.Price}
 }
 
+func (c *CustomSchema) Scanners() []interface{} {
+	return []interface{}{Indirect(&c.UUID), Indirect(&c.Price)}
+}
+
 func TestSchema(t *testing.T) {
 	var (
 		record = struct {

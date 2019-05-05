@@ -21,7 +21,7 @@ func reflectTypePtr(record interface{}) reflect.Type {
 	}
 
 	if rt.Kind() != reflect.Struct {
-		panic("data must be a struct")
+		panic("grimoire: record must be a struct")
 	}
 
 	return rt
@@ -34,7 +34,7 @@ func reflectValuePtr(record interface{}) reflect.Value {
 	}
 
 	if rv.Kind() != reflect.Struct {
-		panic("data must be a struct")
+		panic("grimoire: record must be a struct")
 	}
 
 	return rv

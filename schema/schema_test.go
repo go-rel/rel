@@ -31,6 +31,10 @@ func (c CustomSchema) Types() []reflect.Type {
 	return []reflect.Type{String, Int}
 }
 
+func (c CustomSchema) Values() []interface{} {
+	return []interface{}{c.UUID, c.Price}
+}
+
 func TestSchema(t *testing.T) {
 	var (
 		record = struct {

@@ -56,18 +56,13 @@ func inferFieldAndTypes(record interface{}) (map[string]int, []reflect.Type) {
 
 	for i := 0; i < rv.NumField(); i++ {
 		var (
-			sf = rt.Field(i)
-			ft = sf.Type
+			sf   = rt.Field(i)
+			ft   = sf.Type
+			name = inferFieldName(sf)
 		)
 
-		var name string
-		if tag := sf.Tag.Get("db"); tag != "" {
-			if tag == "-" {
-				continue
-			}
-			name = strings.Split(tag, ",")[0]
-		} else {
-			name = snakecase.SnakeCase(sf.Name)
+		if name == "" {
+			continue
 		}
 
 		if ft.Kind() == reflect.Ptr {
@@ -87,4 +82,16 @@ func inferFieldAndTypes(record interface{}) (map[string]int, []reflect.Type) {
 	})
 
 	return fields, types
+}
+
+func inferFieldName(sf reflect.StructField) string {
+	if tag := sf.Tag.Get("db"); tag != "" {
+		if tag == "-" {
+			return ""
+		}
+
+		return strings.Split(tag, ",")[0]
+	}
+
+	return snakecase.SnakeCase(sf.Name)
 }

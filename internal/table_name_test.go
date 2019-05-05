@@ -8,39 +8,46 @@ import (
 
 func TestInferTableName(t *testing.T) {
 	type User struct{}
-	record := User{}
+
+	var (
+		record       = User{}
+		rt           = reflectInternalType(record)
+		expectedName = "users"
+	)
 
 	// should not be cached yet
-	typ := reflectInternalType(record)
-	_, cached := tableNamesCache.Load(typ)
+	_, cached := tableNamesCache.Load(rt)
 	assert.False(t, cached)
 
 	// infer table name
 	name := InferTableName(record)
-	assert.Equal(t, "users", name)
+	assert.Equal(t, expectedName, name)
 
 	// cached
-	_, cached = tableNamesCache.Load(typ)
+	_, cached = tableNamesCache.Load(rt)
 	assert.True(t, cached)
 
 	// infer table name using cache
 	name = InferTableName(record)
-	assert.Equal(t, "users", name)
+	assert.Equal(t, expectedName, name)
 }
 
 func TestInferTableName_usingInterface(t *testing.T) {
-	record := CustomSchema{}
+	var (
+		record       = CustomSchema{}
+		rt           = reflectInternalType(record)
+		expectedName = "_users"
+	)
 
 	// should not be cached yet
-	typ := reflectInternalType(record)
-	_, cached := tableNamesCache.Load(typ)
+	_, cached := tableNamesCache.Load(rt)
 	assert.False(t, cached)
 
 	// infer table name
 	name := InferTableName(record)
-	assert.Equal(t, "users", name)
+	assert.Equal(t, expectedName, name)
 
 	// never cache
-	_, cached = tableNamesCache.Load(typ)
+	_, cached = tableNamesCache.Load(rt)
 	assert.False(t, cached)
 }

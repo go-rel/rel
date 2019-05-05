@@ -37,9 +37,11 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 		primaryKeysCache.Store(rt, result)
 	}
 
-	pkey := result.(primaryKeyData)
-	field := pkey.field
-	value := interface{}(nil)
+	var (
+		pkey  = result.(primaryKeyData)
+		field = pkey.field
+		value = interface{}(nil)
+	)
 
 	if returnValue {
 		rv := reflectValuePtr(record)
@@ -50,8 +52,10 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 }
 
 func searchPrimaryKey(rt reflect.Type) (string, int) {
-	field := ""
-	index := 0
+	var (
+		field = ""
+		index = 0
+	)
 
 	for i := 0; i < rt.NumField(); i++ {
 		sf := rt.Field(i)

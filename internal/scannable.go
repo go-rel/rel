@@ -9,8 +9,11 @@ import (
 // Scannable checks whether type is scannable.
 func Scannable(rt reflect.Type) bool {
 	if rt.Kind() == reflect.Ptr {
-		fzeroval := reflect.New(rt.Elem()).Interface()
-		kind := rt.Elem().Kind()
+		var (
+			fzeroval = reflect.New(rt.Elem()).Interface()
+			kind     = rt.Elem().Kind()
+		)
+
 		_, isScanner := fzeroval.(sql.Scanner)
 		_, isTime := fzeroval.(*time.Time)
 
@@ -18,8 +21,11 @@ func Scannable(rt reflect.Type) bool {
 			return false
 		}
 	} else {
-		fzeroval := reflect.New(rt).Interface()
-		kind := rt.Kind()
+		var (
+			fzeroval = reflect.New(rt).Interface()
+			kind     = rt.Kind()
+		)
+
 		_, isScanner := fzeroval.(sql.Scanner)
 		_, isTime := fzeroval.(*time.Time)
 

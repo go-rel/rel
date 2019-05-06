@@ -162,7 +162,7 @@ func conversionTests() []conversionTest {
 		{s: "1.5", d: &scanf64, wantf64: float64(1.5)},
 
 		// Pointers
-		// {s: interface{}(nil), d: &scanptr, wantnil: true},
+		{s: interface{}(nil), d: &scanptr, wantnil: true},
 		{s: int64(42), d: &scanptr, wantptr: &answer},
 
 		// To interface{}
@@ -359,5 +359,121 @@ func TestUserDefinedBytes(t *testing.T) {
 	convertAssign(&u, v)
 	if &u[0] == &v[0] {
 		t.Fatal("userDefinedBytes got potentially dirty driver memory")
+	}
+}
+
+func TestAssignZero(t *testing.T) {
+	vbool := true
+	assignZero(&vbool)
+	if vbool != false {
+		t.Error("vbool is not zero")
+	}
+
+	vstring := "a"
+	assignZero(&vstring)
+	if vstring != "" {
+		t.Error("vstring is not zero")
+	}
+
+	vint := int(1)
+	assignZero(&vint)
+	if vint != 0 {
+		t.Error("vint is not zero")
+	}
+
+	vint8 := int8(1)
+	assignZero(&vint8)
+	if vint8 != 0 {
+		t.Error("vint8 is not zero")
+	}
+
+	vint16 := int16(1)
+	assignZero(&vint16)
+	if vint16 != 0 {
+		t.Error("vint16 is not zero")
+	}
+
+	vint32 := int32(1)
+	assignZero(&vint32)
+	if vint32 != 0 {
+		t.Error("vint32 is not zero")
+	}
+
+	vint64 := int64(1)
+	assignZero(&vint64)
+	if vint64 != 0 {
+		t.Error("vint64 is not zero")
+	}
+
+	vuint := uint(1)
+	assignZero(&vuint)
+	if vuint != 0 {
+		t.Error("vuint is not zero")
+	}
+
+	vuint8 := uint8(1)
+	assignZero(&vuint8)
+	if vuint8 != 0 {
+		t.Error("vuint8 is not zero")
+	}
+
+	vuint16 := uint16(1)
+	assignZero(&vuint16)
+	if vuint16 != 0 {
+		t.Error("vuint16 is not zero")
+	}
+
+	vuint32 := uint32(1)
+	assignZero(&vuint32)
+	if vuint32 != 0 {
+		t.Error("vuint32 is not zero")
+	}
+
+	vuint64 := uint64(1)
+	assignZero(&vuint64)
+	if vuint64 != 0 {
+		t.Error("vuint64 is not zero")
+	}
+
+	vuintptr := uintptr(1)
+	assignZero(&vuintptr)
+	if vuintptr != 0 {
+		t.Error("vuintptr is not zero")
+	}
+
+	vfloat32 := float32(1)
+	assignZero(&vfloat32)
+	if vfloat32 != 0 {
+		t.Error("vfloat32 is not zero")
+	}
+
+	vfloat64 := float64(1)
+	assignZero(&vfloat64)
+	if vfloat64 != 0 {
+		t.Error("vfloat64 is not zero")
+	}
+
+	vinterface := interface{}("a")
+	assignZero(&vinterface)
+	if vinterface != nil {
+		t.Error("vinterface is not zero")
+	}
+
+	vbytes := []byte("a")
+	assignZero(&vbytes)
+	if vbytes != nil {
+		t.Error("vbytes is not zero")
+	}
+
+	rawBytes := sql.RawBytes("a")
+	assignZero(&rawBytes)
+	if rawBytes != nil {
+		t.Error("rawBytes is not zero")
+	}
+
+	vuserDefined := userDefined(1)
+	assignZero(&vuserDefined)
+	if vuserDefined != 0 {
+		t.Error("vuserDefined is not zero")
 	}
 }

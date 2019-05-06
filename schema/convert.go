@@ -19,7 +19,8 @@ import (
 // convertAssign copies to dest the value in src, converting it if possible.
 // An error is returned if the copy would result in loss of information.
 // dest should be a pointer type.
-// this function assumes desst will never be nil.
+// dest will be set to zero value if src is nil.
+// this function assumes dest will never be nil.
 func convertAssign(dest, src interface{}) error {
 	// Common cases, without reflect.
 	switch s := src.(type) {
@@ -286,6 +287,6 @@ func assignZero(dest interface{}) {
 		*d = nil
 	default:
 		rv := reflect.ValueOf(dest)
-		rv.Addr().Set(reflect.Zero(rv.Type().Elem()))
+		rv.Elem().Set(reflect.Zero(rv.Type().Elem()))
 	}
 }

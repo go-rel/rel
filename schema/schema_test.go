@@ -36,7 +36,7 @@ func (c CustomSchema) Values() []interface{} {
 }
 
 func (c *CustomSchema) Scanners() []interface{} {
-	return []interface{}{Indirect(&c.UUID), Indirect(&c.Price)}
+	return []interface{}{Value(&c.UUID), Value(&c.Price)}
 }
 
 func TestSchema(t *testing.T) {

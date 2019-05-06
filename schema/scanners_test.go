@@ -24,11 +24,11 @@ func TestInferScanners(t *testing.T) {
 			Data:    []byte("data"),
 		}
 		expected = []interface{}{
-			Indirect(&record.ID),
-			Indirect(&record.Name),
-			Indirect(&record.Number),
+			Value(&record.ID),
+			Value(&record.Name),
+			Value(&record.Number),
 			&record.Address,
-			Indirect(&record.Data),
+			Value(&record.Data),
 		}
 	)
 
@@ -41,7 +41,7 @@ func TestInferScanners_usingInterface(t *testing.T) {
 			UUID:  "abc123",
 			Price: 100,
 		}
-		expected = []interface{}{Indirect(&record.UUID), Indirect(&record.Price)}
+		expected = []interface{}{Value(&record.UUID), Value(&record.Price)}
 	)
 
 	assert.Equal(t, expected, InferScanners(&record))

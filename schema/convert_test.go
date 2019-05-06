@@ -73,6 +73,7 @@ func conversionTests() []conversionTest {
 		// To strings
 		{s: "string", d: &scanstr, wantstr: "string"},
 		{s: []byte("byteslice"), d: &scanstr, wantstr: "byteslice"},
+		{s: true, d: &scanstr, wantstr: "true"},
 		{s: 123, d: &scanstr, wantstr: "123"},
 		{s: int8(123), d: &scanstr, wantstr: "123"},
 		{s: int64(123), d: &scanstr, wantstr: "123"},
@@ -81,6 +82,7 @@ func conversionTests() []conversionTest {
 		{s: uint32(123), d: &scanstr, wantstr: "123"},
 		{s: uint64(123), d: &scanstr, wantstr: "123"},
 		{s: 1.5, d: &scanstr, wantstr: "1.5"},
+		{s: float32(1.5), d: &scanstr, wantstr: "1.5"},
 
 		// From time.Time:
 		{s: time.Unix(1, 0).UTC(), d: &scanstr, wantstr: "1970-01-01T00:00:01Z"},
@@ -102,6 +104,7 @@ func conversionTests() []conversionTest {
 		{s: uint32(123), d: &scanbytes, wantbytes: []byte("123")},
 		{s: uint64(123), d: &scanbytes, wantbytes: []byte("123")},
 		{s: 1.5, d: &scanbytes, wantbytes: []byte("1.5")},
+		{s: userDefinedString("user string"), d: &scanbytes, wantbytes: []byte("user string")},
 
 		// To sql.RawBytes
 		{s: nil, d: &scanraw, wantraw: nil},
@@ -115,12 +118,14 @@ func conversionTests() []conversionTest {
 		{s: uint32(123), d: &scanraw, wantraw: sql.RawBytes("123")},
 		{s: uint64(123), d: &scanraw, wantraw: sql.RawBytes("123")},
 		{s: 1.5, d: &scanraw, wantraw: sql.RawBytes("1.5")},
+		{s: userDefinedString("user string"), d: &scanraw, wantbytes: sql.RawBytes("user string")},
 		// time.Time has been placed here to check that the sql.RawBytes slice gets
 		// correctly reset when calling time.Time.AppendFormat.
 		{s: time.Unix(2, 5).UTC(), d: &scanraw, wantraw: sql.RawBytes("1970-01-01T00:00:02.000000005Z")},
 
-		// Strings to integers
+		// To integers
 		{s: "255", d: &scanuint8, wantuint: 255},
+		{s: []byte("255"), d: &scanuint8, wantuint: 255},
 		{s: "256", d: &scanuint8, wanterr: "converting driver.Value type string (\"256\") to a uint8: value out of range"},
 		{s: "256", d: &scanuint16, wantuint: 256},
 		{s: "-1", d: &scanint, wantint: -1},
@@ -159,7 +164,9 @@ func conversionTests() []conversionTest {
 		{s: int64(1), d: &scanf64, wantf64: float64(1)},
 		{s: float64(1.5), d: &scanf32, wantf32: float32(1.5)},
 		{s: "1.5", d: &scanf32, wantf32: float32(1.5)},
+		{s: "foo", d: &scanf32, wanterr: "converting driver.Value type string (\"foo\") to a float32: invalid syntax"},
 		{s: "1.5", d: &scanf64, wantf64: float64(1.5)},
+		{s: "foo", d: &scanf64, wanterr: "converting driver.Value type string (\"foo\") to a float64: invalid syntax"},
 
 		// Pointers
 		{s: interface{}(nil), d: &scanptr, wantnil: true},
@@ -180,9 +187,11 @@ func conversionTests() []conversionTest {
 		{s: "1.5", d: new(userDefined), wantusrdef: 1.5},
 		{s: []byte{1, 2, 3}, d: new(userDefinedSlice), wanterr: `unsupported Scan, storing driver.Value type []uint8 into type *schema.userDefinedSlice`},
 		{s: "str", d: new(userDefinedString), wantusrstr: "str"},
+		{s: []byte("byte"), d: new(userDefinedString), wantusrstr: "byte"},
 
 		// Other errors
 		{s: complex(1, 2), d: &scanstr, wanterr: `unsupported Scan, storing driver.Value type complex128 into type *string`},
+		{s: complex(1, 2), d: &scanbytes, wanterr: `unsupported Scan, storing driver.Value type complex128 into type *[]uint8`},
 	}
 }
 

@@ -221,7 +221,6 @@ func timeValue(ptr interface{}) time.Time {
 
 func TestConversions(t *testing.T) {
 	for n, ct := range conversionTests() {
-		fmt.Printf("convertAssign #%d: for %v (%T) -> %T, \n", n, ct.s, ct.s, ct.d)
 		err := convertAssign(ct.d, ct.s)
 		errstr := ""
 		if err != nil {

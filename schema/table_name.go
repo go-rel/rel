@@ -19,14 +19,17 @@ func InferTableName(record interface{}) string {
 		return tn.TableName()
 	}
 
-	typ := reflectInternalType(record)
-	if name, cached := tableNamesCache.Load(typ); cached {
+	rt := reflectInternalType(record)
+
+	// check for cache
+	if name, cached := tableNamesCache.Load(rt); cached {
 		return name.(string)
 	}
 
-	name := inflection.Plural(typ.Name())
+	name := inflection.Plural(rt.Name())
 	name = snakecase.SnakeCase(name)
-	tableNamesCache.Store(typ, name)
+
+	tableNamesCache.Store(rt, name)
 
 	return name
 }

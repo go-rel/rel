@@ -5,6 +5,7 @@ import (
 )
 
 type scanners interface {
+	fields
 	Scanners() []interface{}
 }
 

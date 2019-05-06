@@ -2,6 +2,8 @@ package schema
 
 import (
 	"reflect"
+	"sync"
+	"time"
 )
 
 var (
@@ -22,4 +24,51 @@ var (
 	Rune    = reflect.TypeOf(rune(' '))
 	Float32 = reflect.TypeOf(float32(0))
 	Float64 = reflect.TypeOf(float64(0))
+	Bytes   = reflect.TypeOf([]byte{})
+	Time    = reflect.TypeOf(time.Time{})
 )
+
+type types interface {
+	fields
+	Types() []reflect.Type
+}
+
+var typesCache sync.Map
+
+func InferTypes(record interface{}) []reflect.Type {
+	if v, ok := record.(types); ok {
+		return v.Types()
+	}
+
+	rt := reflectTypePtr(record)
+
+	// check for cache
+	if v, cached := typesCache.Load(rt); cached {
+		return v.([]reflect.Type)
+	}
+
+	var (
+		fields  = InferFields(record)
+		mapping = inferFieldMapping(record)
+		types   = make([]reflect.Type, len(fields))
+	)
+
+	for name, index := range fields {
+		var (
+			structIndex = mapping[name]
+			ft          = rt.Field(structIndex).Type
+		)
+
+		if ft.Kind() == reflect.Ptr {
+			ft = ft.Elem()
+		} else if ft.Kind() == reflect.Slice && ft.Elem().Kind() == reflect.Ptr {
+			ft = reflect.SliceOf(ft.Elem().Elem())
+		}
+
+		types[index] = ft
+	}
+
+	typesCache.Store(rt, types)
+
+	return types
+}

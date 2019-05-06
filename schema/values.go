@@ -2,10 +2,10 @@ package schema
 
 import (
 	"reflect"
-	"sync"
 )
 
 type values interface {
+	fields
 	Values() []interface{}
 }
 
@@ -38,37 +38,4 @@ func InferValues(record interface{}) []interface{} {
 	}
 
 	return values
-}
-
-var fieldMappingCache sync.Map
-
-func inferFieldMapping(record interface{}) map[string]int {
-	rt := reflectTypePtr(record)
-
-	// check for cache
-	if v, cached := fieldMappingCache.Load((rt)); cached {
-		return v.(map[string]int)
-	}
-
-	var (
-		rv      = reflectValuePtr(record)
-		mapping = make(map[string]int, rv.NumField())
-	)
-
-	for i := 0; i < rv.NumField(); i++ {
-		var (
-			sf   = rt.Field(i)
-			name = inferFieldName(sf)
-		)
-
-		if name == "" {
-			continue
-		}
-
-		mapping[name] = i
-	}
-
-	fieldMappingCache.Store(rt, mapping)
-
-	return mapping
 }

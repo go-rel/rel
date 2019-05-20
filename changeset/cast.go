@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Fs02/grimoire/params"
-	"github.com/azer/snakecase"
+	"github.com/Fs02/grimoire/schema"
 )
 
 // CastErrorMessage is the default error message for Cast.
@@ -29,7 +29,7 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 		ch = &Changeset{}
 		ch.params = params
 		ch.changes = make(map[string]interface{})
-		ch.values, ch.types, ch.zero = mapSchema(data)
+		ch.values, ch.types, ch.zero = mapSchema(data, true)
 	}
 
 	for _, field := range fields {
@@ -59,54 +59,30 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 	return ch
 }
 
-func mapSchema(data interface{}) (map[string]interface{}, map[string]reflect.Type, bool) {
-	mvalues := make(map[string]interface{})
-	mtypes := make(map[string]reflect.Type)
-	zero := true
+func mapSchema(data interface{}, zero bool) (map[string]interface{}, map[string]reflect.Type, bool) {
+	var (
+		fields    = schema.InferFields(data)
+		types     = schema.InferTypes(data)
+		values    = schema.InferValues(data)
+		valuesMap = make(map[string]interface{}, len(fields))
+		typesMap  = make(map[string]reflect.Type, len(fields))
+	)
 
-	rv := reflect.ValueOf(data)
-	if rv.Kind() == reflect.Ptr {
-		rv = rv.Elem()
-	}
-	rt := rv.Type()
+	for field, index := range fields {
+		typesMap[field] = types[index]
 
-	if rv.Kind() != reflect.Struct {
-		panic("data must be a struct")
-	}
+		value := values[index]
 
-	for i := 0; i < rv.NumField(); i++ {
-		fv := rv.Field(i)
-		ft := rt.Field(i)
+		if value != nil {
+			valuesMap[field] = values[index]
 
-		var name string
-		if tag := ft.Tag.Get("db"); tag != "" {
-			if tag == "-" {
-				continue
+			if zero {
+				zero = isZero(value)
 			}
-			name = tag
-		} else {
-			name = snakecase.SnakeCase(ft.Name)
-		}
-
-		if ft.Type.Kind() == reflect.Ptr {
-			mtypes[name] = ft.Type.Elem()
-			if !fv.IsNil() {
-				mvalues[name] = fv.Elem().Interface()
-			}
-		} else if ft.Type.Kind() == reflect.Slice && ft.Type.Elem().Kind() == reflect.Ptr {
-			mtypes[name] = reflect.SliceOf(ft.Type.Elem().Elem())
-			mvalues[name] = fv.Interface()
-		} else {
-			mtypes[name] = fv.Type()
-			mvalues[name] = fv.Interface()
-		}
-
-		if zero {
-			zero = isZero(fv)
 		}
 	}
 
-	return mvalues, mtypes, zero
+	return valuesMap, typesMap, zero
 }
 
 func contains(vs []interface{}, v interface{}) bool {
@@ -120,21 +96,40 @@ func contains(vs []interface{}, v interface{}) bool {
 }
 
 // isZero shallowly check wether a field in struct is zero or not
-func isZero(rv reflect.Value) bool {
+func isZero(i interface{}) bool {
 	zero := true
-	switch rv.Kind() {
-	case reflect.Bool:
-		zero = !rv.Bool()
-	case reflect.Float32, reflect.Float64:
-		zero = rv.Float() == 0
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		zero = rv.Int() == 0
-	case reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
-		zero = rv.IsNil()
-	case reflect.String:
-		zero = rv.String() == ""
-	case reflect.Uint, reflect.Uintptr, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		zero = rv.Uint() == 0
+
+	switch v := i.(type) {
+	case bool:
+		zero = v == false
+	case string:
+		zero = v == ""
+	case int:
+		zero = v == 0
+	case int8:
+		zero = v == 0
+	case int16:
+		zero = v == 0
+	case int32:
+		zero = v == 0
+	case int64:
+		zero = v == 0
+	case uint:
+		zero = v == 0
+	case uint8:
+		zero = v == 0
+	case uint16:
+		zero = v == 0
+	case uint32:
+		zero = v == 0
+	case uint64:
+		zero = v == 0
+	case uintptr:
+		zero = v == 0
+	case float32:
+		zero = v == 0
+	case float64:
+		zero = v == 0
 	}
 
 	return zero

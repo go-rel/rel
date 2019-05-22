@@ -4,7 +4,7 @@ package changeset
 func Convert(data interface{}) *Changeset {
 	ch := &Changeset{}
 	ch.values = make(map[string]interface{})
-	ch.changes, ch.types, _ = mapSchema(data)
+	ch.changes, ch.types, _ = mapSchema(data, false)
 
 	return ch
 }

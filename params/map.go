@@ -7,6 +7,8 @@ import (
 // Map is param type alias for map[string]interface{}
 type Map map[string]interface{}
 
+var _ Params = (*Map)(nil)
+
 // Exists returns true if key exists.
 func (m Map) Exists(name string) bool {
 	_, exists := m[name]

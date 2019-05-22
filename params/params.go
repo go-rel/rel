@@ -3,7 +3,10 @@ package params
 
 import (
 	"reflect"
+	"time"
 )
+
+var timeType = reflect.TypeOf(time.Time{})
 
 // Params is interface used by changeset when casting parameters to changeset.
 type Params interface {

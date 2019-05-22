@@ -1,43 +1,51 @@
 package schema
 
 import (
+	"database/sql"
 	"reflect"
 )
 
 type scanners interface {
-	fields
-	Scanners() []interface{}
+	Scanners([]string) []interface{}
 }
 
-func InferScanners(record interface{}) []interface{} {
+// InferScanners from struct.
+func InferScanners(record interface{}, fields []string) []interface{} {
 	if v, ok := record.(scanners); ok {
-		return v.Scanners()
+		return v.Scanners(fields)
+	}
+
+	if s, ok := record.(sql.Scanner); ok {
+		return []interface{}{s}
 	}
 
 	var (
-		rv      = reflectValuePtr(record)
-		fields  = InferFields(record)
-		mapping = inferFieldMapping(record)
-		values  = make([]interface{}, len(fields))
+		rv        = reflectValuePtr(record)
+		mapping   = inferFieldMapping(record)
+		result    = make([]interface{}, len(fields))
+		tempValue = sql.RawBytes{}
 	)
 
 	if !rv.CanAddr() {
 		panic("grimoire: not a pointer")
 	}
 
-	for name, index := range fields {
-		var (
-			structIndex = mapping[name]
-			fv          = rv.Field(structIndex)
-			ft          = fv.Type()
-		)
+	for index, field := range fields {
+		if structIndex, ok := mapping[field]; ok {
+			var (
+				fv = rv.Field(structIndex)
+				ft = fv.Type()
+			)
 
-		if ft.Kind() == reflect.Ptr {
-			values[index] = fv.Addr().Interface()
+			if ft.Kind() == reflect.Ptr {
+				result[index] = fv.Addr().Interface()
+			} else {
+				result[index] = Nullable(fv.Addr().Interface())
+			}
 		} else {
-			values[index] = Value(fv.Addr().Interface())
+			result[index] = &tempValue
 		}
 	}
 
-	return values
+	return result
 }

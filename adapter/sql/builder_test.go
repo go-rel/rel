@@ -36,6 +36,11 @@ func TestBuilder_Find(t *testing.T) {
 			users.Select("id", "name"),
 		},
 		{
+			"SELECT `id`,FIELD(`gender`, \"male\") AS `order` FROM `users` ORDER BY `order` ASC;",
+			nil,
+			users.Select("id", "^FIELD(`gender`, \"male\") AS `order`").Order(Asc("order")),
+		},
+		{
 			"SELECT * FROM `users` JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
 			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
@@ -185,7 +190,11 @@ func TestBuilder_Aggregate(t *testing.T) {
 
 	qs, args = builder.Aggregate(users)
 	assert.Nil(t, args)
-	assert.Equal(t, "SELECT `transactions`.`total`,sum(`transactions`.`total`) AS sum FROM `users`;", qs)
+	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
+
+	qs, args = builder.Aggregate(users.Group("gender"))
+	assert.Nil(t, args)
+	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
 }
 
 func TestBuilder_Insert(t *testing.T) {

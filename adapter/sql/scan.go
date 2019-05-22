@@ -1,11 +1,9 @@
 package sql
 
 import (
-	"database/sql"
 	"reflect"
 
-	"github.com/Fs02/grimoire/internal"
-	"github.com/azer/snakecase"
+	"github.com/Fs02/grimoire/schema"
 )
 
 // Rows is minimal rows interface for test purpose
@@ -15,8 +13,6 @@ type Rows interface {
 	Next() bool
 }
 
-var typeScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
-
 // Scan rows into interface
 func Scan(value interface{}, rows Rows) (int64, error) {
 	columns, err := rows.Columns()
@@ -24,109 +20,58 @@ func Scan(value interface{}, rows Rows) (int64, error) {
 		return 0, err
 	}
 
-	rv := reflect.ValueOf(value)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	rt := reflect.TypeOf(value)
+	if rt.Kind() != reflect.Ptr {
 		panic("grimoire: record parameter must be a pointer")
 	}
 
-	count := int64(0)
-	rv = rv.Elem()
-	var index map[string]int
-	isScanner := rv.Addr().Type().Implements(typeScanner)
-	isSlice := rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 && !isScanner
-
-	if !isScanner {
-		if isSlice {
-			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
-			index = fieldIndex(rv.Type().Elem())
-		} else {
-			index = fieldIndex(rv.Type())
-		}
+	if rt.Elem().Kind() == reflect.Slice {
+		return scanMany(value, rows, columns)
 	}
 
-	for rows.Next() {
-		var elem reflect.Value
-		if isSlice {
-			elem = reflect.New(rv.Type().Elem()).Elem()
-		} else {
-			elem = rv
-		}
+	return scanOne(value, rows, columns)
+}
 
-		var ptr []interface{}
-		var reset map[int]reflect.Value
-		if isScanner {
-			ptr = []interface{}{elem.Addr().Interface()}
-		} else {
-			ptr, reset = fieldPtr(elem, index, columns)
-		}
+func scanOne(out interface{}, rows Rows, columns []string) (int64, error) {
+	if !rows.Next() {
+		return 0, nil
+	}
 
+	var (
+		ptr = schema.InferScanners(out, columns)
 		err = rows.Scan(ptr...)
+	)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return 1, nil
+}
+
+func scanMany(out interface{}, rows Rows, columns []string) (int64, error) {
+	var (
+		rv      = reflect.ValueOf(out).Elem()
+		sliceRv = reflect.MakeSlice(rv.Type(), 0, 0)
+		elemRt  = rv.Type().Elem()
+		elemRv  = reflect.New(elemRt).Elem()
+	)
+
+	for rows.Next() {
+		var (
+			copyElem = elemRv
+			ptr      = schema.InferScanners(copyElem.Addr().Interface(), columns)
+			err      = rows.Scan(ptr...)
+		)
+
 		if err != nil {
 			return 0, err
 		}
 
-		count++
-
-		for index, field := range reset {
-			if v := reflect.ValueOf(ptr[index]).Elem().Elem(); v.IsValid() {
-				field.Set(v)
-			}
-		}
-
-		if isSlice {
-			rv.Set(reflect.Append(rv, elem))
-		} else {
-			break
-		}
+		sliceRv = reflect.Append(sliceRv, copyElem)
 	}
 
-	return count, nil
-}
+	rv.Set(sliceRv)
 
-func fieldPtr(rv reflect.Value, index map[string]int, columns []string) ([]interface{}, map[int]reflect.Value) {
-	var ptr []interface{}
-	reset := make(map[int]reflect.Value)
-
-	dummy := sql.RawBytes{}
-	for i, col := range columns {
-		if id, exist := index[col]; exist {
-			field := rv.Field(id)
-			if field.Kind() == reflect.Ptr {
-				ptr = append(ptr, field.Addr().Interface())
-			} else {
-				nrv := reflect.New(reflect.PtrTo(field.Type()))
-				nrv.Elem().Set(field.Addr())
-				ptr = append(ptr, nrv.Interface())
-				reset[i] = field
-			}
-		} else {
-			ptr = append(ptr, &dummy)
-		}
-	}
-
-	return ptr, reset
-}
-
-func fieldIndex(rt reflect.Type) map[string]int {
-	fields := make(map[string]int)
-	for i := 0; i < rt.NumField(); i++ {
-		f := rt.Field(i)
-
-		// skip if not scannable
-		if !internal.Scannable(f.Type) {
-			continue
-		}
-
-		if tag := f.Tag.Get("db"); tag != "" {
-			if tag == "-" {
-				continue
-			}
-
-			fields[tag] = i
-		} else {
-			fields[snakecase.SnakeCase(f.Name)] = i
-		}
-	}
-
-	return fields
+	return int64(sliceRv.Len()), nil
 }

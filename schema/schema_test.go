@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"database/sql"
 	"reflect"
 )
 
@@ -32,6 +33,22 @@ func (c CustomSchema) Values() []interface{} {
 	return []interface{}{c.UUID, c.Price}
 }
 
-func (c *CustomSchema) Scanners() []interface{} {
-	return []interface{}{Value(&c.UUID), Value(&c.Price)}
+func (c *CustomSchema) Scanners(fields []string) []interface{} {
+	var (
+		scanners  = make([]interface{}, len(fields))
+		tempValue = sql.RawBytes{}
+	)
+
+	for index, field := range fields {
+		switch field {
+		case "_uuid":
+			scanners[index] = Nullable(&c.UUID)
+		case "_price":
+			scanners[index] = Nullable(&c.Price)
+		default:
+			scanners[index] = &tempValue
+		}
+	}
+
+	return scanners
 }

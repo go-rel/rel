@@ -15,6 +15,7 @@ type Changeset struct {
 	values      map[string]interface{}
 	types       map[string]reflect.Type
 	constraints Constraints
+	zero        bool
 }
 
 // Errors of changeset.

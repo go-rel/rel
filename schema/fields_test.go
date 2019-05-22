@@ -11,16 +11,16 @@ func TestFields(t *testing.T) {
 		record = struct {
 			A string
 			B *int
-			C []byte     `db:"-"`
+			C []byte     `db:",primary"`
 			D bool       `db:"D"`
-			E []*float64 `db:"_e,primary"`
+			E []*float64 `db:"-"`
 		}{}
 		rt       = reflectTypePtr(record)
 		expected = map[string]int{
-			"a":  0,
-			"b":  1,
-			"D":  2,
-			"_e": 3,
+			"a": 0,
+			"b": 1,
+			"c": 2,
+			"D": 3,
 		}
 	)
 

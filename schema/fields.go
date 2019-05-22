@@ -14,12 +14,14 @@ type fields interface {
 
 var fieldsCache sync.Map
 
+// InferFields from a struct.
 func InferFields(record interface{}) map[string]int {
 	if s, ok := record.(fields); ok {
 		return s.Fields()
 	}
 
-	rt := reflectTypePtr(record)
+	rt := reflectInternalType(record)
+	// rt := reflectTypePtr(record)
 
 	// check for cache
 	if v, cached := fieldsCache.Load((rt)); cached {
@@ -50,11 +52,15 @@ func InferFields(record interface{}) map[string]int {
 
 func inferFieldName(sf reflect.StructField) string {
 	if tag := sf.Tag.Get("db"); tag != "" {
-		if tag == "-" {
+		name := strings.Split(tag, ",")[0]
+
+		if name == "-" {
 			return ""
 		}
 
-		return strings.Split(tag, ",")[0]
+		if name != "" {
+			return name
+		}
 	}
 
 	return snakecase.SnakeCase(sf.Name)
@@ -78,11 +84,9 @@ func inferFieldMapping(record interface{}) map[string]int {
 			name = inferFieldName(sf)
 		)
 
-		if name == "" {
-			continue
+		if name != "" {
+			mapping[name] = i
 		}
-
-		mapping[name] = i
 	}
 
 	fieldMappingCache.Store(rt, mapping)

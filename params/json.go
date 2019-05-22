@@ -8,13 +8,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var timeType = reflect.TypeOf(time.Time{})
-
 // JSON is param type for json document.
 type JSON struct {
 	gjson.Result
 	results sync.Map
 }
+
+var _ Params = (*JSON)(nil)
 
 // Exists returns true if key exists.
 func (json *JSON) Exists(name string) bool {
@@ -81,6 +81,10 @@ func (json *JSON) GetParamsSlice(name string) ([]Params, bool) {
 }
 
 func (json *JSON) convert(value gjson.Result, typ reflect.Type) (interface{}, bool) {
+	if value.Type == gjson.Null {
+		return nil, true
+	}
+
 	// handle type alias
 	if typ.PkgPath() != "" && typ.Kind() != reflect.Struct && typ.Kind() != reflect.Slice && typ.Kind() != reflect.Array {
 		rv := reflect.ValueOf(value.Value())
@@ -92,8 +96,6 @@ func (json *JSON) convert(value gjson.Result, typ reflect.Type) (interface{}, bo
 	}
 
 	switch value.Type {
-	case gjson.Null:
-		return nil, true
 	case gjson.False, gjson.True:
 		if typ.Kind() == reflect.Bool {
 			return value.Bool(), true

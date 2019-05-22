@@ -19,6 +19,7 @@ type primaryKeyData struct {
 
 var primaryKeysCache sync.Map
 
+// InferPrimaryKey from struct.
 func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{}) {
 	if pk, ok := record.(primaryKey); ok {
 		return pk.PrimaryKey()

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,16 +24,19 @@ func TestInferScanners(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
+		fields   = []string{"name", "id", "skip", "data", "number", "address", "not_exist"}
 		expected = []interface{}{
-			Value(&record.ID),
-			Value(&record.Name),
-			Value(&record.Number),
+			Nullable(&record.Name),
+			Nullable(&record.ID),
+			&sql.RawBytes{},
+			Nullable(&record.Data),
+			Nullable(&record.Number),
 			&record.Address,
-			Value(&record.Data),
+			&sql.RawBytes{},
 		}
 	)
 
-	assert.Equal(t, expected, InferScanners(&record))
+	assert.Equal(t, expected, InferScanners(&record, fields))
 }
 
 func TestInferScanners_usingInterface(t *testing.T) {
@@ -41,14 +45,25 @@ func TestInferScanners_usingInterface(t *testing.T) {
 			UUID:  "abc123",
 			Price: 100,
 		}
-		expected = []interface{}{Value(&record.UUID), Value(&record.Price)}
+		fields   = []string{"_uuid", "_price"}
+		expected = []interface{}{Nullable(&record.UUID), Nullable(&record.Price)}
 	)
 
-	assert.Equal(t, expected, InferScanners(&record))
+	assert.Equal(t, expected, InferScanners(&record, fields))
+}
+
+func TestInferScanners_sqlScanner(t *testing.T) {
+	var (
+		record   = sql.NullBool{}
+		fields   = []string{}
+		expected = []interface{}{&sql.NullBool{}}
+	)
+
+	assert.Equal(t, expected, InferScanners(&record, fields))
 }
 
 func TestInferScanners_notPointer(t *testing.T) {
 	assert.Panics(t, func() {
-		InferScanners(struct{}{})
+		InferScanners(struct{}{}, []string{})
 	})
 }

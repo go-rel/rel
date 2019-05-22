@@ -10,6 +10,9 @@ import (
 	"github.com/Fs02/grimoire/c"
 )
 
+// UnescapeCharacter disable field escaping when it starts with this character.
+var UnescapeCharacter byte = '^'
+
 var fieldCache sync.Map
 
 // Builder defines information of query builder.
@@ -28,18 +31,16 @@ func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
 // Aggregate generates query for aggregation.
 func (builder *Builder) Aggregate(q grimoire.Query) (string, []interface{}) {
 	qs, args := builder.query(q)
+	field := q.AggregateMode + "(" + q.AggregateField + ") AS " + q.AggregateMode
 
-	if q.AggregateMode == "count" && q.AggregateField == "*" {
-		return builder.fields(false, "count(*) AS count") + qs, args
-	}
-
-	field := q.AggregateMode + "(" + q.AggregateField + ")" + " AS " + q.AggregateMode
-	return builder.fields(false, q.AggregateField, field) + qs, args
+	return builder.fields(false, append(q.GroupFields, field)...) + qs, args
 }
 
 func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {
-	var buffer bytes.Buffer
-	var args []interface{}
+	var (
+		buffer bytes.Buffer
+		args   []interface{}
+	)
 
 	if s := builder.from(q.Collection); s != "" {
 		buffer.WriteString(" ")
@@ -91,10 +92,11 @@ func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {
 
 // Insert generates query for insert.
 func (builder *Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
-	length := len(changes)
-
-	var buffer bytes.Buffer
-	var args = make([]interface{}, 0, length)
+	var (
+		buffer bytes.Buffer
+		length = len(changes)
+		args   = make([]interface{}, 0, length)
+	)
 
 	buffer.WriteString("INSERT INTO ")
 	buffer.WriteString(builder.config.EscapeChar)
@@ -147,8 +149,10 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 
 // InsertAll generates query for multiple insert.
 func (builder *Builder) InsertAll(collection string, fields []string, allchanges []map[string]interface{}) (string, []interface{}) {
-	var buffer bytes.Buffer
-	var args = make([]interface{}, 0, len(fields)*len(allchanges))
+	var (
+		buffer bytes.Buffer
+		args   = make([]interface{}, 0, len(fields)*len(allchanges))
+	)
 
 	buffer.WriteString("INSERT INTO ")
 
@@ -201,10 +205,11 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 
 // Update generates query for update.
 func (builder *Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
-	length := len(changes)
-
-	var buffer bytes.Buffer
-	var args = make([]interface{}, 0, length)
+	var (
+		buffer bytes.Buffer
+		length = len(changes)
+		args   = make([]interface{}, 0, length)
+	)
 
 	buffer.WriteString("UPDATE ")
 	buffer.WriteString(builder.config.EscapeChar)
@@ -241,8 +246,10 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 
 // Delete generates query for delete.
 func (builder *Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
-	var buffer bytes.Buffer
-	var args []interface{}
+	var (
+		buffer bytes.Buffer
+		args   []interface{}
+	)
 
 	buffer.WriteString("DELETE FROM ")
 	buffer.WriteString(builder.config.EscapeChar)
@@ -294,8 +301,11 @@ func (builder *Builder) join(join ...c.Join) (string, []interface{}) {
 		return "", nil
 	}
 
-	var qs string
-	var args []interface{}
+	var (
+		qs   string
+		args []interface{}
+	)
+
 	for i, j := range join {
 		cs, jargs := builder.condition(j.Condition)
 		qs += j.Mode + " " + builder.config.EscapeChar + j.Collection + builder.config.EscapeChar + " ON " + cs
@@ -418,9 +428,11 @@ func (builder *Builder) condition(cond c.Condition) (string, []interface{}) {
 }
 
 func (builder *Builder) build(op string, inner []c.Condition) (string, []interface{}) {
-	length := len(inner)
-	var qstring string
-	var args []interface{}
+	var (
+		qstring string
+		length  = len(inner)
+		args    []interface{}
+	)
 
 	if length > 1 {
 		qstring += "("
@@ -444,8 +456,10 @@ func (builder *Builder) build(op string, inner []c.Condition) (string, []interfa
 }
 
 func (builder *Builder) buildComparison(cond c.Condition) (string, []interface{}) {
-	var cs string
-	var op string
+	var (
+		cs string
+		op string
+	)
 
 	switch cond.Type {
 	case c.ConditionEq:
@@ -517,10 +531,9 @@ func (builder *Builder) escape(field string) string {
 		return escapedField.(string)
 	}
 
-	start := strings.IndexRune(field, '(')
-	end := strings.IndexRune(field, ')')
-
-	if start >= 0 && end >= 0 && end > start {
+	if len(field) > 0 && field[0] == UnescapeCharacter {
+		escapedField = field[1:]
+	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
 		escapedField = field[:start+1] + builder.escape(field[start+1:end]) + field[end:]
 	} else if strings.HasSuffix(field, "*") {
 		escapedField = builder.config.EscapeChar + strings.Replace(field, ".", builder.config.EscapeChar+".", 1)

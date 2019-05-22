@@ -64,8 +64,10 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 		return nil, err
 	}
 
-	ids := []interface{}{id}
-	inc := 1
+	var (
+		ids = []interface{}{id}
+		inc = 1
+	)
 
 	if adapter.Config.IncrementFunc != nil {
 		inc = adapter.Config.IncrementFunc(*adapter)
@@ -94,9 +96,11 @@ func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger)
 
 // Begin begins a new transaction.
 func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
-	var tx *sql.Tx
-	var savepoint int
-	var err error
+	var (
+		tx        *sql.Tx
+		savepoint int
+		err       error
+	)
 
 	if adapter.Tx != nil {
 		tx = adapter.Tx
@@ -145,8 +149,10 @@ func (adapter *Adapter) Rollback() error {
 
 // Query performs query operation.
 func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}, loggers ...grimoire.Logger) (int64, error) {
-	var rows *sql.Rows
-	var err error
+	var (
+		rows *sql.Rows
+		err  error
+	)
 
 	start := time.Now()
 	if adapter.Tx != nil {
@@ -154,6 +160,7 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 	} else {
 		rows, err = adapter.DB.Query(statement, args...)
 	}
+
 	go grimoire.Log(loggers, statement, time.Since(start), err)
 
 	if err != nil {
@@ -167,8 +174,10 @@ func (adapter *Adapter) Query(out interface{}, statement string, args []interfac
 
 // Exec performs exec operation.
 func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...grimoire.Logger) (int64, int64, error) {
-	var res sql.Result
-	var err error
+	var (
+		res sql.Result
+		err error
+	)
 
 	start := time.Now()
 	if adapter.Tx != nil {
@@ -176,6 +185,7 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...gr
 	} else {
 		res, err = adapter.DB.Exec(statement, args...)
 	}
+
 	go grimoire.Log(loggers, statement, time.Since(start), err)
 
 	if err != nil {

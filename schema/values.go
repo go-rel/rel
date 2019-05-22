@@ -9,6 +9,7 @@ type values interface {
 	Values() []interface{}
 }
 
+// InferValues from struct.
 func InferValues(record interface{}) []interface{} {
 	if v, ok := record.(values); ok {
 		return v.Values()

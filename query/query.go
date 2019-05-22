@@ -11,6 +11,7 @@ type Query struct {
 	SortClause   []SortClause
 	OffsetClause Offset
 	LimitClause  Limit
+	LockClause   Lock
 }
 
 func (q Query) Build(query *Query) {
@@ -42,6 +43,10 @@ func (q Query) Build(query *Query) {
 
 		if q.LimitClause != 0 {
 			query.LimitClause = q.LimitClause
+		}
+
+		if q.LockClause != "" {
+			query.LockClause = q.LockClause
 		}
 	}
 }
@@ -156,6 +161,12 @@ func (q Query) Offset(offset Offset) Query {
 // Limit result returned by database.
 func (q Query) Limit(limit Limit) Query {
 	q.LimitClause = limit
+	return q
+}
+
+// Lock query expression.
+func (q Query) Lock(lock Lock) Query {
+	q.LockClause = lock
 	return q
 }
 

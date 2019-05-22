@@ -8,6 +8,7 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire/query"
 )
 
 // Config holds configuration for adapter.
@@ -36,29 +37,29 @@ func (adapter *Adapter) Close() error {
 }
 
 // All retrieves all record that match the query.
-func (adapter *Adapter) All(query grimoire.Query, doc interface{}, loggers ...grimoire.Logger) (int, error) {
-	statement, args := NewBuilder(adapter.Config).Find(query)
+func (adapter *Adapter) All(q query.Query, doc interface{}, loggers ...grimoire.Logger) (int, error) {
+	statement, args := NewBuilder(adapter.Config).Find(q)
 	count, err := adapter.Query(doc, statement, args, loggers...)
 	return int(count), err
 }
 
 // Aggregate record using given query.
-func (adapter *Adapter) Aggregate(query grimoire.Query, doc interface{}, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Aggregate(query)
+func (adapter *Adapter) Aggregate(q query.Query, doc interface{}, todo1 string, todo2 string, loggers ...grimoire.Logger) error {
+	statement, args := NewBuilder(adapter.Config).Aggregate(q)
 	_, err := adapter.Query(doc, statement, args, loggers...)
 	return err
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).Insert(query.Collection, changes)
+func (adapter *Adapter) Insert(q query.Query, changes map[string]interface{}, loggers ...grimoire.Logger) (interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).Insert(q.Collection, changes)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Collection, fields, allchanges)
+func (adapter *Adapter) InsertAll(q query.Query, fields []string, allchanges []map[string]interface{}, loggers ...grimoire.Logger) ([]interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).InsertAll(q.Collection, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
@@ -81,15 +82,15 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query grimoire.Query, changes map[string]interface{}, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Update(query.Collection, changes, query.Condition)
+func (adapter *Adapter) Update(q query.Query, changes map[string]interface{}, loggers ...grimoire.Logger) error {
+	statement, args := NewBuilder(adapter.Config).Update(q.Collection, changes, q.WhereClause)
 	_, _, err := adapter.Exec(statement, args, loggers...)
 	return err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Delete(query.Collection, query.Condition)
+func (adapter *Adapter) Delete(q query.Query, loggers ...grimoire.Logger) error {
+	statement, args := NewBuilder(adapter.Config).Delete(q.Collection, q.WhereClause)
 	_, _, err := adapter.Exec(statement, args, loggers...)
 	return err
 }

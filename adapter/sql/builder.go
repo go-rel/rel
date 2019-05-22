@@ -6,8 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/query"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -23,20 +22,20 @@ type Builder struct {
 }
 
 // Find generates query for select.
-func (builder *Builder) Find(q grimoire.Query) (string, []interface{}) {
+func (builder *Builder) Find(q query.Query) (string, []interface{}) {
 	qs, args := builder.query(q)
-	return builder.fields(q.AsDistinct, q.Fields...) + qs, args
+	return builder.fields(q.SelectClause.OnlyDistinct, q.SelectClause.Fields) + qs, args
 }
 
 // Aggregate generates query for aggregation.
-func (builder *Builder) Aggregate(q grimoire.Query) (string, []interface{}) {
+func (builder *Builder) Aggregate(q query.Query) (string, []interface{}) {
 	qs, args := builder.query(q)
-	field := q.AggregateMode + "(" + q.AggregateField + ") AS " + q.AggregateMode
+	field := "" //q.AggregateMode + "(" + q.AggregateField + ") AS " + q.AggregateMode
 
-	return builder.fields(false, append(q.GroupFields, field)...) + qs, args
+	return builder.fields(false, append(q.GroupClause.Fields, field)) + qs, args
 }
 
-func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {
+func (builder *Builder) query(q query.Query) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   []interface{}
@@ -53,36 +52,36 @@ func (builder *Builder) query(q grimoire.Query) (string, []interface{}) {
 		args = append(args, arg...)
 	}
 
-	if s, arg := builder.where(q.Condition); s != "" {
+	if s, arg := builder.where(q.WhereClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.groupBy(q.GroupFields...); s != "" {
+	if s := builder.groupBy(q.GroupClause.Fields); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 
-		if s, arg := builder.having(q.HavingCondition); s != "" {
+		if s, arg := builder.having(q.GroupClause.Filter); s != "" {
 			buffer.WriteString(" ")
 			buffer.WriteString(s)
 			args = append(args, arg...)
 		}
 	}
 
-	if s := builder.orderBy(q.OrderClause...); s != "" {
+	if s := builder.orderBy(q.SortClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.limitOffset(q.LimitResult, q.OffsetResult); s != "" {
+	if s := builder.limitOffset(q.LimitClause, q.OffsetClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
 	if q.LockClause != "" {
 		buffer.WriteString(" ")
-		buffer.WriteString(q.LockClause)
+		buffer.WriteString(string(q.LockClause))
 	}
 
 	buffer.WriteString(";")
@@ -204,7 +203,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 }
 
 // Update generates query for update.
-func (builder *Builder) Update(collection string, changes map[string]interface{}, cond c.Condition) (string, []interface{}) {
+func (builder *Builder) Update(collection string, changes map[string]interface{}, filter query.FilterClause) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		length = len(changes)
@@ -233,7 +232,7 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 		curr++
 	}
 
-	if s, arg := builder.where(cond); s != "" {
+	if s, arg := builder.where(filter); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
@@ -245,7 +244,7 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 }
 
 // Delete generates query for delete.
-func (builder *Builder) Delete(collection string, cond c.Condition) (string, []interface{}) {
+func (builder *Builder) Delete(collection string, filter query.FilterClause) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   []interface{}
@@ -256,7 +255,7 @@ func (builder *Builder) Delete(collection string, cond c.Condition) (string, []i
 	buffer.WriteString(collection)
 	buffer.WriteString(builder.config.EscapeChar)
 
-	if s, arg := builder.where(cond); s != "" {
+	if s, arg := builder.where(filter); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
@@ -267,7 +266,7 @@ func (builder *Builder) Delete(collection string, cond c.Condition) (string, []i
 	return buffer.String(), args
 }
 
-func (builder *Builder) fields(distinct bool, fields ...string) string {
+func (builder *Builder) fields(distinct bool, fields []string) string {
 	if len(fields) == 0 {
 		return "SELECT *"
 	}
@@ -296,39 +295,45 @@ func (builder *Builder) from(collection string) string {
 	return "FROM " + builder.config.EscapeChar + collection + builder.config.EscapeChar
 }
 
-func (builder *Builder) join(join ...c.Join) (string, []interface{}) {
-	if len(join) == 0 {
+func (builder *Builder) join(joins ...query.JoinClause) (string, []interface{}) {
+	if len(joins) == 0 {
 		return "", nil
 	}
 
 	var (
-		qs   string
-		args []interface{}
+		buffer bytes.Buffer
+		args   []interface{}
 	)
 
-	for i, j := range join {
-		cs, jargs := builder.condition(j.Condition)
-		qs += j.Mode + " " + builder.config.EscapeChar + j.Collection + builder.config.EscapeChar + " ON " + cs
-		args = append(args, jargs...)
+	for i, join := range joins {
+		buffer.WriteString(join.Mode)
+		buffer.WriteString(builder.config.EscapeChar)
+		buffer.WriteString(join.Collection)
+		buffer.WriteString(builder.config.EscapeChar)
+		buffer.WriteString(" ON ")
+		buffer.WriteString(join.From)
+		buffer.WriteString(join.To)
 
-		if i < len(join)-1 {
-			qs += " "
+		args = append(args, join.Arguments...)
+
+		if i < len(joins)-1 {
+			buffer.WriteString(" ")
 		}
 	}
 
-	return qs, args
+	return buffer.String(), args
 }
 
-func (builder *Builder) where(condition c.Condition) (string, []interface{}) {
-	if condition.None() {
+func (builder *Builder) where(filter query.FilterClause) (string, []interface{}) {
+	if filter.None() {
 		return "", nil
 	}
 
-	qs, args := builder.condition(condition)
+	qs, args := builder.filter(filter)
 	return "WHERE " + qs, args
 }
 
-func (builder *Builder) groupBy(fields ...string) string {
+func (builder *Builder) groupBy(fields []string) string {
 	if len(fields) == 0 {
 		return ""
 	}
@@ -348,16 +353,16 @@ func (builder *Builder) groupBy(fields ...string) string {
 	return buffer.String()
 }
 
-func (builder *Builder) having(condition c.Condition) (string, []interface{}) {
-	if condition.None() {
+func (builder *Builder) having(filter query.FilterClause) (string, []interface{}) {
+	if filter.None() {
 		return "", nil
 	}
 
-	qs, args := builder.condition(condition)
+	qs, args := builder.filter(filter)
 	return "HAVING " + qs, args
 }
 
-func (builder *Builder) orderBy(orders ...c.Order) string {
+func (builder *Builder) orderBy(orders []query.SortClause) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -379,55 +384,55 @@ func (builder *Builder) orderBy(orders ...c.Order) string {
 	return qs
 }
 
-func (builder *Builder) limitOffset(limit int, offset int) string {
+func (builder *Builder) limitOffset(limit query.Limit, offset query.Offset) string {
 	str := ""
 
 	if limit > 0 {
-		str = "LIMIT " + strconv.Itoa(limit)
+		str = "LIMIT " + strconv.Itoa(int(limit))
 
 		if offset > 0 {
-			str += " OFFSET " + strconv.Itoa(offset)
+			str += " OFFSET " + strconv.Itoa(int(offset))
 		}
 	}
 
 	return str
 }
 
-func (builder *Builder) condition(cond c.Condition) (string, []interface{}) {
-	switch cond.Type {
-	case c.ConditionAnd:
-		return builder.build("AND", cond.Inner)
-	case c.ConditionOr:
-		return builder.build("OR", cond.Inner)
-	case c.ConditionNot:
-		qs, args := builder.build("AND", cond.Inner)
+func (builder *Builder) filter(filter query.FilterClause) (string, []interface{}) {
+	switch filter.Type {
+	case query.AndOp:
+		return builder.build("AND", filter.Inner)
+	case query.OrOp:
+		return builder.build("OR", filter.Inner)
+	case query.NotOp:
+		qs, args := builder.build("AND", filter.Inner)
 		return "NOT " + qs, args
-	case c.ConditionEq,
-		c.ConditionNe,
-		c.ConditionLt,
-		c.ConditionLte,
-		c.ConditionGt,
-		c.ConditionGte:
-		return builder.buildComparison(cond)
-	case c.ConditionNil:
-		return builder.escape(string(cond.Left.Column)) + " IS NULL", cond.Right.Values
-	case c.ConditionNotNil:
-		return builder.escape(string(cond.Left.Column)) + " IS NOT NULL", cond.Right.Values
-	case c.ConditionIn,
-		c.ConditionNin:
-		return builder.buildInclusion(cond)
-	case c.ConditionLike:
-		return builder.escape(string(cond.Left.Column)) + " LIKE " + builder.ph(), cond.Right.Values
-	case c.ConditionNotLike:
-		return builder.escape(string(cond.Left.Column)) + " NOT LIKE " + builder.ph(), cond.Right.Values
-	case c.ConditionFragment:
-		return string(cond.Left.Column), cond.Right.Values
+	case query.EqOp,
+		query.NeOp,
+		query.LtOp,
+		query.LteOp,
+		query.GtOp,
+		query.GteOp:
+		return builder.buildComparison(filter)
+	case query.NilOp:
+		return builder.escape(filter.Field) + " IS NULL", filter.Values
+	case query.NotNilOp:
+		return builder.escape(filter.Field) + " IS NOT NULL", filter.Values
+	case query.InOp,
+		query.NinOp:
+		return builder.buildInclusion(filter)
+	case query.LikeOp:
+		return builder.escape(filter.Field) + " LIKE " + builder.ph(), filter.Values
+	case query.NotLikeOp:
+		return builder.escape(filter.Field) + " NOT LIKE " + builder.ph(), filter.Values
+	case query.FragmentOp:
+		return filter.Field, filter.Values
 	}
 
 	return "", nil
 }
 
-func (builder *Builder) build(op string, inner []c.Condition) (string, []interface{}) {
+func (builder *Builder) build(op string, inner []query.FilterClause) (string, []interface{}) {
 	var (
 		qstring string
 		length  = len(inner)
@@ -439,7 +444,7 @@ func (builder *Builder) build(op string, inner []c.Condition) (string, []interfa
 	}
 
 	for i, c := range inner {
-		cQstring, cArgs := builder.condition(c)
+		cQstring, cArgs := builder.filter(c)
 		qstring += cQstring
 		args = append(args, cArgs...)
 
@@ -455,60 +460,50 @@ func (builder *Builder) build(op string, inner []c.Condition) (string, []interfa
 	return qstring, args
 }
 
-func (builder *Builder) buildComparison(cond c.Condition) (string, []interface{}) {
+func (builder *Builder) buildComparison(filter query.FilterClause) (string, []interface{}) {
 	var (
 		cs string
 		op string
 	)
 
-	switch cond.Type {
-	case c.ConditionEq:
+	switch filter.Type {
+	case query.EqOp:
 		op = "="
-	case c.ConditionNe:
+	case query.NeOp:
 		op = "<>"
-	case c.ConditionLt:
+	case query.LtOp:
 		op = "<"
-	case c.ConditionLte:
+	case query.LteOp:
 		op = "<="
-	case c.ConditionGt:
+	case query.GtOp:
 		op = ">"
-	case c.ConditionGte:
+	case query.GteOp:
 		op = ">="
 	}
 
-	if cond.Left.Column != "" {
-		cs = builder.escape(string(cond.Left.Column)) + op
-	} else {
-		cs = builder.ph() + op
-	}
+	cs = filter.Field + op + builder.ph()
 
-	if cond.Right.Column != "" {
-		cs += builder.escape(string(cond.Right.Column))
-	} else {
-		cs += builder.ph()
-	}
-
-	return cs, append(cond.Left.Values, cond.Right.Values...)
+	return cs, filter.Values
 }
 
-func (builder *Builder) buildInclusion(cond c.Condition) (string, []interface{}) {
+func (builder *Builder) buildInclusion(filter query.FilterClause) (string, []interface{}) {
 	var buffer bytes.Buffer
-	buffer.WriteString(builder.escape(string(cond.Left.Column)))
+	buffer.WriteString(builder.escape(filter.Field))
 
-	if cond.Type == c.ConditionIn {
+	if filter.Type == query.InOp {
 		buffer.WriteString(" IN (")
 	} else {
 		buffer.WriteString(" NOT IN (")
 	}
 
 	buffer.WriteString(builder.ph())
-	for i := 1; i <= len(cond.Right.Values)-1; i++ {
+	for i := 1; i <= len(filter.Values)-1; i++ {
 		buffer.WriteString(",")
 		buffer.WriteString(builder.ph())
 	}
 	buffer.WriteString(")")
 
-	return buffer.String(), cond.Right.Values
+	return buffer.String(), filter.Values
 }
 
 func (builder *Builder) ph() string {

@@ -1,6 +1,8 @@
 package grimoire
 
-import "github.com/Fs02/grimoire/query"
+import (
+	"github.com/Fs02/grimoire/query"
+)
 
 // Adapter interface
 type Adapter interface {

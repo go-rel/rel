@@ -6,19 +6,18 @@ import (
 
 	"github.com/Fs02/grimoire"
 	. "github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuilder_Find(t *testing.T) {
-	users := grimoire.Query{
-		Collection: "users",
-		Fields:     []string{"*"},
-	}
+	users := query.From("users")
 
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       grimoire.Query
+		Query       query.Query
 	}{
 		{
 			"SELECT * FROM `users`;",
@@ -38,37 +37,37 @@ func TestBuilder_Find(t *testing.T) {
 		{
 			"SELECT `id`,FIELD(`gender`, \"male\") AS `order` FROM `users` ORDER BY `order` ASC;",
 			nil,
-			users.Select("id", "^FIELD(`gender`, \"male\") AS `order`").Order(Asc("order")),
+			users.Select("id", "^FIELD(`gender`, \"male\") AS `order`").SortAsc("order"),
 		},
 		{
 			"SELECT * FROM `users` JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
+			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM `users` WHERE `id`=?;",
 			[]interface{}{10},
-			users.Where(Eq(I("id"), 10)),
+			users.Where(where.Eq("id", 10)),
 		},
 		{
 			"SELECT DISTINCT * FROM `users` GROUP BY `type` HAVING `price`>?;",
 			[]interface{}{1000},
-			users.Distinct().Group("type").Having(Gt(I("price"), 1000)),
+			users.Distinct().Group("type").Having(where.Gt("price", 1000)),
 		},
 		{
-			"SELECT * FROM `users` JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
+			"SELECT * FROM `users` INNER JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
+			users.JoinWith("INNER JOIN", "transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM `users` ORDER BY `created_at` ASC;",
 			nil,
-			users.Order(Asc("created_at")),
+			users.SortAsc("created_at"),
 		},
 		{
 			"SELECT * FROM `users` ORDER BY `created_at` ASC, `id` DESC;",
 			nil,
-			users.Order(Asc("created_at"), Desc("id")),
+			users.SortAsc("created_at").SortDesc("id"),
 		},
 		{
 			"SELECT * FROM `users` LIMIT 10 OFFSET 10;",
@@ -98,7 +97,7 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       grimoire.Query
+		Query       query.Query
 	}{
 		{
 			"SELECT * FROM \"users\";",

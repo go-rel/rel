@@ -6,8 +6,8 @@ import (
 
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
-	"github.com/Fs02/grimoire/internal"
 	"github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire/schema"
 	"github.com/Fs02/grimoire/where"
 )
 
@@ -38,7 +38,7 @@ func (r *Repo) SetLogger(logger ...Logger) {
 
 // Aggregate calculate aggregate over the given field.
 func (r Repo) Aggregate(record interface{}, mode string, field string, out interface{}, queries ...query.Builder) error {
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	q := query.Build(table, queries...)
 	return r.adapter.Aggregate(q, out, mode, field, r.logger...)
 }
@@ -70,7 +70,7 @@ func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
 func (r Repo) One(record interface{}, queries ...query.Builder) error {
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	q := query.Build(table, queries...).Limit(1)
 
 	count, err := r.adapter.All(q, record, r.logger...)
@@ -92,7 +92,7 @@ func (r Repo) MustOne(record interface{}, queries ...query.Builder) {
 
 // All retrieves all results that match the query.
 func (r Repo) All(record interface{}, queries ...query.Builder) error {
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	q := query.Build(table, queries...)
 	_, err := r.adapter.All(q, record, r.logger...)
 	return err
@@ -109,7 +109,7 @@ func (r Repo) Insert(record interface{}, chs ...*changeset.Changeset) error {
 	var err error
 	var ids []interface{}
 
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	primaryKey, _ := getPrimaryKey(record, false)
 
 	q := query.Build(table)
@@ -178,7 +178,7 @@ func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
 	changes := ch.Changes()
 	putTimestamp(changes, "updated_at", ch.Types())
 
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	primaryKey, primaryValue := getPrimaryKey(record, false)
 
 	q := query.Build(table, where.Eq(primaryKey, primaryValue))
@@ -200,7 +200,7 @@ func (r Repo) MustUpdate(record interface{}, chs *changeset.Changeset) {
 
 // Delete deletes all results that match the query.
 func (r Repo) Delete(record interface{}) error {
-	table := internal.InferTableName(record)
+	table := schema.InferTableName(record)
 	primaryKey, primaryValue := getPrimaryKey(record, true)
 
 	q := query.Build(table, where.Eq(primaryKey, primaryValue))
@@ -216,9 +216,11 @@ func (r Repo) MustDelete(record interface{}) {
 
 // Preload loads association with given query.
 func (r Repo) Preload(record interface{}, field string, queries ...query.Builder) error {
-	path := strings.Split(field, ".")
+	var (
+		path = strings.Split(field, ".")
+		rv   = reflect.ValueOf(record)
+	)
 
-	rv := reflect.ValueOf(record)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		panic("grimoire: record parameter must be a pointer.")
 	}
@@ -229,7 +231,7 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 	}
 
 	schemaType := preload[0].schema.Type()
-	refIndex, fkIndex, column := getPreloadInfo(schemaType, path[len(path)-1])
+	refIndex, fkIndex, column := schema.InferAssociation(schemaType, path[len(path)-1])
 
 	addrs, ids := collectPreloadTarget(preload, refIndex)
 	if len(ids) == 0 {
@@ -242,7 +244,7 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 		rt = rt.Elem()
 	}
 
-	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, len(ids))
+	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, 0)
 	result := reflect.New(slice.Type())
 	result.Elem().Set(slice)
 

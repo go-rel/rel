@@ -268,6 +268,9 @@ func (builder *Builder) Delete(collection string, filter query.FilterClause) (st
 
 func (builder *Builder) fields(distinct bool, fields []string) string {
 	if len(fields) == 0 {
+		if distinct {
+			return "SELECT DISTINCT *"
+		}
 		return "SELECT *"
 	}
 
@@ -307,12 +310,14 @@ func (builder *Builder) join(joins ...query.JoinClause) (string, []interface{}) 
 
 	for i, join := range joins {
 		buffer.WriteString(join.Mode)
+		buffer.WriteString(" ")
 		buffer.WriteString(builder.config.EscapeChar)
 		buffer.WriteString(join.Collection)
 		buffer.WriteString(builder.config.EscapeChar)
 		buffer.WriteString(" ON ")
-		buffer.WriteString(join.From)
-		buffer.WriteString(join.To)
+		buffer.WriteString(builder.escape(join.From))
+		buffer.WriteString("=")
+		buffer.WriteString(builder.escape(join.To))
 
 		args = append(args, join.Arguments...)
 
@@ -481,7 +486,7 @@ func (builder *Builder) buildComparison(filter query.FilterClause) (string, []in
 		op = ">="
 	}
 
-	cs = filter.Field + op + builder.ph()
+	cs = builder.escape(filter.Field) + op + builder.ph()
 
 	return cs, filter.Values
 }

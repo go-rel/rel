@@ -4,9 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	. "github.com/Fs02/grimoire/c"
 	"github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire/sort"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
@@ -76,23 +75,20 @@ func TestBuilder_Find(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).Find(tt.Query)
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			}).Find(test.Query)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
 
 func TestBuilder_Find_ordinal(t *testing.T) {
-	users := grimoire.Query{
-		Collection: "users",
-		Fields:     []string{"*"},
-	}
+	users := query.From("users")
 
 	tests := []struct {
 		QueryString string
@@ -117,32 +113,32 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 		{
 			"SELECT * FROM \"users\" JOIN \"transactions\" ON \"transactions\".\"id\"=\"users\".\"transaction_id\";",
 			nil,
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
+			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM \"users\" WHERE \"id\"=$1;",
 			[]interface{}{10},
-			users.Where(Eq(I("id"), 10)),
+			users.Where(where.Eq("id", 10)),
 		},
 		{
 			"SELECT DISTINCT * FROM \"users\" GROUP BY \"type\" HAVING \"price\">$1;",
 			[]interface{}{1000},
-			users.Distinct().Group("type").Having(Gt(I("price"), 1000)),
+			users.Distinct().Group("type").Having(where.Gt("price", 1000)),
 		},
 		{
 			"SELECT * FROM \"users\" JOIN \"transactions\" ON \"transactions\".\"id\"=\"users\".\"transaction_id\";",
 			nil,
-			users.Join("transactions", Eq(I("transactions.id"), I("users.transaction_id"))),
+			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM \"users\" ORDER BY \"created_at\" ASC;",
 			nil,
-			users.Order(Asc("created_at")),
+			users.SortAsc("created_at"),
 		},
 		{
 			"SELECT * FROM \"users\" ORDER BY \"created_at\" ASC, \"id\" DESC;",
 			nil,
-			users.Order(Asc("created_at"), Desc("id")),
+			users.SortAsc("created_at").SortDesc("id"),
 		},
 		{
 			"SELECT * FROM \"users\" LIMIT 10 OFFSET 10;",
@@ -151,50 +147,47 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder:         "$",
 				EscapeChar:          "\"",
 				Ordinal:             true,
 				InsertDefaultValues: true,
-			}).Find(tt.Query)
+			}).Find(test.Query)
 
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
 
-func TestBuilder_Aggregate(t *testing.T) {
-	builder := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	})
+// func TestBuilder_Aggregate(t *testing.T) {
+// 	builder := NewBuilder(&Config{
+// 		Placeholder: "?",
+// 		EscapeChar:  "`",
+// 	})
 
-	users := grimoire.Query{
-		Collection: "users",
-		Fields:     []string{"*"},
-	}
+// 	users := query.From("users")
 
-	users.AggregateMode = "count"
-	users.AggregateField = "*"
+// 	users.AggregateMode = "count"
+// 	users.AggregateField = "*"
 
-	qs, args := builder.Aggregate(users)
-	assert.Nil(t, args)
-	assert.Equal(t, "SELECT count(*) AS count FROM `users`;", qs)
+// 	qs, args := builder.Aggregate(users)
+// 	assert.Nil(t, args)
+// 	assert.Equal(t, "SELECT count(*) AS count FROM `users`;", qs)
 
-	users.AggregateMode = "sum"
-	users.AggregateField = "transactions.total"
+// 	users.AggregateMode = "sum"
+// 	users.AggregateField = "transactions.total"
 
-	qs, args = builder.Aggregate(users)
-	assert.Nil(t, args)
-	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
+// 	qs, args = builder.Aggregate(users)
+// 	assert.Nil(t, args)
+// 	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
 
-	qs, args = builder.Aggregate(users.Group("gender"))
-	assert.Nil(t, args)
-	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
-}
+// 	qs, args = builder.Aggregate(users.Group("gender"))
+// 	assert.Nil(t, args)
+// 	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
+// }
 
 func TestBuilder_Insert(t *testing.T) {
 	changes := map[string]interface{}{
@@ -328,7 +321,7 @@ func TestBuilder_Update(t *testing.T) {
 		"name": "foo",
 	}
 	args := []interface{}{"foo"}
-	cond := And()
+	cond := where.And()
 
 	qs, qargs := NewBuilder(&Config{
 		Placeholder: "?",
@@ -347,7 +340,7 @@ func TestBuilder_Update(t *testing.T) {
 	assert.Equal(t, args, qargs)
 
 	args = []interface{}{"foo", 1}
-	cond = Eq(I("id"), 1)
+	cond = where.Eq("id", 1)
 
 	qs, qargs = NewBuilder(&Config{
 		Placeholder: "?",
@@ -373,7 +366,7 @@ func TestBuilder_Update(t *testing.T) {
 		EscapeChar:          "\"",
 		Ordinal:             true,
 		InsertDefaultValues: true,
-	}).Update("users", changes, And())
+	}).Update("users", changes, where.And())
 
 	assert.True(t, strings.HasPrefix(qs, "UPDATE \"users\" SET "))
 	assert.True(t, strings.Contains(qs, "\"name\""))
@@ -386,14 +379,14 @@ func TestBuilder_Delete(t *testing.T) {
 	qs, args := NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).Delete("users", And())
+	}).Delete("users", where.And())
 	assert.Equal(t, "DELETE FROM `users`;", qs)
 	assert.Equal(t, []interface{}(nil), args)
 
 	qs, args = NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).Delete("users", Eq(I("id"), 1))
+	}).Delete("users", where.Eq("id", 1))
 	assert.Equal(t, "DELETE FROM `users` WHERE `id`=?;", qs)
 	assert.Equal(t, []interface{}{1}, args)
 
@@ -402,7 +395,7 @@ func TestBuilder_Delete(t *testing.T) {
 		EscapeChar:          "\"",
 		Ordinal:             true,
 		InsertDefaultValues: true,
-	}).Delete("users", Eq(I("id"), 1))
+	}).Delete("users", where.Eq("id", 1))
 	assert.Equal(t, "DELETE FROM \"users\" WHERE \"id\"=$1;", qs)
 	assert.Equal(t, []interface{}{1}, args)
 }
@@ -411,42 +404,42 @@ func TestBuilder_Select(t *testing.T) {
 	assert.Equal(t, "SELECT *", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false))
+	}).fields(false, nil))
 
 	assert.Equal(t, "SELECT *", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false, "*"))
+	}).fields(false, []string{"*"}))
 
 	assert.Equal(t, "SELECT `id`,`name`", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false, "id", "name"))
+	}).fields(false, []string{"id", "name"}))
 
 	assert.Equal(t, "SELECT DISTINCT *", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(true, "*"))
+	}).fields(true, []string{"*"}))
 
 	assert.Equal(t, "SELECT DISTINCT `id`,`name`", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(true, "id", "name"))
+	}).fields(true, []string{"id", "name"}))
 
 	assert.Equal(t, "SELECT COUNT(*) AS count", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false, "COUNT(*) AS count"))
+	}).fields(false, []string{"COUNT(*) AS count"}))
 
 	assert.Equal(t, "SELECT COUNT(`transactions`.*) AS count", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false, "COUNT(transactions.*) AS count"))
+	}).fields(false, []string{"COUNT(transactions.*) AS count"}))
 
 	assert.Equal(t, "SELECT SUM(`transactions`.`total`) AS total", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).fields(false, "SUM(transactions.total) AS total"))
+	}).fields(false, []string{"SUM(transactions.total) AS total"}))
 }
 
 func TestBuilder_From(t *testing.T) {
@@ -459,40 +452,35 @@ func TestBuilder_From(t *testing.T) {
 func TestBuilder_Join(t *testing.T) {
 	tests := []struct {
 		QueryString string
-		Args        []interface{}
-		JoinClause  []Join
+		Query       query.Query
 	}{
 		{
 			"",
-			nil,
-			nil,
+			query.From("trxs"),
 		},
 		{
 			"JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			nil,
-			grimoire.Query{Collection: "trxs"}.Join("users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+			query.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
 		},
 		{
 			"INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			nil,
-			grimoire.Query{Collection: "trxs"}.JoinWith("INNER JOIN", "users", Eq(I("user.id"), I("trxs.user_id"))).JoinClause,
+			query.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
 		},
 		{
 			"JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
-			nil,
-			grimoire.Query{Collection: "trxs"}.Join("users", Eq(I("user.id"), I("trxs.user_id"))).
-				Join("payments", Eq(I("payments.id"), I("trxs.payment_id"))).JoinClause,
+			query.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
+				JoinOn("payments", "payments.id", "trxs.payment_id"),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).join(tt.JoinClause...)
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			}).join(query.Build("", test.Query).JoinClause...)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Nil(t, args)
 		})
 	}
 }
@@ -501,33 +489,33 @@ func TestBuilder_Where(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"WHERE `field`=?",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
+			where.Eq("field", "value"),
 		},
 		{
 			"WHERE (`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).where(tt.Condition)
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			}).where(test.Filter)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
@@ -536,35 +524,35 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"WHERE \"field\"=$1",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
+			where.Eq("field", "value"),
 		},
 		{
 			"WHERE (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder:         "$",
 				EscapeChar:          "\"",
 				Ordinal:             true,
 				InsertDefaultValues: true,
-			}).where(tt.Condition)
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			}).where(test.Filter)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
@@ -573,50 +561,50 @@ func TestBuilder_GroupBy(t *testing.T) {
 	assert.Equal(t, "", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).groupBy())
+	}).groupBy(nil))
 
 	assert.Equal(t, "GROUP BY `city`", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).groupBy("city"))
+	}).groupBy([]string{"city"}))
 
 	assert.Equal(t, "GROUP BY `city`,`nation`", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).groupBy("city", "nation"))
+	}).groupBy([]string{"city", "nation"}))
 }
 
 func TestBuilder_Having(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"HAVING `field`=?",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
+			where.Eq("field", "value"),
 		},
 		{
 			"HAVING (`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).having(tt.Condition)
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			}).having(test.Filter)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
@@ -625,36 +613,36 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"HAVING \"field\"=$1",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
+			where.Eq("field", "value"),
 		},
 		{
 			"HAVING (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder:         "$",
 				EscapeChar:          "\"",
 				Ordinal:             true,
 				InsertDefaultValues: true,
-			}).having(tt.Condition)
+			}).having(test.Filter)
 
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
@@ -663,17 +651,17 @@ func TestBuilder_OrderBy(t *testing.T) {
 	assert.Equal(t, "", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy())
+	}).orderBy(nil))
 
 	assert.Equal(t, "ORDER BY `name` ASC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy(Asc("name")))
+	}).orderBy([]query.SortClause{sort.Asc("name")}))
 
 	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy(Asc("name"), Desc("created_at")))
+	}).orderBy([]query.SortClause{sort.Asc("name"), sort.Desc("created_at")}))
 }
 
 func TestBuilder_LimitOffset(t *testing.T) {
@@ -698,491 +686,367 @@ func TestBuilder_LimitOffset(t *testing.T) {
 	}).limitOffset(10, 10))
 }
 
-func TestBuilder_Condition(t *testing.T) {
+func TestBuilder_Filter(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"`field`=?",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
-		},
-		{
-			"?=`field`",
-			[]interface{}{"value"},
-			Eq("value", I("field")),
-		},
-		{
-			"?=?",
-			[]interface{}{"value1", "value2"},
-			Eq("value1", "value2"),
+			where.Eq("field", "value"),
 		},
 		{
 			"`field`<>?",
 			[]interface{}{"value"},
-			Ne(I("field"), "value"),
-		},
-		{
-			"?<>`field`",
-			[]interface{}{"value"},
-			Ne("value", I("field")),
-		},
-		{
-			"?<>?",
-			[]interface{}{"value1", "value2"},
-			Ne("value1", "value2"),
+			where.Ne("field", "value"),
 		},
 		{
 			"`field`<?",
 			[]interface{}{10},
-			Lt(I("field"), 10),
-		},
-		{
-			"?<`field`",
-			[]interface{}{"value"},
-			Lt("value", I("field")),
-		},
-		{
-			"?<?",
-			[]interface{}{"value1", "value2"},
-			Lt("value1", "value2"),
+			where.Lt("field", 10),
 		},
 		{
 			"`field`<=?",
 			[]interface{}{10},
-			Lte(I("field"), 10),
-		},
-		{
-			"?<=`field`",
-			[]interface{}{"value"},
-			Lte("value", I("field")),
-		},
-		{
-			"?<=?",
-			[]interface{}{"value1", "value2"},
-			Lte("value1", "value2"),
+			where.Lte("field", 10),
 		},
 		{
 			"`field`>?",
 			[]interface{}{10},
-			Gt(I("field"), 10),
-		},
-		{
-			"?>`field`",
-			[]interface{}{"value"},
-			Gt("value", I("field")),
-		},
-		{
-			"?>?",
-			[]interface{}{"value1", "value2"},
-			Gt("value1", "value2"),
+			where.Gt("field", 10),
 		},
 		{
 			"`field`>=?",
 			[]interface{}{10},
-			Gte(I("field"), 10),
-		},
-		{
-			"?>=`field`",
-			[]interface{}{"value"},
-			Gte("value", I("field")),
-		},
-		{
-			"?>=?",
-			[]interface{}{"value1", "value2"},
-			Gte("value1", "value2"),
+			where.Gte("field", 10),
 		},
 		{
 			"`field` IS NULL",
 			nil,
-			Nil("field"),
+			where.Nil("field"),
 		},
 		{
 			"`field` IS NOT NULL",
 			nil,
-			NotNil("field"),
+			where.NotNil("field"),
 		},
 		{
 			"`field` IN (?)",
 			[]interface{}{"value1"},
-			In("field", "value1"),
+			where.In("field", "value1"),
 		},
 		{
 			"`field` IN (?,?)",
 			[]interface{}{"value1", "value2"},
-			In("field", "value1", "value2"),
+			where.In("field", "value1", "value2"),
 		},
 		{
 			"`field` IN (?,?,?)",
 			[]interface{}{"value1", "value2", "value3"},
-			In("field", "value1", "value2", "value3"),
+			where.In("field", "value1", "value2", "value3"),
 		},
 		{
 			"`field` NOT IN (?)",
 			[]interface{}{"value1"},
-			Nin("field", "value1"),
+			where.Nin("field", "value1"),
 		},
 		{
 			"`field` NOT IN (?,?)",
 			[]interface{}{"value1", "value2"},
-			Nin("field", "value1", "value2"),
+			where.Nin("field", "value1", "value2"),
 		},
 		{
 			"`field` NOT IN (?,?,?)",
 			[]interface{}{"value1", "value2", "value3"},
-			Nin("field", "value1", "value2", "value3"),
+			where.Nin("field", "value1", "value2", "value3"),
 		},
 		{
 			"`field` LIKE ?",
 			[]interface{}{"%value%"},
-			Like("field", "%value%"),
+			where.Like("field", "%value%"),
 		},
 		{
 			"`field` NOT LIKE ?",
 			[]interface{}{"%value%"},
-			NotLike("field", "%value%"),
+			where.NotLike("field", "%value%"),
 		},
 		{
 			"FRAGMENT",
 			nil,
-			Fragment("FRAGMENT"),
+			where.Fragment("FRAGMENT"),
 		},
 		{
 			"(`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 		{
 			"(`field1`=? AND `field2`=? AND `field3`=?)",
 			[]interface{}{"value1", "value2", "value3"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Eq("field1", "value1").AndEq("field2", "value2").AndEq("field3", "value3"),
 		},
 		{
 			"(`field1`=? OR `field2`=?)",
 			[]interface{}{"value1", "value2"},
-			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").OrEq("field2", "value2"),
 		},
 		{
 			"(`field1`=? OR `field2`=? OR `field3`=?)",
 			[]interface{}{"value1", "value2", "value3"},
-			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Eq("field1", "value1").OrEq("field2", "value2").OrEq("field3", "value3"),
 		},
 		{
 			"NOT (`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
-			Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2")),
 		},
 		{
 			"NOT (`field1`=? AND `field2`=? AND `field3`=?)",
 			[]interface{}{"value1", "value2", "value3"},
-			Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2"), where.Eq("field3", "value3")),
 		},
 		{
 			"((`field1`=? OR `field2`=?) AND `field3`=?)",
 			[]interface{}{"value1", "value2", "value3"},
-			And(Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Eq(I("field3"), "value3")),
+			where.And(where.Or(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Eq("field3", "value3")),
 		},
 		{
 			"((`field1`=? OR `field2`=?) AND (`field3`=? OR `field4`=?))",
 			[]interface{}{"value1", "value2", "value3", "value4"},
-			And(Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Or(Eq(I("field3"), "value3"), Eq(I("field4"), "value4"))),
+			where.And(where.Or(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Or(where.Eq("field3", "value3"), where.Eq("field4", "value4"))),
 		},
 		{
 			"(NOT (`field1`=? AND `field2`=?) AND NOT (`field3`=? OR `field4`=?))",
 			[]interface{}{"value1", "value2", "value3", "value4"},
-			And(Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Not(Or(Eq(I("field3"), "value3"), Eq(I("field4"), "value4")))),
+			where.And(where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Not(where.Or(where.Eq("field3", "value3"), where.Eq("field4", "value4")))),
 		},
 		{
 			"NOT (`field1`=? AND (`field2`=? OR `field3`=?) AND NOT (`field4`=? OR `field5`=?))",
 			[]interface{}{"value1", "value2", "value3", "value4", "value5"},
-			And(Not(Eq(I("field1"), "value1"), Or(Eq(I("field2"), "value2"), Eq(I("field3"), "value3")), Not(Or(Eq(I("field4"), "value4"), Eq(I("field5"), "value5"))))),
+			where.And(where.Not(where.Eq("field1", "value1"), where.Or(where.Eq("field2", "value2"), where.Eq("field3", "value3")), where.Not(where.Or(where.Eq("field4", "value4"), where.Eq("field5", "value5"))))),
 		},
 		{
 			"((`field1` IN (?,?) OR `field2` NOT IN (?)) AND `field3` IN (?,?,?))",
 			[]interface{}{"value1", "value2", "value3", "value4", "value5", "value6"},
-			And(Or(In("field1", "value1", "value2"), Nin("field2", "value3")), In("field3", "value4", "value5", "value6")),
+			where.And(where.Or(where.In("field1", "value1", "value2"), where.Nin("field2", "value3")), where.In("field3", "value4", "value5", "value6")),
 		},
 		{
 			"(`field1` LIKE ? AND `field2` NOT LIKE ?)",
 			[]interface{}{"%value1%", "%value2%"},
-			And(Like(I("field1"), "%value1%"), NotLike(I(I("field2")), "%value2%")),
+			where.And(where.Like("field1", "%value1%"), where.NotLike("field2", "%value2%")),
 		},
 		{
 			"",
 			nil,
-			Condition{Type: ConditionType(9999)},
+			query.FilterClause{Type: query.FilterOp(9999)},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).condition(tt.Condition)
+			}).filter(test.Filter)
 
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
 
-func TestBuilder_Condition_ordinal(t *testing.T) {
+func TestBuilder_Filter_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Condition   Condition
+		Filter      query.FilterClause
 	}{
 		{
 			"",
 			nil,
-			And(),
+			where.And(),
 		},
 		{
 			"\"field\"=$1",
 			[]interface{}{"value"},
-			Eq(I("field"), "value"),
-		},
-		{
-			"$1=\"field\"",
-			[]interface{}{"value"},
-			Eq("value", I("field")),
-		},
-		{
-			"$1=$2",
-			[]interface{}{"value1", "value2"},
-			Eq("value1", "value2"),
+			where.Eq("field", "value"),
 		},
 		{
 			"\"field\"<>$1",
 			[]interface{}{"value"},
-			Ne(I("field"), "value"),
-		},
-		{
-			"$1<>\"field\"",
-			[]interface{}{"value"},
-			Ne("value", I("field")),
-		},
-		{
-			"$1<>$2",
-			[]interface{}{"value1", "value2"},
-			Ne("value1", "value2"),
+			where.Ne("field", "value"),
 		},
 		{
 			"\"field\"<$1",
 			[]interface{}{10},
-			Lt(I("field"), 10),
-		},
-		{
-			"$1<\"field\"",
-			[]interface{}{"value"},
-			Lt("value", I("field")),
-		},
-		{
-			"$1<$2",
-			[]interface{}{"value1", "value2"},
-			Lt("value1", "value2"),
+			where.Lt("field", 10),
 		},
 		{
 			"\"field\"<=$1",
 			[]interface{}{10},
-			Lte(I("field"), 10),
-		},
-		{
-			"$1<=\"field\"",
-			[]interface{}{"value"},
-			Lte("value", I("field")),
-		},
-		{
-			"$1<=$2",
-			[]interface{}{"value1", "value2"},
-			Lte("value1", "value2"),
+			where.Lte("field", 10),
 		},
 		{
 			"\"field\">$1",
 			[]interface{}{10},
-			Gt(I("field"), 10),
-		},
-		{
-			"$1>\"field\"",
-			[]interface{}{"value"},
-			Gt("value", I("field")),
-		},
-		{
-			"$1>$2",
-			[]interface{}{"value1", "value2"},
-			Gt("value1", "value2"),
+			where.Gt("field", 10),
 		},
 		{
 			"\"field\">=$1",
 			[]interface{}{10},
-			Gte(I("field"), 10),
-		},
-		{
-			"$1>=\"field\"",
-			[]interface{}{"value"},
-			Gte("value", I("field")),
-		},
-		{
-			"$1>=$2",
-			[]interface{}{"value1", "value2"},
-			Gte("value1", "value2"),
+			where.Gte("field", 10),
 		},
 		{
 			"\"field\" IS NULL",
 			nil,
-			Nil("field"),
+			where.Nil("field"),
 		},
 		{
 			"\"field\" IS NOT NULL",
 			nil,
-			NotNil("field"),
+			where.NotNil("field"),
 		},
 		{
 			"\"field\" IN ($1)",
 			[]interface{}{"value1"},
-			In("field", "value1"),
+			where.In("field", "value1"),
 		},
 		{
 			"\"field\" IN ($1,$2)",
 			[]interface{}{"value1", "value2"},
-			In("field", "value1", "value2"),
+			where.In("field", "value1", "value2"),
 		},
 		{
 			"\"field\" IN ($1,$2,$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			In("field", "value1", "value2", "value3"),
+			where.In("field", "value1", "value2", "value3"),
 		},
 		{
 			"\"field\" NOT IN ($1)",
 			[]interface{}{"value1"},
-			Nin("field", "value1"),
+			where.Nin("field", "value1"),
 		},
 		{
 			"\"field\" NOT IN ($1,$2)",
 			[]interface{}{"value1", "value2"},
-			Nin("field", "value1", "value2"),
+			where.Nin("field", "value1", "value2"),
 		},
 		{
 			"\"field\" NOT IN ($1,$2,$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			Nin("field", "value1", "value2", "value3"),
+			where.Nin("field", "value1", "value2", "value3"),
 		},
 		{
 			"\"field\" LIKE $1",
 			[]interface{}{"%value%"},
-			Like("field", "%value%"),
+			where.Like("field", "%value%"),
 		},
 		{
 			"\"field\" NOT LIKE $1",
 			[]interface{}{"%value%"},
-			NotLike("field", "%value%"),
+			where.NotLike("field", "%value%"),
 		},
 		{
 			"FRAGMENT",
 			nil,
-			Fragment("FRAGMENT"),
+			where.Fragment("FRAGMENT"),
 		},
 		{
 			"(\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
 		{
 			"(\"field1\"=$1 AND \"field2\"=$2 AND \"field3\"=$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			And(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Eq("field1", "value1").AndEq("field2", "value2").AndEq("field3", "value3"),
 		},
 		{
 			"(\"field1\"=$1 OR \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
-			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Eq("field1", "value1").OrEq("field2", "value2"),
 		},
 		{
 			"(\"field1\"=$1 OR \"field2\"=$2 OR \"field3\"=$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Eq("field1", "value1").OrEq("field2", "value2").OrEq("field3", "value3"),
 		},
 		{
 			"NOT (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
-			Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")),
+			where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2")),
 		},
 		{
 			"NOT (\"field1\"=$1 AND \"field2\"=$2 AND \"field3\"=$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2"), Eq(I("field3"), "value3")),
+			where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2"), where.Eq("field3", "value3")),
 		},
 		{
 			"((\"field1\"=$1 OR \"field2\"=$2) AND \"field3\"=$3)",
 			[]interface{}{"value1", "value2", "value3"},
-			And(Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Eq(I("field3"), "value3")),
+			where.And(where.Or(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Eq("field3", "value3")),
 		},
 		{
 			"((\"field1\"=$1 OR \"field2\"=$2) AND (\"field3\"=$3 OR \"field4\"=$4))",
 			[]interface{}{"value1", "value2", "value3", "value4"},
-			And(Or(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Or(Eq(I("field3"), "value3"), Eq(I("field4"), "value4"))),
+			where.And(where.Or(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Or(where.Eq("field3", "value3"), where.Eq("field4", "value4"))),
 		},
 		{
 			"(NOT (\"field1\"=$1 AND \"field2\"=$2) AND NOT (\"field3\"=$3 OR \"field4\"=$4))",
 			[]interface{}{"value1", "value2", "value3", "value4"},
-			And(Not(Eq(I("field1"), "value1"), Eq(I("field2"), "value2")), Not(Or(Eq(I("field3"), "value3"), Eq(I("field4"), "value4")))),
+			where.And(where.Not(where.Eq("field1", "value1"), where.Eq("field2", "value2")), where.Not(where.Or(where.Eq("field3", "value3"), where.Eq("field4", "value4")))),
 		},
 		{
 			"NOT (\"field1\"=$1 AND (\"field2\"=$2 OR \"field3\"=$3) AND NOT (\"field4\"=$4 OR \"field5\"=$5))",
 			[]interface{}{"value1", "value2", "value3", "value4", "value5"},
-			And(Not(Eq(I("field1"), "value1"), Or(Eq(I("field2"), "value2"), Eq(I("field3"), "value3")), Not(Or(Eq(I("field4"), "value4"), Eq(I("field5"), "value5"))))),
+			where.And(where.Not(where.Eq("field1", "value1"), where.Or(where.Eq("field2", "value2"), where.Eq("field3", "value3")), where.Not(where.Or(where.Eq("field4", "value4"), where.Eq("field5", "value5"))))),
 		},
 		{
 			"((\"field1\" IN ($1,$2) OR \"field2\" NOT IN ($3)) AND \"field3\" IN ($4,$5,$6))",
 			[]interface{}{"value1", "value2", "value3", "value4", "value5", "value6"},
-			And(Or(In("field1", "value1", "value2"), Nin("field2", "value3")), In("field3", "value4", "value5", "value6")),
+			where.And(where.Or(where.In("field1", "value1", "value2"), where.Nin("field2", "value3")), where.In("field3", "value4", "value5", "value6")),
 		},
 		{
 			"(\"field1\" LIKE $1 AND \"field2\" NOT LIKE $2)",
 			[]interface{}{"%value1%", "%value2%"},
-			And(Like(I("field1"), "%value1%"), NotLike(I(I("field2")), "%value2%")),
+			where.And(where.Like("field1", "%value1%"), where.NotLike("field2", "%value2%")),
 		},
 		{
 			"",
 			nil,
-			Condition{Type: ConditionType(9999)},
+			query.FilterClause{Type: query.FilterOp(9999)},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.QueryString, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder:         "$",
 				EscapeChar:          "\"",
 				Ordinal:             true,
 				InsertDefaultValues: true,
-			}).condition(tt.Condition)
+			}).filter(test.Filter)
 
-			assert.Equal(t, tt.QueryString, qs)
-			assert.Equal(t, tt.Args, args)
+			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.Args, args)
 		})
 	}
 }
 
 func TestBuilder_Lock(t *testing.T) {
-	query := grimoire.Query{
-		Collection: "users",
-		Fields:     []string{"*"},
-		LockClause: "FOR UPDATE",
-	}
+	users := query.From("users").Lock(query.ForUpdate())
 
 	qs, args := NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).Find(query)
+	}).Find(users)
 
 	assert.Equal(t, "SELECT * FROM `users` FOR UPDATE;", qs)
 	assert.Nil(t, args)

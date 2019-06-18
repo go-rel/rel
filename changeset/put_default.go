@@ -18,9 +18,9 @@ func PutDefault(ch *Changeset, field string, value interface{}, opts ...Option) 
 	if typ, exist := ch.types[field]; exist {
 		valTyp := reflect.TypeOf(value)
 		if valTyp.ConvertibleTo(typ) {
-			if ch.changes[field] == nil && // no changes
-				(ch.values[field] == nil || // no existing value
-					isZero(ch.values[field])) { // existing value is zero value
+			if (ch.params == nil || !ch.params.Exists(field)) && // no input
+				ch.changes[field] == nil && // no change
+				isZero(ch.values[field]) { // existing value is zero value
 				ch.changes[field] = value
 			}
 			return

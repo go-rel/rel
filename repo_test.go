@@ -129,7 +129,7 @@ func TestRepo_Insert(t *testing.T) {
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders)
+		changes = change.Build(cbuilders...)
 	)
 
 	adapter.
@@ -149,7 +149,7 @@ func TestRepo_Insert_error(t *testing.T) {
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders)
+		changes = change.Build(cbuilders...)
 	)
 
 	adapter.
@@ -169,7 +169,7 @@ func TestRepp_Update(t *testing.T) {
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders)
+		changes = change.Build(cbuilders...)
 		queries = query.From("users").Where(where.Eq("id", user.ID))
 	)
 
@@ -215,7 +215,7 @@ func TestRepo_Update_error(t *testing.T) {
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders)
+		changes = change.Build(cbuilders...)
 		queries = query.From("users").Where(where.Eq("id", user.ID))
 	)
 

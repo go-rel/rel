@@ -117,7 +117,7 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 		table         = schema.InferTableName(record)
 		primaryKey, _ = schema.InferPrimaryKey(record, false)
 		queries       = query.Build(table)
-		changes       = change.Build(cbuilders)
+		changes       = change.Build(cbuilders...)
 	)
 
 	// TODO: put timestamp (updated_at, created_at)
@@ -150,7 +150,7 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 		table                    = schema.InferTableName(record)
 		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
 		queries                  = query.Build(table, where.Eq(primaryKey, primaryValue))
-		changes                  = change.Build(cbuilders)
+		changes                  = change.Build(cbuilders...)
 	)
 
 	if changes.Empty() {

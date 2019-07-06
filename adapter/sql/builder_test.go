@@ -1,9 +1,9 @@
 package sql
 
 import (
-	"strings"
 	"testing"
 
+	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/sort"
 	"github.com/Fs02/grimoire/where"
@@ -190,16 +190,21 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 // }
 
 func TestBuilder_Insert(t *testing.T) {
-	changes := map[string]interface{}{
-		"name": "foo",
-	}
-	args := []interface{}{"foo"}
+	var (
+		changes = change.Build(
+			change.Set("name", "foo"),
+			change.Set("age", 10),
+			change.Set("agree", true),
+		)
+		args = []interface{}{"foo", 10, true}
+	)
 
 	qs, qargs := NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}).Insert("users", changes)
-	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?);", qs)
+
+	assert.Equal(t, "INSERT INTO `users` (`name`,`age`,`agree`) VALUES (?,?,?);", qs)
 	assert.Equal(t, args, qargs)
 
 	qs, qargs = NewBuilder(&Config{
@@ -209,32 +214,21 @@ func TestBuilder_Insert(t *testing.T) {
 		InsertDefaultValues: true,
 	}).Returning("id").Insert("users", changes)
 
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1) RETURNING \"id\";", qs)
+	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\",\"agree\") VALUES ($1,$2,$3) RETURNING \"id\";", qs)
 	assert.Equal(t, args, qargs)
-
-	// test for multiple changes since map is randomly ordered
-	changes["age"] = 10
-	changes["agree"] = true
-	qs, _ = NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Insert("users", changes)
-
-	assert.True(t, strings.HasPrefix(qs, "INSERT INTO `users` ("))
-	assert.True(t, strings.Contains(qs, "`name`"))
-	assert.True(t, strings.Contains(qs, "`age`"))
-	assert.True(t, strings.Contains(qs, "`agree`"))
-	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
 func TestBuilder_Insert_defaultValues(t *testing.T) {
-	changes := map[string]interface{}{}
-	args := []interface{}{}
+	var (
+		changes = change.Changes{}
+		args    = []interface{}{}
+	)
 
 	qs, qargs := NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}).Insert("users", changes)
+
 	assert.Equal(t, "INSERT INTO `users` () VALUES ();", qs)
 	assert.Equal(t, args, qargs)
 
@@ -243,91 +237,97 @@ func TestBuilder_Insert_defaultValues(t *testing.T) {
 		InsertDefaultValues: true,
 		EscapeChar:          "`",
 	}).Returning("id").Insert("users", changes)
+
 	assert.Equal(t, "INSERT INTO `users` DEFAULT VALUES RETURNING `id`;", qs)
 	assert.Equal(t, args, qargs)
 }
 
-func TestBuilder_InsertAll(t *testing.T) {
-	fields := []string{"name"}
-	allchanges := []map[string]interface{}{
-		{"name": "foo"},
-		{"age": 12},
-		{"name": "boo"},
-	}
+// func TestBuilder_InsertAll(t *testing.T) {
+// 	fields := []string{"name"}
+// 	allchanges := []map[string]interface{}{
+// 		{"name": "foo"},
+// 		{"age": 12},
+// 		{"name": "boo"},
+// 	}
 
-	statement, args := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
-	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+// 	statement, args := NewBuilder(&Config{
+// 		Placeholder: "?",
+// 		EscapeChar:  "`",
+// 	}).InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
+// 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
-	// ordinal
-	statement, args = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Returning("id").InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
-	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+// 	// ordinal
+// 	statement, args = NewBuilder(&Config{
+// 		Placeholder:         "$",
+// 		EscapeChar:          "\"",
+// 		Ordinal:             true,
+// 		InsertDefaultValues: true,
+// 	}).Returning("id").InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
+// 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
-	// with age
-	fields = append(fields, "age")
-	statement, args = NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,DEFAULT);", statement)
-	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+// 	// with age
+// 	fields = append(fields, "age")
+// 	statement, args = NewBuilder(&Config{
+// 		Placeholder: "?",
+// 		EscapeChar:  "`",
+// 	}).InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,DEFAULT);", statement)
+// 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
-	// ordinal
-	statement, args = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Returning("id").InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT) RETURNING \"id\";", statement)
-	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+// 	// ordinal
+// 	statement, args = NewBuilder(&Config{
+// 		Placeholder:         "$",
+// 		EscapeChar:          "\"",
+// 		Ordinal:             true,
+// 		InsertDefaultValues: true,
+// 	}).Returning("id").InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT) RETURNING \"id\";", statement)
+// 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
 
-	// all changes have value
-	allchanges = []map[string]interface{}{
-		{"name": "foo", "age": 10},
-		{"name": "zoo", "age": 12},
-		{"name": "boo", "age": 20},
-	}
+// 	// all changes have value
+// 	allchanges = []map[string]interface{}{
+// 		{"name": "foo", "age": 10},
+// 		{"name": "zoo", "age": 12},
+// 		{"name": "boo", "age": 20},
+// 	}
 
-	statement, args = NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,?),(?,?),(?,?);", statement)
-	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
+// 	statement, args = NewBuilder(&Config{
+// 		Placeholder: "?",
+// 		EscapeChar:  "`",
+// 	}).InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,?),(?,?),(?,?);", statement)
+// 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
 
-	// ordinal
-	statement, args = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).InsertAll("users", fields, allchanges)
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,$2),($3,$4),($5,$6);", statement)
-	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
-}
+// 	// ordinal
+// 	statement, args = NewBuilder(&Config{
+// 		Placeholder:         "$",
+// 		EscapeChar:          "\"",
+// 		Ordinal:             true,
+// 		InsertDefaultValues: true,
+// 	}).InsertAll("users", fields, allchanges)
+// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,$2),($3,$4),($5,$6);", statement)
+// 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
+// }
 
 func TestBuilder_Update(t *testing.T) {
-	changes := map[string]interface{}{
-		"name": "foo",
-	}
-	args := []interface{}{"foo"}
-	cond := where.And()
+	var (
+		changes = change.Build(
+			change.Set("name", "foo"),
+			change.Set("age", 10),
+			change.Set("agree", true),
+		)
+		args = []interface{}{"foo", 10, true}
+		cond = where.And()
+	)
 
 	qs, qargs := NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}).Update("users", changes, cond)
-	assert.Equal(t, "UPDATE `users` SET `name`=?;", qs)
+
+	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=?;", qs)
 	assert.Equal(t, args, qargs)
 
 	qs, qargs = NewBuilder(&Config{
@@ -336,17 +336,19 @@ func TestBuilder_Update(t *testing.T) {
 		Ordinal:             true,
 		InsertDefaultValues: true,
 	}).Update("users", changes, cond)
-	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1;", qs)
+
+	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3;", qs)
 	assert.Equal(t, args, qargs)
 
-	args = []interface{}{"foo", 1}
+	args = []interface{}{"foo", 10, true, 1}
 	cond = where.Eq("id", 1)
 
 	qs, qargs = NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}).Update("users", changes, cond)
-	assert.Equal(t, "UPDATE `users` SET `name`=? WHERE `id`=?;", qs)
+
+	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=? WHERE `id`=?;", qs)
 	assert.Equal(t, args, qargs)
 
 	qs, qargs = NewBuilder(&Config{
@@ -355,24 +357,8 @@ func TestBuilder_Update(t *testing.T) {
 		Ordinal:             true,
 		InsertDefaultValues: true,
 	}).Update("users", changes, cond)
-	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1 WHERE \"id\"=$2;", qs)
+	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3 WHERE \"id\"=$4;", qs)
 	assert.Equal(t, args, qargs)
-
-	// test for multiple changes since map is randomly ordered
-	changes["age"] = 10
-	changes["agree"] = true
-	qs, _ = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Update("users", changes, where.And())
-
-	assert.True(t, strings.HasPrefix(qs, "UPDATE \"users\" SET "))
-	assert.True(t, strings.Contains(qs, "\"name\""))
-	assert.True(t, strings.Contains(qs, "\"age\""))
-	assert.True(t, strings.Contains(qs, "\"agree\""))
-	assert.True(t, strings.HasSuffix(qs, ";"))
 }
 
 func TestBuilder_Delete(t *testing.T) {

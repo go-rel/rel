@@ -8,7 +8,6 @@ import (
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
-	"github.com/Fs02/grimoire/query"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +58,7 @@ func TestAdapter_All(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	result := []struct{}{}
+	result := []Name{}
 	assert.Nil(t, grimoire.New(adapter).All(&result)) //From("test").All(&result))
 }
 
@@ -68,10 +67,9 @@ func TestAdapter_Insert(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	result := struct {
-		Name string
-	}{}
+	result := Name{}
 	ch := changeset.Convert(result)
+
 	assert.Nil(t, grimoire.New(adapter).Insert(&result, ch))
 	assert.Nil(t, grimoire.New(adapter).Insert(nil, ch, ch))
 }
@@ -81,9 +79,7 @@ func TestAdapter_Update(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	result := struct {
-		Name string
-	}{}
+	result := Name{}
 	ch := changeset.Convert(result)
 
 	assert.Nil(t, grimoire.New(adapter).Update(nil, ch))
@@ -157,21 +153,21 @@ func TestAdapter_Transaction_nestedRollback(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestAdapter_InsertAll_error(t *testing.T) {
-	adapter, err := open()
-	paranoid.Panic(err, "failed to open database connection")
-	defer adapter.Close()
+// func TestAdapter_InsertAll_error(t *testing.T) {
+// 	adapter, err := open()
+// 	paranoid.Panic(err, "failed to open database connection")
+// 	defer adapter.Close()
 
-	fields := []string{"notexist"}
-	allchanges := []map[string]interface{}{
-		{"notexist": "12"},
-		{"notexist": "13"},
-	}
+// 	fields := []string{"notexist"}
+// 	allchanges := []map[string]interface{}{
+// 		{"notexist": "12"},
+// 		{"notexist": "13"},
+// 	}
 
-	_, err = adapter.InsertAll(query.Query{}, fields, allchanges)
+// 	_, err = adapter.InsertAll(query.Query{}, fields, allchanges)
 
-	assert.NotNil(t, err)
-}
+// 	assert.NotNil(t, err)
+// }
 
 func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := open()

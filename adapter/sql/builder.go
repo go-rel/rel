@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/query"
 )
 
@@ -90,44 +91,47 @@ func (builder *Builder) query(q query.Query) (string, []interface{}) {
 }
 
 // Insert generates query for insert.
-func (builder *Builder) Insert(collection string, changes map[string]interface{}) (string, []interface{}) {
+func (builder *Builder) Insert(collection string, changes change.Changes) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
-		length = len(changes)
+		length = len(changes.Changes)
 		args   = make([]interface{}, 0, length)
 	)
 
 	buffer.WriteString("INSERT INTO ")
-	buffer.WriteString(builder.config.EscapeChar)
-	buffer.WriteString(collection)
-	buffer.WriteString(builder.config.EscapeChar)
+	buffer.WriteString(builder.escape(collection))
 
-	if len(changes) == 0 && builder.config.InsertDefaultValues {
+	if length == 0 && builder.config.InsertDefaultValues {
 		buffer.WriteString(" DEFAULT VALUES")
 	} else {
 		buffer.WriteString(" (")
 
-		curr := 0
-		for field, value := range changes {
-			buffer.WriteString(builder.config.EscapeChar)
-			buffer.WriteString(field)
-			buffer.WriteString(builder.config.EscapeChar)
-
-			args = append(args, value)
-
-			if curr < length-1 {
-				buffer.WriteString(",")
+		for i, ch := range changes.Changes {
+			switch ch.Type {
+			case change.SetOp:
+				buffer.WriteString(builder.config.EscapeChar)
+				buffer.WriteString(ch.Field)
+				buffer.WriteString(builder.config.EscapeChar)
+				args = append(args, ch.Value)
+			case change.FragmentOp:
+				buffer.WriteString(ch.Field)
+				args = append(args, ch.Value.([]interface{})...)
+			case change.IncOp, change.DecOp:
+				continue
 			}
 
-			curr++
+			if i < length-1 {
+				buffer.WriteString(",")
+			}
 		}
+
 		buffer.WriteString(") VALUES ")
 
 		buffer.WriteString("(")
-		for i := 0; i < length; i++ {
+		for i := 0; i < len(args); i++ {
 			buffer.WriteString(builder.ph())
 
-			if i < length-1 {
+			if i < len(args)-1 {
 				buffer.WriteString(",")
 			}
 		}
@@ -147,7 +151,7 @@ func (builder *Builder) Insert(collection string, changes map[string]interface{}
 }
 
 // InsertAll generates query for multiple insert.
-func (builder *Builder) InsertAll(collection string, fields []string, allchanges []map[string]interface{}) (string, []interface{}) {
+func (builder *Builder) InsertAll(collection string, fields []string, allchanges []change.Changes) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   = make([]interface{}, 0, len(fields)*len(allchanges))
@@ -167,28 +171,28 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 	buffer.WriteString(builder.config.EscapeChar)
 	buffer.WriteString(") VALUES ")
 
-	for i, changes := range allchanges {
-		buffer.WriteString("(")
+	// for i, changes := range allchanges {
+	// 	buffer.WriteString("(")
 
-		for j, field := range fields {
-			if val, exist := changes[field]; exist {
-				buffer.WriteString(builder.ph())
-				args = append(args, val)
-			} else {
-				buffer.WriteString("DEFAULT")
-			}
+	// 	for j, field := range fields {
+	// 		if ch, ok := changes.Get(field); ok && ch.Type == change.SetOp {
+	// 			buffer.WriteString(builder.ph())
+	// 			args = append(args, val)
+	// 		} else {
+	// 			buffer.WriteString("DEFAULT")
+	// 		}
 
-			if j < len(fields)-1 {
-				buffer.WriteString(",")
-			}
-		}
+	// 		if j < len(fields)-1 {
+	// 			buffer.WriteString(",")
+	// 		}
+	// 	}
 
-		if i < len(allchanges)-1 {
-			buffer.WriteString("),")
-		} else {
-			buffer.WriteString(")")
-		}
-	}
+	// 	if i < len(allchanges)-1 {
+	// 		buffer.WriteString("),")
+	// 	} else {
+	// 		buffer.WriteString(")")
+	// 	}
+	// }
 
 	if builder.returnField != "" {
 		buffer.WriteString(" RETURNING ")
@@ -203,10 +207,10 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 }
 
 // Update generates query for update.
-func (builder *Builder) Update(collection string, changes map[string]interface{}, filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) Update(collection string, changes change.Changes, filter query.FilterClause) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
-		length = len(changes)
+		length = len(changes.Changes)
 		args   = make([]interface{}, 0, length)
 	)
 
@@ -216,20 +220,35 @@ func (builder *Builder) Update(collection string, changes map[string]interface{}
 	buffer.WriteString(builder.config.EscapeChar)
 	buffer.WriteString(" SET ")
 
-	curr := 0
-	for field, value := range changes {
-		buffer.WriteString(builder.config.EscapeChar)
-		buffer.WriteString(field)
-		buffer.WriteString(builder.config.EscapeChar)
-		buffer.WriteString("=")
-		buffer.WriteString(builder.ph())
-		args = append(args, value)
-
-		if curr < length-1 {
-			buffer.WriteString(",")
+	for i, ch := range changes.Changes {
+		switch ch.Type {
+		case change.SetOp:
+			buffer.WriteString(builder.escape(ch.Field))
+			buffer.WriteString("=")
+			buffer.WriteString(builder.ph())
+			args = append(args, ch.Value)
+		case change.IncOp:
+			buffer.WriteString(builder.escape(ch.Field))
+			buffer.WriteString("=")
+			buffer.WriteString(builder.escape(ch.Field))
+			buffer.WriteString("+")
+			buffer.WriteString(builder.ph())
+			args = append(args, ch.Value)
+		case change.DecOp:
+			buffer.WriteString(builder.escape(ch.Field))
+			buffer.WriteString("=")
+			buffer.WriteString(builder.escape(ch.Field))
+			buffer.WriteString("-")
+			buffer.WriteString(builder.ph())
+			args = append(args, ch.Value)
+		case change.FragmentOp:
+			buffer.WriteString(ch.Field)
+			args = append(args, ch.Value.([]interface{})...)
 		}
 
-		curr++
+		if i < length-1 {
+			buffer.WriteString(",")
+		}
 	}
 
 	if s, arg := builder.where(filter); s != "" {

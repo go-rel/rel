@@ -189,23 +189,23 @@ func TestRepo_Insert_multipleError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Insert_notReturning(t *testing.T) {
-	ch, _ := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+// func TestRepo_Insert_notReturning(t *testing.T) {
+// 	ch, _ := createChangeset()
+// 	adapter := &TestAdapter{}
+// 	repo := Repo{adapter: adapter}
 
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
+// 	changes := map[string]interface{}{
+// 		"name":       "name",
+// 		"created_at": time.Now().Round(time.Second),
+// 		"updated_at": time.Now().Round(time.Second),
+// 	}
 
-	adapter.On("Insert", query.From("users"), changes).Return(1, nil)
+// 	adapter.On("Insert", query.From("users"), changes).Return(1, nil)
 
-	assert.Nil(t, repo.Insert(nil, ch))
-	assert.NotPanics(t, func() { repo.MustInsert(nil, ch) })
-	adapter.AssertExpectations(t)
-}
+// 	assert.Nil(t, repo.Insert(nil, ch))
+// 	assert.NotPanics(t, func() { repo.MustInsert(nil, ch) })
+// 	adapter.AssertExpectations(t)
+// }
 
 func TestRepo_Insert_error(t *testing.T) {
 	ch, user := createChangeset()

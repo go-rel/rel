@@ -20,12 +20,13 @@ type primaryKeyData struct {
 var primaryKeysCache sync.Map
 
 // InferPrimaryKey from struct.
+// Only returns value if record is not a slice or array.
 func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{}) {
 	if pk, ok := record.(primaryKey); ok {
 		return pk.PrimaryKey()
 	}
 
-	rt := reflectTypePtr(record)
+	rt, isSliceOrArray := reflectInternalType(record)
 
 	result, cached := primaryKeysCache.Load(rt)
 	if !cached {
@@ -44,7 +45,7 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 		value = interface{}(nil)
 	)
 
-	if returnValue {
+	if returnValue && !isSliceOrArray {
 		rv := reflectValuePtr(record)
 		value = rv.Field(pkey.index).Interface()
 	}

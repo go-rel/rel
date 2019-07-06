@@ -19,7 +19,7 @@ func InferTableName(record interface{}) string {
 		return tn.TableName()
 	}
 
-	rt := reflectInternalType(record)
+	rt, _ := reflectInternalType(record)
 
 	// check for cache
 	if name, cached := tableNamesCache.Load(rt); cached {

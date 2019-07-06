@@ -106,11 +106,18 @@ func (r Repo) MustAll(record interface{}, queries ...query.Builder) {
 
 // Insert records to database.
 func (r Repo) Insert(record interface{}, chs ...*changeset.Changeset) error {
+	// TODO: perform reference check on library level for record instead of adapter level
+	// TODO: support not returning via changeset table inference
+	if record == nil || len(chs) == 0 {
+		return nil
+	}
+
 	var err error
 	var ids []interface{}
 
+	// if string means no returning
 	table := schema.InferTableName(record)
-	primaryKey, _ := getPrimaryKey(record, false)
+	primaryKey, _ := schema.InferPrimaryKey(record, false)
 
 	q := query.Build(table)
 
@@ -179,7 +186,7 @@ func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
 	putTimestamp(changes, "updated_at", ch.Types())
 
 	table := schema.InferTableName(record)
-	primaryKey, primaryValue := getPrimaryKey(record, false)
+	primaryKey, primaryValue := schema.InferPrimaryKey(record, true)
 
 	q := query.Build(table, where.Eq(primaryKey, primaryValue))
 
@@ -201,7 +208,7 @@ func (r Repo) MustUpdate(record interface{}, chs *changeset.Changeset) {
 // Delete deletes all results that match the query.
 func (r Repo) Delete(record interface{}) error {
 	table := schema.InferTableName(record)
-	primaryKey, primaryValue := getPrimaryKey(record, true)
+	primaryKey, primaryValue := schema.InferPrimaryKey(record, true)
 
 	q := query.Build(table, where.Eq(primaryKey, primaryValue))
 

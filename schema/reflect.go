@@ -4,14 +4,18 @@ import (
 	"reflect"
 )
 
-func reflectInternalType(record interface{}) reflect.Type {
-	rt := reflect.TypeOf(record)
+func reflectInternalType(record interface{}) (reflect.Type, bool) {
+	var (
+		rt           = reflect.TypeOf(record)
+		sliceOrArray = false
+	)
 
 	for rt.Kind() == reflect.Ptr || rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
+		sliceOrArray = sliceOrArray || rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array
 		rt = rt.Elem()
 	}
 
-	return rt
+	return rt, sliceOrArray
 }
 
 func reflectTypePtr(record interface{}) reflect.Type {

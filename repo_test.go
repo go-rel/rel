@@ -2,9 +2,8 @@ package grimoire
 
 import (
 	"testing"
-	"time"
 
-	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/where"
@@ -123,165 +122,108 @@ func TestRepo_All(t *testing.T) {
 }
 
 func TestRepo_Insert(t *testing.T) {
-	ch, user := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		user      User
+		adapter   = &TestAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []change.Builder{
+			change.Set("name", "name"),
+		}
+		changes = change.Build(cbuilders)
+	)
 
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	adapter.On("Insert", query.From("users"), changes).Return(1, nil).
+	adapter.
+		On("Insert", query.From("users"), changes).Return(1, nil).
 		On("All", query.From("users").Where(where.Eq("id", 1)).Limit(1), &user).Return(1, nil)
 
-	assert.Nil(t, repo.Insert(&user, ch))
-	assert.NotPanics(t, func() { repo.MustInsert(&user, ch) })
+	assert.Nil(t, repo.Insert(&user, cbuilders...))
+	assert.NotPanics(t, func() { repo.MustInsert(&user, cbuilders...) })
 	adapter.AssertExpectations(t)
 }
-
-func TestRepo_Insert_multiple(t *testing.T) {
-	ch1, user1 := createChangeset()
-	ch2, user2 := createChangeset()
-	users := []User{user1, user2}
-
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	allchanges := []map[string]interface{}{changes, changes}
-
-	adapter.On("InsertAll", query.From("users"), allchanges).Return([]interface{}{1, 2}, nil).
-		On("All", query.From("users").Where(where.In("id", 1, 2)), &users).Return(2, nil)
-
-	assert.Nil(t, repo.Insert(&users, ch1, ch2))
-	assert.NotPanics(t, func() { repo.MustInsert(&users, ch1, ch2) })
-	adapter.AssertExpectations(t)
-}
-
-func TestRepo_Insert_multipleError(t *testing.T) {
-	ch1, user1 := createChangeset()
-	ch2, user2 := createChangeset()
-	users := []User{user1, user2}
-
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
-
-	allchanges := []map[string]interface{}{changes, changes}
-
-	adapter.On("InsertAll", query.From("users"), allchanges).
-		Return([]interface{}{1, 2}, errors.NewUnexpected("error"))
-
-	assert.NotNil(t, repo.Insert(&users, ch1, ch2))
-	assert.Panics(t, func() { repo.MustInsert(&users, ch1, ch2) })
-	adapter.AssertExpectations(t)
-}
-
-// func TestRepo_Insert_notReturning(t *testing.T) {
-// 	ch, _ := createChangeset()
-// 	adapter := &TestAdapter{}
-// 	repo := Repo{adapter: adapter}
-
-// 	changes := map[string]interface{}{
-// 		"name":       "name",
-// 		"created_at": time.Now().Round(time.Second),
-// 		"updated_at": time.Now().Round(time.Second),
-// 	}
-
-// 	adapter.On("Insert", query.From("users"), changes).Return(1, nil)
-
-// 	assert.Nil(t, repo.Insert(nil, ch))
-// 	assert.NotPanics(t, func() { repo.MustInsert(nil, ch) })
-// 	adapter.AssertExpectations(t)
-// }
 
 func TestRepo_Insert_error(t *testing.T) {
-	ch, user := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		user      User
+		adapter   = &TestAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []change.Builder{
+			change.Set("name", "name"),
+		}
+		changes = change.Build(cbuilders)
+	)
 
-	changes := map[string]interface{}{
-		"name":       "name",
-		"created_at": time.Now().Round(time.Second),
-		"updated_at": time.Now().Round(time.Second),
-	}
+	adapter.
+		On("Insert", query.From("users"), changes).Return(0, errors.NewUnexpected("error"))
 
-	adapter.On("Insert", query.From("users"), changes).Return(0, errors.NewUnexpected("error"))
+	assert.NotNil(t, repo.Insert(&user, cbuilders...))
+	assert.Panics(t, func() { repo.MustInsert(&user, cbuilders...) })
 
-	assert.NotNil(t, repo.Insert(&user, ch))
-	assert.Panics(t, func() { repo.MustInsert(&user, ch) })
 	adapter.AssertExpectations(t)
 }
 
 func TestRepp_Update(t *testing.T) {
-	ch, user := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		user      = User{ID: 1}
+		adapter   = &TestAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []change.Builder{
+			change.Set("name", "name"),
+		}
+		changes = change.Build(cbuilders)
+		queries = query.From("users").Where(where.Eq("id", user.ID))
+	)
 
-	changes := map[string]interface{}{
-		"name":       "name",
-		"updated_at": time.Now().Round(time.Second),
-	}
+	adapter.
+		On("Update", queries, changes).Return(nil).
+		On("All", queries.Limit(1), &user).Return(1, nil)
 
-	query := query.From("users").Where(where.Eq("id", user.ID))
-	adapter.On("Update", query, changes).Return(nil).
-		On("All", query.Limit(1), &user).Return(1, nil)
-
-	assert.Nil(t, repo.Update(&user, ch))
-	assert.NotPanics(t, func() { repo.MustUpdate(&user, ch) })
+	assert.Nil(t, repo.Update(&user, cbuilders...))
+	assert.NotPanics(t, func() { repo.MustUpdate(&user, cbuilders...) })
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Update_nothing(t *testing.T) {
-	ch, _ := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
 
-	assert.Nil(t, repo.Update(nil, ch))
-	assert.NotPanics(t, func() { repo.MustUpdate(nil, ch) })
+	assert.Nil(t, repo.Update(nil))
+	assert.NotPanics(t, func() { repo.MustUpdate(nil) })
 
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Update_unchanged(t *testing.T) {
-	ch := &changeset.Changeset{}
-	user := User{}
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		user    = User{ID: 1}
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
 
-	assert.Nil(t, repo.Update(&user, ch))
-	assert.NotPanics(t, func() { repo.MustUpdate(&user, ch) })
+	assert.Nil(t, repo.Update(&user))
+	assert.NotPanics(t, func() { repo.MustUpdate(&user) })
 
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Update_error(t *testing.T) {
-	ch, user := createChangeset()
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		user      = User{ID: 1}
+		adapter   = &TestAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []change.Builder{
+			change.Set("name", "name"),
+		}
+		changes = change.Build(cbuilders)
+		queries = query.From("users").Where(where.Eq("id", user.ID))
+	)
 
-	changes := map[string]interface{}{
-		"name":       "name",
-		"updated_at": time.Now().Round(time.Second),
-	}
+	adapter.
+		On("Update", queries, changes).Return(errors.NewUnexpected("error"))
 
-	adapter.On("Update", query.From("users").Where(where.Eq("id", 0)), changes).
-		Return(errors.NewUnexpected("error"))
-
-	assert.NotNil(t, repo.Update(&user, ch))
-	assert.Panics(t, func() { repo.MustUpdate(&user, ch) })
+	assert.NotNil(t, repo.Update(&user, cbuilders...))
+	assert.Panics(t, func() { repo.MustUpdate(&user, cbuilders...) })
 	adapter.AssertExpectations(t)
 }
 

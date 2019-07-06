@@ -20,7 +20,7 @@ func InferFields(record interface{}) map[string]int {
 		return s.Fields()
 	}
 
-	rt, _ := reflectInternalType(record)
+	rt := reflectInternalType(record)
 	// rt := reflectTypePtr(record)
 
 	// check for cache

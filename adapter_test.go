@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/query"
 	"github.com/stretchr/testify/mock"
 )
@@ -22,13 +23,13 @@ func (adapter *TestAdapter) Close() error {
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Aggregate(query query.Query, out interface{}, mode string, field string, logger ...Logger) error {
-	args := adapter.Called(query, out, mode, field)
+func (adapter *TestAdapter) Aggregate(queries query.Query, out interface{}, mode string, field string, logger ...Logger) error {
+	args := adapter.Called(queries, out, mode, field)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) All(query query.Query, doc interface{}, logger ...Logger) (int, error) {
-	args := adapter.Called(query, doc)
+func (adapter *TestAdapter) All(queries query.Query, doc interface{}, logger ...Logger) (int, error) {
+	args := adapter.Called(queries, doc)
 
 	if adapter.result != nil {
 		switch doc.(type) {
@@ -46,23 +47,23 @@ func (adapter *TestAdapter) All(query query.Query, doc interface{}, logger ...Lo
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter *TestAdapter) Insert(query query.Query, ch map[string]interface{}, logger ...Logger) (interface{}, error) {
-	args := adapter.Called(query, ch)
+func (adapter *TestAdapter) Insert(queries query.Query, changes change.Changes, logger ...Logger) (interface{}, error) {
+	args := adapter.Called(queries, changes)
 	return args.Get(0), args.Error(1)
 }
 
-func (adapter *TestAdapter) InsertAll(query query.Query, fields []string, chs []map[string]interface{}, logger ...Logger) ([]interface{}, error) {
-	args := adapter.Called(query, chs)
+func (adapter *TestAdapter) InsertAll(queries query.Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
+	args := adapter.Called(queries, changess)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (adapter *TestAdapter) Update(query query.Query, ch map[string]interface{}, logger ...Logger) error {
-	args := adapter.Called(query, ch)
+func (adapter *TestAdapter) Update(queries query.Query, changes change.Changes, logger ...Logger) error {
+	args := adapter.Called(queries, changes)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Delete(query query.Query, logger ...Logger) error {
-	args := adapter.Called(query)
+func (adapter *TestAdapter) Delete(queries query.Query, logger ...Logger) error {
+	args := adapter.Called(queries)
 	return args.Error(0)
 }
 

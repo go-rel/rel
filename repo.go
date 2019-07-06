@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/schema"
@@ -104,105 +104,75 @@ func (r Repo) MustAll(record interface{}, queries ...query.Builder) {
 	must(r.All(record, queries...))
 }
 
-// Insert records to database.
-func (r Repo) Insert(record interface{}, chs ...*changeset.Changeset) error {
+// Insert a record to database.
+// TODO: insert all (multiple changes as multiple records)
+func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(chs) == 0 {
+	if record == nil || len(cbuilders) == 0 {
 		return nil
 	}
 
-	var err error
-	var ids []interface{}
+	var (
+		table         = schema.InferTableName(record)
+		primaryKey, _ = schema.InferPrimaryKey(record, false)
+		queries       = query.Build(table)
+		changes       = change.Build(cbuilders)
+	)
 
-	// if string means no returning
-	table := schema.InferTableName(record)
-	primaryKey, _ := schema.InferPrimaryKey(record, false)
+	// TODO: put timestamp (updated_at, created_at)
 
-	q := query.Build(table)
-
-	if len(chs) == 1 {
-		// single insert
-		ch := chs[0]
-		changes := ch.Changes()
-		// cloneChangeset(changes, ch.Changes())
-		putTimestamp(changes, "created_at", ch.Types())
-		putTimestamp(changes, "updated_at", ch.Types())
-		// cloneQuery(changes, query.Changes)
-
-		var id interface{}
-		id, err = r.adapter.Insert(q, changes, r.logger...)
-		ids = append(ids, id)
-	} else if len(chs) > 1 {
-		// multiple insert
-		fields := getFields(chs)
-
-		allchanges := make([]map[string]interface{}, len(chs))
-		for i, ch := range chs {
-			changes := ch.Changes()
-			// cloneChangeset(changes, ch.Changes())
-			putTimestamp(changes, "created_at", ch.Types())
-			putTimestamp(changes, "updated_at", ch.Types())
-			// cloneQuery(changes, query.Changes)
-
-			allchanges[i] = changes
-		}
-
-		ids, err = r.adapter.InsertAll(q, fields, allchanges, r.logger...)
-	} else { //if len(query.Changes) > 0 {
-		// set only
-		// var id interface{}
-		// id, err = r.adapter.Insert(query, query.Changes, r.logger...)
-		// ids = append(ids, id)
-	}
-
+	id, err := r.Adapter().Insert(queries, changes, r.logger...)
 	if err != nil {
-		return transformError(err, chs...)
-	} else if record == nil || len(ids) == 0 {
-		return nil
-	} else if len(ids) == 1 {
-		return transformError(r.One(record, where.Eq(primaryKey, ids[0])))
+		// TODO: transform changeset error
+		return transformError(err)
 	}
 
-	return transformError(r.All(record, where.In(primaryKey, ids...)))
+	return transformError(r.One(record, where.Eq(primaryKey, id)))
 }
 
-// MustInsert records to database.
+// MustInsert a record to database.
 // It'll panic if any error occurred.
-func (r Repo) MustInsert(record interface{}, chs ...*changeset.Changeset) {
-	must(r.Insert(record, chs...))
+func (r Repo) MustInsert(record interface{}, cbuilders ...change.Builder) {
+	must(r.Insert(record, cbuilders...))
 }
 
-// Update records in database.
+// Update a record in database.
 // It'll panic if any error occurred.
-func (r Repo) Update(record interface{}, ch *changeset.Changeset) error {
+func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(ch.Changes()) == 0 {
+	if record == nil || len(cbuilders) == 0 {
 		return nil
 	}
 
-	changes := ch.Changes()
-	putTimestamp(changes, "updated_at", ch.Types())
+	var (
+		table                    = schema.InferTableName(record)
+		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
+		queries                  = query.Build(table, where.Eq(primaryKey, primaryValue))
+		changes                  = change.Build(cbuilders)
+	)
 
-	table := schema.InferTableName(record)
-	primaryKey, primaryValue := schema.InferPrimaryKey(record, true)
+	if changes.Empty() {
+		return nil
+	}
 
-	q := query.Build(table, where.Eq(primaryKey, primaryValue))
+	// TODO: update timestamp (updated_at)
 
 	// perform update
-	err := r.adapter.Update(q, changes, r.logger...)
+	err := r.adapter.Update(queries, changes, r.logger...)
 	if err != nil {
-		return transformError(err, ch)
+		// TODO: changeset error
+		return transformError(err)
 	}
 
-	return r.One(record, q)
+	return r.One(record, queries)
 }
 
-// MustUpdate records in database.
+// MustUpdate a record in database.
 // It'll panic if any error occurred.
-func (r Repo) MustUpdate(record interface{}, chs *changeset.Changeset) {
-	must(r.Update(record, chs))
+func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
+	must(r.Update(record, cbuilders...))
 }
 
 // Delete deletes all results that match the query.

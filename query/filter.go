@@ -49,10 +49,11 @@ const (
 type FilterClause struct {
 	Type   FilterOp
 	Field  string
-	Values []interface{}
+	Values []interface{} // TODO: don't use array (let adapter cast when needed)
 	Inner  []FilterClause
 }
 
+// Build Filter query.
 func (f FilterClause) Build(query *Query) {
 	query.WhereClause = query.WhereClause.And(f)
 }

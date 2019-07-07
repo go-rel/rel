@@ -123,6 +123,14 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 	// TODO: put timestamp (updated_at, created_at)
 
 	id, err := r.Adapter().Insert(queries, changes, r.logger...)
+
+	// has asssociation
+	// TODO: map based on has schema
+	for _, assoc := range changes.AssocChanges {
+		// TODO: set fk
+		assoc.Set(change.Set("todo_id", id))
+	}
+
 	if err != nil {
 		// TODO: transform changeset error
 		return transformError(err)

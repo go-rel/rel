@@ -10,7 +10,9 @@ func Build(builders ...Builder) Changes {
 		Changes: make([]Change, 0, len(builders)),
 	}
 
-	changes.Apply(builders...)
+	for i := range builders {
+		builders[i].Build(&changes)
+	}
 
 	return changes
 }

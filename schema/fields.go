@@ -36,7 +36,7 @@ func InferFields(record interface{}) map[string]int {
 	for i := 0; i < rt.NumField(); i++ {
 		var (
 			sf   = rt.Field(i)
-			name = inferFieldName(sf)
+			name = inferFieldColumn(sf)
 		)
 
 		if name != "" {
@@ -50,7 +50,7 @@ func InferFields(record interface{}) map[string]int {
 	return fields
 }
 
-func inferFieldName(sf reflect.StructField) string {
+func inferFieldColumn(sf reflect.StructField) string {
 	if tag := sf.Tag.Get("db"); tag != "" {
 		name := strings.Split(tag, ",")[0]
 
@@ -81,7 +81,7 @@ func inferFieldMapping(record interface{}) map[string]int {
 	for i := 0; i < rt.NumField(); i++ {
 		var (
 			sf   = rt.Field(i)
-			name = inferFieldName(sf)
+			name = inferFieldColumn(sf)
 		)
 
 		if name != "" {

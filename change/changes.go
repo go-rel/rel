@@ -7,7 +7,7 @@ type Changes struct {
 	Fields       map[string]int
 	Changes      []Change
 	Assoc        map[string]int
-	AssocChanges []Changes
+	AssocChanges [][]Changes
 }
 
 func (c Changes) Empty() bool {
@@ -29,6 +29,14 @@ func (c *Changes) Set(ch Change) {
 		c.Fields[ch.Field] = len(c.Changes)
 		c.Changes = append(c.Changes, ch)
 	}
+}
+
+func (c Changes) GetAssoc(field string) ([]Changes, bool) {
+	if index, ok := c.Assoc[field]; ok {
+		return c.AssocChanges[index], true
+	}
+
+	return nil, false
 }
 
 type ChangeOp int

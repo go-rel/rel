@@ -33,13 +33,13 @@ func TestAssociation(t *testing.T) {
 		addresst     = reflect.TypeOf(Address{})
 	)
 
-	_, cached := associationCache.Load(associationKey{rt: usert, field: "Transactions"})
+	_, cached := associationFieldCache.Load(associationFieldKey{rt: usert, field: "Transactions"})
 	assert.False(t, cached)
 
 	_, _, column = InferAssociationField(usert, "Transactions")
 	assert.Equal(t, "user_id", column)
 
-	_, cached = associationCache.Load(associationKey{rt: usert, field: "Transactions"})
+	_, cached = associationFieldCache.Load(associationFieldKey{rt: usert, field: "Transactions"})
 	assert.True(t, true)
 
 	// with cache

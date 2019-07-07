@@ -113,27 +113,34 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 		return nil
 	}
 
+	// TODO: transform changeset error
+	return transformError(r.insert(record, change.Build(cbuilders...)))
+}
+
+func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
 		table         = schema.InferTableName(record)
 		primaryKey, _ = schema.InferPrimaryKey(record, false)
+		association   = schema.Association{}
 		queries       = query.Build(table)
-		changes       = change.Build(cbuilders...)
 	)
 
-	// TODO: put timestamp (updated_at, created_at)
-
-	id, err := r.Adapter().Insert(queries, changes, r.logger...)
-
-	// has asssociation
-	// TODO: map based on has schema
-	for _, assoc := range changes.AssocChanges {
-		// TODO: set fk
-		assoc.Set(change.Set("todo_id", id))
+	if err := r.upsertBelongsTo(association, &changes); err != nil {
+		return err
 	}
 
+	// TODO: put timestamp (updated_at, created_at)
+	id, err := r.Adapter().Insert(queries, changes, r.logger...)
 	if err != nil {
-		// TODO: transform changeset error
-		return transformError(err)
+		return err
+	}
+
+	if err := r.upsertHasOne(association, &changes, id); err != nil {
+		return err
+	}
+
+	if err := r.upsertHasMany(association, &changes, id); err != nil {
+		return err
 	}
 
 	return transformError(r.One(record, where.Eq(primaryKey, id)))
@@ -155,15 +162,23 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	}
 
 	var (
-		table                    = schema.InferTableName(record)
 		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
-		queries                  = query.Build(table, where.Eq(primaryKey, primaryValue))
+		filter                   = where.Eq(primaryKey, primaryValue)
 		changes                  = change.Build(cbuilders...)
 	)
 
+	return r.update(record, changes, filter)
+}
+
+func (r Repo) update(record interface{}, changes change.Changes, filter query.FilterClause) error {
 	if changes.Empty() {
 		return nil
 	}
+
+	var (
+		table   = schema.InferTableName(record)
+		queries = query.Build(table, filter)
+	)
 
 	// TODO: update timestamp (updated_at)
 
@@ -181,6 +196,117 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 // It'll panic if any error occurred.
 func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
 	must(r.Update(record, cbuilders...))
+}
+
+func (r Repo) upsertBelongsTo(assocs schema.Association, changes *change.Changes) error {
+	for field, assoc := range assocs.BelongsTo {
+		allAssocChanges, changed := changes.GetAssoc(field)
+		if !changed || len(allAssocChanges) == 0 {
+			continue
+		}
+
+		var (
+			assocChanges = allAssocChanges[0]
+		)
+
+		// TODO: determine update using primary key
+		if forch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
+			// Point belongs to id to new id
+			// TODO: option on replace id
+			changes.Set(change.Set(assoc.ReferenceColumn, forch.Value))
+
+			// other fields is updated
+			// update association record
+			if len(assocChanges.Changes) > 1 {
+				var (
+					assocAddrs interface{}
+					filter     = where.Eq(assoc.ForeignColumn, forch.Value)
+				)
+
+				if err := r.update(assocAddrs, assocChanges, filter); err != nil {
+					return err
+				}
+			}
+		} else {
+			// insert new column
+			var (
+				assocAddrs interface{}
+			)
+
+			if err := r.insert(assocAddrs, assocChanges); err != nil {
+				return err
+			}
+
+			var refValue interface{} // TODO: get ref value
+			changes.Set(change.Set(assoc.ReferenceColumn, refValue))
+		}
+	}
+
+	return nil
+}
+
+func (r Repo) upsertHasOne(assocs schema.Association, changes *change.Changes, id interface{}) error {
+	for field, assoc := range assocs.HasOne {
+		allAssocChanges, changed := changes.GetAssoc(field)
+		if !changed || len(allAssocChanges) == 0 {
+			continue
+		}
+
+		assocChanges := allAssocChanges[0]
+
+		// TODO: determine update using primary key
+		if ch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
+			// other fields is updated
+			if len(assocChanges.Changes) > 1 {
+				var (
+					assocRecord interface{}
+					filter      = where.Eq(assoc.ForeignColumn, ch.Value).AndEq("primary_keyu", "primary_value") // TODO
+				)
+
+				if err := r.update(assocRecord, assocChanges, filter); err != nil {
+					return err
+				}
+			}
+		} else {
+			// insert new column
+			var (
+				assocRecord interface{}
+			)
+
+			// Set belongs to id
+			assocChanges.Set(change.Set(assoc.ForeignColumn, id))
+
+			if err := r.insert(assocRecord, assocChanges); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r Repo) upsertHasMany(assocs schema.Association, changes *change.Changes, id interface{}) error {
+	for field, assoc := range assocs.HasMany {
+		allAssocChanges, changed := changes.GetAssoc(field)
+		if !changed {
+			continue
+		}
+
+		// Set belongs to id
+		for i := range allAssocChanges {
+			// Set belongs to id
+			allAssocChanges[i].Set(change.Set(assoc.ForeignColumn, id))
+		}
+
+		// TODO: delete all association if the behaviour is replace
+
+		// TODO: re-insert all association
+		// if err := r.insertAll(assocRecord, assocChanges); err != nil {
+		// 	return transformError(err)
+		// }
+	}
+
+	return nil
 }
 
 // Delete deletes all results that match the query.
@@ -216,9 +342,9 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 	}
 
 	schemaType := preload[0].schema.Type()
-	refIndex, fkIndex, column := schema.InferAssociationField(schemaType, path[len(path)-1])
+	assocField := schema.InferAssociationField(schemaType, path[len(path)-1])
 
-	addrs, ids := collectPreloadTarget(preload, refIndex)
+	addrs, ids := collectPreloadTarget(preload, assocField.ReferenceIndex)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -234,7 +360,7 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 	result.Elem().Set(slice)
 
 	// query all records using collected ids.
-	err := r.All(result.Interface(), where.In(column, ids...))
+	err := r.All(result.Interface(), where.In(assocField.ForeignColumn, ids...))
 	if err != nil {
 		return err
 	}
@@ -243,7 +369,7 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 	result = result.Elem()
 	for i := 0; i < result.Len(); i++ {
 		curr := result.Index(i)
-		id := getPreloadID(curr.FieldByIndex(fkIndex))
+		id := getPreloadID(curr.FieldByIndex(assocField.ForeignIndex))
 
 		for _, addr := range addrs[id] {
 			if addr.Kind() == reflect.Slice {

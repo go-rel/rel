@@ -10,7 +10,7 @@ import (
 
 func TestQuery_Build(t *testing.T) {
 	q := query.From("users").Select("*")
-	assert.Equal(t, q, query.Build(q))
+	assert.Equal(t, q, query.Build("", q))
 }
 
 func TestQuery_Select(t *testing.T) {
@@ -33,18 +33,15 @@ func TestQuery_Distinct(t *testing.T) {
 	assert.Equal(t, query.Query{
 		Collection: "users",
 		SelectClause: query.SelectClause{
-			Fields:       []string{"users.*"},
+			Fields:       []string{"*"},
 			OnlyDistinct: true,
 		},
-	}, query.From("users").Distinct())
+	}, query.From("users").Select("*").Distinct())
 }
 
 func TestQuery_Join(t *testing.T) {
 	result := query.Query{
 		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
 		JoinClause: []query.JoinClause{
 			{
 				Mode:       "JOIN",
@@ -55,16 +52,14 @@ func TestQuery_Join(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, query.Build(query.From("users").Join("transactions")))
-	assert.Equal(t, result, query.Build(query.Join("transactions").From("users")))
+	assert.Equal(t, result, query.Build("", query.From("users").Join("transactions")))
+	assert.Equal(t, result, query.Build("", query.Join("transactions").From("users")))
+	assert.Equal(t, result, query.Build("users", query.Join("transactions")))
 }
 
 func TestQuery_JoinOn(t *testing.T) {
 	result := query.Query{
 		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
 		JoinClause: []query.JoinClause{
 			{
 				Mode:       "JOIN",
@@ -82,9 +77,6 @@ func TestQuery_JoinOn(t *testing.T) {
 func TestQuery_JoinFragment(t *testing.T) {
 	result := query.Query{
 		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
 		JoinClause: []query.JoinClause{
 			{
 				Mode:      "JOIN transactions ON transacations.id=?",
@@ -107,10 +99,7 @@ func TestQuery_Where(t *testing.T) {
 			`id=1 AND deleted_at IS NIL`,
 			query.From("users").Where(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			},
 		},
@@ -125,10 +114,7 @@ func TestQuery_Where(t *testing.T) {
 			`id=1 AND deleted_at IS NIL AND active<>false`,
 			query.From("users").Where(query.FilterEq("id", 1), query.FilterNil("deleted_at")).Where(query.FilterNe("active", false)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at"), query.FilterNe("active", false)),
 			},
 		},
@@ -136,10 +122,7 @@ func TestQuery_Where(t *testing.T) {
 			`id=1 AND deleted_at IS NIL (where package)`,
 			query.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			},
 		},
@@ -147,10 +130,7 @@ func TestQuery_Where(t *testing.T) {
 			`id=1 AND deleted_at IS NIL (chained where package)`,
 			query.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			},
 		},
@@ -173,10 +153,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`id=1 AND deleted_at IS NIL`,
 			query.From("users").OrWhere(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			},
 		},
@@ -184,10 +161,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`id=1 OR deleted_at IS NIL`,
 			query.From("users").Where(query.FilterEq("id", 1)).OrWhere(query.FilterNil("deleted_at")),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterOr(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			},
 		},
@@ -202,10 +176,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
 			query.From("users").Where(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrWhere(query.FilterNe("active", false)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterNe("active", false)),
 			},
 		},
@@ -213,10 +184,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
 			query.From("users").Where(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrWhere(query.FilterNe("active", false), query.FilterGte("score", 80)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))),
 			},
 		},
@@ -224,10 +192,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
 			query.From("users").Where(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrWhere(query.FilterNe("active", false), query.FilterGte("score", 80)).Where(query.FilterLt("price", 10000)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))), query.FilterLt("price", 10000)),
 			},
 		},
@@ -235,10 +200,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (where package)`,
 			query.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))), query.FilterLt("price", 10000)),
 			},
 		},
@@ -246,10 +208,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (chained where package)`,
 			query.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
 			query.Query{
-				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
+				Collection:  "users",
 				WhereClause: query.FilterAnd(query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))), query.FilterLt("price", 10000)),
 			},
 		},
@@ -265,9 +224,6 @@ func TestQuery_OrWhere(t *testing.T) {
 func TestQuery_Group(t *testing.T) {
 	result := query.Query{
 		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
 		GroupClause: query.GroupClause{
 			Fields: []string{"active", "plan"},
 		},
@@ -288,9 +244,6 @@ func TestQuery_Having(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
@@ -302,9 +255,6 @@ func TestQuery_Having(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
@@ -316,9 +266,6 @@ func TestQuery_Having(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")).Having(query.FilterNe("active", false)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at"), query.FilterNe("active", false)),
@@ -330,9 +277,6 @@ func TestQuery_Having(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at"), query.FilterNe("active", false)),
@@ -344,9 +288,6 @@ func TestQuery_Having(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(where.Eq("id", 1).AndNil("deleted_at")).Having(where.Ne("active", false)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at"), query.FilterNe("active", false)),
@@ -372,9 +313,6 @@ func TestQuery_OrHaving(t *testing.T) {
 			query.From("users").Group("active", "plan").OrHaving(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
@@ -386,9 +324,6 @@ func TestQuery_OrHaving(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1)).OrHaving(query.FilterNil("deleted_at")),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterOr(query.FilterEq("id", 1), query.FilterNil("deleted_at")),
@@ -400,9 +335,6 @@ func TestQuery_OrHaving(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrHaving(query.FilterNe("active", false)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterNe("active", false)),
@@ -414,9 +346,6 @@ func TestQuery_OrHaving(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrHaving(query.FilterNe("active", false), query.FilterGte("score", 80)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))),
@@ -428,9 +357,6 @@ func TestQuery_OrHaving(t *testing.T) {
 			query.From("users").Group("active", "plan").Having(query.FilterEq("id", 1), query.FilterNil("deleted_at")).OrHaving(query.FilterNe("active", false), query.FilterGte("score", 80)).Having(query.FilterLt("price", 10000)),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				GroupClause: query.GroupClause{
 					Fields: []string{"active", "plan"},
 					Filter: query.FilterAnd(query.FilterOr(query.FilterAnd(query.FilterEq("id", 1), query.FilterNil("deleted_at")), query.FilterAnd(query.FilterNe("active", false), query.FilterGte("score", 80))), query.FilterLt("price", 10000)),
@@ -457,9 +383,6 @@ func TestQuery_Sort(t *testing.T) {
 			query.From("users").Sort("id"),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				SortClause: []query.SortClause{
 					{
 						Field: "id",
@@ -473,9 +396,6 @@ func TestQuery_Sort(t *testing.T) {
 			query.From("users").SortAsc("id", "name"),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				SortClause: []query.SortClause{
 					{
 						Field: "id",
@@ -493,9 +413,6 @@ func TestQuery_Sort(t *testing.T) {
 			query.From("users").SortAsc("id", "name").SortDesc("age", "created_at"),
 			query.Query{
 				Collection: "users",
-				SelectClause: query.SelectClause{
-					Fields: []string{"users.*"},
-				},
 				SortClause: []query.SortClause{
 					{
 						Field: "id",
@@ -527,20 +444,14 @@ func TestQuery_Sort(t *testing.T) {
 
 func TestQuery_Offset(t *testing.T) {
 	assert.Equal(t, query.Query{
-		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
+		Collection:   "users",
 		OffsetClause: 10,
 	}, query.From("users").Offset(10))
 }
 
 func TestQuery_Limit(t *testing.T) {
 	assert.Equal(t, query.Query{
-		Collection: "users",
-		SelectClause: query.SelectClause{
-			Fields: []string{"users.*"},
-		},
+		Collection:  "users",
 		LimitClause: 10,
 	}, query.From("users").Limit(10))
 }

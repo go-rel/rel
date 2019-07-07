@@ -14,13 +14,13 @@ func Build(collection string, builders ...Builder) Query {
 		q.empty = false
 	}
 
-	for i := range q.JoinClause {
-		q.JoinClause[i].buildJoin(q)
-	}
-
 	if q.Collection == "" {
 		q.Collection = collection
 		q.empty = false
+	}
+
+	for i := range q.JoinClause {
+		q.JoinClause[i].buildJoin(q)
 	}
 
 	return q

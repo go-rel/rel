@@ -116,7 +116,7 @@ func TestBuilder(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, b := range test.builders {
-				assert.Equal(t, test.query, query.Build(b...))
+				assert.Equal(t, test.query, query.Build("", b...))
 			}
 		})
 	}

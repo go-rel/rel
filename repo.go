@@ -216,7 +216,7 @@ func (r Repo) Preload(record interface{}, field string, queries ...query.Builder
 	}
 
 	schemaType := preload[0].schema.Type()
-	refIndex, fkIndex, column := schema.InferAssociation(schemaType, path[len(path)-1])
+	refIndex, fkIndex, column := schema.InferAssociationField(schemaType, path[len(path)-1])
 
 	addrs, ids := collectPreloadTarget(preload, refIndex)
 	if len(ids) == 0 {

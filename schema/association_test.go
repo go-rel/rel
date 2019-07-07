@@ -36,30 +36,30 @@ func TestAssociation(t *testing.T) {
 	_, cached := associationCache.Load(associationKey{rt: usert, field: "Transactions"})
 	assert.False(t, cached)
 
-	_, _, column = InferAssociation(usert, "Transactions")
+	_, _, column = InferAssociationField(usert, "Transactions")
 	assert.Equal(t, "user_id", column)
 
 	_, cached = associationCache.Load(associationKey{rt: usert, field: "Transactions"})
 	assert.True(t, true)
 
 	// with cache
-	_, _, column = InferAssociation(usert, "Transactions")
+	_, _, column = InferAssociationField(usert, "Transactions")
 	assert.Equal(t, "user_id", column)
 
-	_, _, column = InferAssociation(transactiont, "Buyer")
+	_, _, column = InferAssociationField(transactiont, "Buyer")
 	assert.Equal(t, "id", column)
 
 	// without struct tags
-	_, _, column = InferAssociation(addresst, "User")
+	_, _, column = InferAssociationField(addresst, "User")
 	assert.Equal(t, "id", column)
 
-	_, _, column = InferAssociation(usert, "Addresses")
+	_, _, column = InferAssociationField(usert, "Addresses")
 	assert.Equal(t, "user_id", column)
 }
 
 func TestAssociation_fieldNotFound(t *testing.T) {
 	assert.Panics(t, func() {
-		InferAssociation(reflect.TypeOf(User{}), "Unknown")
+		InferAssociationField(reflect.TypeOf(User{}), "Unknown")
 	})
 }
 
@@ -69,7 +69,7 @@ func TestAssociation_refFieldNotFound(t *testing.T) {
 	}
 
 	assert.Panics(t, func() {
-		InferAssociation(reflect.TypeOf(Invoice{}), "User")
+		InferAssociationField(reflect.TypeOf(Invoice{}), "User")
 	})
 }
 
@@ -80,6 +80,6 @@ func TestAssociation_fkFieldNotFound(t *testing.T) {
 	}
 
 	assert.Panics(t, func() {
-		InferAssociation(reflect.TypeOf(Invoice{}), "User")
+		InferAssociationField(reflect.TypeOf(Invoice{}), "User")
 	})
 }

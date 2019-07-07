@@ -18,8 +18,8 @@ type association struct {
 	column   string
 }
 
-// InferAssociation from a field in a struct type.
-func InferAssociation(rt reflect.Type, field string) ([]int, []int, string) {
+// InferAssociationField from a struct type.
+func InferAssociationField(rt reflect.Type, field string) ([]int, []int, string) {
 	key := associationKey{
 		rt:    rt,
 		field: field,

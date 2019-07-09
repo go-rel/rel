@@ -121,7 +121,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
 		table         = schema.InferTableName(record)
 		primaryKey, _ = schema.InferPrimaryKey(record, false)
-		association   = schema.Association{}
+		association   = schema.Associations{}
 		queries       = query.Build(table)
 	)
 
@@ -198,7 +198,7 @@ func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
 	must(r.Update(record, cbuilders...))
 }
 
-func (r Repo) upsertBelongsTo(assocs schema.Association, changes *change.Changes) error {
+func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Changes) error {
 	for field, assoc := range assocs.BelongsTo {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -206,105 +206,111 @@ func (r Repo) upsertBelongsTo(assocs schema.Association, changes *change.Changes
 		}
 
 		var (
-			assocChanges = allAssocChanges[0]
+			assocChanges   = allAssocChanges[0]
+			target, loaded = assoc.TargetAddr()
+			targetRefValue = assoc.ReferenceValue()
 		)
 
-		// TODO: determine update using primary key
-		if forch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
-			// Point belongs to id to new id
-			// TODO: option on replace id
-			changes.Set(change.Set(assoc.ReferenceColumn, forch.Value))
+		if rch, isUpdate := assocChanges.Get(assoc.ReferenceColumn()); isUpdate {
+			if loaded && rch.Value != targetRefValue {
+				if true { // TODO: should update option
+					changes.Set(change.Set(assoc.ForeignColumn(), targetRefValue))
+				} else {
+					panic("replace operation detected")
+				}
+			} else {
+				changes.Set(change.Set(assoc.ForeignColumn(), targetRefValue))
+			}
 
-			// other fields is updated
-			// update association record
 			if len(assocChanges.Changes) > 1 {
 				var (
-					assocAddrs interface{}
-					filter     = where.Eq(assoc.ForeignColumn, forch.Value)
+					filter = where.Eq(assoc.ReferenceColumn(), targetRefValue)
 				)
 
-				if err := r.update(assocAddrs, assocChanges, filter); err != nil {
+				if err := r.update(target, assocChanges, filter); err != nil {
 					return err
 				}
 			}
-		} else {
-			// insert new column
+		} else if loaded {
 			var (
-				assocAddrs interface{}
+				filter = where.Eq(assoc.ReferenceColumn(), targetRefValue)
 			)
 
-			if err := r.insert(assocAddrs, assocChanges); err != nil {
+			if err := r.update(target, assocChanges, filter); err != nil {
+				return err
+			}
+		} else {
+			if err := r.insert(target, assocChanges); err != nil {
 				return err
 			}
 
-			var refValue interface{} // TODO: get ref value
-			changes.Set(change.Set(assoc.ReferenceColumn, refValue))
+			changes.Set(change.Set(assoc.ForeignColumn(), assoc.ReferenceValue()))
 		}
 	}
 
 	return nil
 }
 
-func (r Repo) upsertHasOne(assocs schema.Association, changes *change.Changes, id interface{}) error {
-	for field, assoc := range assocs.HasOne {
-		allAssocChanges, changed := changes.GetAssoc(field)
-		if !changed || len(allAssocChanges) == 0 {
-			continue
-		}
+func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, id interface{}) error {
+	// for field, assoc := range assocs.HasOne {
+	// 	allAssocChanges, changed := changes.GetAssoc(field)
+	// 	if !changed || len(allAssocChanges) == 0 {
+	// 		continue
+	// 	}
 
-		assocChanges := allAssocChanges[0]
+	// 	assocChanges := allAssocChanges[0]
 
-		// TODO: determine update using primary key
-		if ch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
-			// other fields is updated
-			if len(assocChanges.Changes) > 1 {
-				var (
-					assocRecord interface{}
-					filter      = where.Eq(assoc.ForeignColumn, ch.Value).AndEq("primary_keyu", "primary_value") // TODO
-				)
+	// 	// TODO: determine update using primary key
+	// 	if ch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
+	// 		// other fields is updated
+	// 		if len(assocChanges.Changes) > 1 {
+	// 			var (
+	// 				assocRecord interface{}
+	// 				filter      = where.Eq(assoc.ForeignColumn, ch.Value).AndEq("primary_key", "primary_value") // TODO
+	// 			)
 
-				if err := r.update(assocRecord, assocChanges, filter); err != nil {
-					return err
-				}
-			}
-		} else {
-			// insert new column
-			var (
-				assocRecord interface{}
-			)
+	// 			if err := r.update(assocRecord, assocChanges, filter); err != nil {
+	// 				return err
+	// 			}
+	// 		}
+	// 	} else {
+	// 		// insert new column
+	// 		var (
+	// 			assocRecord interface{}
+	// 		)
 
-			// Set belongs to id
-			assocChanges.Set(change.Set(assoc.ForeignColumn, id))
+	// 		// Set belongs to id
+	// 		assocChanges.Set(change.Set(assoc.ForeignColumn, id))
 
-			if err := r.insert(assocRecord, assocChanges); err != nil {
-				return err
-			}
-		}
-	}
+	// 		if err := r.insert(assocRecord, assocChanges); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	return nil
 }
 
-func (r Repo) upsertHasMany(assocs schema.Association, changes *change.Changes, id interface{}) error {
-	for field, assoc := range assocs.HasMany {
-		allAssocChanges, changed := changes.GetAssoc(field)
-		if !changed {
-			continue
-		}
+func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}) error {
+	// for field, assoc := range assocs.HasMany {
+	// 	allAssocChanges, changed := changes.GetAssoc(field)
+	// 	if !changed {
+	// 		continue
+	// 	}
 
-		// Set belongs to id
-		for i := range allAssocChanges {
-			// Set belongs to id
-			allAssocChanges[i].Set(change.Set(assoc.ForeignColumn, id))
-		}
+	// 	// Set belongs to id
+	// 	for i := range allAssocChanges {
+	// 		// Set belongs to id
+	// 		allAssocChanges[i].Set(change.Set(assoc.ForeignColumn, id))
+	// 	}
 
-		// TODO: delete all association if the behaviour is replace
+	// TODO: delete all association if the behaviour is replace
 
-		// TODO: re-insert all association
-		// if err := r.insertAll(assocRecord, assocChanges); err != nil {
-		// 	return transformError(err)
-		// }
-	}
+	// TODO: re-insert all association
+	// if err := r.insertAll(assocRecord, assocChanges); err != nil {
+	// 	return transformError(err)
+	// }
+	// }
 
 	return nil
 }

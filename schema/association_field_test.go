@@ -25,9 +25,8 @@ type Address struct {
 	User   *User
 }
 
-func TestAssociation(t *testing.T) {
+func TestAssociationField(t *testing.T) {
 	var (
-		column       string
 		usert        = reflect.TypeOf(User{})
 		transactiont = reflect.TypeOf(Transaction{})
 		addresst     = reflect.TypeOf(Address{})
@@ -36,25 +35,25 @@ func TestAssociation(t *testing.T) {
 	_, cached := associationFieldCache.Load(associationFieldKey{rt: usert, field: "Transactions"})
 	assert.False(t, cached)
 
-	_, _, column = InferAssociationField(usert, "Transactions")
-	assert.Equal(t, "user_id", column)
+	assoc := InferAssociationField(usert, "Transactions")
+	assert.Equal(t, "user_id", assoc.ForeignColumn)
 
 	_, cached = associationFieldCache.Load(associationFieldKey{rt: usert, field: "Transactions"})
 	assert.True(t, true)
 
 	// with cache
-	_, _, column = InferAssociationField(usert, "Transactions")
-	assert.Equal(t, "user_id", column)
+	assoc = InferAssociationField(usert, "Transactions")
+	assert.Equal(t, "user_id", assoc.ForeignColumn)
 
-	_, _, column = InferAssociationField(transactiont, "Buyer")
-	assert.Equal(t, "id", column)
+	assoc = InferAssociationField(transactiont, "Buyer")
+	assert.Equal(t, "id", assoc.ForeignColumn)
 
 	// without struct tags
-	_, _, column = InferAssociationField(addresst, "User")
-	assert.Equal(t, "id", column)
+	assoc = InferAssociationField(addresst, "User")
+	assert.Equal(t, "id", assoc.ForeignColumn)
 
-	_, _, column = InferAssociationField(usert, "Addresses")
-	assert.Equal(t, "user_id", column)
+	assoc = InferAssociationField(usert, "Addresses")
+	assert.Equal(t, "user_id", assoc.ForeignColumn)
 }
 
 func TestAssociation_fieldNotFound(t *testing.T) {

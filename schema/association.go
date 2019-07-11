@@ -60,7 +60,15 @@ func (a association) TargetAddr() (interface{}, bool) {
 
 		return rv.Addr().Interface(), rv.Len() != 0
 	case reflect.Ptr:
-		return rv.Interface(), !rv.IsNil()
+		var (
+			loaded = !rv.IsNil()
+		)
+
+		if !loaded {
+			rv.Set(reflect.New(rv.Type().Elem()))
+		}
+
+		return rv.Interface(), loaded
 	default:
 		var (
 			target = rv.Addr().Interface()
@@ -147,9 +155,6 @@ func InferAssociation(rv reflect.Value, name string) Association {
 		if _, isBelongsTo := rt.FieldByName(st.Name + "ID"); isBelongsTo {
 			ref = st.Name + "ID"
 			fk = "ID"
-
-			// TODO:
-			data.typ = BelongsTo
 		} else {
 			ref = "ID"
 			fk = rt.Name() + "ID"
@@ -177,7 +182,7 @@ func InferAssociation(rv reflect.Value, name string) Association {
 		if typ == "belongs_to" || len(data.referenceColumn) > len(data.foreignColumn) {
 			data.typ = BelongsTo
 		} else {
-			data.typ = HasMany
+			data.typ = HasOne
 		}
 	}
 

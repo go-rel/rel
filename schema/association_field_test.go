@@ -7,24 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct {
-	ID           int
-	Transactions []Transaction `references:"ID" foreign_key:"BuyerID"`
-	Addresses    []Address
-}
-
-type Transaction struct {
-	ID      int
-	BuyerID int  `db:"user_id"`
-	Buyer   User `references:"BuyerID" foreign_key:"ID"`
-}
-
-type Address struct {
-	ID     int
-	UserID *int
-	User   *User
-}
-
 func TestAssociationField(t *testing.T) {
 	var (
 		usert        = reflect.TypeOf(User{})

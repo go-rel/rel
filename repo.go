@@ -121,7 +121,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
 		table         = schema.InferTableName(record)
 		primaryKey, _ = schema.InferPrimaryKey(record, false)
-		association   = schema.Associations{}
+		association   = schema.InferAssociations(record)
 		queries       = query.Build(table)
 	)
 
@@ -199,7 +199,7 @@ func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
 }
 
 func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Changes) error {
-	for field, assoc := range assocs.BelongsTo {
+	for _, field := range assocs.BelongsTo() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
 			continue
@@ -207,6 +207,7 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 
 		var (
 			assocChanges   = allAssocChanges[0]
+			assoc          = assocs.Association(field)
 			target, loaded = assoc.TargetAddr()
 			targetRefValue = assoc.ReferenceValue()
 		)

@@ -3,6 +3,7 @@ package schema
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,13 +12,14 @@ type User struct {
 	ID           int
 	Address      Address
 	Transactions []Transaction `references:"ID" foreign_key:"BuyerID"`
-	Addresses    []Address     // TODO: remmove
+	// Addresses    []Address     // TODO: remmove
 }
 
 type Transaction struct {
 	ID      int
 	BuyerID int  `db:"user_id"`
 	Buyer   User `references:"BuyerID" foreign_key:"ID"`
+	time    time.Time
 }
 
 type Address struct {
@@ -170,6 +172,51 @@ func TestAssociation(t *testing.T) {
 					assert.Equal(t, test.foreignValue, assoc.ForeignValue())
 				})
 			}
+		})
+	}
+}
+
+func TestAssociations(t *testing.T) {
+	tests := []struct {
+		name      string
+		record    interface{}
+		belongsTo []string
+		hasOne    []string
+		hasMany   []string
+	}{
+		{
+			name:    "User",
+			record:  &User{},
+			hasOne:  []string{"Address"},
+			hasMany: []string{"Transactions"},
+		},
+		{
+			name:    "User Cached",
+			record:  &User{},
+			hasOne:  []string{"Address"},
+			hasMany: []string{"Transactions"},
+		},
+		{
+			name:      "Transaction",
+			record:    &Transaction{},
+			belongsTo: []string{"Buyer"},
+		},
+		{
+			name:      "Address",
+			record:    &Address{},
+			belongsTo: []string{"User"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				associations = InferAssociations(test.record)
+			)
+
+			assert.Equal(t, test.belongsTo, associations.BelongsTo())
+			assert.Equal(t, test.hasOne, associations.HasOne())
+			assert.Equal(t, test.hasMany, associations.HasMany())
 		})
 	}
 }

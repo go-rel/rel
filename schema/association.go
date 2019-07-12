@@ -124,7 +124,7 @@ func InferAssociation(rv reflect.Value, name string) Association {
 		}
 	)
 
-	if val, cached := associationFieldCache.Load(key); cached {
+	if val, cached := associationCache.Load(key); cached {
 		return association{
 			data:  val.(associationData),
 			value: rv,
@@ -186,7 +186,7 @@ func InferAssociation(rv reflect.Value, name string) Association {
 		}
 	}
 
-	associationFieldCache.Store(key, data)
+	associationCache.Store(key, data)
 
 	return association{
 		data:  data,
@@ -194,8 +194,97 @@ func InferAssociation(rv reflect.Value, name string) Association {
 	}
 }
 
-type Associations struct {
-	BelongsTo map[string]Association
-	HasOne    map[string]Association
-	HasMany   map[string]Association
+type Associations interface {
+	BelongsTo() []string
+	HasOne() []string
+	HasMany() []string
+	Association(field string) Association
+}
+
+var associationsFieldCache sync.Map
+
+type associationsField struct {
+	belongsTo []string
+	hasOne    []string
+	hasMany   []string
+}
+
+type associations struct {
+	rv     reflect.Value
+	fields associationsField
+}
+
+func (a associations) BelongsTo() []string {
+	return a.fields.belongsTo
+}
+
+func (a associations) HasOne() []string {
+	return a.fields.hasOne
+}
+
+func (a associations) HasMany() []string {
+	return a.fields.hasMany
+}
+
+func (a associations) Association(name string) Association {
+	return InferAssociation(a.rv, name)
+}
+
+func InferAssociations(record interface{}) Associations {
+	if s, ok := record.(Associations); ok {
+		return s
+	}
+
+	var (
+		rv = reflectValuePtr(record)
+		rt = rv.Type()
+	)
+
+	if fields, cached := associationsFieldCache.Load(rt); cached {
+		return associations{
+			rv:     rv,
+			fields: fields.(associationsField),
+		}
+	}
+
+	var (
+		fields associationsField
+	)
+
+	for i := 0; i < rt.NumField(); i++ {
+		var (
+			sf   = rt.Field(i)
+			name = sf.Name
+			typ  = sf.Type
+		)
+
+		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Interface || typ.Kind() == reflect.Slice {
+			typ = typ.Elem()
+		}
+
+		if typ.Kind() != reflect.Struct {
+			continue
+		}
+
+		// must have a primary key
+		if pk, _ := searchPrimaryKey(typ); pk == "" {
+			continue
+		}
+
+		switch InferAssociation(rv, name).Type() {
+		case BelongsTo:
+			fields.belongsTo = append(fields.belongsTo, name)
+		case HasOne:
+			fields.hasOne = append(fields.hasOne, name)
+		case HasMany:
+			fields.hasMany = append(fields.hasMany, name)
+		}
+	}
+
+	associationsFieldCache.Store(rt, fields)
+
+	return associations{
+		rv:     rv,
+		fields: fields,
+	}
 }

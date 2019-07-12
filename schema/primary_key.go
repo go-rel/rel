@@ -30,6 +30,10 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 	result, cached := primaryKeysCache.Load(rt)
 	if !cached {
 		field, index := searchPrimaryKey(rt)
+		if field == "" {
+			panic("grimoire: failed to infer primary key for type " + rt.String())
+		}
+
 		result = primaryKeyData{
 			field: field,
 			index: index,
@@ -77,10 +81,6 @@ func searchPrimaryKey(rt reflect.Type) (string, int) {
 			index = i
 			field = "id"
 		}
-	}
-
-	if field == "" {
-		panic("grimoire: failed to infer primary key for type " + rt.String())
 	}
 
 	return field, index

@@ -245,7 +245,7 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 				return err
 			}
 
-			changes.Set(change.Set(assoc.ForeignColumn(), assoc.ReferenceValue()))
+			changes.Set(change.Set(assoc.ReferenceColumn(), assoc.ForeignValue()))
 		}
 	}
 

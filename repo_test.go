@@ -6,6 +6,7 @@ import (
 	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/query"
+	"github.com/Fs02/grimoire/schema"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -224,6 +225,72 @@ func TestRepo_Update_error(t *testing.T) {
 
 	assert.NotNil(t, repo.Update(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustUpdate(&user, cbuilders...) })
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users")
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Insert", q, buyer[0], mock.Anything).Return(1, nil).
+		On("All", mock.Anything, mock.Anything, mock.Anything).Return(1, nil).
+		Run(func(args mock.Arguments) {
+			user := args.Get(1).(*User)
+			user.ID = 1
+		})
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Nil(t, err)
+
+	ref, ok := changes.Get("user_id")
+	assert.True(t, ok)
+	assert.Equal(t, change.Set("user_id", 1), ref)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users")
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Insert", q, buyer[0], mock.Anything).Return(0, errors.NewUnexpected("insert error"))
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Equal(t, errors.NewUnexpected("insert error"), err)
+
+	_, ok := changes.Get("user_id")
+	assert.False(t, ok)
+
 	adapter.AssertExpectations(t)
 }
 

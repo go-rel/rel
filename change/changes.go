@@ -39,6 +39,15 @@ func (c Changes) GetAssoc(field string) ([]Changes, bool) {
 	return nil, false
 }
 
+func (c *Changes) SetAssoc(field string, chs ...Changes) {
+	if index, exist := c.Assoc[field]; exist {
+		c.AssocChanges[index] = chs
+	} else {
+		c.Assoc[field] = len(c.AssocChanges)
+		c.AssocChanges = append(c.AssocChanges, chs)
+	}
+}
+
 type ChangeOp int
 
 const (

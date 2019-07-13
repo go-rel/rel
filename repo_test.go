@@ -228,6 +228,126 @@ func TestRepo_Update_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepo_upsertBelongsTo_replaceForeignColumn(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{Buyer: User{ID: 1}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"id":   2,
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users", where.Eq("id", 1))
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Update", q, buyer[0], mock.Anything).Return(nil).
+		On("All", q.Limit(1), &record.Buyer, mock.Anything).Return(1, nil)
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Nil(t, err)
+
+	ref, ok := changes.Get("user_id")
+	assert.True(t, ok)
+	assert.Equal(t, change.Set("user_id", 2), ref)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_replaceForeignColumnUpdateError(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{Buyer: User{ID: 1}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"id":   2,
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users", where.Eq("id", 1))
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Update", q, buyer[0], mock.Anything).Return(errors.NewUnexpected("update error"))
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Equal(t, errors.NewUnexpected("update error"), err)
+
+	ref, ok := changes.Get("user_id")
+	assert.True(t, ok)
+	assert.Equal(t, change.Set("user_id", 2), ref)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_update(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{Buyer: User{ID: 1}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users", where.Eq("id", 1))
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Update", q, buyer[0], mock.Anything).Return(nil).
+		On("All", q.Limit(1), &record.Buyer, mock.Anything).Return(1, nil)
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Nil(t, err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{Buyer: User{ID: 1}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+		q        = query.Build("users", where.Eq("id", 1))
+		buyer, _ = changes.GetAssoc("Buyer")
+	)
+
+	adapter.
+		On("Update", q, buyer[0], mock.Anything).Return(errors.NewUnexpected("update error"))
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Equal(t, errors.NewUnexpected("update error"), err)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
@@ -248,7 +368,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 
 	adapter.
 		On("Insert", q, buyer[0], mock.Anything).Return(1, nil).
-		On("All", mock.Anything, mock.Anything, mock.Anything).Return(1, nil).
+		On("All", q.Where(where.Eq("id", 1)).Limit(1), &record.Buyer, mock.Anything).Return(1, nil).
 		Run(func(args mock.Arguments) {
 			user := args.Get(1).(*User)
 			user.ID = 1
@@ -261,6 +381,20 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, change.Set("user_id", 1), ref)
 
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build()
+	)
+
+	err := repo.upsertBelongsTo(assocs, &changes)
+	assert.Nil(t, err)
 	adapter.AssertExpectations(t)
 }
 

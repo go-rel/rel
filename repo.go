@@ -206,26 +206,26 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 		}
 
 		var (
-			assocChanges   = allAssocChanges[0]
-			assoc          = assocs.Association(field)
-			target, loaded = assoc.TargetAddr()
-			targetRefValue = assoc.ReferenceValue()
+			assocChanges       = allAssocChanges[0]
+			assoc              = assocs.Association(field)
+			target, loaded     = assoc.TargetAddr()
+			targetForeignValue = assoc.ForeignValue()
 		)
 
-		if rch, isUpdate := assocChanges.Get(assoc.ReferenceColumn()); isUpdate {
-			if loaded && rch.Value != targetRefValue {
+		if fch, isUpdate := assocChanges.Get(assoc.ForeignColumn()); isUpdate {
+			if loaded && fch.Value != targetForeignValue {
 				if true { // TODO: should update option
-					changes.Set(change.Set(assoc.ForeignColumn(), targetRefValue))
+					changes.Set(change.Set(assoc.ReferenceColumn(), fch.Value))
 				} else {
 					panic("replace operation detected")
 				}
 			} else {
-				changes.Set(change.Set(assoc.ForeignColumn(), targetRefValue))
+				changes.Set(change.Set(assoc.ReferenceColumn(), fch.Value))
 			}
 
 			if len(assocChanges.Changes) > 1 {
 				var (
-					filter = where.Eq(assoc.ReferenceColumn(), targetRefValue)
+					filter = where.Eq(assoc.ForeignColumn(), targetForeignValue)
 				)
 
 				if err := r.update(target, assocChanges, filter); err != nil {
@@ -234,7 +234,7 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 			}
 		} else if loaded {
 			var (
-				filter = where.Eq(assoc.ReferenceColumn(), targetRefValue)
+				filter = where.Eq(assoc.ForeignColumn(), targetForeignValue)
 			)
 
 			if err := r.update(target, assocChanges, filter); err != nil {

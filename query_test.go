@@ -28,6 +28,7 @@ type Address struct {
 	ID     int
 	UserID *int
 	User   *User
+	Street string
 }
 
 type Owner struct {

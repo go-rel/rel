@@ -135,6 +135,11 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 		return err
 	}
 
+	// fetch record
+	if err := r.One(record, where.Eq(primaryKey, id)); err != nil {
+		return err
+	}
+
 	if err := r.upsertHasOne(association, &changes, id); err != nil {
 		return err
 	}
@@ -143,7 +148,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 		return err
 	}
 
-	return transformError(r.One(record, where.Eq(primaryKey, id)))
+	return nil
 }
 
 // MustInsert a record to database.
@@ -206,14 +211,70 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 		}
 
 		var (
-			assocChanges       = allAssocChanges[0]
-			assoc              = assocs.Association(field)
-			target, loaded     = assoc.TargetAddr()
-			targetForeignValue = assoc.ForeignValue()
+			assocChanges   = allAssocChanges[0]
+			assoc          = assocs.Association(field)
+			target, loaded = assoc.TargetAddr()
+			foreignValue   = assoc.ForeignValue()
 		)
 
 		if fch, isUpdate := assocChanges.Get(assoc.ForeignColumn()); isUpdate {
-			if loaded && fch.Value != targetForeignValue {
+			if loaded && fch.Value != foreignValue {
+				if true { // TODO: should update option
+					changes.SetValue(assoc.ReferenceColumn(), fch.Value)
+				} else {
+					panic("replace operation detected")
+				}
+			} else {
+				changes.SetValue(assoc.ReferenceColumn(), fch.Value)
+			}
+
+			if len(assocChanges.Changes) > 1 {
+				var (
+					filter = where.Eq(assoc.ForeignColumn(), foreignValue) // TODO: won't be found if assoc not loaded, use reference value if not loaded?
+				)
+
+				if err := r.update(target, assocChanges, filter); err != nil {
+					return err
+				}
+			}
+		} else if loaded {
+			var (
+				filter = where.Eq(assoc.ForeignColumn(), foreignValue)
+			)
+
+			if err := r.update(target, assocChanges, filter); err != nil {
+				return err
+			}
+		} else {
+			if err := r.insert(target, assocChanges); err != nil {
+				return err
+			}
+
+			changes.SetValue(assoc.ReferenceColumn(), assoc.ForeignValue())
+		}
+	}
+
+	return nil
+}
+
+func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, id interface{}) error {
+	for _, field := range assocs.HasOne() {
+		allAssocChanges, changed := changes.GetAssoc(field)
+		if !changed || len(allAssocChanges) == 0 {
+			continue
+		}
+
+		var (
+			assocChanges             = allAssocChanges[0]
+			assoc                    = assocs.Association(field)
+			target, loaded           = assoc.TargetAddr()
+			foreignValue             = assoc.ForeignValue()
+			referenceValue           = assoc.ReferenceValue()
+			primaryKey, primaryValue = schema.InferPrimaryKey(target, true)
+		)
+
+		if fch, isUpdate := assocChanges.Get(assoc.ForeignColumn()); isUpdate {
+			if loaded && fch.Value != foreignValue {
 				if true { // TODO: should update option
 					changes.Set(change.Set(assoc.ReferenceColumn(), fch.Value))
 				} else {
@@ -225,7 +286,7 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 
 			if len(assocChanges.Changes) > 1 {
 				var (
-					filter = where.Eq(assoc.ForeignColumn(), targetForeignValue)
+					filter = where.Eq(assoc.ForeignColumn(), foreignValue) // TODO: won't be found if assoc not loaded, use reference value if not loaded?
 				)
 
 				if err := r.update(target, assocChanges, filter); err != nil {
@@ -234,60 +295,21 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 			}
 		} else if loaded {
 			var (
-				filter = where.Eq(assoc.ForeignColumn(), targetForeignValue)
+				filter = where.Eq(primaryKey, primaryValue).
+					AndEq(assoc.ForeignColumn(), referenceValue)
 			)
 
 			if err := r.update(target, assocChanges, filter); err != nil {
 				return err
 			}
 		} else {
+			assocChanges.SetValue(assoc.ForeignColumn(), referenceValue)
+
 			if err := r.insert(target, assocChanges); err != nil {
 				return err
 			}
-
-			changes.Set(change.Set(assoc.ReferenceColumn(), assoc.ForeignValue()))
 		}
 	}
-
-	return nil
-}
-
-func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, id interface{}) error {
-	// for field, assoc := range assocs.HasOne {
-	// 	allAssocChanges, changed := changes.GetAssoc(field)
-	// 	if !changed || len(allAssocChanges) == 0 {
-	// 		continue
-	// 	}
-
-	// 	assocChanges := allAssocChanges[0]
-
-	// 	// TODO: determine update using primary key
-	// 	if ch, isUpdate := assocChanges.Get(assoc.ForeignColumn); isUpdate {
-	// 		// other fields is updated
-	// 		if len(assocChanges.Changes) > 1 {
-	// 			var (
-	// 				assocRecord interface{}
-	// 				filter      = where.Eq(assoc.ForeignColumn, ch.Value).AndEq("primary_key", "primary_value") // TODO
-	// 			)
-
-	// 			if err := r.update(assocRecord, assocChanges, filter); err != nil {
-	// 				return err
-	// 			}
-	// 		}
-	// 	} else {
-	// 		// insert new column
-	// 		var (
-	// 			assocRecord interface{}
-	// 		)
-
-	// 		// Set belongs to id
-	// 		assocChanges.Set(change.Set(assoc.ForeignColumn, id))
-
-	// 		if err := r.insert(assocRecord, assocChanges); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
 
 	return nil
 }

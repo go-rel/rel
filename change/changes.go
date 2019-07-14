@@ -4,7 +4,7 @@ package change
 // Use Assoc fields in Changges?
 // Table name not stored here, but handled by repo logic.
 type Changes struct {
-	Fields       map[string]int
+	Fields       map[string]int // TODO: not copy friendly
 	Changes      []Change
 	Assoc        map[string]int
 	AssocChanges [][]Changes
@@ -29,6 +29,18 @@ func (c *Changes) Set(ch Change) {
 		c.Fields[ch.Field] = len(c.Changes)
 		c.Changes = append(c.Changes, ch)
 	}
+}
+
+func (c Changes) GetValue(field string) (interface{}, bool) {
+	var (
+		ch, ok = c.Get(field)
+	)
+
+	return ch.Value, ok
+}
+
+func (c *Changes) SetValue(field string, value interface{}) {
+	c.Set(Set(field, value))
 }
 
 func (c Changes) GetAssoc(field string) ([]Changes, bool) {

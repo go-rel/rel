@@ -217,27 +217,15 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 			foreignValue   = assoc.ForeignValue()
 		)
 
-		if fch, isUpdate := assocChanges.Get(assoc.ForeignColumn()); isUpdate {
-			if loaded && fch.Value != foreignValue {
-				if true { // TODO: should update option
-					changes.SetValue(assoc.ReferenceColumn(), fch.Value)
-				} else {
-					panic("replace operation detected")
-				}
-			} else {
-				changes.SetValue(assoc.ReferenceColumn(), fch.Value)
+		if loaded {
+			var (
+				primaryKey, primaryValue = schema.InferPrimaryKey(target, true)
+			)
+
+			if pch, exist := assocChanges.Get(primaryKey); exist && pch.Value != primaryValue {
+				panic("cannot update assoc: inconsistent primary key")
 			}
 
-			if len(assocChanges.Changes) > 1 {
-				var (
-					filter = where.Eq(assoc.ForeignColumn(), foreignValue) // TODO: won't be found if assoc not loaded, use reference value if not loaded?
-				)
-
-				if err := r.update(target, assocChanges, filter); err != nil {
-					return err
-				}
-			}
-		} else if loaded {
 			var (
 				filter = where.Eq(assoc.ForeignColumn(), foreignValue)
 			)
@@ -268,32 +256,15 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 			assocChanges             = allAssocChanges[0]
 			assoc                    = assocs.Association(field)
 			target, loaded           = assoc.TargetAddr()
-			foreignValue             = assoc.ForeignValue()
 			referenceValue           = assoc.ReferenceValue()
 			primaryKey, primaryValue = schema.InferPrimaryKey(target, true)
 		)
 
-		if fch, isUpdate := assocChanges.Get(assoc.ForeignColumn()); isUpdate {
-			if loaded && fch.Value != foreignValue {
-				if true { // TODO: should update option
-					changes.Set(change.Set(assoc.ReferenceColumn(), fch.Value))
-				} else {
-					panic("replace operation detected")
-				}
-			} else {
-				changes.Set(change.Set(assoc.ReferenceColumn(), fch.Value))
+		if loaded {
+			if pch, exist := assocChanges.Get(primaryKey); exist && pch.Value != primaryValue {
+				panic("cannot update assoc: inconsistent primary key")
 			}
 
-			if len(assocChanges.Changes) > 1 {
-				var (
-					filter = where.Eq(assoc.ForeignColumn(), foreignValue) // TODO: won't be found if assoc not loaded, use reference value if not loaded?
-				)
-
-				if err := r.update(target, assocChanges, filter); err != nil {
-					return err
-				}
-			}
-		} else if loaded {
 			var (
 				filter = where.Eq(primaryKey, primaryValue).
 					AndEq(assoc.ForeignColumn(), referenceValue)

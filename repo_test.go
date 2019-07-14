@@ -228,71 +228,6 @@ func TestRepo_Update_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_replaceForeignColumn(t *testing.T) {
-	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{Buyer: User{ID: 1}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
-			change.Map{
-				"Buyer": change.Map{
-					"id":   2,
-					"name": "buyer1",
-					"age":  20,
-				},
-			},
-		)
-		q        = query.Build("users", where.Eq("id", 1))
-		buyer, _ = changes.GetAssoc("Buyer")
-	)
-
-	adapter.
-		On("Update", q, buyer[0]).Return(nil).
-		On("All", q.Limit(1), &record.Buyer).Return(1, nil)
-
-	err := repo.upsertBelongsTo(assocs, &changes)
-	assert.Nil(t, err)
-
-	ref, ok := changes.Get("user_id")
-	assert.True(t, ok)
-	assert.Equal(t, change.Set("user_id", 2), ref)
-
-	adapter.AssertExpectations(t)
-}
-
-func TestRepo_upsertBelongsTo_replaceForeignColumnUpdateError(t *testing.T) {
-	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{Buyer: User{ID: 1}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
-			change.Map{
-				"Buyer": change.Map{
-					"id":   2,
-					"name": "buyer1",
-					"age":  20,
-				},
-			},
-		)
-		q        = query.Build("users", where.Eq("id", 1))
-		buyer, _ = changes.GetAssoc("Buyer")
-	)
-
-	adapter.
-		On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error"))
-
-	err := repo.upsertBelongsTo(assocs, &changes)
-	assert.Equal(t, errors.NewUnexpected("update error"), err)
-
-	ref, ok := changes.Get("user_id")
-	assert.True(t, ok)
-	assert.Equal(t, change.Set("user_id", 2), ref)
-
-	adapter.AssertExpectations(t)
-}
-
 func TestRepo_upsertBelongsTo_update(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
@@ -344,6 +279,30 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 
 	err := repo.upsertBelongsTo(assocs, &changes)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &Transaction{Buyer: User{ID: 1}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Buyer": change.Map{
+					"id":   2,
+					"name": "buyer1",
+					"age":  20,
+				},
+			},
+		)
+	)
+
+	assert.Panics(t, func() {
+		repo.upsertBelongsTo(assocs, &changes)
+	})
 
 	adapter.AssertExpectations(t)
 }
@@ -477,6 +436,29 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 
 	err := repo.upsertHasOne(assocs, &changes, nil)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{ID: 1, Address: Address{ID: 2}}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Address": change.Map{
+					"id":     1,
+					"street": "street1",
+				},
+			},
+		)
+	)
+
+	assert.Panics(t, func() {
+		repo.upsertHasOne(assocs, &changes, nil)
+	})
 
 	adapter.AssertExpectations(t)
 }

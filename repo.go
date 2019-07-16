@@ -92,9 +92,12 @@ func (r Repo) MustOne(record interface{}, queries ...query.Builder) {
 
 // All retrieves all results that match the query.
 func (r Repo) All(record interface{}, queries ...query.Builder) error {
-	table := schema.InferTableName(record)
-	q := query.Build(table, queries...)
-	_, err := r.adapter.All(q, record, r.logger...)
+	var (
+		table  = schema.InferTableName(record)
+		q      = query.Build(table, queries...)
+		_, err = r.adapter.All(q, record, r.logger...)
+	)
+
 	return err
 }
 
@@ -129,7 +132,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 		return err
 	}
 
-	// TODO: put timestamp (updated_at, created_at)
+	// TODO: put timestamp (updated_at, created_at) if those fields exist.
 	id, err := r.Adapter().Insert(queries, changes, r.logger...)
 	if err != nil {
 		return err
@@ -155,6 +158,46 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 // It'll panic if any error occurred.
 func (r Repo) MustInsert(record interface{}, cbuilders ...change.Builder) {
 	must(r.Insert(record, cbuilders...))
+}
+
+func (r Repo) InsertAll(record interface{}, changes []change.Changes) error {
+	return transformError(r.InsertAll(record, changes))
+}
+
+func (r Repo) MustInsertAll(record interface{}, changes []change.Changes) {
+	must(r.InsertAll(record, changes))
+}
+
+// TODO: support assocs
+func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
+	if len(changes) == 0 {
+		return nil
+	}
+
+	var (
+		table         = schema.InferTableName(record)
+		primaryKey, _ = schema.InferPrimaryKey(record, false)
+		queries       = query.Build(table)
+		fields        = make([]string, 0, len(changes[0].Fields))
+		fieldMap      = make(map[string]struct{}, len(changes[0].Fields))
+	)
+
+	for i := range changes {
+		for _, ch := range changes[i].Changes {
+			if _, exist := fieldMap[ch.Field]; !exist {
+				fieldMap[ch.Field] = struct{}{}
+				fields = append(fields, ch.Field)
+			}
+		}
+	}
+
+	ids, err := r.adapter.InsertAll(queries, fields, changes, r.logger...)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.adapter.All(queries.Where(where.In(primaryKey, ids...)), record, r.logger...)
+	return err
 }
 
 // Update a record in database.
@@ -286,35 +329,29 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 }
 
 func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}) error {
-	// for field, assoc := range assocs.HasMany {
-	// 	allAssocChanges, changed := changes.GetAssoc(field)
-	// 	if !changed {
-	// 		continue
-	// 	}
+	for _, field := range assocs.HasMany() {
+		_, changed := changes.GetAssoc(field)
+		if !changed {
+			continue
+		}
 
-	// 	// Set belongs to id
-	// 	for i := range allAssocChanges {
-	// 		// Set belongs to id
-	// 		allAssocChanges[i].Set(change.Set(assoc.ForeignColumn, id))
-	// 	}
-
-	// TODO: delete all association if the behaviour is replace
-
-	// TODO: re-insert all association
-	// if err := r.insertAll(assocRecord, assocChanges); err != nil {
-	// 	return transformError(err)
-	// }
-	// }
+		// Check must be loaded if updated
+		// Collect primary keys
+		// Delete all based on primary keys
+		// Insert all using assoc
+	}
 
 	return nil
 }
 
 // Delete deletes all results that match the query.
+// TODO: supports array
 func (r Repo) Delete(record interface{}) error {
-	table := schema.InferTableName(record)
-	primaryKey, primaryValue := schema.InferPrimaryKey(record, true)
-
-	q := query.Build(table, where.Eq(primaryKey, primaryValue))
+	var (
+		table                    = schema.InferTableName(record)
+		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
+		q                        = query.Build(table, where.Eq(primaryKey, primaryValue))
+	)
 
 	return transformError(r.adapter.Delete(q, r.logger...))
 }
@@ -323,6 +360,22 @@ func (r Repo) Delete(record interface{}) error {
 // It'll panic if any error eccured.
 func (r Repo) MustDelete(record interface{}) {
 	must(r.Delete(record))
+}
+
+func (r Repo) DeleteAll(queries ...query.Builder) error {
+	var (
+		q = query.Build("", queries...)
+	)
+
+	return transformError(r.DeleteAll(q))
+}
+
+func (r Repo) MustDeleteAll(queries ...query.Builder) {
+	must(r.DeleteAll(queries...))
+}
+
+func (r Repo) deleteAll(q query.Query) error {
+	return r.adapter.Delete(q, r.logger...)
 }
 
 // Preload loads association with given query.

@@ -25,25 +25,9 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 		return pk.PrimaryKey()
 	}
 
-	rt := reflectTypePtr(record)
-
-	result, cached := primaryKeysCache.Load(rt)
-	if !cached {
-		field, index := searchPrimaryKey(rt)
-		if field == "" {
-			panic("grimoire: failed to infer primary key for type " + rt.String())
-		}
-
-		result = primaryKeyData{
-			field: field,
-			index: index,
-		}
-
-		primaryKeysCache.Store(rt, result)
-	}
-
 	var (
-		pkey  = result.(primaryKeyData)
+		rt    = reflectTypePtr(record) // TODO: what needs to be ptr and what's not
+		pkey  = inferPrimaryKeyData(rt)
 		field = pkey.field
 		value = interface{}(nil)
 	)
@@ -54,6 +38,52 @@ func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{})
 	}
 
 	return field, value
+}
+
+func InferPrimaryKeys(records interface{}) (string, []interface{}) {
+	// TODO: support interface for collections
+	var (
+		rv = reflect.ValueOf(records)
+		rt = rv.Type()
+	)
+
+	if rt.Kind() != reflect.Ptr || rt.Elem().Kind() != reflect.Slice || rt.Elem().Elem().Kind() != reflect.Struct {
+		panic("grimoire: must be a pointer of slice of structs")
+	}
+
+	rv = rv.Elem()
+	rt = rt.Elem()
+
+	var (
+		pkey   = inferPrimaryKeyData(rt.Elem())
+		values = make([]interface{}, rv.Len())
+	)
+
+	for i := 0; i < rv.Len(); i++ {
+		values[i] = rv.Index(i).Field(pkey.index).Interface()
+	}
+
+	return pkey.field, values
+}
+
+func inferPrimaryKeyData(rt reflect.Type) primaryKeyData {
+	if result, cached := primaryKeysCache.Load(rt); cached {
+		return result.(primaryKeyData)
+	}
+
+	field, index := searchPrimaryKey(rt)
+	if field == "" {
+		panic("grimoire: failed to infer primary key for type " + rt.String())
+	}
+
+	result := primaryKeyData{
+		field: field,
+		index: index,
+	}
+
+	primaryKeysCache.Store(rt, result)
+
+	return result
 }
 
 func searchPrimaryKey(rt reflect.Type) (string, int) {

@@ -110,3 +110,31 @@ func TestInferPrimaryKey_notFound(t *testing.T) {
 		InferPrimaryKey(record, true)
 	})
 }
+
+func TestInferPrimaryKeys(t *testing.T) {
+	var (
+		records = []struct {
+			ID   int
+			Name string
+		}{
+			{
+				ID: 1,
+			},
+			{
+				ID: 2,
+			},
+		}
+		expectedField  = "id"
+		expectedValues = []interface{}{1, 2}
+	)
+
+	// infer primary keys
+	field, values := InferPrimaryKeys(&records)
+	assert.Equal(t, expectedField, field)
+	assert.Equal(t, expectedValues, values)
+
+	// not a ptr
+	assert.Panics(t, func() {
+		InferPrimaryKeys(records)
+	})
+}

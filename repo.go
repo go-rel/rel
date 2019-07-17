@@ -330,7 +330,7 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 
 func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}) error {
 	for _, field := range assocs.HasMany() {
-		_, changed := changes.GetAssoc(field)
+		changes, changed := changes.GetAssoc(field)
 		if !changed {
 			continue
 		}
@@ -339,6 +339,30 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 		// Collect primary keys
 		// Delete all based on primary keys
 		// Insert all using assoc
+		var (
+			assoc          = assocs.Association(field)
+			target, loaded = assoc.TargetAddr()
+			table          = schema.InferTableName(target)
+			pk, pv         = schema.InferPrimaryKeys(target)
+			referenceValue = assoc.ReferenceValue()
+			filter         = where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pk, pv...)
+		)
+
+		if loaded && !filter.None() {
+			if err := r.deleteAll(query.Build(table, filter)); err != nil {
+				return err
+			}
+		}
+
+		// set assocs
+		for i := range changes {
+			changes[i].SetValue(assoc.ForeignColumn(), referenceValue)
+		}
+
+		if err := r.insertAll(target, changes); err != nil {
+			return err
+		}
+
 	}
 
 	return nil

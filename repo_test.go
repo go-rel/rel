@@ -162,7 +162,27 @@ func TestRepo_Insert_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepp_Update(t *testing.T) {
+func TestRepo_InsertAll(t *testing.T) {
+	var (
+		users   []User
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		changes = []change.Changes{
+			change.Build(change.Set("name", "name1")),
+			change.Build(change.Set("name", "name2")),
+		}
+	)
+
+	adapter.
+		On("InsertAll", query.From("users"), changes).Return([]interface{}{1, 2}, nil).
+		On("All", query.From("users").Where(where.In("id", 1, 2)), &users).Return(2, nil)
+
+	assert.Nil(t, repo.InsertAll(&users, changes))
+	assert.NotPanics(t, func() { repo.MustInsertAll(&users, changes) })
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}
 		adapter   = &TestAdapter{}
@@ -525,13 +545,47 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 }
 
 func TestRepo_Delete(t *testing.T) {
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = User{ID: 1}
+	)
 
-	adapter.On("Delete", query.From("users").Where(where.Eq("id", 0))).Return(nil)
+	adapter.
+		On("Delete", query.From("users").Where(where.In("id", user.ID))).Return(nil)
 
-	assert.Nil(t, repo.Delete(User{}))
-	assert.NotPanics(t, func() { repo.MustDelete(User{}) })
+	assert.Nil(t, repo.Delete(user))
+	assert.NotPanics(t, func() { repo.MustDelete(user) })
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Delete_slice(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		users   = []User{
+			{ID: 1},
+			{ID: 2},
+		}
+	)
+
+	adapter.
+		On("Delete", query.From("users").Where(where.In("id", 1, 2))).Return(nil)
+
+	assert.Nil(t, repo.Delete(users))
+	assert.NotPanics(t, func() { repo.MustDelete(users) })
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Delete_emptySlice(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		users   = []User{}
+	)
+
+	assert.Nil(t, repo.Delete(users))
+	assert.NotPanics(t, func() { repo.MustDelete(users) })
 	adapter.AssertExpectations(t)
 }
 

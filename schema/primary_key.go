@@ -20,50 +20,44 @@ type primaryKeyData struct {
 var primaryKeysCache sync.Map
 
 // InferPrimaryKey from struct.
-func InferPrimaryKey(record interface{}, returnValue bool) (string, interface{}) {
+func InferPrimaryKey(record interface{}, returnValue bool) (string, []interface{}) {
 	if pk, ok := record.(primaryKey); ok {
-		return pk.PrimaryKey()
+		key, value := pk.PrimaryKey()
+		return key, []interface{}{value}
+	}
+
+	rt := reflect.TypeOf(record)
+	for rt.Kind() == reflect.Ptr || rt.Kind() == reflect.Slice {
+		rt = rt.Elem()
+	}
+
+	if rt.Kind() != reflect.Struct {
+		panic("grimoire: must be a struct or slice of structs")
 	}
 
 	var (
-		rt    = reflectTypePtr(record) // TODO: what needs to be ptr and what's not
-		pkey  = inferPrimaryKeyData(rt)
-		field = pkey.field
-		value = interface{}(nil)
+		pkey   = inferPrimaryKeyData(rt)
+		field  = pkey.field
+		values = []interface{}(nil)
 	)
 
 	if returnValue {
-		rv := reflectValuePtr(record)
-		value = rv.Field(pkey.index).Interface()
+		rv := reflect.ValueOf(record)
+		if rv.Kind() == reflect.Ptr {
+			rv = rv.Elem()
+		}
+
+		if rv.Kind() == reflect.Slice {
+			values = make([]interface{}, rv.Len())
+			for i := 0; i < rv.Len(); i++ {
+				values[i] = rv.Index(i).Field(pkey.index).Interface()
+			}
+		} else {
+			values = []interface{}{rv.Field(pkey.index).Interface()}
+		}
 	}
 
-	return field, value
-}
-
-func InferPrimaryKeys(records interface{}) (string, []interface{}) {
-	// TODO: support interface for collections
-	var (
-		rv = reflect.ValueOf(records)
-		rt = rv.Type()
-	)
-
-	if rt.Kind() != reflect.Ptr || rt.Elem().Kind() != reflect.Slice || rt.Elem().Elem().Kind() != reflect.Struct {
-		panic("grimoire: must be a pointer of slice of structs")
-	}
-
-	rv = rv.Elem()
-	rt = rt.Elem()
-
-	var (
-		pkey   = inferPrimaryKeyData(rt.Elem())
-		values = make([]interface{}, rv.Len())
-	)
-
-	for i := 0; i < rv.Len(); i++ {
-		values[i] = rv.Index(i).Field(pkey.index).Interface()
-	}
-
-	return pkey.field, values
+	return field, values
 }
 
 func inferPrimaryKeyData(rt reflect.Type) primaryKeyData {

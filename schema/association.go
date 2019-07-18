@@ -75,7 +75,7 @@ func (a association) TargetAddr() (interface{}, bool) {
 			_, pv  = InferPrimaryKey(target, true)
 		)
 
-		return target, !isZero(pv)
+		return target, !isZero(pv[0])
 	}
 }
 

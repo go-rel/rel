@@ -24,9 +24,9 @@ func TestInferPrimaryKey(t *testing.T) {
 	assert.False(t, cached)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record, true)
+	field, values := InferPrimaryKey(record, true)
 	assert.Equal(t, expectedField, field)
-	assert.Equal(t, expectedValue, value)
+	assert.Equal(t, expectedValue, values[0])
 
 	// cached
 	_, cached = primaryKeysCache.Load(rt)
@@ -35,9 +35,9 @@ func TestInferPrimaryKey(t *testing.T) {
 	record.ID = 2
 
 	// infer primary key using cache
-	field, value = InferPrimaryKey(record, true)
+	field, values = InferPrimaryKey(record, true)
 	assert.Equal(t, expectedField, field)
-	assert.Equal(t, uint(2), value)
+	assert.Equal(t, uint(2), values[0])
 }
 
 func TestInferPrimaryKey_usingInterface(t *testing.T) {
@@ -45,9 +45,9 @@ func TestInferPrimaryKey_usingInterface(t *testing.T) {
 		record = CustomSchema{
 			UUID: "abc123",
 		}
-		rt            = reflectInternalType(record)
-		expectedField = "_uuid"
-		expectedValue = "abc123"
+		rt             = reflectInternalType(record)
+		expectedField  = "_uuid"
+		expectedValues = "abc123"
 	)
 
 	// should not be cached yet
@@ -55,9 +55,9 @@ func TestInferPrimaryKey_usingInterface(t *testing.T) {
 	assert.False(t, cached)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record, true)
+	field, values := InferPrimaryKey(record, true)
 	assert.Equal(t, expectedField, field)
-	assert.Equal(t, expectedValue, value)
+	assert.Equal(t, expectedValues, values[0])
 
 	// never cache
 	_, cached = primaryKeysCache.Load(rt)
@@ -76,9 +76,9 @@ func TestInferPrimaryKey_usingTag(t *testing.T) {
 	)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record, true)
+	field, values := InferPrimaryKey(record, true)
 	assert.Equal(t, "external_id", field)
-	assert.Equal(t, 12345, value)
+	assert.Equal(t, 12345, values[0])
 }
 
 func TestInferPrimaryKey_usingTagAmdCustomName(t *testing.T) {
@@ -93,9 +93,9 @@ func TestInferPrimaryKey_usingTagAmdCustomName(t *testing.T) {
 	)
 
 	// infer primary key
-	field, value := InferPrimaryKey(record, true)
+	field, values := InferPrimaryKey(record, true)
 	assert.Equal(t, "partner_id", field)
-	assert.Equal(t, 1111, value)
+	assert.Equal(t, 1111, values[0])
 }
 
 func TestInferPrimaryKey_notFound(t *testing.T) {
@@ -111,7 +111,7 @@ func TestInferPrimaryKey_notFound(t *testing.T) {
 	})
 }
 
-func TestInferPrimaryKeys(t *testing.T) {
+func TestInferPrimaryKey_slice(t *testing.T) {
 	var (
 		records = []struct {
 			ID   int
@@ -129,12 +129,7 @@ func TestInferPrimaryKeys(t *testing.T) {
 	)
 
 	// infer primary keys
-	field, values := InferPrimaryKeys(&records)
+	field, values := InferPrimaryKey(records, true)
 	assert.Equal(t, expectedField, field)
 	assert.Equal(t, expectedValues, values)
-
-	// not a ptr
-	assert.Panics(t, func() {
-		InferPrimaryKeys(records)
-	})
 }

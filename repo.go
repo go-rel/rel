@@ -161,7 +161,7 @@ func (r Repo) MustInsert(record interface{}, cbuilders ...change.Builder) {
 }
 
 func (r Repo) InsertAll(record interface{}, changes []change.Changes) error {
-	return transformError(r.InsertAll(record, changes))
+	return transformError(r.insertAll(record, changes))
 }
 
 func (r Repo) MustInsertAll(record interface{}, changes []change.Changes) {
@@ -210,12 +210,15 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	}
 
 	var (
-		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
-		filter                   = where.Eq(primaryKey, primaryValue)
-		changes                  = change.Build(cbuilders...)
+		pKey, pValues = schema.InferPrimaryKey(record, true)
+		changes       = change.Build(cbuilders...)
 	)
 
-	return r.update(record, changes, filter)
+	if len(pValues) == 0 {
+		panic("grimoire: must be a struct")
+	}
+
+	return r.update(record, changes, where.Eq(pKey, pValues[0]))
 }
 
 func (r Repo) update(record interface{}, changes change.Changes, filter query.FilterClause) error {
@@ -262,10 +265,10 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 
 		if loaded {
 			var (
-				primaryKey, primaryValue = schema.InferPrimaryKey(target, true)
+				pKey, pValues = schema.InferPrimaryKey(target, true)
 			)
 
-			if pch, exist := assocChanges.Get(primaryKey); exist && pch.Value != primaryValue {
+			if pch, exist := assocChanges.Get(pKey); exist && pch.Value != pValues[0] {
 				panic("cannot update assoc: inconsistent primary key")
 			}
 
@@ -296,20 +299,20 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 		}
 
 		var (
-			assocChanges             = allAssocChanges[0]
-			assoc                    = assocs.Association(field)
-			target, loaded           = assoc.TargetAddr()
-			referenceValue           = assoc.ReferenceValue()
-			primaryKey, primaryValue = schema.InferPrimaryKey(target, true)
+			assocChanges   = allAssocChanges[0]
+			assoc          = assocs.Association(field)
+			target, loaded = assoc.TargetAddr()
+			referenceValue = assoc.ReferenceValue()
+			pKey, pValues  = schema.InferPrimaryKey(target, true)
 		)
 
 		if loaded {
-			if pch, exist := assocChanges.Get(primaryKey); exist && pch.Value != primaryValue {
+			if pch, exist := assocChanges.Get(pKey); exist && pch.Value != pValues[0] {
 				panic("cannot update assoc: inconsistent primary key")
 			}
 
 			var (
-				filter = where.Eq(primaryKey, primaryValue).
+				filter = where.Eq(pKey, pValues[0]).
 					AndEq(assoc.ForeignColumn(), referenceValue)
 			)
 
@@ -343,9 +346,9 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 			assoc          = assocs.Association(field)
 			target, loaded = assoc.TargetAddr()
 			table          = schema.InferTableName(target)
-			pk, pv         = schema.InferPrimaryKeys(target)
+			pKey, pValues  = schema.InferPrimaryKey(target, true)
 			referenceValue = assoc.ReferenceValue()
-			filter         = where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pk, pv...)
+			filter         = where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pKey, pValues...)
 		)
 
 		if loaded && !filter.None() {
@@ -372,10 +375,14 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 // TODO: supports array
 func (r Repo) Delete(record interface{}) error {
 	var (
-		table                    = schema.InferTableName(record)
-		primaryKey, primaryValue = schema.InferPrimaryKey(record, true)
-		q                        = query.Build(table, where.Eq(primaryKey, primaryValue))
+		table         = schema.InferTableName(record)
+		pKey, pValues = schema.InferPrimaryKey(record, true)
+		q             = query.Build(table, where.In(pKey, pValues...))
 	)
+
+	if len(pValues) == 0 {
+		return nil
+	}
 
 	return transformError(r.adapter.Delete(q, r.logger...))
 }

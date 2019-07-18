@@ -398,7 +398,7 @@ func (r Repo) DeleteAll(queries ...query.Builder) error {
 		q = query.Build("", queries...)
 	)
 
-	return transformError(r.DeleteAll(q))
+	return transformError(r.deleteAll(q))
 }
 
 func (r Repo) MustDeleteAll(queries ...query.Builder) {

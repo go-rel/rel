@@ -589,6 +589,21 @@ func TestRepo_Delete_emptySlice(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepo_DeleteAll(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		queries = query.From("logs").Where(where.Eq("user_id", 1))
+	)
+
+	adapter.
+		On("Delete", query.From("logs").Where(where.Eq("user_id", 1))).Return(nil)
+
+	assert.Nil(t, repo.DeleteAll(queries))
+	assert.NotPanics(t, func() { repo.MustDeleteAll(queries) })
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_Transaction(t *testing.T) {
 	adapter := new(TestAdapter)
 	adapter.On("Begin").Return(nil).

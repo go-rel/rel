@@ -147,7 +147,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 		return err
 	}
 
-	if err := r.upsertHasMany(association, &changes, id); err != nil {
+	if err := r.upsertHasMany(association, &changes, id, true); err != nil {
 		return err
 	}
 
@@ -331,29 +331,34 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 	return nil
 }
 
-func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}) error {
+func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}, insertion bool) error {
 	for _, field := range assocs.HasMany() {
 		changes, changed := changes.GetAssoc(field)
 		if !changed {
 			continue
 		}
 
-		// Check must be loaded if updated
-		// Collect primary keys
-		// Delete all based on primary keys
-		// Insert all using assoc
 		var (
 			assoc          = assocs.Association(field)
 			target, loaded = assoc.TargetAddr()
 			table          = schema.InferTableName(target)
-			pKey, pValues  = schema.InferPrimaryKey(target, true)
 			referenceValue = assoc.ReferenceValue()
-			filter         = where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pKey, pValues...)
 		)
 
-		if loaded && !filter.None() {
-			if err := r.deleteAll(query.Build(table, filter)); err != nil {
-				return err
+		if !insertion {
+			if !loaded {
+				panic("grimoire: association must be loaded to update")
+			}
+
+			var (
+				pKey, pValues = schema.InferPrimaryKey(target, true)
+			)
+
+			if len(pValues) > 0 {
+				filter := where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pKey, pValues...)
+				if err := r.deleteAll(query.Build(table, filter)); err != nil {
+					return err
+				}
 			}
 		}
 

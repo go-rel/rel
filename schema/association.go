@@ -54,11 +54,15 @@ func (a association) TargetAddr() (interface{}, bool) {
 
 	switch rv.Kind() {
 	case reflect.Slice:
-		if rv.IsNil() {
+		var (
+			loaded = !rv.IsNil()
+		)
+
+		if !loaded {
 			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
 		}
 
-		return rv.Addr().Interface(), rv.Len() != 0
+		return rv.Addr().Interface(), loaded
 	case reflect.Ptr:
 		var (
 			loaded = !rv.IsNil()

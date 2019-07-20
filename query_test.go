@@ -20,6 +20,7 @@ type User struct {
 
 type Transaction struct {
 	ID      int
+	Item    string
 	BuyerID int  `db:"user_id"`
 	Buyer   User `references:"BuyerID" foreign_key:"ID"`
 }

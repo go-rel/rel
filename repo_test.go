@@ -544,6 +544,244 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepo_upsertHasMany_insert(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{ID: 1}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item1",
+					},
+					{
+						"item": "item2",
+					},
+				},
+			},
+		)
+		q               = query.Build("transactions")
+		transactions, _ = changes.GetAssoc("Transactions")
+	)
+
+	adapter.
+		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{2, 3}, nil).
+		On("All", q.Where(where.In("id", 2, 3)), &record.Transactions).Return(2, nil)
+
+	err := repo.upsertHasMany(assocs, &changes, record.ID, true)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(transactions))
+
+	for i := range transactions {
+		id, ok := transactions[i].GetValue("user_id")
+		assert.True(t, ok)
+		assert.Equal(t, record.ID, id)
+	}
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasMany_insertError(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{ID: 1}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item1",
+					},
+					{
+						"item": "item2",
+					},
+				},
+			},
+		)
+		q               = query.Build("transactions")
+		transactions, _ = changes.GetAssoc("Transactions")
+		rerr            = errors.NewUnexpected("insert all error")
+	)
+
+	adapter.
+		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{}, rerr)
+
+	err := repo.upsertHasMany(assocs, &changes, record.ID, true)
+	assert.Equal(t, rerr, err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasMany_update(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{
+			ID: 1,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "item1",
+				},
+				{
+					ID:   2,
+					Item: "item2",
+				},
+			},
+		}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item3",
+					},
+					{
+						"item": "item4",
+					},
+					{
+						"item": "item5",
+					},
+				},
+			},
+		)
+		q               = query.Build("transactions")
+		transactions, _ = changes.GetAssoc("Transactions")
+	)
+
+	adapter.
+		On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).
+		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).
+		On("All", q.Where(where.In("id", 3, 4, 5)), &record.Transactions).Return(3, nil)
+
+	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 3, len(transactions))
+
+	for i := range transactions {
+		id, ok := transactions[i].GetValue("user_id")
+		assert.True(t, ok)
+		assert.Equal(t, record.ID, id)
+	}
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{
+			ID:           1,
+			Transactions: []Transaction{},
+		}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item3",
+					},
+					{
+						"item": "item4",
+					},
+					{
+						"item": "item5",
+					},
+				},
+			},
+		)
+		q               = query.Build("transactions")
+		transactions, _ = changes.GetAssoc("Transactions")
+	)
+
+	adapter.
+		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).
+		On("All", q.Where(where.In("id", 3, 4, 5)), &record.Transactions).Return(3, nil)
+
+	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 3, len(transactions))
+
+	for i := range transactions {
+		id, ok := transactions[i].GetValue("user_id")
+		assert.True(t, ok)
+		assert.Equal(t, record.ID, id)
+	}
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{
+			ID: 1,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "item1",
+				},
+				{
+					ID:   2,
+					Item: "item2",
+				},
+			},
+		}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item3",
+					},
+				},
+			},
+		)
+		q    = query.Build("transactions")
+		rerr = errors.NewUnexpected("delete all error")
+	)
+
+	adapter.
+		On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(rerr)
+
+	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	assert.Equal(t, rerr, err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
+	var (
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		record  = &User{ID: 1}
+		assocs  = schema.InferAssociations(record)
+		changes = change.Build(
+			change.Map{
+				"Transactions": []change.Map{
+					{
+						"item": "item3",
+					},
+				},
+			},
+		)
+	)
+
+	assert.Panics(t, func() {
+		repo.upsertHasMany(assocs, &changes, record.ID, false)
+	})
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_Delete(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}

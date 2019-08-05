@@ -5,7 +5,6 @@ import (
 )
 
 type values interface {
-	fields
 	Values() []interface{}
 }
 

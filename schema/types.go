@@ -48,7 +48,6 @@ var (
 )
 
 type types interface {
-	fields
 	Types() []reflect.Type
 }
 

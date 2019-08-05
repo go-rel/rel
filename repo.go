@@ -93,8 +93,8 @@ func (r Repo) MustOne(record interface{}, queries ...query.Builder) {
 // All retrieves all results that match the query.
 func (r Repo) All(record interface{}, queries ...query.Builder) error {
 	var (
-		table  = schema.InferTableName(record)
-		q      = query.Build(table, queries...)
+		model  = InferModel(record)
+		q      = query.Build(model.TableName(), queries...)
 		_, err = r.adapter.All(q, record, r.logger...)
 	)
 
@@ -122,10 +122,10 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 
 func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
-		table         = schema.InferTableName(record)
-		primaryKey, _ = schema.InferPrimaryKey(record, false)
-		association   = schema.InferAssociations(record)
-		queries       = query.Build(table)
+		model       = InferModel(record)
+		pKey, _     = model.PrimaryKey()
+		association = schema.InferAssociations(record)
+		queries     = query.Build(model.TableName())
 	)
 
 	if err := r.upsertBelongsTo(association, &changes); err != nil {
@@ -139,7 +139,7 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 	}
 
 	// fetch record
-	if err := r.One(record, where.Eq(primaryKey, id)); err != nil {
+	if err := r.One(record, where.Eq(pKey, id)); err != nil {
 		return err
 	}
 
@@ -175,11 +175,11 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 	}
 
 	var (
-		table         = schema.InferTableName(record)
-		primaryKey, _ = schema.InferPrimaryKey(record, false)
-		queries       = query.Build(table)
-		fields        = make([]string, 0, len(changes[0].Fields))
-		fieldMap      = make(map[string]struct{}, len(changes[0].Fields))
+		model    = InferModel(record)
+		pKey, _  = model.PrimaryKey()
+		queries  = query.Build(model.TableName())
+		fields   = make([]string, 0, len(changes[0].Fields))
+		fieldMap = make(map[string]struct{}, len(changes[0].Fields))
 	)
 
 	for i := range changes {
@@ -196,7 +196,7 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 		return err
 	}
 
-	_, err = r.adapter.All(queries.Where(where.In(primaryKey, ids...)), record, r.logger...)
+	_, err = r.adapter.All(queries.Where(where.In(pKey, ids...)), record, r.logger...)
 	return err
 }
 
@@ -210,15 +210,12 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	}
 
 	var (
-		pKey, pValues = schema.InferPrimaryKey(record, true)
-		changes       = change.Build(cbuilders...)
+		model        = InferModel(record)
+		pKey, pValue = model.PrimaryKey()
+		changes      = change.Build(cbuilders...)
 	)
 
-	if len(pValues) == 0 {
-		panic("grimoire: must be a struct")
-	}
-
-	return r.update(record, changes, where.Eq(pKey, pValues[0]))
+	return r.update(record, changes, where.Eq(pKey, pValue))
 }
 
 func (r Repo) update(record interface{}, changes change.Changes, filter query.FilterClause) error {
@@ -227,11 +224,11 @@ func (r Repo) update(record interface{}, changes change.Changes, filter query.Fi
 	}
 
 	var (
-		table   = schema.InferTableName(record)
-		queries = query.Build(table, filter)
+		model   = InferModel(record)
+		queries = query.Build(model.TableName(), filter)
 	)
 
-	// TODO: update timestamp (updated_at)
+	// TODO: update timestamp (updated_at) from form
 
 	// perform update
 	err := r.adapter.Update(queries, changes, r.logger...)

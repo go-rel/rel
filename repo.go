@@ -69,11 +69,13 @@ func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
 
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
-func (r Repo) One(record interface{}, queries ...query.Builder) error {
-	table := schema.InferTableName(record)
-	q := query.Build(table, queries...).Limit(1)
+func (r Repo) One(entity interface{}, queries ...query.Builder) error {
+	var (
+		doc = newDocument(entity)
+		q   = query.Build(doc.Table(), queries...).Limit(1)
+	)
 
-	count, err := r.adapter.All(q, record, r.logger...)
+	count, err := r.adapter.All(q, doc, r.logger...)
 
 	if err != nil {
 		return transformError(err)
@@ -86,16 +88,16 @@ func (r Repo) One(record interface{}, queries ...query.Builder) error {
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
-func (r Repo) MustOne(record interface{}, queries ...query.Builder) {
-	must(r.One(record, queries...))
+func (r Repo) MustOne(entity interface{}, queries ...query.Builder) {
+	must(r.One(entity, queries...))
 }
 
 // All retrieves all results that match the query.
-func (r Repo) All(record interface{}, queries ...query.Builder) error {
+func (r Repo) All(entities interface{}, queries ...query.Builder) error {
 	var (
-		model  = InferModel(record)
-		q      = query.Build(model.TableName(), queries...)
-		_, err = r.adapter.All(q, record, r.logger...)
+		collec = newCollection(entities)
+		q      = query.Build(collec.Table(), queries...)
+		_, err = r.adapter.All(q, collec, r.logger...)
 	)
 
 	return err
@@ -103,8 +105,8 @@ func (r Repo) All(record interface{}, queries ...query.Builder) error {
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustAll(record interface{}, queries ...query.Builder) {
-	must(r.All(record, queries...))
+func (r Repo) MustAll(entities interface{}, queries ...query.Builder) {
+	must(r.All(entities, queries...))
 }
 
 // Insert a record to database.
@@ -122,13 +124,12 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 
 func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
-		model       = InferModel(record)
-		pKey, _     = model.PrimaryKey()
-		association = schema.InferAssociations(record)
-		queries     = query.Build(model.TableName())
+		doc     = newDocument(record)
+		pField  = doc.PrimaryField()
+		queries = query.Build(doc.Table())
 	)
 
-	if err := r.upsertBelongsTo(association, &changes); err != nil {
+	if err := r.upsertBelongsTo(doc, &changes); err != nil {
 		return err
 	}
 
@@ -139,15 +140,15 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 	}
 
 	// fetch record
-	if err := r.One(record, where.Eq(pKey, id)); err != nil {
+	if err := r.One(record, where.Eq(pField, id)); err != nil {
 		return err
 	}
 
-	if err := r.upsertHasOne(association, &changes, id); err != nil {
+	if err := r.upsertHasOne(doc, &changes, id); err != nil {
 		return err
 	}
 
-	if err := r.upsertHasMany(association, &changes, id, true); err != nil {
+	if err := r.upsertHasMany(doc, &changes, id, true); err != nil {
 		return err
 	}
 
@@ -175,9 +176,9 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 	}
 
 	var (
-		model    = InferModel(record)
-		pKey, _  = model.PrimaryKey()
-		queries  = query.Build(model.TableName())
+		collec   = newCollection(record)
+		pField   = collec.PrimaryField()
+		queries  = query.Build(collec.Table())
 		fields   = make([]string, 0, len(changes[0].Fields))
 		fieldMap = make(map[string]struct{}, len(changes[0].Fields))
 	)
@@ -196,7 +197,7 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 		return err
 	}
 
-	_, err = r.adapter.All(queries.Where(where.In(pKey, ids...)), record, r.logger...)
+	_, err = r.adapter.All(queries.Where(where.In(pField, ids...)), collec, r.logger...)
 	return err
 }
 
@@ -210,12 +211,13 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	}
 
 	var (
-		model        = InferModel(record)
-		pKey, pValue = model.PrimaryKey()
-		changes      = change.Build(cbuilders...)
+		doc     = newDocument(record)
+		pField  = doc.PrimaryField()
+		pValue  = doc.PrimaryValue()
+		changes = change.Build(cbuilders...)
 	)
 
-	return r.update(record, changes, where.Eq(pKey, pValue))
+	return r.update(record, changes, where.Eq(pField, pValue))
 }
 
 func (r Repo) update(record interface{}, changes change.Changes, filter query.FilterClause) error {
@@ -224,8 +226,8 @@ func (r Repo) update(record interface{}, changes change.Changes, filter query.Fi
 	}
 
 	var (
-		model   = InferModel(record)
-		queries = query.Build(model.TableName(), filter)
+		doc     = newDocument(record)
+		queries = query.Build(doc.Table(), filter)
 	)
 
 	// TODO: update timestamp (updated_at) from form
@@ -246,8 +248,8 @@ func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
 	must(r.Update(record, cbuilders...))
 }
 
-func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Changes) error {
-	for _, field := range assocs.BelongsTo() {
+func (r Repo) upsertBelongsTo(doc Document, changes *change.Changes) error {
+	for _, field := range doc.BelongsTo() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
 			continue
@@ -255,41 +257,43 @@ func (r Repo) upsertBelongsTo(assocs schema.Associations, changes *change.Change
 
 		var (
 			assocChanges   = allAssocChanges[0]
-			assoc          = assocs.Association(field)
-			target, loaded = assoc.TargetAddr()
-			foreignValue   = assoc.ForeignValue()
+			assoc          = doc.Association(field)
+			fValue         = assoc.ForeignValue()
+			target, loaded = assoc.Target()
+			doc            = target.(Document)
 		)
 
 		if loaded {
 			var (
-				pKey, pValues = schema.InferPrimaryKey(target, true)
+				pField = doc.PrimaryField()
+				pValue = doc.PrimaryValue()
 			)
 
-			if pch, exist := assocChanges.Get(pKey); exist && pch.Value != pValues[0] {
-				panic("cannot update assoc: inconsistent primary key")
+			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+				panic("cannot update assoc: inconsistent primary value")
 			}
 
 			var (
-				filter = where.Eq(assoc.ForeignColumn(), foreignValue)
+				filter = where.Eq(assoc.ForeignField(), fValue)
 			)
 
-			if err := r.update(target, assocChanges, filter); err != nil {
+			if err := r.update(doc, assocChanges, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(target, assocChanges); err != nil {
+			if err := r.insert(doc, assocChanges); err != nil {
 				return err
 			}
 
-			changes.SetValue(assoc.ReferenceColumn(), assoc.ForeignValue())
+			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
 	}
 
 	return nil
 }
 
-func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, id interface{}) error {
-	for _, field := range assocs.HasOne() {
+func (r Repo) upsertHasOne(doc Document, changes *change.Changes, id interface{}) error {
+	for _, field := range doc.HasOne() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
 			continue
@@ -297,27 +301,29 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 
 		var (
 			assocChanges   = allAssocChanges[0]
-			assoc          = assocs.Association(field)
-			target, loaded = assoc.TargetAddr()
-			referenceValue = assoc.ReferenceValue()
-			pKey, pValues  = schema.InferPrimaryKey(target, true)
+			assoc          = doc.Association(field)
+			fField         = assoc.ForeignField()
+			rValue         = assoc.ReferenceValue()
+			target, loaded = assoc.Target()
+			doc            = target.(Document)
+			pField         = doc.PrimaryField()
+			pValue         = doc.PrimaryValue()
 		)
 
 		if loaded {
-			if pch, exist := assocChanges.Get(pKey); exist && pch.Value != pValues[0] {
+			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
 				panic("cannot update assoc: inconsistent primary key")
 			}
 
 			var (
-				filter = where.Eq(pKey, pValues[0]).
-					AndEq(assoc.ForeignColumn(), referenceValue)
+				filter = where.Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
 			if err := r.update(target, assocChanges, filter); err != nil {
 				return err
 			}
 		} else {
-			assocChanges.SetValue(assoc.ForeignColumn(), referenceValue)
+			assocChanges.SetValue(fField, rValue)
 
 			if err := r.insert(target, assocChanges); err != nil {
 				return err
@@ -328,18 +334,19 @@ func (r Repo) upsertHasOne(assocs schema.Associations, changes *change.Changes, 
 	return nil
 }
 
-func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes, id interface{}, insertion bool) error {
-	for _, field := range assocs.HasMany() {
+func (r Repo) upsertHasMany(doc Document, changes *change.Changes, id interface{}, insertion bool) error {
+	for _, field := range doc.HasMany() {
 		changes, changed := changes.GetAssoc(field)
 		if !changed {
 			continue
 		}
 
 		var (
-			assoc          = assocs.Association(field)
-			target, loaded = assoc.TargetAddr()
-			table          = schema.InferTableName(target)
-			referenceValue = assoc.ReferenceValue()
+			assoc          = doc.Association(field)
+			target, loaded = assoc.Target()
+			table          = target.Table()
+			fField         = assoc.ForeignField()
+			rValue         = assoc.ReferenceValue()
 		)
 
 		if !insertion {
@@ -348,11 +355,15 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 			}
 
 			var (
-				pKey, pValues = schema.InferPrimaryKey(target, true)
+				pField  = target.PrimaryField()
+				pValues = target.PrimaryValue().([]interface{})
 			)
 
 			if len(pValues) > 0 {
-				filter := where.Eq(assoc.ForeignColumn(), referenceValue).AndIn(pKey, pValues...)
+				var (
+					filter = where.Eq(fField, rValue).AndIn(pField, pValues...)
+				)
+
 				if err := r.deleteAll(query.Build(table, filter)); err != nil {
 					return err
 				}
@@ -361,7 +372,7 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 
 		// set assocs
 		for i := range changes {
-			changes[i].SetValue(assoc.ForeignColumn(), referenceValue)
+			changes[i].SetValue(fField, rValue)
 		}
 
 		if err := r.insertAll(target, changes); err != nil {
@@ -373,23 +384,20 @@ func (r Repo) upsertHasMany(assocs schema.Associations, changes *change.Changes,
 	return nil
 }
 
-// Delete deletes all results that match the query.
-// TODO: supports array
-func (r Repo) Delete(record interface{}) error {
+// Delete single entry.
+func (r Repo) Delete(entity interface{}) error {
 	var (
-		table         = schema.InferTableName(record)
-		pKey, pValues = schema.InferPrimaryKey(record, true)
-		q             = query.Build(table, where.In(pKey, pValues...))
+		doc    = newDocument(entity)
+		table  = doc.Table()
+		pField = doc.PrimaryField()
+		pValue = doc.PrimaryValue()
+		q      = query.Build(table, where.Eq(pField, pValue))
 	)
-
-	if len(pValues) == 0 {
-		return nil
-	}
 
 	return transformError(r.adapter.Delete(q, r.logger...))
 }
 
-// MustDelete deletes all results that match the query.
+// MustDelete single entry.
 // It'll panic if any error eccured.
 func (r Repo) MustDelete(record interface{}) {
 	must(r.Delete(record))

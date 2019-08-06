@@ -6,7 +6,6 @@ import (
 	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/query"
-	"github.com/Fs02/grimoire/schema"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -71,12 +70,17 @@ func TestRepo_Count(t *testing.T) {
 }
 
 func TestRepo_One(t *testing.T) {
-	user := User{}
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users").Limit(1)
+	var (
+		user    User
+		doc     = newDocument(&user)
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users").Limit(1)
+	)
 
-	adapter.On("All", query, &user).Return(1, nil)
+	doc.(*document).reflect()
+
+	adapter.On("All", query, doc).Return(1, nil)
 
 	assert.Nil(t, repo.One(&user, query))
 	assert.NotPanics(t, func() { repo.MustOne(&user, query) })
@@ -84,12 +88,17 @@ func TestRepo_One(t *testing.T) {
 }
 
 func TestRepo_One_unexpectedError(t *testing.T) {
-	user := User{}
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users").Limit(1)
+	var (
+		user    User
+		doc     = newDocument(&user)
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users").Limit(1)
+	)
 
-	adapter.On("All", query, &user).Return(1, errors.NewUnexpected("error"))
+	doc.(*document).reflect()
+
+	adapter.On("All", query, doc).Return(1, errors.NewUnexpected("error"))
 
 	assert.NotNil(t, repo.One(&user, query))
 	assert.Panics(t, func() { repo.MustOne(&user, query) })
@@ -97,12 +106,17 @@ func TestRepo_One_unexpectedError(t *testing.T) {
 }
 
 func TestRepo_One_notFound(t *testing.T) {
-	user := User{}
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users").Limit(1)
+	var (
+		user    User
+		doc     = newDocument(&user)
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users").Limit(1)
+	)
 
-	adapter.On("All", query, &user).Return(0, nil)
+	doc.(*document).reflect()
+
+	adapter.On("All", query, doc).Return(0, nil)
 
 	assert.Equal(t, errors.New("no result found", "", errors.NotFound), repo.One(&user, query))
 	assert.Panics(t, func() { repo.MustOne(&user, query) })
@@ -110,21 +124,27 @@ func TestRepo_One_notFound(t *testing.T) {
 }
 
 func TestRepo_All(t *testing.T) {
-	user := User{}
-	adapter := &TestAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users").Limit(1)
+	var (
+		users   []User
+		collec  = newCollection(&users)
+		adapter = &TestAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users").Limit(1)
+	)
 
-	adapter.On("All", query, &user).Return(1, nil)
+	collec.(*collection).reflect()
 
-	assert.Nil(t, repo.All(&user, query))
-	assert.NotPanics(t, func() { repo.MustAll(&user, query) })
+	adapter.On("All", query, collec).Return(1, nil)
+
+	assert.Nil(t, repo.All(&users, query))
+	assert.NotPanics(t, func() { repo.MustAll(&users, query) })
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Insert(t *testing.T) {
 	var (
 		user      User
+		doc       = newDocument(&user)
 		adapter   = &TestAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
@@ -133,9 +153,11 @@ func TestRepo_Insert(t *testing.T) {
 		changes = change.Build(cbuilders...)
 	)
 
+	doc.(*document).reflect()
+
 	adapter.
 		On("Insert", query.From("users"), changes).Return(1, nil).
-		On("All", query.From("users").Where(where.Eq("id", 1)).Limit(1), &user).Return(1, nil)
+		On("All", query.From("users").Where(where.Eq("id", 1)).Limit(1), doc).Return(1, nil)
 
 	assert.Nil(t, repo.Insert(&user, cbuilders...))
 	assert.NotPanics(t, func() { repo.MustInsert(&user, cbuilders...) })
@@ -165,6 +187,7 @@ func TestRepo_Insert_error(t *testing.T) {
 func TestRepo_InsertAll(t *testing.T) {
 	var (
 		users   []User
+		collec  = newCollection(&users)
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []change.Changes{
@@ -173,9 +196,11 @@ func TestRepo_InsertAll(t *testing.T) {
 		}
 	)
 
+	collec.(*collection).reflect()
+
 	adapter.
 		On("InsertAll", query.From("users"), changes).Return([]interface{}{1, 2}, nil).
-		On("All", query.From("users").Where(where.In("id", 1, 2)), &users).Return(2, nil)
+		On("All", query.From("users").Where(where.In("id", 1, 2)), collec).Return(2, nil)
 
 	assert.Nil(t, repo.InsertAll(&users, changes))
 	assert.NotPanics(t, func() { repo.MustInsertAll(&users, changes) })
@@ -185,6 +210,7 @@ func TestRepo_InsertAll(t *testing.T) {
 func TestRepo_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}
+		doc       = newDocument(&user)
 		adapter   = &TestAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
@@ -194,9 +220,11 @@ func TestRepo_Update(t *testing.T) {
 		queries = query.From("users").Where(where.Eq("id", user.ID))
 	)
 
+	doc.(*document).reflect()
+
 	adapter.
 		On("Update", queries, changes).Return(nil).
-		On("All", queries.Limit(1), &user).Return(1, nil)
+		On("All", queries.Limit(1), doc).Return(1, nil)
 
 	assert.Nil(t, repo.Update(&user, cbuilders...))
 	assert.NotPanics(t, func() { repo.MustUpdate(&user, cbuilders...) })
@@ -250,11 +278,12 @@ func TestRepo_Update_error(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_update(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{Buyer: User{ID: 1}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{Buyer: User{ID: 1}}
+		doc         = newDocument(transaction)
+		buyerDoc    = newDocument(&transaction.Buyer)
+		changes     = change.Build(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -266,11 +295,13 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
+	buyerDoc.(*document).reflect()
+
 	adapter.
 		On("Update", q, buyer[0]).Return(nil).
-		On("All", q.Limit(1), &record.Buyer).Return(1, nil)
+		On("All", q.Limit(1), buyerDoc).Return(1, nil)
 
-	err := repo.upsertBelongsTo(assocs, &changes)
+	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 
 	adapter.AssertExpectations(t)
@@ -278,11 +309,11 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{Buyer: User{ID: 1}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{Buyer: User{ID: 1}}
+		doc         = newDocument(transaction)
+		changes     = change.Build(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -297,7 +328,7 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 	adapter.
 		On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error"))
 
-	err := repo.upsertBelongsTo(assocs, &changes)
+	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -305,11 +336,11 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{Buyer: User{ID: 1}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{Buyer: User{ID: 1}}
+		doc         = newDocument(transaction)
+		changes     = change.Build(
 			change.Map{
 				"Buyer": change.Map{
 					"id":   2,
@@ -321,7 +352,7 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertBelongsTo(assocs, &changes)
+		repo.upsertBelongsTo(doc, &changes)
 	})
 
 	adapter.AssertExpectations(t)
@@ -329,11 +360,12 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{}
+		doc         = newDocument(transaction)
+		buyerDoc    = newDocument(&transaction.Buyer)
+		changes     = change.Build(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -345,15 +377,18 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
+	buyerDoc.(*document).reflect()
+	buyerDoc.(*document).initAssociations()
+
 	adapter.
 		On("Insert", q, buyer[0]).Return(1, nil).
-		On("All", q.Where(where.Eq("id", 1)).Limit(1), &record.Buyer).Return(1, nil).
+		On("All", q.Where(where.Eq("id", 1)).Limit(1), buyerDoc).Return(1, nil).
 		Run(func(args mock.Arguments) {
-			user := args.Get(1).(*User)
+			user := args.Get(1).(*document).v.(*User)
 			user.ID = 1
 		})
 
-	err := repo.upsertBelongsTo(assocs, &changes)
+	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 
 	ref, ok := changes.Get("user_id")
@@ -365,11 +400,11 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{}
+		doc         = newDocument(transaction)
+		changes     = change.Build(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -384,7 +419,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 	adapter.
 		On("Insert", q, buyer[0]).Return(0, errors.NewUnexpected("insert error"))
 
-	err := repo.upsertBelongsTo(assocs, &changes)
+	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Equal(t, errors.NewUnexpected("insert error"), err)
 
 	_, ok := changes.Get("user_id")
@@ -395,25 +430,26 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &Transaction{}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build()
+		adapter     = &TestAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = &Transaction{}
+		doc         = newDocument(transaction)
+		changes     = change.Build()
 	)
 
-	err := repo.upsertBelongsTo(assocs, &changes)
+	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_upsertHasOne_update(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1, Address: Address{ID: 2}}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter    = &TestAdapter{}
+		repo       = Repo{adapter: adapter}
+		user       = &User{ID: 1, Address: Address{ID: 2}}
+		doc        = newDocument(user)
+		addressDoc = newDocument(&user.Address)
+		changes    = change.Build(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -424,11 +460,13 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 		addresses, _ = changes.GetAssoc("Address")
 	)
 
+	addressDoc.(*document).reflect()
+
 	adapter.
 		On("Update", q, addresses[0]).Return(nil).
-		On("All", q.Limit(1), &record.Address).Return(1, nil)
+		On("All", q.Limit(1), addressDoc).Return(1, nil)
 
-	err := repo.upsertHasOne(assocs, &changes, nil)
+	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Nil(t, err)
 
 	adapter.AssertExpectations(t)
@@ -438,8 +476,8 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1, Address: Address{ID: 2}}
-		assocs  = schema.InferAssociations(record)
+		user    = &User{ID: 1, Address: Address{ID: 2}}
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Address": change.Map{
@@ -454,7 +492,7 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 	adapter.
 		On("Update", q, addresses[0]).Return(errors.NewUnexpected("update error"))
 
-	err := repo.upsertHasOne(assocs, &changes, nil)
+	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -464,8 +502,8 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1, Address: Address{ID: 2}}
-		assocs  = schema.InferAssociations(record)
+		user    = &User{ID: 1, Address: Address{ID: 2}}
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Address": change.Map{
@@ -477,7 +515,7 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertHasOne(assocs, &changes, nil)
+		repo.upsertHasOne(doc, &changes, nil)
 	})
 
 	adapter.AssertExpectations(t)
@@ -485,11 +523,12 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &User{}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter    = &TestAdapter{}
+		repo       = Repo{adapter: adapter}
+		user       = &User{}
+		doc        = newDocument(user)
+		addressDoc = newDocument(&user.Address)
+		changes    = change.Build(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -500,15 +539,18 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 		address = change.Build(change.Set("street", "street1"))
 	)
 
+	addressDoc.(*document).reflect()
+	addressDoc.(*document).initAssociations()
+
 	// foreign value set after associations infered
-	record.ID = 1
-	address.SetValue("user_id", record.ID)
+	user.ID = 1
+	address.SetValue("user_id", user.ID)
 
 	adapter.
 		On("Insert", q, address).Return(2, nil).
-		On("All", q.Where(where.Eq("id", 2)).Limit(1), &record.Address).Return(1, nil)
+		On("All", q.Where(where.Eq("id", 2)).Limit(1), addressDoc).Return(1, nil)
 
-	err := repo.upsertHasOne(assocs, &changes, nil)
+	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Nil(t, err)
 
 	adapter.AssertExpectations(t)
@@ -518,8 +560,8 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{}
-		assocs  = schema.InferAssociations(record)
+		user    = &User{}
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Address": change.Map{
@@ -532,13 +574,13 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 	)
 
 	// foreign value set after associations infered
-	record.ID = 1
-	address.SetValue("user_id", record.ID)
+	user.ID = 1
+	address.SetValue("user_id", user.ID)
 
 	adapter.
 		On("Insert", q, address).Return(nil, errors.NewUnexpected("insert error"))
 
-	err := repo.upsertHasOne(assocs, &changes, nil)
+	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Equal(t, errors.NewUnexpected("insert error"), err)
 
 	adapter.AssertExpectations(t)
@@ -546,11 +588,12 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 
 func TestRepo_upsertHasMany_insert(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		adapter           = &TestAdapter{}
+		repo              = Repo{adapter: adapter}
+		user              = &User{ID: 1}
+		doc               = newDocument(user)
+		transactionCollec = newCollection(&user.Transactions)
+		changes           = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -566,11 +609,13 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 		transactions, _ = changes.GetAssoc("Transactions")
 	)
 
+	transactionCollec.(*collection).reflect()
+
 	adapter.
 		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{2, 3}, nil).
-		On("All", q.Where(where.In("id", 2, 3)), &record.Transactions).Return(2, nil)
+		On("All", q.Where(where.In("id", 2, 3)), transactionCollec).Return(2, nil)
 
-	err := repo.upsertHasMany(assocs, &changes, record.ID, true)
+	err := repo.upsertHasMany(doc, &changes, user.ID, true)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, len(transactions))
@@ -578,7 +623,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 	for i := range transactions {
 		id, ok := transactions[i].GetValue("user_id")
 		assert.True(t, ok)
-		assert.Equal(t, record.ID, id)
+		assert.Equal(t, user.ID, id)
 	}
 
 	adapter.AssertExpectations(t)
@@ -588,8 +633,8 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1}
-		assocs  = schema.InferAssociations(record)
+		user    = &User{ID: 1}
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
@@ -610,7 +655,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 	adapter.
 		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{}, rerr)
 
-	err := repo.upsertHasMany(assocs, &changes, record.ID, true)
+	err := repo.upsertHasMany(doc, &changes, user.ID, true)
 	assert.Equal(t, rerr, err)
 
 	adapter.AssertExpectations(t)
@@ -620,7 +665,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{
+		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
 				{
@@ -633,8 +678,9 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 				},
 			},
 		}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		doc               = newDocument(user)
+		transactionCollec = newCollection(&user.Transactions)
+		changes           = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -653,12 +699,14 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 		transactions, _ = changes.GetAssoc("Transactions")
 	)
 
+	transactionCollec.(*collection).reflect()
+
 	adapter.
 		On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).
 		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).
-		On("All", q.Where(where.In("id", 3, 4, 5)), &record.Transactions).Return(3, nil)
+		On("All", q.Where(where.In("id", 3, 4, 5)), transactionCollec).Return(3, nil)
 
-	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 3, len(transactions))
@@ -666,7 +714,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 	for i := range transactions {
 		id, ok := transactions[i].GetValue("user_id")
 		assert.True(t, ok)
-		assert.Equal(t, record.ID, id)
+		assert.Equal(t, user.ID, id)
 	}
 
 	adapter.AssertExpectations(t)
@@ -676,12 +724,13 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{
+		user    = &User{
 			ID:           1,
 			Transactions: []Transaction{},
 		}
-		assocs  = schema.InferAssociations(record)
-		changes = change.Build(
+		doc               = newDocument(user)
+		transactionCollec = newCollection(&user.Transactions)
+		changes           = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -700,11 +749,13 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 		transactions, _ = changes.GetAssoc("Transactions")
 	)
 
+	transactionCollec.(*collection).reflect()
+
 	adapter.
 		On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).
-		On("All", q.Where(where.In("id", 3, 4, 5)), &record.Transactions).Return(3, nil)
+		On("All", q.Where(where.In("id", 3, 4, 5)), transactionCollec).Return(3, nil)
 
-	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 3, len(transactions))
@@ -712,7 +763,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	for i := range transactions {
 		id, ok := transactions[i].GetValue("user_id")
 		assert.True(t, ok)
-		assert.Equal(t, record.ID, id)
+		assert.Equal(t, user.ID, id)
 	}
 
 	adapter.AssertExpectations(t)
@@ -722,7 +773,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{
+		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
 				{
@@ -735,7 +786,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 				},
 			},
 		}
-		assocs  = schema.InferAssociations(record)
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
@@ -752,7 +803,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 	adapter.
 		On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(rerr)
 
-	err := repo.upsertHasMany(assocs, &changes, record.ID, false)
+	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Equal(t, rerr, err)
 
 	adapter.AssertExpectations(t)
@@ -762,8 +813,8 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		record  = &User{ID: 1}
-		assocs  = schema.InferAssociations(record)
+		user    = &User{ID: 1}
+		doc     = newDocument(user)
 		changes = change.Build(
 			change.Map{
 				"Transactions": []change.Map{
@@ -776,7 +827,7 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertHasMany(assocs, &changes, record.ID, false)
+		repo.upsertHasMany(doc, &changes, user.ID, false)
 	})
 
 	adapter.AssertExpectations(t)
@@ -786,46 +837,46 @@ func TestRepo_Delete(t *testing.T) {
 	var (
 		adapter = &TestAdapter{}
 		repo    = Repo{adapter: adapter}
-		user    = User{ID: 1}
+		user    = &User{ID: 1}
 	)
 
 	adapter.
-		On("Delete", query.From("users").Where(where.In("id", user.ID))).Return(nil)
+		On("Delete", query.From("users").Where(where.Eq("id", user.ID))).Return(nil)
 
 	assert.Nil(t, repo.Delete(user))
 	assert.NotPanics(t, func() { repo.MustDelete(user) })
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Delete_slice(t *testing.T) {
-	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		users   = []User{
-			{ID: 1},
-			{ID: 2},
-		}
-	)
+// func TestRepo_Delete_slice(t *testing.T) {
+// 	var (
+// 		adapter = &TestAdapter{}
+// 		repo    = Repo{adapter: adapter}
+// 		users   = []User{
+// 			{ID: 1},
+// 			{ID: 2},
+// 		}
+// 	)
 
-	adapter.
-		On("Delete", query.From("users").Where(where.In("id", 1, 2))).Return(nil)
+// 	adapter.
+// 		On("Delete", query.From("users").Where(where.In("id", 1, 2))).Return(nil)
 
-	assert.Nil(t, repo.Delete(users))
-	assert.NotPanics(t, func() { repo.MustDelete(users) })
-	adapter.AssertExpectations(t)
-}
+// 	assert.Nil(t, repo.Delete(users))
+// 	assert.NotPanics(t, func() { repo.MustDelete(users) })
+// 	adapter.AssertExpectations(t)
+// }
 
-func TestRepo_Delete_emptySlice(t *testing.T) {
-	var (
-		adapter = &TestAdapter{}
-		repo    = Repo{adapter: adapter}
-		users   = []User{}
-	)
+// func TestRepo_Delete_emptySlice(t *testing.T) {
+// 	var (
+// 		adapter = &TestAdapter{}
+// 		repo    = Repo{adapter: adapter}
+// 		users   = []User{}
+// 	)
 
-	assert.Nil(t, repo.Delete(users))
-	assert.NotPanics(t, func() { repo.MustDelete(users) })
-	adapter.AssertExpectations(t)
-}
+// 	assert.Nil(t, repo.Delete(users))
+// 	assert.NotPanics(t, func() { repo.MustDelete(users) })
+// 	adapter.AssertExpectations(t)
+// }
 
 func TestRepo_DeleteAll(t *testing.T) {
 	var (

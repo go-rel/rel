@@ -8,7 +8,7 @@ import (
 // Adapter interface
 type Adapter interface {
 	Aggregate(query.Query, interface{}, string, string, ...Logger) error
-	All(query.Query, interface{}, ...Logger) (int, error)
+	All(query.Query, Collection, ...Logger) (int, error)
 	Insert(query.Query, change.Changes, ...Logger) (interface{}, error)
 	InsertAll(query.Query, []string, []change.Changes, ...Logger) ([]interface{}, error)
 	Update(query.Query, change.Changes, ...Logger) error

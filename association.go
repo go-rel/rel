@@ -15,7 +15,7 @@ const (
 
 type Association interface {
 	Type() AssociationType
-	Target() (interface{}, bool)
+	Target() (Collection, bool)
 	ReferenceField() string
 	ReferenceValue() interface{}
 	ForeignField() string
@@ -39,49 +39,54 @@ type associationData struct {
 var associationCache sync.Map
 
 type association struct {
-	data  associationData
-	value reflect.Value
+	data associationData
+	rv   reflect.Value
 }
 
 func (a association) Type() AssociationType {
 	return a.data.typ
 }
 
-func (a association) Target() (interface{}, bool) {
-	// var (
-	// 	rv = a.value.FieldByIndex(a.data.targetIndex)
-	// )
+func (a association) Target() (Collection, bool) {
+	var (
+		rv = a.rv.FieldByIndex(a.data.targetIndex)
+	)
 
-	// switch rv.Kind() {
-	// case reflect.Slice:
-	// 	var (
-	// 		loaded = !rv.IsNil()
-	// 	)
+	switch rv.Kind() {
+	case reflect.Slice:
+		var (
+			loaded = !rv.IsNil()
+		)
 
-	// 	if !loaded {
-	// 		rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
-	// 	}
+		if !loaded {
+			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
+		}
 
-	// 	return rv.Addr().Interface(), loaded
-	// case reflect.Ptr:
-	// 	var (
-	// 		loaded = !rv.IsNil()
-	// 	)
+		return newCollection(rv.Addr()), loaded
+	case reflect.Ptr:
+		var (
+			loaded = !rv.IsNil()
+		)
 
-	// 	if !loaded {
-	// 		rv.Set(reflect.New(rv.Type().Elem()))
-	// 	}
+		if !loaded {
+			rv.Set(reflect.New(rv.Type().Elem()))
+		}
 
-	// 	return rv.Interface(), loaded
-	// default:
-	// 	var (
-	// 		target = rv.Addr().Interface()
-	// 		_, pv  = InferPrimaryKey(target, true)
-	// 	)
+		if rv.Elem().Kind() == reflect.Slice {
+			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
 
-	// 	return target, !isZero(pv[0])
-	// }
-	return nil, false
+			return newCollection(rv), loaded
+		}
+
+		return newDocument(rv), loaded
+	default:
+		var (
+			doc = newDocument(rv.Addr())
+			id  = doc.PrimaryValue()
+		)
+
+		return doc, !isZero(id)
+	}
 }
 
 func (a association) ReferenceField() string {
@@ -89,7 +94,7 @@ func (a association) ReferenceField() string {
 }
 
 func (a association) ReferenceValue() interface{} {
-	return a.value.FieldByIndex(a.data.referenceIndex).Interface()
+	return a.rv.FieldByIndex(a.data.referenceIndex).Interface()
 }
 
 func (a association) ForeignField() string {
@@ -102,7 +107,7 @@ func (a association) ForeignValue() interface{} {
 	}
 
 	var (
-		rv = a.value.FieldByIndex(a.data.targetIndex)
+		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
 
 	if rv.Kind() == reflect.Ptr {
@@ -116,7 +121,7 @@ func (a association) ForeignValue() interface{} {
 	return rv.FieldByIndex(a.data.foreignIndex).Interface()
 }
 
-func InferAssociation(rv reflect.Value, name string) Association {
+func newAssociation(rv reflect.Value, name string) Association {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -131,8 +136,8 @@ func InferAssociation(rv reflect.Value, name string) Association {
 
 	if val, cached := associationCache.Load(key); cached {
 		return association{
-			data:  val.(associationData),
-			value: rv,
+			data: val.(associationData),
+			rv:   rv,
 		}
 	}
 
@@ -194,7 +199,7 @@ func InferAssociation(rv reflect.Value, name string) Association {
 	associationCache.Store(key, data)
 
 	return association{
-		data:  data,
-		value: rv,
+		data: data,
+		rv:   rv,
 	}
 }

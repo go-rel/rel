@@ -28,21 +28,21 @@ func (adapter *TestAdapter) Aggregate(queries query.Query, out interface{}, mode
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) All(queries query.Query, doc interface{}, logger ...Logger) (int, error) {
-	args := adapter.Called(queries, doc)
+func (adapter *TestAdapter) All(queries query.Query, collection Collection, logger ...Logger) (int, error) {
+	args := adapter.Called(queries, collection)
 
-	if adapter.result != nil {
-		switch doc.(type) {
-		case *[]Address:
-			*doc.(*[]Address) = adapter.result.([]Address)
-		case *[]Transaction:
-			*doc.(*[]Transaction) = adapter.result.([]Transaction)
-		case *[]User:
-			*doc.(*[]User) = adapter.result.([]User)
-		default:
-			panic("not implemented")
-		}
-	}
+	// if adapter.result != nil {
+	// 	switch doc.(type) {
+	// 	case *[]Address:
+	// 		*doc.(*[]Address) = adapter.result.([]Address)
+	// 	case *[]Transaction:
+	// 		*doc.(*[]Transaction) = adapter.result.([]Transaction)
+	// 	case *[]User:
+	// 		*doc.(*[]User) = adapter.result.([]User)
+	// 	default:
+	// 		panic("not implemented")
+	// 	}
+	// }
 
 	return args.Int(0), args.Error(1)
 }

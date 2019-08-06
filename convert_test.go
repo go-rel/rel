@@ -185,7 +185,7 @@ func conversionTests() []conversionTest {
 		{s: 1.5, d: new(userDefined), wantusrdef: 1.5},
 		{s: int64(123), d: new(userDefined), wantusrdef: 123},
 		{s: "1.5", d: new(userDefined), wantusrdef: 1.5},
-		{s: []byte{1, 2, 3}, d: new(userDefinedSlice), wanterr: `unsupported Scan, storing driver.Value type []uint8 into type *schema.userDefinedSlice`},
+		{s: []byte{1, 2, 3}, d: new(userDefinedSlice), wanterr: `unsupported Scan, storing driver.Value type []uint8 into type *grimoire.userDefinedSlice`},
 		{s: "str", d: new(userDefinedString), wantusrstr: "str"},
 		{s: []byte("byte"), d: new(userDefinedString), wantusrstr: "byte"},
 

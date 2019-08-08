@@ -5,6 +5,8 @@ import "reflect"
 type Collection interface {
 	table
 	primary
+	Reset()
+	Add() Document
 	Len() int
 }
 
@@ -79,6 +81,14 @@ func (c *collection) Len() int {
 	c.reflect()
 
 	return c.rv.Len()
+}
+
+func (c *collection) Reset() {
+	// TODD
+}
+
+func (c *collection) Add() Document {
+	return nil
 }
 
 func newCollection(entities interface{}) Collection {

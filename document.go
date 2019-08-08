@@ -70,6 +70,8 @@ type Document interface {
 	scanners
 	values
 	associations
+	Reset()
+	Add() Document
 	Len() int
 }
 
@@ -366,6 +368,13 @@ func (d *document) Association(name string) Association {
 	d.reflect()
 
 	return newAssociation(d.rv, name)
+}
+
+func (d *document) Reset() {
+}
+
+func (d *document) Add() Document {
+	return d
 }
 
 func (d *document) Len() int {

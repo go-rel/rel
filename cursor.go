@@ -1,6 +1,8 @@
 package grimoire
 
 import (
+	"reflect"
+
 	"github.com/Fs02/grimoire/errors"
 )
 
@@ -53,7 +55,7 @@ func scanMany(cur Cursor, collec Collection) error {
 	return nil
 }
 
-func scanMulti(cur Cursor, keyField string, collecs map[interface{}][]Collection) error {
+func scanMulti(cur Cursor, keyField string, keyType reflect.Type, collecs map[interface{}][]Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -62,26 +64,23 @@ func scanMulti(cur Cursor, keyField string, collecs map[interface{}][]Collection
 	}
 
 	var (
+		found       = false
+		keyValue    = reflect.New(keyType)
+		nopScanner  = cur.NopScanner()
 		keyScanners = make([]interface{}, len(fields))
-		keyIndex    = -1
 	)
 
 	for i, field := range fields {
 		if keyField == field {
-			keyIndex = i
+			found = true
+			keyScanners[i] = keyValue.Interface()
+		} else {
+			keyScanners[i] = nopScanner
 		}
-
-		keyScanners[i] = cur.NopScanner()
 	}
 
-	if keyIndex < 0 {
+	if !found {
 		panic("grimoire: TODO")
-	}
-
-	// get the first key
-	for k := range collecs {
-		keyScanners[keyIndex] = k
-		break
 	}
 
 	// scan the result
@@ -91,12 +90,17 @@ func scanMulti(cur Cursor, keyField string, collecs map[interface{}][]Collection
 			return err
 		}
 
-		for _, collec := range collecs[keyScanners[keyIndex]] {
+		var (
+			key = reflect.Indirect(keyValue).Interface()
+		)
+
+		for _, collec := range collecs[key] {
 			var (
-				doc = collec.Add()
+				doc      = collec.Add()
+				scanners = doc.Scanners(fields)
 			)
 
-			if err := cur.Scan(doc.Scanners(fields)); err != nil {
+			if err := cur.Scan(scanners...); err != nil {
 				return err
 			}
 		}

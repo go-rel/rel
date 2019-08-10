@@ -88,7 +88,17 @@ func (c *collection) Reset() {
 }
 
 func (c *collection) Add() Document {
-	return nil
+	c.reflect()
+
+	var (
+		index = c.Len()
+		typ   = c.rt.Elem()
+		drv   = reflect.Zero(typ)
+	)
+
+	c.rv.Set(reflect.Append(c.rv, drv))
+
+	return newDocument(c.rv.Index(index).Addr().Interface())
 }
 
 func newCollection(entities interface{}) Collection {

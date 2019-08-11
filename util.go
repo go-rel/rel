@@ -1,5 +1,30 @@
 package grimoire
 
+import (
+	"github.com/Fs02/grimoire/changeset"
+	"github.com/Fs02/grimoire/errors"
+)
+
+func transformError(err error, chs ...*changeset.Changeset) error {
+	if err == nil {
+		return nil
+	} else if e, ok := err.(errors.Error); ok {
+		if len(chs) > 0 {
+			return chs[0].Constraints().GetError(e)
+		}
+		return e
+	} else {
+		return errors.NewUnexpected(err.Error())
+	}
+}
+
+// must is grimoire version of paranoid.Panic without context, but only original error.
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 // isZero shallowly check wether a field in struct is zero or not
 func isZero(i interface{}) bool {
 	zero := true

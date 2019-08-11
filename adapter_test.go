@@ -28,25 +28,6 @@ func (ta *testAdapter) Aggregate(queries query.Query, out interface{}, mode stri
 	return args.Error(0)
 }
 
-func (ta *testAdapter) All(queries query.Query, collection Collection, logger ...Logger) (int, error) {
-	args := ta.Called(queries, collection)
-
-	// if ta.result != nil {
-	// 	switch doc.(type) {
-	// 	case *[]Address:
-	// 		*doc.(*[]Address) = ta.result.([]Address)
-	// 	case *[]Transaction:
-	// 		*doc.(*[]Transaction) = ta.result.([]Transaction)
-	// 	case *[]User:
-	// 		*doc.(*[]User) = ta.result.([]User)
-	// 	default:
-	// 		panic("not implemented")
-	// 	}
-	// }
-
-	return args.Int(0), args.Error(1)
-}
-
 func (ta *testAdapter) Query(queries query.Query, logger ...Logger) (Cursor, error) {
 	args := ta.Called(queries)
 	return args.Get(0).(Cursor), args.Error(1)

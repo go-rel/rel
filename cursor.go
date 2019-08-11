@@ -14,7 +14,7 @@ type Cursor interface {
 	NopScanner() interface{}
 }
 
-func scanOne(cur Cursor, collec Collection) error {
+func scanOne(cur Cursor, col Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -27,13 +27,13 @@ func scanOne(cur Cursor, collec Collection) error {
 	}
 
 	var (
-		scanners = collec.Add().Scanners(fields)
+		scanners = col.Add().Scanners(fields)
 	)
 
 	return cur.Scan(scanners...)
 }
 
-func scanMany(cur Cursor, collec Collection) error {
+func scanMany(cur Cursor, col Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -43,7 +43,7 @@ func scanMany(cur Cursor, collec Collection) error {
 
 	for cur.Next() {
 		var (
-			doc      = collec.Add()
+			doc      = col.Add()
 			scanners = doc.Scanners(fields)
 		)
 
@@ -55,7 +55,7 @@ func scanMany(cur Cursor, collec Collection) error {
 	return nil
 }
 
-func scanMulti(cur Cursor, keyField string, keyType reflect.Type, collecs map[interface{}][]Collection) error {
+func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[interface{}][]Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -98,9 +98,9 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, collecs map[in
 			key = reflect.Indirect(keyValue).Interface()
 		)
 
-		for _, collec := range collecs[key] {
+		for _, col := range cols[key] {
 			var (
-				doc      = collec.Add()
+				doc      = col.Add()
 				scanners = doc.Scanners(fields)
 			)
 

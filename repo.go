@@ -71,11 +71,11 @@ func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
 // If no result found, it'll return not found error.
 func (r Repo) One(entity interface{}, queries ...query.Builder) error {
 	var (
-		doc = newDocument(entity)
-		q   = query.Build(doc.Table(), queries...).Limit(1)
+		doc   = newDocument(entity)
+		query = query.Build(doc.Table(), queries...).Limit(1)
 	)
 
-	cur, err := r.adapter.Query(q, r.logger...)
+	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
 	}
@@ -92,12 +92,16 @@ func (r Repo) MustOne(entity interface{}, queries ...query.Builder) {
 // All retrieves all results that match the query.
 func (r Repo) All(entities interface{}, queries ...query.Builder) error {
 	var (
-		collec = newCollection(entities)
-		q      = query.Build(collec.Table(), queries...)
-		_, err = r.adapter.All(q, collec, r.logger...)
+		col   = newCollection(entities)
+		query = query.Build(col.Table(), queries...)
 	)
 
-	return err
+	cur, err := r.adapter.Query(query, r.logger...)
+	if err != nil {
+		return err
+	}
+
+	return scanMany(cur, col)
 }
 
 // MustAll retrieves all results that match the query.
@@ -173,9 +177,9 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 	}
 
 	var (
-		collec   = newCollection(record)
-		pField   = collec.PrimaryField()
-		queries  = query.Build(collec.Table())
+		col      = newCollection(record)
+		pField   = col.PrimaryField()
+		queries  = query.Build(col.Table())
 		fields   = make([]string, 0, len(changes[0].Fields))
 		fieldMap = make(map[string]struct{}, len(changes[0].Fields))
 	)
@@ -194,8 +198,12 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 		return err
 	}
 
-	_, err = r.adapter.All(queries.Where(where.In(pField, ids...)), collec, r.logger...)
-	return err
+	cur, err := r.adapter.Query(queries.Where(where.In(pField, ids...)), r.logger...)
+	if err != nil {
+		return err
+	}
+
+	return scanMany(cur, col)
 }
 
 // Update a record in database.

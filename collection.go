@@ -1,12 +1,15 @@
 package grimoire
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Collection interface {
 	table
 	primary
 	Reset()
 	Add() Document
+	Get(index int) Document
 	Len() int
 }
 
@@ -75,6 +78,12 @@ func (c *collection) PrimaryValue() interface{} {
 	}
 
 	return ids
+}
+
+func (c *collection) Get(index int) Document {
+	c.reflect()
+
+	return newDocument(c.rv.Index(index).Interface())
 }
 
 func (c *collection) Len() int {

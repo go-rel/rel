@@ -6,39 +6,39 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type TestAdapter struct {
+type testAdapter struct {
 	mock.Mock
 	result interface{}
 }
 
-var _ Adapter = (*TestAdapter)(nil)
+var _ Adapter = (*testAdapter)(nil)
 
-func (adapter *TestAdapter) Open(dsn string) error {
-	args := adapter.Called(dsn)
+func (ta *testAdapter) Open(dsn string) error {
+	args := ta.Called(dsn)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Close() error {
-	args := adapter.Called()
+func (ta *testAdapter) Close() error {
+	args := ta.Called()
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Aggregate(queries query.Query, out interface{}, mode string, field string, logger ...Logger) error {
-	args := adapter.Called(queries, out, mode, field)
+func (ta *testAdapter) Aggregate(queries query.Query, out interface{}, mode string, field string, logger ...Logger) error {
+	args := ta.Called(queries, out, mode, field)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) All(queries query.Query, collection Collection, logger ...Logger) (int, error) {
-	args := adapter.Called(queries, collection)
+func (ta *testAdapter) All(queries query.Query, collection Collection, logger ...Logger) (int, error) {
+	args := ta.Called(queries, collection)
 
-	// if adapter.result != nil {
+	// if ta.result != nil {
 	// 	switch doc.(type) {
 	// 	case *[]Address:
-	// 		*doc.(*[]Address) = adapter.result.([]Address)
+	// 		*doc.(*[]Address) = ta.result.([]Address)
 	// 	case *[]Transaction:
-	// 		*doc.(*[]Transaction) = adapter.result.([]Transaction)
+	// 		*doc.(*[]Transaction) = ta.result.([]Transaction)
 	// 	case *[]User:
-	// 		*doc.(*[]User) = adapter.result.([]User)
+	// 		*doc.(*[]User) = ta.result.([]User)
 	// 	default:
 	// 		panic("not implemented")
 	// 	}
@@ -47,42 +47,47 @@ func (adapter *TestAdapter) All(queries query.Query, collection Collection, logg
 	return args.Int(0), args.Error(1)
 }
 
-func (adapter *TestAdapter) Insert(queries query.Query, changes change.Changes, logger ...Logger) (interface{}, error) {
-	args := adapter.Called(queries, changes)
+func (ta *testAdapter) Query(queries query.Query, logger ...Logger) (Cursor, error) {
+	args := ta.Called(queries)
+	return args.Get(0).(Cursor), args.Error(1)
+}
+
+func (ta *testAdapter) Insert(queries query.Query, changes change.Changes, logger ...Logger) (interface{}, error) {
+	args := ta.Called(queries, changes)
 	return args.Get(0), args.Error(1)
 }
 
-func (adapter *TestAdapter) InsertAll(queries query.Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
-	args := adapter.Called(queries, changess)
+func (ta *testAdapter) InsertAll(queries query.Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
+	args := ta.Called(queries, changess)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (adapter *TestAdapter) Update(queries query.Query, changes change.Changes, logger ...Logger) error {
-	args := adapter.Called(queries, changes)
+func (ta *testAdapter) Update(queries query.Query, changes change.Changes, logger ...Logger) error {
+	args := ta.Called(queries, changes)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Delete(queries query.Query, logger ...Logger) error {
-	args := adapter.Called(queries)
+func (ta *testAdapter) Delete(queries query.Query, logger ...Logger) error {
+	args := ta.Called(queries)
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Begin() (Adapter, error) {
-	args := adapter.Called()
-	return adapter, args.Error(0)
+func (ta *testAdapter) Begin() (Adapter, error) {
+	args := ta.Called()
+	return ta, args.Error(0)
 }
 
-func (adapter *TestAdapter) Commit() error {
-	args := adapter.Called()
+func (ta *testAdapter) Commit() error {
+	args := ta.Called()
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Rollback() error {
-	args := adapter.Called()
+func (ta *testAdapter) Rollback() error {
+	args := ta.Called()
 	return args.Error(0)
 }
 
-func (adapter *TestAdapter) Result(result interface{}) *TestAdapter {
-	adapter.result = result
-	return adapter
+func (ta *testAdapter) Result(result interface{}) *testAdapter {
+	ta.result = result
+	return ta
 }

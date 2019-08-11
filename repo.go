@@ -419,66 +419,101 @@ func (r Repo) deleteAll(q query.Query) error {
 	return r.adapter.Delete(q, r.logger...)
 }
 
-// Preload loads association with given query.
-func (r Repo) Preload(record interface{}, field string, queries ...query.Builder) error {
+func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}][]Collection, string, string, reflect.Type) {
+	type frame struct {
+		index int
+		doc   Document
+	}
+
 	var (
-		path = strings.Split(field, ".")
-		rv   = reflect.ValueOf(record)
+		table     string
+		keyField  string
+		keyType   reflect.Type
+		mapTarget = make(map[interface{}][]Collection)
+		stack     = make([]frame, col.Len())
 	)
 
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	// init stack
+	for i := 0; i < col.Len(); i++ {
+		stack[i] = frame{index: i, doc: col.Get(i)}
+	}
+
+	for len(stack) > 0 {
+		var (
+			n              = len(stack) - 1
+			top            = stack[n]
+			assocs         = top.doc.Association(path[top.index])
+			target, loaded = assocs.Target()
+		)
+
+		stack = stack[:n]
+
+		if top.index == len(path)-1 {
+			var (
+				ref = assocs.ReferenceValue()
+			)
+
+			mapTarget[ref] = append(mapTarget[ref], target)
+
+			if table == "" {
+				table = target.Table()
+				keyField = assocs.ForeignField()
+				keyType = reflect.TypeOf(ref)
+			}
+		} else {
+			if !loaded {
+				continue
+			}
+
+			stack = append(stack, make([]frame, target.Len())...)
+			for i := 0; i < target.Len(); i++ {
+				stack[n+i] = frame{
+					index: top.index + 1,
+					doc:   target.Get(i),
+				}
+			}
+		}
+
+	}
+
+	return mapTarget, table, keyField, keyType
+}
+
+// Preload loads association with given query.
+func (r Repo) Preload(entities interface{}, field string, queries ...query.Builder) error {
+	var (
+		col  Collection
+		path = strings.Split(field, ".")
+		rt   = reflect.TypeOf(entities)
+	)
+
+	if rt.Kind() != reflect.Ptr {
 		panic("grimoire: record parameter must be a pointer.")
 	}
 
-	preload := traversePreloadTarget(rv.Elem(), path)
-	if len(preload) == 0 {
-		return nil
+	rt = rt.Elem()
+	if rt.Kind() == reflect.Slice {
+		col = newCollection(entities)
+	} else {
+		col = newDocument(entities)
 	}
 
-	schemaType := preload[0].schema.Type()
-	assocField := schema.InferAssociationField(schemaType, path[len(path)-1])
+	var (
+		targets, table, keyField, keyType = r.mapPreloadTargets(col, path)
+		ids                               = make([]interface{}, len(targets))
+	)
 
-	addrs, ids := collectPreloadTarget(preload, assocField.ReferenceIndex)
-	if len(ids) == 0 {
-		return nil
+	i := 0
+	for key := range targets {
+		ids[i] = key
 	}
 
-	// prepare temp result variable for querying
-	rt := preload[0].field.Type()
-	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array || rt.Kind() == reflect.Ptr {
-		rt = rt.Elem()
-	}
-
-	slice := reflect.MakeSlice(reflect.SliceOf(rt), 0, 0)
-	result := reflect.New(slice.Type())
-	result.Elem().Set(slice)
-
-	// query all records using collected ids.
-	err := r.All(result.Interface(), where.In(assocField.ForeignColumn, ids...))
+	cur, err := r.adapter.Query(query.Build(table, where.In(keyField, ids...)), r.logger...)
 	if err != nil {
 		return err
 	}
 
-	// map results.
-	result = result.Elem()
-	for i := 0; i < result.Len(); i++ {
-		curr := result.Index(i)
-		id := getPreloadID(curr.FieldByIndex(assocField.ForeignIndex))
-
-		for _, addr := range addrs[id] {
-			if addr.Kind() == reflect.Slice {
-				addr.Set(reflect.Append(addr, curr))
-			} else if addr.Kind() == reflect.Ptr {
-				currP := reflect.New(curr.Type())
-				currP.Elem().Set(curr)
-				addr.Set(currP)
-			} else {
-				addr.Set(curr)
-			}
-		}
-	}
-
-	return nil
+	return scanMulti(cur, keyField, keyType, targets)
 }
 
 // MustPreload loads association with given query.

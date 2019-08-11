@@ -71,6 +71,7 @@ type Document interface {
 	values
 	associations
 	Reset()
+	Get(index int) Document
 	Add() Document
 	Len() int
 }
@@ -374,6 +375,10 @@ func (d *document) Reset() {
 }
 
 func (d *document) Add() Document {
+	return d
+}
+
+func (d *document) Get(index int) Document {
 	return d
 }
 

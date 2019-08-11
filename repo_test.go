@@ -14,7 +14,7 @@ import (
 var repo = Repo{}
 
 func TestNew(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	repo := New(adapter)
 
 	assert.NotNil(t, repo)
@@ -29,7 +29,7 @@ func TestRepo_SetLogger(t *testing.T) {
 }
 
 func TestRepo_Aggregate(t *testing.T) {
-	adapter := &TestAdapter{}
+	adapter := &testAdapter{}
 	repo := Repo{adapter: adapter}
 	query := query.From("users")
 	mode := "COUNT"
@@ -52,7 +52,7 @@ func TestRepo_Aggregate(t *testing.T) {
 }
 
 func TestRepo_Count(t *testing.T) {
-	adapter := &TestAdapter{}
+	adapter := &testAdapter{}
 	repo := Repo{adapter: adapter}
 	query := query.From("users")
 
@@ -73,7 +73,7 @@ func TestRepo_One(t *testing.T) {
 	var (
 		user    User
 		doc     = newDocument(&user)
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = query.From("users").Limit(1)
 	)
@@ -91,7 +91,7 @@ func TestRepo_One_unexpectedError(t *testing.T) {
 	var (
 		user    User
 		doc     = newDocument(&user)
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = query.From("users").Limit(1)
 	)
@@ -109,7 +109,7 @@ func TestRepo_One_notFound(t *testing.T) {
 	var (
 		user    User
 		doc     = newDocument(&user)
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = query.From("users").Limit(1)
 	)
@@ -127,7 +127,7 @@ func TestRepo_All(t *testing.T) {
 	var (
 		users   []User
 		collec  = newCollection(&users)
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = query.From("users").Limit(1)
 	)
@@ -145,7 +145,7 @@ func TestRepo_Insert(t *testing.T) {
 	var (
 		user      User
 		doc       = newDocument(&user)
-		adapter   = &TestAdapter{}
+		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
@@ -167,7 +167,7 @@ func TestRepo_Insert(t *testing.T) {
 func TestRepo_Insert_error(t *testing.T) {
 	var (
 		user      User
-		adapter   = &TestAdapter{}
+		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
@@ -188,7 +188,7 @@ func TestRepo_InsertAll(t *testing.T) {
 	var (
 		users   []User
 		collec  = newCollection(&users)
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []change.Changes{
 			change.Build(change.Set("name", "name1")),
@@ -211,7 +211,7 @@ func TestRepo_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}
 		doc       = newDocument(&user)
-		adapter   = &TestAdapter{}
+		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
@@ -233,7 +233,7 @@ func TestRepo_Update(t *testing.T) {
 
 func TestRepo_Update_nothing(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 	)
 
@@ -246,7 +246,7 @@ func TestRepo_Update_nothing(t *testing.T) {
 func TestRepo_Update_unchanged(t *testing.T) {
 	var (
 		user    = User{ID: 1}
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 	)
 
@@ -259,7 +259,7 @@ func TestRepo_Update_unchanged(t *testing.T) {
 func TestRepo_Update_error(t *testing.T) {
 	var (
 		user      = User{ID: 1}
-		adapter   = &TestAdapter{}
+		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []change.Builder{
 			change.Set("name", "name"),
@@ -278,7 +278,7 @@ func TestRepo_Update_error(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_update(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
@@ -309,7 +309,7 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
@@ -336,7 +336,7 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
@@ -360,7 +360,7 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
@@ -400,7 +400,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
@@ -430,7 +430,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 
 func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
 	var (
-		adapter     = &TestAdapter{}
+		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
@@ -444,7 +444,7 @@ func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
 
 func TestRepo_upsertHasOne_update(t *testing.T) {
 	var (
-		adapter    = &TestAdapter{}
+		adapter    = &testAdapter{}
 		repo       = Repo{adapter: adapter}
 		user       = &User{ID: 1, Address: Address{ID: 2}}
 		doc        = newDocument(user)
@@ -474,7 +474,7 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 
 func TestRepo_upsertHasOne_updateError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
@@ -500,7 +500,7 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 
 func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
@@ -523,7 +523,7 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	var (
-		adapter    = &TestAdapter{}
+		adapter    = &testAdapter{}
 		repo       = Repo{adapter: adapter}
 		user       = &User{}
 		doc        = newDocument(user)
@@ -558,7 +558,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 
 func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{}
 		doc     = newDocument(user)
@@ -588,7 +588,7 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 
 func TestRepo_upsertHasMany_insert(t *testing.T) {
 	var (
-		adapter           = &TestAdapter{}
+		adapter           = &testAdapter{}
 		repo              = Repo{adapter: adapter}
 		user              = &User{ID: 1}
 		doc               = newDocument(user)
@@ -631,7 +631,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 
 func TestRepo_upsertHasMany_insertError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
@@ -663,7 +663,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 
 func TestRepo_upsertHasMany_update(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{
 			ID: 1,
@@ -722,7 +722,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 
 func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{
 			ID:           1,
@@ -771,7 +771,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 
 func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{
 			ID: 1,
@@ -811,7 +811,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 
 func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
@@ -835,7 +835,7 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 
 func TestRepo_Delete(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1}
 	)
@@ -850,7 +850,7 @@ func TestRepo_Delete(t *testing.T) {
 
 // func TestRepo_Delete_slice(t *testing.T) {
 // 	var (
-// 		adapter = &TestAdapter{}
+// 		adapter = &testAdapter{}
 // 		repo    = Repo{adapter: adapter}
 // 		users   = []User{
 // 			{ID: 1},
@@ -868,7 +868,7 @@ func TestRepo_Delete(t *testing.T) {
 
 // func TestRepo_Delete_emptySlice(t *testing.T) {
 // 	var (
-// 		adapter = &TestAdapter{}
+// 		adapter = &testAdapter{}
 // 		repo    = Repo{adapter: adapter}
 // 		users   = []User{}
 // 	)
@@ -880,7 +880,7 @@ func TestRepo_Delete(t *testing.T) {
 
 func TestRepo_DeleteAll(t *testing.T) {
 	var (
-		adapter = &TestAdapter{}
+		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		queries = query.From("logs").Where(where.Eq("user_id", 1))
 	)
@@ -894,7 +894,7 @@ func TestRepo_DeleteAll(t *testing.T) {
 }
 
 func TestRepo_Transaction(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).
 		On("Commit").Return(nil)
 
@@ -911,7 +911,7 @@ func TestRepo_Transaction(t *testing.T) {
 }
 
 func TestRepo_Transaction_beginError(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(errors.NewUnexpected("error"))
 
 	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
@@ -924,7 +924,7 @@ func TestRepo_Transaction_beginError(t *testing.T) {
 }
 
 func TestRepo_Transaction_commitError(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).
 		On("Commit").Return(errors.NewUnexpected("error"))
 
@@ -938,7 +938,7 @@ func TestRepo_Transaction_commitError(t *testing.T) {
 }
 
 func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
 
@@ -952,7 +952,7 @@ func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
 }
 
 func TestRepo_Transaction_panicWithKnownErrorAndRollback(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
 
@@ -966,7 +966,7 @@ func TestRepo_Transaction_panicWithKnownErrorAndRollback(t *testing.T) {
 }
 
 func TestRepo_Transaction_panicAndRollback(t *testing.T) {
-	adapter := new(TestAdapter)
+	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).
 		On("Rollback").Return(nil)
 

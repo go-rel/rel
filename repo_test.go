@@ -13,6 +13,22 @@ import (
 
 var repo = Repo{}
 
+func createCursor(row int) *testCursor {
+	cur := &testCursor{}
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id"}, nil).Once()
+
+	if row > 0 {
+		cur.On("Next").Return(true).Times(row)
+		cur.SetScan(row, 10)
+	}
+
+	cur.On("Next").Return(false).Once()
+
+	return cur
+}
+
 func TestNew(t *testing.T) {
 	adapter := &testAdapter{}
 	repo := New(adapter)
@@ -76,33 +92,39 @@ func TestRepo_One(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = query.From("users").Limit(1)
+		cur     = createCursor(1)
 	)
 
 	doc.(*document).reflect()
 
-	adapter.On("All", query, doc).Return(1, nil)
+	adapter.On("Query", query).Return(cur, nil)
 
 	assert.Nil(t, repo.One(&user, query))
-	assert.NotPanics(t, func() { repo.MustOne(&user, query) })
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
-func TestRepo_One_unexpectedError(t *testing.T) {
+func TestRepo_One_queryError(t *testing.T) {
 	var (
 		user    User
 		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
+		cur     = &testCursor{}
 		query   = query.From("users").Limit(1)
 	)
 
 	doc.(*document).reflect()
 
-	adapter.On("All", query, doc).Return(1, errors.NewUnexpected("error"))
+	adapter.On("Query", query).Return(cur, errors.NewUnexpected("error"))
 
 	assert.NotNil(t, repo.One(&user, query))
-	assert.Panics(t, func() { repo.MustOne(&user, query) })
+
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_One_notFound(t *testing.T) {
@@ -111,16 +133,19 @@ func TestRepo_One_notFound(t *testing.T) {
 		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
+		cur     = createCursor(0)
 		query   = query.From("users").Limit(1)
 	)
 
 	doc.(*document).reflect()
 
-	adapter.On("All", query, doc).Return(0, nil)
+	adapter.On("Query", query).Return(cur, nil)
 
-	assert.Equal(t, errors.New("no result found", "", errors.NotFound), repo.One(&user, query))
-	assert.Panics(t, func() { repo.MustOne(&user, query) })
+	err := repo.One(&user, query)
+	assert.Equal(t, errors.New("no result found", "", errors.NotFound), err)
+
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_All(t *testing.T) {
@@ -151,17 +176,19 @@ func TestRepo_Insert(t *testing.T) {
 			change.Set("name", "name"),
 		}
 		changes = change.Build(cbuilders...)
+		cur     = createCursor(1)
 	)
 
 	doc.(*document).reflect()
 
-	adapter.
-		On("Insert", query.From("users"), changes).Return(1, nil).
-		On("All", query.From("users").Where(where.Eq("id", 1)).Limit(1), doc).Return(1, nil)
+	adapter.On("Insert", query.From("users"), changes).Return(1, nil).Once()
+	adapter.On("Query", query.From("users").Where(where.Eq("id", 1)).Limit(1)).Return(cur, nil)
 
 	assert.Nil(t, repo.Insert(&user, cbuilders...))
-	assert.NotPanics(t, func() { repo.MustInsert(&user, cbuilders...) })
+	assert.False(t, cur.Next())
+
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_Insert_error(t *testing.T) {
@@ -175,8 +202,7 @@ func TestRepo_Insert_error(t *testing.T) {
 		changes = change.Build(cbuilders...)
 	)
 
-	adapter.
-		On("Insert", query.From("users"), changes).Return(0, errors.NewUnexpected("error"))
+	adapter.On("Insert", query.From("users"), changes).Return(0, errors.NewUnexpected("error"))
 
 	assert.NotNil(t, repo.Insert(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustInsert(&user, cbuilders...) })
@@ -218,16 +244,17 @@ func TestRepo_Update(t *testing.T) {
 		}
 		changes = change.Build(cbuilders...)
 		queries = query.From("users").Where(where.Eq("id", user.ID))
+		cur     = createCursor(1)
 	)
 
 	doc.(*document).reflect()
 
-	adapter.
-		On("Update", queries, changes).Return(nil).
-		On("All", queries.Limit(1), doc).Return(1, nil)
+	adapter.On("Update", queries, changes).Return(nil).Once()
+	adapter.On("Query", queries.Limit(1)).Return(cur, nil)
 
 	assert.Nil(t, repo.Update(&user, cbuilders...))
-	assert.NotPanics(t, func() { repo.MustUpdate(&user, cbuilders...) })
+	assert.False(t, cur.Next())
+
 	adapter.AssertExpectations(t)
 }
 
@@ -268,8 +295,7 @@ func TestRepo_Update_error(t *testing.T) {
 		queries = query.From("users").Where(where.Eq("id", user.ID))
 	)
 
-	adapter.
-		On("Update", queries, changes).Return(errors.NewUnexpected("error"))
+	adapter.On("Update", queries, changes).Return(errors.NewUnexpected("error"))
 
 	assert.NotNil(t, repo.Update(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustUpdate(&user, cbuilders...) })
@@ -293,18 +319,20 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 		)
 		q        = query.Build("users", where.Eq("id", 1))
 		buyer, _ = changes.GetAssoc("Buyer")
+		cur      = createCursor(1)
 	)
 
 	buyerDoc.(*document).reflect()
 
-	adapter.
-		On("Update", q, buyer[0]).Return(nil).
-		On("All", q.Limit(1), buyerDoc).Return(1, nil)
+	adapter.On("Update", q, buyer[0]).Return(nil).Once()
+	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
 
 	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
+	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
@@ -325,8 +353,7 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
-	adapter.
-		On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error"))
+	adapter.On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error"))
 
 	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
@@ -375,27 +402,25 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 		)
 		q        = query.Build("users")
 		buyer, _ = changes.GetAssoc("Buyer")
+		cur      = createCursor(1)
 	)
 
 	buyerDoc.(*document).reflect()
 	buyerDoc.(*document).initAssociations()
 
-	adapter.
-		On("Insert", q, buyer[0]).Return(1, nil).
-		On("All", q.Where(where.Eq("id", 1)).Limit(1), buyerDoc).Return(1, nil).
-		Run(func(args mock.Arguments) {
-			user := args.Get(1).(*document).v.(*User)
-			user.ID = 1
-		})
+	adapter.On("Insert", q, buyer[0]).Return(1, nil).Once()
+	adapter.On("Query", q.Where(where.Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
+	assert.False(t, cur.Next())
 
 	ref, ok := changes.Get("user_id")
 	assert.True(t, ok)
-	assert.Equal(t, change.Set("user_id", 1), ref)
+	assert.Equal(t, change.Set("user_id", 10), ref)
 
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
@@ -416,8 +441,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
-	adapter.
-		On("Insert", q, buyer[0]).Return(0, errors.NewUnexpected("insert error"))
+	adapter.On("Insert", q, buyer[0]).Return(0, errors.NewUnexpected("insert error"))
 
 	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Equal(t, errors.NewUnexpected("insert error"), err)
@@ -458,18 +482,20 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 		)
 		q            = query.Build("addresses").Where(where.Eq("id", 2).AndEq("user_id", 1))
 		addresses, _ = changes.GetAssoc("Address")
+		cur          = createCursor(1)
 	)
 
 	addressDoc.(*document).reflect()
 
-	adapter.
-		On("Update", q, addresses[0]).Return(nil).
-		On("All", q.Limit(1), addressDoc).Return(1, nil)
+	adapter.On("Update", q, addresses[0]).Return(nil).Once()
+	adapter.On("Query", q.Limit(1)).Return(cur, nil)
 
 	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Nil(t, err)
+	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_upsertHasOne_updateError(t *testing.T) {
@@ -489,8 +515,7 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 		addresses, _ = changes.GetAssoc("Address")
 	)
 
-	adapter.
-		On("Update", q, addresses[0]).Return(errors.NewUnexpected("update error"))
+	adapter.On("Update", q, addresses[0]).Return(errors.NewUnexpected("update error"))
 
 	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Equal(t, errors.NewUnexpected("update error"), err)
@@ -537,6 +562,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 		)
 		q       = query.Build("addresses")
 		address = change.Build(change.Set("street", "street1"))
+		cur     = createCursor(1)
 	)
 
 	addressDoc.(*document).reflect()
@@ -546,14 +572,15 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	user.ID = 1
 	address.SetValue("user_id", user.ID)
 
-	adapter.
-		On("Insert", q, address).Return(2, nil).
-		On("All", q.Where(where.Eq("id", 2)).Limit(1), addressDoc).Return(1, nil)
+	adapter.On("Insert", q, address).Return(2, nil).Once()
+	adapter.On("Query", q.Where(where.Eq("id", 2)).Limit(1)).Return(cur, nil)
 
 	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Nil(t, err)
+	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepo_upsertHasOne_insertNewError(t *testing.T) {

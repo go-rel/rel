@@ -23,7 +23,7 @@ func scanOne(cur Cursor, collec Collection) error {
 	}
 
 	if !cur.Next() {
-		return errors.NewUnexpected("TODO: no result")
+		return errors.New("no result found", "", errors.NotFound)
 	}
 
 	var (

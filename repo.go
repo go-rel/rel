@@ -75,15 +75,12 @@ func (r Repo) One(entity interface{}, queries ...query.Builder) error {
 		q   = query.Build(doc.Table(), queries...).Limit(1)
 	)
 
-	count, err := r.adapter.All(q, doc, r.logger...)
-
+	cur, err := r.adapter.Query(q, r.logger...)
 	if err != nil {
-		return transformError(err)
-	} else if count == 0 {
-		return errors.New("no result found", "", errors.NotFound)
-	} else {
-		return nil
+		return err
 	}
+
+	return scanOne(cur, doc)
 }
 
 // MustOne retrieves one result that match the query.

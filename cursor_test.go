@@ -51,44 +51,21 @@ func (tc *testCursor) Scan(scanners ...interface{}) error {
 func (tc *testCursor) SetScan(times int, ret ...interface{}) *mock.Call {
 	args := make([]interface{}, len(ret))
 	for i := 0; i < len(args); i++ {
-		args[i] = mock.MatchedBy(func(arg interface{}) bool {
-			_, ok := arg.(sql.Scanner)
-			return ok
-		})
-	}
-
-	return tc.On("Scan", args...).
-		Return(func(scanners ...interface{}) error {
-			for i := 0; i < len(scanners); i++ {
-				scanners[i].(sql.Scanner).Scan(ret[i])
-			}
-
-			return nil
-		}).Times(times)
-}
-
-func (tc *testCursor) SetScanHead(times int, ret ...interface{}) *mock.Call {
-	args := make([]interface{}, len(ret))
-
-	args[0] = mock.MatchedBy(func(arg interface{}) bool {
-		_, ok := arg.(*int)
-		return ok
-	})
-
-	for i := 1; i < len(args); i++ {
 		args[i] = mock.Anything
 	}
 
 	return tc.On("Scan", args...).
 		Return(func(scanners ...interface{}) error {
 			for i := 0; i < len(scanners); i++ {
-				if v, ok := scanners[i].(*int); ok {
-					*v = ret[i].(int)
+				if v, ok := scanners[i].(sql.Scanner); ok {
+					v.Scan(ret[i])
+				} else {
+					convertAssign(scanners[i], ret[i])
 				}
 			}
 
 			return nil
-		}).Once()
+		}).Times(times)
 }
 
 func TestScanOne(t *testing.T) {
@@ -102,14 +79,14 @@ func TestScanOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(1, 10, "del piero", nil, now, nil)
+	cur.SetScan(1, 10, "Del Piero", nil, now, nil)
 
 	err := scanOne(cur, doc)
 	assert.Nil(t, err)
 
 	assert.Equal(t, User{
 		ID:        10,
-		Name:      "del piero",
+		Name:      "Del Piero",
 		CreatedAt: now,
 	}, user)
 
@@ -128,8 +105,8 @@ func TestScanMany(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(1, 10, "del piero", nil, now, nil)
-	cur.SetScan(1, 11, "nedved", 46, now, now)
+	cur.SetScan(1, 10, "Del Piero", nil, now, nil)
+	cur.SetScan(1, 11, "Nedved", 46, now, now)
 	cur.On("Next").Return(false).Once()
 
 	err := scanMany(cur, col)
@@ -138,13 +115,13 @@ func TestScanMany(t *testing.T) {
 
 	assert.Equal(t, User{
 		ID:        10,
-		Name:      "del piero",
+		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users[0])
 
 	assert.Equal(t, User{
 		ID:        11,
-		Name:      "nedved",
+		Name:      "Nedved",
 		Age:       46,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -172,10 +149,8 @@ func TestScanMulti(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.SetScanHead(1, 10, nil, nil, nil, nil, nil)
-	cur.SetScan(2, 10, "del piero", nil, now, nil)
-	cur.SetScanHead(1, 11, nil, nil, nil, nil, nil)
-	cur.SetScan(1, 11, "nedved", 46, now, now)
+	cur.SetScan(3, 10, "Del Piero", nil, now, nil)
+	cur.SetScan(2, 11, "Nedved", 46, now, now)
 	cur.On("Next").Return(false).Once()
 
 	err := scanMulti(cur, keyField, keyType, cols)
@@ -184,21 +159,21 @@ func TestScanMulti(t *testing.T) {
 	assert.Len(t, users1, 1)
 	assert.Equal(t, User{
 		ID:        10,
-		Name:      "del piero",
+		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users1[0])
 
 	assert.Len(t, users2, 1)
 	assert.Equal(t, User{
 		ID:        10,
-		Name:      "del piero",
+		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users2[0])
 
 	assert.Len(t, users3, 1)
 	assert.Equal(t, User{
 		ID:        11,
-		Name:      "nedved",
+		Name:      "Nedved",
 		Age:       46,
 		CreatedAt: now,
 		UpdatedAt: now,

@@ -83,7 +83,7 @@ func (c *collection) PrimaryValue() interface{} {
 func (c *collection) Get(index int) Document {
 	c.reflect()
 
-	return newDocument(c.rv.Index(index).Interface())
+	return newDocument(c.rv.Index(index).Addr().Interface())
 }
 
 func (c *collection) Len() int {

@@ -424,6 +424,51 @@ func (r Repo) deleteAll(q query.Query) error {
 	return r.adapter.Delete(q, r.logger...)
 }
 
+// Preload loads association with given query.
+func (r Repo) Preload(entities interface{}, field string, queries ...query.Builder) error {
+	var (
+		col  Collection
+		path = strings.Split(field, ".")
+		rt   = reflect.TypeOf(entities)
+	)
+
+	if rt.Kind() != reflect.Ptr {
+		panic("grimoire: record parameter must be a pointer.")
+	}
+
+	rt = rt.Elem()
+	if rt.Kind() == reflect.Slice {
+		col = newCollection(entities)
+	} else {
+		col = newDocument(entities)
+	}
+
+	var (
+		targets, table, keyField, keyType = r.mapPreloadTargets(col, path)
+	)
+
+	if len(targets) == 0 {
+		return nil
+	}
+
+	var (
+		ids = make([]interface{}, len(targets))
+		i   = 0
+	)
+
+	for key := range targets {
+		ids[i] = key
+		i++
+	}
+
+	cur, err := r.adapter.Query(query.Build(table, where.In(keyField, ids...)), r.logger...)
+	if err != nil {
+		return err
+	}
+
+	return scanMulti(cur, keyField, keyType, targets)
+}
+
 func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}][]Collection, string, string, reflect.Type) {
 	type frame struct {
 		index int
@@ -439,8 +484,8 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 	)
 
 	// init stack
-	for i := 0; i < col.Len(); i++ {
-		stack[i] = frame{index: i, doc: col.Get(i)}
+	for i := 0; i < len(stack); i++ {
+		stack[i] = frame{index: 0, doc: col.Get(i)}
 	}
 
 	for len(stack) > 0 {
@@ -482,43 +527,6 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 	}
 
 	return mapTarget, table, keyField, keyType
-}
-
-// Preload loads association with given query.
-func (r Repo) Preload(entities interface{}, field string, queries ...query.Builder) error {
-	var (
-		col  Collection
-		path = strings.Split(field, ".")
-		rt   = reflect.TypeOf(entities)
-	)
-
-	if rt.Kind() != reflect.Ptr {
-		panic("grimoire: record parameter must be a pointer.")
-	}
-
-	rt = rt.Elem()
-	if rt.Kind() == reflect.Slice {
-		col = newCollection(entities)
-	} else {
-		col = newDocument(entities)
-	}
-
-	var (
-		targets, table, keyField, keyType = r.mapPreloadTargets(col, path)
-		ids                               = make([]interface{}, len(targets))
-	)
-
-	i := 0
-	for key := range targets {
-		ids[i] = key
-	}
-
-	cur, err := r.adapter.Query(query.Build(table, where.In(keyField, ids...)), r.logger...)
-	if err != nil {
-		return err
-	}
-
-	return scanMulti(cur, keyField, keyType, targets)
 }
 
 // MustPreload loads association with given query.

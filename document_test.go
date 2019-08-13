@@ -61,6 +61,22 @@ func (i *Item) Scanners(fields []string) []interface{} {
 	return scanners
 }
 
+func (i Item) BelongsTo() []string {
+	return nil
+}
+
+func (i Item) HasOne() []string {
+	return nil
+}
+
+func (i Item) HasMany() []string {
+	return nil
+}
+
+func (i Item) Association(field string) Association {
+	return nil
+}
+
 func TestDocument_Table(t *testing.T) {
 	type User struct{}
 
@@ -369,4 +385,63 @@ func TestDocument_Values_usingInterface(t *testing.T) {
 	)
 
 	assert.Equal(t, values, doc.Values())
+}
+
+func TestDocument_Association(t *testing.T) {
+	tests := []struct {
+		name      string
+		record    interface{}
+		belongsTo []string
+		hasOne    []string
+		hasMany   []string
+	}{
+		{
+			name:    "User",
+			record:  &User{},
+			hasOne:  []string{"Address"},
+			hasMany: []string{"Transactions"},
+		},
+		{
+			name:    "User Cached",
+			record:  &User{},
+			hasOne:  []string{"Address"},
+			hasMany: []string{"Transactions"},
+		},
+		{
+			name:      "Transaction",
+			record:    &Transaction{},
+			belongsTo: []string{"Buyer"},
+		},
+		{
+			name:      "Address",
+			record:    &Address{},
+			belongsTo: []string{"User"},
+		},
+		{
+			name:   "Item",
+			record: &Item{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				doc = newDocument(test.record)
+			)
+
+			assert.Equal(t, test.belongsTo, doc.BelongsTo())
+			assert.Equal(t, test.hasOne, doc.HasOne())
+			assert.Equal(t, test.hasMany, doc.HasMany())
+		})
+	}
+}
+
+func TestDocument_Association_interface(t *testing.T) {
+	var (
+		doc = newDocument(&Item{})
+	)
+
+	assert.NotPanics(t, func() {
+		assert.Nil(t, doc.Association("empty"))
+	})
 }

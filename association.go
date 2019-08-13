@@ -94,7 +94,7 @@ func (a association) ReferenceField() string {
 }
 
 func (a association) ReferenceValue() interface{} {
-	return a.rv.FieldByIndex(a.data.referenceIndex).Interface()
+	return indirect(a.rv.FieldByIndex(a.data.referenceIndex))
 }
 
 func (a association) ForeignField() string {
@@ -118,7 +118,7 @@ func (a association) ForeignValue() interface{} {
 		rv = rv.Elem()
 	}
 
-	return rv.FieldByIndex(a.data.foreignIndex).Interface()
+	return indirect(rv.FieldByIndex(a.data.foreignIndex))
 }
 
 func newAssociation(rv reflect.Value, name string) Association {
@@ -143,7 +143,7 @@ func newAssociation(rv reflect.Value, name string) Association {
 
 	st, exist := rt.FieldByName(name)
 	if !exist {
-		panic("grimoire: field named (" + name + ") not found ")
+		panic("grimoire: no field named (" + name + ") in type " + rt.String() + " found ")
 	}
 
 	var (

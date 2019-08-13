@@ -63,10 +63,6 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 		return err
 	}
 
-	if keyType.Kind() == reflect.Ptr {
-		keyType = keyType.Elem()
-	}
-
 	var (
 		found       = false
 		keyValue    = reflect.New(keyType)

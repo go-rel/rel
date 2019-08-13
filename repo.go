@@ -490,10 +490,9 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 
 	for len(stack) > 0 {
 		var (
-			n              = len(stack) - 1
-			top            = stack[n]
-			assocs         = top.doc.Association(path[top.index])
-			target, loaded = assocs.Target()
+			n      = len(stack) - 1
+			top    = stack[n]
+			assocs = top.doc.Association(path[top.index])
 		)
 
 		stack = stack[:n]
@@ -501,6 +500,14 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 		if top.index == len(path)-1 {
 			var (
 				ref = assocs.ReferenceValue()
+			)
+
+			if ref == nil {
+				continue
+			}
+
+			var (
+				target, _ = assocs.Target()
 			)
 
 			mapTarget[ref] = append(mapTarget[ref], target)
@@ -511,6 +518,10 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 				keyType = reflect.TypeOf(ref)
 			}
 		} else {
+			var (
+				target, loaded = assocs.Target()
+			)
+
 			if !loaded {
 				continue
 			}

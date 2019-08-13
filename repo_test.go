@@ -1240,7 +1240,7 @@ func TestRepo_Preload_belongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_belongsToPtrKey(t *testing.T) {
+func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -1259,6 +1259,120 @@ func TestRepo_Preload_belongsToPtrKey(t *testing.T) {
 
 	assert.Nil(t, repo.Preload(&address, "User"))
 	assert.Equal(t, user, *address.User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Preload_nullBelongsTo(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		address = Address{}
+	)
+
+	assert.Nil(t, repo.Preload(&address, "User"))
+	assert.Nil(t, address.User)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
+	var (
+		adapter      = &testAdapter{}
+		repo         = Repo{adapter: adapter}
+		transactions = []Transaction{
+			{BuyerID: 10},
+			{BuyerID: 20},
+		}
+		users = []User{
+			{ID: 10, Name: "Del Piero"},
+			{ID: 20, Name: "Nedved"},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", query.From("users").Where(where.In("id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", query.From("users").Where(where.In("id", 20, 10))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.SetScan(2, users[0].ID, users[0].Name)
+	cur.SetScan(2, users[1].ID, users[1].Name)
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(&transactions, "Buyer"))
+	assert.Equal(t, users[0], transactions[0].Buyer)
+	assert.Equal(t, users[1], transactions[1].Buyer)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		users   = []User{
+			{ID: 10, Name: "Del Piero"},
+			{ID: 20, Name: "Nedved"},
+		}
+		addresses = []Address{
+			{UserID: &users[0].ID},
+			{UserID: &users[1].ID},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", query.From("users").Where(where.In("id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", query.From("users").Where(where.In("id", 20, 10))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.SetScan(2, users[0].ID, users[0].Name)
+	cur.SetScan(2, users[1].ID, users[1].Name)
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(&addresses, "User"))
+	assert.Equal(t, users[0], *addresses[0].User)
+	assert.Equal(t, users[1], *addresses[1].User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Preload_emptySlice(t *testing.T) {
+	var (
+		repo      = Repo{}
+		addresses = []Address{}
+	)
+
+	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
+}
+
+func TestQuery_Preload_notPointerPanic(t *testing.T) {
+	var (
+		repo        = Repo{}
+		transaction = Transaction{}
+	)
+
+	assert.Panics(t, func() { repo.Preload(transaction, "User") })
+}
+
+func TestRepo_Preload_queryError(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = Transaction{BuyerID: 10}
+		cur         = &testCursor{}
+		err         = errors.NewUnexpected("error")
+	)
+
+	adapter.On("Query", query.From("users").Where(where.In("id", 10))).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Preload(&transaction, "Buyer"))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

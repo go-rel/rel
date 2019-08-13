@@ -1,6 +1,8 @@
 package grimoire
 
 import (
+	"reflect"
+
 	"github.com/Fs02/grimoire/changeset"
 	"github.com/Fs02/grimoire/errors"
 )
@@ -16,6 +18,18 @@ func transformError(err error, chs ...*changeset.Changeset) error {
 	} else {
 		return errors.NewUnexpected(err.Error())
 	}
+}
+
+func indirect(rv reflect.Value) interface{} {
+	if rv.Kind() == reflect.Ptr {
+		if rv.IsNil() {
+			return nil
+		}
+
+		rv = rv.Elem()
+	}
+
+	return rv.Interface()
 }
 
 // must is grimoire version of paranoid.Panic without context, but only original error.

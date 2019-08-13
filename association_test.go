@@ -87,7 +87,7 @@ func TestAssociation(t *testing.T) {
 			referenceField: "id",
 			referenceValue: user.ID,
 			foreignField:   "user_id",
-			foreignValue:   user.Address.UserID,
+			foreignValue:   nil,
 		},
 		{
 			entity:         "User",
@@ -99,7 +99,7 @@ func TestAssociation(t *testing.T) {
 			referenceField: "id",
 			referenceValue: userLoaded.ID,
 			foreignField:   "user_id",
-			foreignValue:   userLoaded.Address.UserID,
+			foreignValue:   nil,
 		},
 		// {
 		// 	entity:         "Address",
@@ -121,7 +121,7 @@ func TestAssociation(t *testing.T) {
 			target:         newDocument(addressLoaded.User),
 			loaded:         true,
 			referenceField: "user_id",
-			referenceValue: addressLoaded.UserID,
+			referenceValue: *addressLoaded.UserID,
 			foreignField:   "id",
 			foreignValue:   addressLoaded.User.ID,
 		},

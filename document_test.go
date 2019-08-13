@@ -2,6 +2,7 @@ package grimoire
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -443,5 +444,69 @@ func TestDocument_Association_interface(t *testing.T) {
 
 	assert.NotPanics(t, func() {
 		assert.Nil(t, doc.Association("empty"))
+	})
+}
+
+func TestDocument(t *testing.T) {
+	tests := []struct {
+		entity interface{}
+		panics bool
+	}{
+		{
+			entity: &User{},
+		},
+		{
+			entity: newDocument(&User{}),
+		},
+		{
+			entity: reflect.ValueOf(&User{}),
+		},
+		{
+			entity: reflect.ValueOf(User{}),
+			panics: true,
+		},
+		{
+			entity: reflect.ValueOf(&[]User{}),
+			panics: true,
+		},
+		{
+			entity: reflect.TypeOf(&User{}),
+			panics: true,
+		},
+		{
+			entity: reflect.TypeOf(&User{}),
+			panics: true,
+		},
+		{
+			entity: nil,
+			panics: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("%T", test.entity), func(t *testing.T) {
+			if test.panics {
+				assert.Panics(t, func() {
+					newDocument(test.entity)
+				})
+			} else {
+				assert.NotPanics(t, func() {
+					newDocument(test.entity)
+				})
+			}
+		})
+	}
+}
+
+func TestDocument_notPtr(t *testing.T) {
+	assert.Panics(t, func() {
+		newDocument(User{}).Table()
+	})
+}
+
+func TestDocument_notPtrOfStruct(t *testing.T) {
+	assert.Panics(t, func() {
+		i := 1
+		newDocument(&i).Table()
 	})
 }

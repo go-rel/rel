@@ -399,8 +399,8 @@ func newDocument(entity interface{}) Document {
 	case Document:
 		return v
 	case reflect.Value:
-		if v.Kind() != reflect.Ptr && v.Elem().Kind() != reflect.Slice {
-			panic("grimoire: must be a pointer to a slice")
+		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
+			panic("grimoire: must be a pointer to a struct")
 		}
 
 		return &document{
@@ -408,6 +408,10 @@ func newDocument(entity interface{}) Document {
 			rv: v.Elem(),
 			rt: v.Elem().Type(),
 		}
+	case reflect.Type:
+		panic("grimoire: cannot use reflect.Type")
+	case nil:
+		panic("grimoire: cannot be nil")
 	default:
 		return &document{v: v}
 	}

@@ -510,6 +510,7 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 				target, _ = assocs.Target()
 			)
 
+			target.Reset()
 			mapTarget[ref] = append(mapTarget[ref], target)
 
 			if table == "" {

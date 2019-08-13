@@ -124,12 +124,16 @@ func (d *document) PrimaryField() string {
 		field, _ = searchPrimary(d.rt)
 	)
 
+	if field == "" {
+		panic("grimoire: failed to infer primary key for type " + d.rt.String())
+	}
+
 	return field
 }
 
 func (d *document) PrimaryValue() interface{} {
 	if p, ok := d.v.(primary); ok {
-		return p.PrimaryField()
+		return p.PrimaryValue()
 	}
 
 	d.reflect()
@@ -137,6 +141,10 @@ func (d *document) PrimaryValue() interface{} {
 	var (
 		_, index = searchPrimary(d.rt)
 	)
+
+	if index < 0 {
+		panic("grimoire: failed to infer primary key for type " + d.rt.String())
+	}
 
 	return d.rv.Field(index).Interface()
 }
@@ -453,7 +461,7 @@ func searchPrimary(rt reflect.Type) (string, int) {
 
 	var (
 		field = ""
-		index = 0
+		index = -1
 	)
 
 	for i := 0; i < rt.NumField(); i++ {

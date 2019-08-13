@@ -4,13 +4,17 @@ import (
 	"reflect"
 )
 
-type Collection interface {
-	table
-	primary
+type slice interface {
 	Reset()
 	Add() Document
 	Get(index int) Document
 	Len() int
+}
+
+type Collection interface {
+	table
+	primary
+	slice
 }
 
 type collection struct {
@@ -42,6 +46,8 @@ func (c *collection) Table() string {
 		return tn.Table()
 	}
 
+	// TODO: check interface definition in slice item
+
 	c.reflect()
 
 	return tableName(c.rt.Elem())
@@ -51,6 +57,8 @@ func (c *collection) PrimaryField() string {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryField()
 	}
+
+	// TODO: check interface definition in slice item
 
 	c.reflect()
 

@@ -388,6 +388,19 @@ func TestDocument_Values_usingInterface(t *testing.T) {
 	assert.Equal(t, values, doc.Values())
 }
 
+func TestDocument_Slice(t *testing.T) {
+	assert.NotPanics(t, func() {
+		var (
+			doc = newDocument(&Item{})
+		)
+
+		doc.Reset()
+		assert.Equal(t, 1, doc.Len())
+		assert.Equal(t, doc, doc.Get(0))
+		assert.Equal(t, doc, doc.Add())
+	})
+}
+
 func TestDocument_Association(t *testing.T) {
 	tests := []struct {
 		name      string

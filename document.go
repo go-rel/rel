@@ -70,10 +70,7 @@ type Document interface {
 	scanners
 	values
 	associations
-	Reset()
-	Get(index int) Document
-	Add() Document
-	Len() int
+	slice
 }
 
 type document struct {

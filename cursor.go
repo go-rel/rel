@@ -11,7 +11,7 @@ type Cursor interface {
 	Fields() ([]string, error)
 	Next() bool
 	Scan(...interface{}) error
-	NopScanner() interface{}
+	NopScanner() interface{} // TODO: conflict with manual scanners interface
 }
 
 func scanOne(cur Cursor, col Collection) error {

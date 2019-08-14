@@ -48,7 +48,7 @@ func (tc *testCursor) Scan(scanners ...interface{}) error {
 	return err
 }
 
-func (tc *testCursor) SetScan(times int, ret ...interface{}) *mock.Call {
+func (tc *testCursor) MockScan(ret ...interface{}) *mock.Call {
 	args := make([]interface{}, len(ret))
 	for i := 0; i < len(args); i++ {
 		args[i] = mock.Anything
@@ -65,7 +65,7 @@ func (tc *testCursor) SetScan(times int, ret ...interface{}) *mock.Call {
 			}
 
 			return nil
-		}).Times(times)
+		})
 }
 
 func TestScanOne(t *testing.T) {
@@ -79,7 +79,7 @@ func TestScanOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(1, 10, "Del Piero", nil, now, nil)
+	cur.MockScan(10, "Del Piero", nil, now, nil).Once()
 
 	err := scanOne(cur, doc)
 	assert.Nil(t, err)
@@ -105,8 +105,8 @@ func TestScanMany(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(1, 10, "Del Piero", nil, now, nil)
-	cur.SetScan(1, 11, "Nedved", 46, now, now)
+	cur.MockScan(10, "Del Piero", nil, now, nil).Once()
+	cur.MockScan(11, "Nedved", 46, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
 	err := scanMany(cur, col)
@@ -149,8 +149,8 @@ func TestScanMulti(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(3, 10, "Del Piero", nil, now, nil)
-	cur.SetScan(2, 11, "Nedved", 46, now, now)
+	cur.MockScan(10, "Del Piero", nil, now, nil).Times(3)
+	cur.MockScan(11, "Nedved", 46, now, now).Twice()
 	cur.On("Next").Return(false).Once()
 
 	err := scanMulti(cur, keyField, keyType, cols)

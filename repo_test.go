@@ -21,7 +21,7 @@ func createCursor(row int) *testCursor {
 
 	if row > 0 {
 		cur.On("Next").Return(true).Times(row)
-		cur.SetScan(row, 10)
+		cur.MockScan(10).Times(row)
 	}
 
 	cur.On("Next").Return(false).Once()
@@ -938,7 +938,7 @@ func TestRepo_Preload_hasOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(2, address.ID, *address.UserID)
+	cur.MockScan(address.ID, *address.UserID).Times(2)
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&user, "Address"))
@@ -967,8 +967,8 @@ func TestRepo_Preload_sliceHasOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, addresses[0].ID, *addresses[0].UserID)
-	cur.SetScan(2, addresses[1].ID, *addresses[1].UserID)
+	cur.MockScan(addresses[0].ID, *addresses[0].UserID).Twice()
+	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&users, "Address"))
@@ -995,7 +995,7 @@ func TestRepo_Preload_nestedHasOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(2, address.ID, *address.UserID)
+	cur.MockScan(address.ID, *address.UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&transaction, "Buyer.Address"))
@@ -1027,8 +1027,8 @@ func TestRepo_Preload_sliceNestedHasOne(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, addresses[0].ID, *addresses[0].UserID)
-	cur.SetScan(2, addresses[1].ID, *addresses[1].UserID)
+	cur.MockScan(addresses[0].ID, *addresses[0].UserID).Twice()
+	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&transactions, "Buyer.Address"))
@@ -1056,8 +1056,8 @@ func TestRepo_Preload_hasMany(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, transactions[0].ID, transactions[0].BuyerID)
-	cur.SetScan(2, transactions[1].ID, transactions[1].BuyerID)
+	cur.MockScan(transactions[0].ID, transactions[0].BuyerID).Twice()
+	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&user, "Transactions"))
@@ -1087,10 +1087,10 @@ func TestRepo_Preload_sliceHasMany(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Times(4)
-	cur.SetScan(2, transactions[0].ID, transactions[0].BuyerID)
-	cur.SetScan(2, transactions[1].ID, transactions[1].BuyerID)
-	cur.SetScan(2, transactions[2].ID, transactions[2].BuyerID)
-	cur.SetScan(2, transactions[3].ID, transactions[3].BuyerID)
+	cur.MockScan(transactions[0].ID, transactions[0].BuyerID).Twice()
+	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
+	cur.MockScan(transactions[2].ID, transactions[2].BuyerID).Twice()
+	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&users, "Transactions"))
@@ -1119,8 +1119,8 @@ func TestRepo_Preload_nestedHasMany(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, transactions[0].ID, transactions[0].BuyerID)
-	cur.SetScan(2, transactions[1].ID, transactions[1].BuyerID)
+	cur.MockScan(transactions[0].ID, transactions[0].BuyerID).Twice()
+	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&address, "User.Transactions"))
@@ -1165,10 +1165,10 @@ func TestRepo_Preload_nestedSliceHasMany(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Times(4)
-	cur.SetScan(2, transactions[0].ID, transactions[0].BuyerID)
-	cur.SetScan(2, transactions[1].ID, transactions[1].BuyerID)
-	cur.SetScan(2, transactions[2].ID, transactions[2].BuyerID)
-	cur.SetScan(2, transactions[3].ID, transactions[3].BuyerID)
+	cur.MockScan(transactions[0].ID, transactions[0].BuyerID).Twice()
+	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
+	cur.MockScan(transactions[2].ID, transactions[2].BuyerID).Twice()
+	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
@@ -1202,9 +1202,9 @@ func TestRepo_Preload_nestedNullSliceHasMany(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Times(3)
-	cur.SetScan(2, transactions[0].ID, transactions[0].BuyerID)
-	cur.SetScan(2, transactions[1].ID, transactions[1].BuyerID)
-	cur.SetScan(2, transactions[2].ID, transactions[2].BuyerID)
+	cur.MockScan(transactions[0].ID, transactions[0].BuyerID).Twice()
+	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
+	cur.MockScan(transactions[2].ID, transactions[2].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
@@ -1230,7 +1230,7 @@ func TestRepo_Preload_belongsTo(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(2, user.ID, user.Name)
+	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&transaction, "Buyer"))
@@ -1254,7 +1254,7 @@ func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
 	cur.On("Next").Return(true).Once()
-	cur.SetScan(2, user.ID, user.Name)
+	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&address, "User"))
@@ -1298,8 +1298,8 @@ func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, users[0].ID, users[0].Name)
-	cur.SetScan(2, users[1].ID, users[1].Name)
+	cur.MockScan(users[0].ID, users[0].Name).Twice()
+	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&transactions, "Buyer"))
@@ -1331,8 +1331,8 @@ func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
 	cur.On("Next").Return(true).Twice()
-	cur.SetScan(2, users[0].ID, users[0].Name)
-	cur.SetScan(2, users[1].ID, users[1].Name)
+	cur.MockScan(users[0].ID, users[0].Name).Twice()
+	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, repo.Preload(&addresses, "User"))

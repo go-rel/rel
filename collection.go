@@ -101,7 +101,9 @@ func (c *collection) Len() int {
 }
 
 func (c *collection) Reset() {
-	// TODD
+	c.reflect()
+
+	c.rv.Set(reflect.Zero(c.rt))
 }
 
 func (c *collection) Add() Document {
@@ -123,7 +125,7 @@ func newCollection(entities interface{}) Collection {
 	case Collection:
 		return v
 	case reflect.Value:
-		if v.Kind() != reflect.Ptr && v.Elem().Kind() != reflect.Slice {
+		if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Slice {
 			panic("grimoire: must be a pointer to a slice")
 		}
 
@@ -132,6 +134,10 @@ func newCollection(entities interface{}) Collection {
 			rv: v.Elem(),
 			rt: v.Elem().Type(),
 		}
+	case reflect.Type:
+		panic("grimoire: cannot use reflect.Type")
+	case nil:
+		panic("grimoire: cannot be nil")
 	default:
 		return &collection{v: v}
 	}

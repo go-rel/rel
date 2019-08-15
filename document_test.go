@@ -487,10 +487,6 @@ func TestDocument(t *testing.T) {
 			panics: true,
 		},
 		{
-			entity: reflect.TypeOf(&User{}),
-			panics: true,
-		},
-		{
 			entity: nil,
 			panics: true,
 		},

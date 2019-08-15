@@ -39,6 +39,10 @@ func must(err error) {
 	}
 }
 
+type isZeroer interface {
+	IsZero() bool
+}
+
 // isZero shallowly check wether a field in struct is zero or not
 func isZero(i interface{}) bool {
 	zero := true
@@ -74,6 +78,8 @@ func isZero(i interface{}) bool {
 		zero = v == 0
 	case float64:
 		zero = v == 0
+	case isZeroer:
+		zero = v.IsZero()
 	}
 
 	return zero

@@ -8,6 +8,170 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type Items []Item
+
+func (it *Items) Table() string {
+	return "_items"
+}
+
+func (it *Items) PrimaryField() string {
+	return "_uuid"
+}
+
+func (it *Items) PrimaryValue() interface{} {
+	var (
+		ids = make([]interface{}, len(*it))
+	)
+
+	for i := range *it {
+		ids[i] = (*it)[i].UUID
+	}
+
+	return ids
+}
+
+func TestCollection_Table(t *testing.T) {
+	var (
+		entities = []User{}
+		rt       = reflect.TypeOf(entities).Elem()
+		col      = newCollection(&entities)
+	)
+
+	// infer table name
+	assert.Equal(t, "users", col.Table())
+
+	// cached
+	_, cached := tablesCache.Load(rt)
+	assert.True(t, cached)
+
+	tablesCache.Delete(rt)
+}
+
+func TestCollection_Table_usingInterface(t *testing.T) {
+	var (
+		entities = Items{}
+		rt       = reflect.TypeOf(entities).Elem()
+		col      = newCollection(&entities)
+	)
+
+	// infer table name
+	assert.Equal(t, "_items", col.Table())
+
+	// never cache
+	_, cached := tablesCache.Load(rt)
+	assert.False(t, cached)
+}
+
+func TestCollection_Table_usingElemInterface(t *testing.T) {
+	var (
+		entities = []Item{}
+		rt       = reflect.TypeOf(entities).Elem()
+		col      = newCollection(&entities)
+	)
+
+	// infer table name
+	assert.Equal(t, "_items", col.Table())
+
+	// cache
+	_, cached := tablesCache.Load(rt)
+	assert.True(t, cached)
+
+	tablesCache.Delete(rt)
+}
+
+func TestCollection_Primary(t *testing.T) {
+	var (
+		entities = []User{
+			{ID: 1},
+			{ID: 2},
+		}
+		rt  = reflect.TypeOf(entities).Elem()
+		col = newCollection(&entities)
+	)
+
+	// infer primary key
+	assert.Equal(t, "id", col.PrimaryField())
+	assert.Equal(t, []interface{}{1, 2}, col.PrimaryValue())
+
+	// cached
+	_, cached := primariesCache.Load(rt)
+	assert.True(t, cached)
+
+	entities[1].ID = 4
+
+	// infer primary key using cache
+	assert.Equal(t, "id", col.PrimaryField())
+	assert.Equal(t, []interface{}{1, 4}, col.PrimaryValue())
+
+	primariesCache.Delete(rt)
+}
+
+func TestCollection_Primary_usingInterface(t *testing.T) {
+	var (
+		entities = Items{
+			{UUID: "abc123"},
+			{UUID: "def456"},
+		}
+		rt  = reflect.TypeOf(entities).Elem()
+		col = newCollection(&entities)
+	)
+
+	// should not be cached yet
+	_, cached := primariesCache.Load(rt)
+	assert.False(t, cached)
+
+	// infer primary key
+	assert.Equal(t, "_uuid", col.PrimaryField())
+	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+
+	// never cache
+	_, cached = primariesCache.Load(rt)
+	assert.False(t, cached)
+}
+
+func TestCollection_Primary_usingElemInterface(t *testing.T) {
+	var (
+		entities = []Item{
+			{UUID: "abc123"},
+			{UUID: "def456"},
+		}
+		rt  = reflect.TypeOf(entities).Elem()
+		col = newCollection(&entities)
+	)
+
+	// should not be cached yet
+	_, cached := primariesCache.Load(rt)
+	assert.False(t, cached)
+
+	// infer primary key
+	assert.Equal(t, "_uuid", col.PrimaryField())
+	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+
+	// cache
+	_, cached = primariesCache.Load(rt)
+	assert.True(t, cached)
+
+	primariesCache.Delete(rt)
+}
+
+func TestCollection_Primary_usingTag(t *testing.T) {
+	var (
+		entities = []struct {
+			ID         uint
+			ExternalID int `db:",primary"`
+			Name       string
+		}{
+			{ExternalID: 1},
+			{ExternalID: 2},
+		}
+		doc = newCollection(&entities)
+	)
+
+	// infer primary key
+	assert.Equal(t, "external_id", doc.PrimaryField())
+	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValue())
+}
+
 func TestCollection_Slice(t *testing.T) {
 	assert.NotPanics(t, func() {
 		var (

@@ -17,6 +17,11 @@ type Collection interface {
 	slice
 }
 
+var (
+	tableRt   = reflect.TypeOf((*table)(nil)).Elem()
+	primaryRt = reflect.TypeOf((*primary)(nil)).Elem()
+)
+
 type collection struct {
 	v  interface{}
 	rv reflect.Value
@@ -46,11 +51,31 @@ func (c *collection) Table() string {
 		return tn.Table()
 	}
 
-	// TODO: check interface definition in slice item
+	return c.tableName()
+}
 
+func (c *collection) tableName() string {
 	c.reflect()
 
-	return tableName(c.rt.Elem())
+	var (
+		rt = c.rt.Elem()
+	)
+
+	// check for cache
+	if name, cached := tablesCache.Load(rt); cached {
+		return name.(string)
+	}
+
+	if rt.Implements(tableRt) {
+		var (
+			v = reflect.Zero(rt).Interface().(table)
+		)
+
+		tablesCache.Store(rt, v.Table())
+		return v.Table()
+	}
+
+	return tableName(rt)
 }
 
 func (c *collection) PrimaryField() string {
@@ -58,12 +83,8 @@ func (c *collection) PrimaryField() string {
 		return p.PrimaryField()
 	}
 
-	// TODO: check interface definition in slice item
-
-	c.reflect()
-
 	var (
-		field, _ = searchPrimary(c.rt.Elem())
+		field, _ = c.searchPrimary()
 	)
 
 	return field
@@ -71,21 +92,58 @@ func (c *collection) PrimaryField() string {
 
 func (c *collection) PrimaryValue() interface{} {
 	if p, ok := c.v.(primary); ok {
-		return p.PrimaryField()
+		return p.PrimaryValue()
 	}
 
-	c.reflect()
-
 	var (
-		_, index = searchPrimary(c.rt.Elem())
+		_, index = c.searchPrimary()
 		ids      = make([]interface{}, c.rv.Len())
 	)
 
 	for i := 0; i < len(ids); i++ {
-		ids[i] = c.rv.Index(i).Field(index).Interface()
+		var (
+			fv = c.rv.Index(i)
+		)
+
+		if index == -2 {
+			// using interface
+			ids[i] = fv.Interface().(primary).PrimaryValue()
+		} else {
+			ids[i] = fv.Field(index).Interface()
+		}
 	}
 
 	return ids
+}
+
+func (c *collection) searchPrimary() (string, int) {
+	c.reflect()
+
+	var (
+		rt = c.rt.Elem()
+	)
+
+	if result, cached := primariesCache.Load(rt); cached {
+		p := result.(primaryData)
+		return p.field, p.index
+	}
+
+	if rt.Implements(primaryRt) {
+		var (
+			v     = reflect.Zero(rt).Interface().(primary)
+			field = v.PrimaryField()
+			index = -2 // special index to mark interface usage
+		)
+
+		primariesCache.Store(rt, primaryData{
+			field: field,
+			index: index,
+		})
+
+		return field, index
+	}
+
+	return searchPrimary(rt)
 }
 
 func (c *collection) Get(index int) Document {

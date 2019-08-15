@@ -79,12 +79,10 @@ func (i Item) Association(field string) Association {
 }
 
 func TestDocument_Table(t *testing.T) {
-	type User struct{}
-
 	var (
-		user = User{}
-		rt   = reflect.TypeOf(user)
-		doc  = newDocument(&user)
+		entity = User{}
+		rt     = reflect.TypeOf(entity)
+		doc    = newDocument(&entity)
 	)
 
 	// infer table name
@@ -112,9 +110,9 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 
 func TestDocument_Primary(t *testing.T) {
 	var (
-		user = User{ID: 1}
-		rt   = reflect.TypeOf(user)
-		doc  = newDocument(&user)
+		entity = User{ID: 1}
+		rt     = reflect.TypeOf(entity)
+		doc    = newDocument(&entity)
 	)
 
 	// infer primary key
@@ -125,11 +123,13 @@ func TestDocument_Primary(t *testing.T) {
 	_, cached := primariesCache.Load(rt)
 	assert.True(t, cached)
 
-	user.ID = 2
+	entity.ID = 2
 
 	// infer primary key using cache
 	assert.Equal(t, "id", doc.PrimaryField())
 	assert.Equal(t, 2, doc.PrimaryValue())
+
+	primariesCache.Delete(rt)
 }
 
 func TestDocument_Primary_usingInterface(t *testing.T) {
@@ -231,6 +231,8 @@ func TestDocument_Fields(t *testing.T) {
 	assert.True(t, cached)
 
 	assert.Equal(t, fields, doc.Fields())
+
+	fieldsCache.Delete(rt)
 }
 
 func TestDocument_Fields_usingInterface(t *testing.T) {
@@ -275,6 +277,8 @@ func TestDocument_Types(t *testing.T) {
 	assert.True(t, cached)
 
 	assert.Equal(t, types, doc.Types())
+
+	typesCache.Delete(rt)
 }
 
 func TestDocument_Types_usingInterface(t *testing.T) {

@@ -7,7 +7,6 @@ import (
 	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/query"
-	"github.com/Fs02/grimoire/schema"
 	"github.com/Fs02/grimoire/where"
 )
 
@@ -37,32 +36,28 @@ func (r *Repo) SetLogger(logger ...Logger) {
 }
 
 // Aggregate calculate aggregate over the given field.
-func (r Repo) Aggregate(record interface{}, mode string, field string, out interface{}, queries ...query.Builder) error {
-	table := schema.InferTableName(record)
-	q := query.Build(table, queries...)
-	return r.adapter.Aggregate(q, out, mode, field, r.logger...)
+// Supported aggregate: count, sum, avg, max, min.
+func (r Repo) Aggregate(query query.Query, aggregate string, field string) (int, error) {
+	return r.adapter.Aggregate(query, aggregate, field, r.logger...)
 }
 
 // MustAggregate calculate aggregate over the given field.
 // It'll panic if any error eccured.
-func (r Repo) MustAggregate(record interface{}, mode string, field string, out interface{}, queries ...query.Builder) {
-	must(r.Aggregate(record, mode, field, out, queries...))
+func (r Repo) MustAggregate(query query.Query, aggregate string, field string) int {
+	result, err := r.Aggregate(query, aggregate, field)
+	must(err)
+	return result
 }
 
 // Count retrieves count of results that match the query.
-func (r Repo) Count(record interface{}, queries ...query.Builder) (int, error) {
-	var out struct {
-		Count int
-	}
-
-	err := r.Aggregate(record, "COUNT", "*", &out, queries...)
-	return out.Count, err
+func (r Repo) Count(collection string, queries ...query.Builder) (int, error) {
+	return r.Aggregate(query.Build(collection, queries...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustCount(record interface{}, queries ...query.Builder) int {
-	count, err := r.Count(record, queries...)
+func (r Repo) MustCount(collection string, queries ...query.Builder) int {
+	count, err := r.Count(collection, queries...)
 	must(err)
 	return count
 }

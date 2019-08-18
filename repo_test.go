@@ -8,7 +8,6 @@ import (
 	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 var repo = Repo{}
@@ -30,56 +29,90 @@ func createCursor(row int) *testCursor {
 }
 
 func TestNew(t *testing.T) {
-	adapter := &testAdapter{}
-	repo := New(adapter)
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
 
 	assert.NotNil(t, repo)
 	assert.Equal(t, adapter, repo.Adapter())
 }
 
 func TestRepo_SetLogger(t *testing.T) {
-	repo := Repo{}
+	var (
+		repo = Repo{}
+	)
+
 	assert.Nil(t, repo.logger)
 	repo.SetLogger(DefaultLogger)
 	assert.NotNil(t, repo.logger)
 }
 
 func TestRepo_Aggregate(t *testing.T) {
-	adapter := &testAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users")
-	mode := "COUNT"
-	field := "*"
+	var (
+		adapter   = &testAdapter{}
+		repo      = Repo{adapter: adapter}
+		query     = query.From("users")
+		aggregate = "count"
+		field     = "*"
+	)
 
-	var out struct {
-		Count int
-	}
+	adapter.On("Aggregate", query, aggregate, field).Return(1, nil).Once()
 
-	adapter.On("Aggregate", query, &out, mode, field).Return(nil)
-
-	err := repo.Aggregate(User{}, "COUNT", "*", &out, query)
+	count, err := repo.Aggregate(query, "count", "*")
+	assert.Equal(t, 1, count)
 	assert.Nil(t, err)
 
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_MustAggregate(t *testing.T) {
+	var (
+		adapter   = &testAdapter{}
+		repo      = Repo{adapter: adapter}
+		query     = query.From("users")
+		aggregate = "count"
+		field     = "*"
+	)
+
+	adapter.On("Aggregate", query, aggregate, field).Return(1, nil).Once()
+
 	assert.NotPanics(t, func() {
-		repo.MustAggregate(User{}, "COUNT", "*", &out, query)
+		count := repo.MustAggregate(query, "count", "*")
+		assert.Equal(t, 1, count)
 	})
 
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Count(t *testing.T) {
-	adapter := &testAdapter{}
-	repo := Repo{adapter: adapter}
-	query := query.From("users")
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users")
+	)
 
-	adapter.On("Aggregate", query, mock.Anything, "COUNT", "*").Return(nil)
+	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
 
-	count, err := repo.Count(User{}, query)
+	count, err := repo.Count("users")
 	assert.Nil(t, err)
-	assert.Equal(t, 0, count)
+	assert.Equal(t, 1, count)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_MustCount(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = query.From("users")
+	)
+
+	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		assert.Equal(t, 0, repo.MustCount(User{}, query))
+		count := repo.MustCount("users")
+		assert.Equal(t, 1, count)
 	})
 
 	adapter.AssertExpectations(t)

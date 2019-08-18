@@ -23,33 +23,33 @@ func (ta *testAdapter) Close() error {
 	return args.Error(0)
 }
 
-func (ta *testAdapter) Aggregate(queries query.Query, out interface{}, mode string, field string, logger ...Logger) error {
-	args := ta.Called(queries, out, mode, field)
-	return args.Error(0)
+func (ta *testAdapter) Aggregate(query query.Query, aggregate string, field string, logger ...Logger) (int, error) {
+	args := ta.Called(query, aggregate, field)
+	return args.Int(0), args.Error(1)
 }
 
-func (ta *testAdapter) Query(queries query.Query, logger ...Logger) (Cursor, error) {
-	args := ta.Called(queries)
+func (ta *testAdapter) Query(query query.Query, logger ...Logger) (Cursor, error) {
+	args := ta.Called(query)
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(queries query.Query, changes change.Changes, logger ...Logger) (interface{}, error) {
-	args := ta.Called(queries, changes)
+func (ta *testAdapter) Insert(query query.Query, changes change.Changes, logger ...Logger) (interface{}, error) {
+	args := ta.Called(query, changes)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(queries query.Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
-	args := ta.Called(queries, changess)
+func (ta *testAdapter) InsertAll(query query.Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
+	args := ta.Called(query, changess)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(queries query.Query, changes change.Changes, logger ...Logger) error {
-	args := ta.Called(queries, changes)
+func (ta *testAdapter) Update(query query.Query, changes change.Changes, logger ...Logger) error {
+	args := ta.Called(query, changes)
 	return args.Error(0)
 }
 
-func (ta *testAdapter) Delete(queries query.Query, logger ...Logger) error {
-	args := ta.Called(queries)
+func (ta *testAdapter) Delete(query query.Query, logger ...Logger) error {
+	args := ta.Called(query)
 	return args.Error(0)
 }
 

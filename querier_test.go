@@ -68,7 +68,7 @@ func TestQuerier(t *testing.T) {
 				WhereClause:  where.Gt("age", 10),
 				LimitClause:  10,
 				OffsetClause: 10,
-				SortClause: []grimoire.SortClause{
+				SortQuery: []grimoire.SortQuery{
 					grimoire.NewSortAsc("name"),
 					grimoire.NewSortDesc("age"),
 				},
@@ -91,11 +91,11 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: grimoire.Query{
-				SelectClause: grimoire.SelectClause{
+				SelectQuery: grimoire.SelectQuery{
 					Fields: []string{"sum(amount)", "name"},
 				},
 				Collection: "transactions",
-				JoinClause: []grimoire.JoinClause{
+				JoinQuery: []grimoire.JoinQuery{
 					{
 						Mode:       "JOIN",
 						Collection: "users",
@@ -103,7 +103,7 @@ func TestQuerier(t *testing.T) {
 						To:         "users.id",
 					},
 				},
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"name"},
 					Filter: where.Gt("amount", 10),
 				},

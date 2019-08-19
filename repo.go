@@ -218,7 +218,7 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 	return r.update(record, changes, FilterEq(pField, pValue))
 }
 
-func (r Repo) update(record interface{}, changes change.Changes, filter FilterClause) error {
+func (r Repo) update(record interface{}, changes change.Changes, filter FilterQuery) error {
 	if changes.Empty() {
 		return nil
 	}

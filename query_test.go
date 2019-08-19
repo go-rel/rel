@@ -16,14 +16,14 @@ func TestQuery_Build(t *testing.T) {
 func TestQuery_Select(t *testing.T) {
 	assert.Equal(t, grimoire.Query{
 		Collection: "users",
-		SelectClause: grimoire.SelectClause{
+		SelectQuery: grimoire.SelectQuery{
 			Fields: []string{"*"},
 		},
 	}, grimoire.From("users").Select("*"))
 
 	assert.Equal(t, grimoire.Query{
 		Collection: "users",
-		SelectClause: grimoire.SelectClause{
+		SelectQuery: grimoire.SelectQuery{
 			Fields: []string{"id", "name", "email"},
 		},
 	}, grimoire.From("users").Select("id", "name", "email"))
@@ -32,7 +32,7 @@ func TestQuery_Select(t *testing.T) {
 func TestQuery_Distinct(t *testing.T) {
 	assert.Equal(t, grimoire.Query{
 		Collection: "users",
-		SelectClause: grimoire.SelectClause{
+		SelectQuery: grimoire.SelectQuery{
 			Fields:       []string{"*"},
 			OnlyDistinct: true,
 		},
@@ -42,7 +42,7 @@ func TestQuery_Distinct(t *testing.T) {
 func TestQuery_Join(t *testing.T) {
 	result := grimoire.Query{
 		Collection: "users",
-		JoinClause: []grimoire.JoinClause{
+		JoinQuery: []grimoire.JoinQuery{
 			{
 				Mode:       "JOIN",
 				Collection: "transactions",
@@ -60,7 +60,7 @@ func TestQuery_Join(t *testing.T) {
 func TestQuery_JoinOn(t *testing.T) {
 	result := grimoire.Query{
 		Collection: "users",
-		JoinClause: []grimoire.JoinClause{
+		JoinQuery: []grimoire.JoinQuery{
 			{
 				Mode:       "JOIN",
 				Collection: "transactions",
@@ -77,7 +77,7 @@ func TestQuery_JoinOn(t *testing.T) {
 func TestQuery_JoinFragment(t *testing.T) {
 	result := grimoire.Query{
 		Collection: "users",
-		JoinClause: []grimoire.JoinClause{
+		JoinQuery: []grimoire.JoinQuery{
 			{
 				Mode:      "JOIN transactions ON transacations.id=?",
 				Arguments: []interface{}{1},
@@ -224,7 +224,7 @@ func TestQuery_OrWhere(t *testing.T) {
 func TestQuery_Group(t *testing.T) {
 	result := grimoire.Query{
 		Collection: "users",
-		GroupClause: grimoire.GroupClause{
+		GroupQuery: grimoire.GroupQuery{
 			Fields: []string{"active", "plan"},
 		},
 	}
@@ -244,7 +244,7 @@ func TestQuery_Having(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -255,7 +255,7 @@ func TestQuery_Having(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -266,7 +266,7 @@ func TestQuery_Having(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -277,7 +277,7 @@ func TestQuery_Having(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -288,7 +288,7 @@ func TestQuery_Having(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1).AndNil("deleted_at")).Having(where.Ne("active", false)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -313,7 +313,7 @@ func TestQuery_OrHaving(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").OrHaving(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -324,7 +324,7 @@ func TestQuery_OrHaving(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1)).OrHaving(where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -335,7 +335,7 @@ func TestQuery_OrHaving(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
 				},
@@ -346,7 +346,7 @@ func TestQuery_OrHaving(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
 				},
@@ -357,7 +357,7 @@ func TestQuery_OrHaving(t *testing.T) {
 			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)).Having(where.Lt("price", 10000)),
 			grimoire.Query{
 				Collection: "users",
-				GroupClause: grimoire.GroupClause{
+				GroupQuery: grimoire.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 				},
@@ -383,7 +383,7 @@ func TestQuery_Sort(t *testing.T) {
 			grimoire.From("users").Sort("id"),
 			grimoire.Query{
 				Collection: "users",
-				SortClause: []grimoire.SortClause{
+				SortQuery: []grimoire.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,
@@ -396,7 +396,7 @@ func TestQuery_Sort(t *testing.T) {
 			grimoire.From("users").SortAsc("id", "name"),
 			grimoire.Query{
 				Collection: "users",
-				SortClause: []grimoire.SortClause{
+				SortQuery: []grimoire.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,
@@ -413,7 +413,7 @@ func TestQuery_Sort(t *testing.T) {
 			grimoire.From("users").SortAsc("id", "name").SortDesc("age", "created_at"),
 			grimoire.Query{
 				Collection: "users",
-				SortClause: []grimoire.SortClause{
+				SortQuery: []grimoire.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,

@@ -8,14 +8,14 @@ import (
 )
 
 func TestSelect(t *testing.T) {
-	assert.Equal(t, grimoire.SelectClause{
+	assert.Equal(t, grimoire.SelectQuery{
 		OnlyDistinct: false,
 		Fields:       []string{"id", "name"},
 	}, grimoire.NewSelect("id", "name"))
 }
 
 func TestSelect_Distinct(t *testing.T) {
-	assert.Equal(t, grimoire.SelectClause{
+	assert.Equal(t, grimoire.SelectQuery{
 		OnlyDistinct: true,
 		Fields:       []string{"id", "name"},
 	}, grimoire.NewSelect("id", "name").Distinct())

@@ -25,7 +25,7 @@ type Builder struct {
 // Find generates query for select.
 func (builder *Builder) Find(query grimoire.Query) (string, []interface{}) {
 	qs, args := builder.query(query)
-	return builder.fields(query.SelectClause.OnlyDistinct, query.SelectClause.Fields) + qs, args
+	return builder.fields(query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields) + qs, args
 }
 
 // Aggregate generates query for aggregation.
@@ -33,7 +33,7 @@ func (builder *Builder) Aggregate(query grimoire.Query) (string, []interface{}) 
 	qs, args := builder.query(query)
 	field := "" //query.AggregateMode + "(" + query.AggregateField + ") AS " + query.AggregateMode
 
-	return builder.fields(false, append(query.GroupClause.Fields, field)) + qs, args
+	return builder.fields(false, append(query.GroupQuery.Fields, field)) + qs, args
 }
 
 func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
@@ -47,7 +47,7 @@ func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 		buffer.WriteString(s)
 	}
 
-	if s, arg := builder.join(query.JoinClause...); s != "" {
+	if s, arg := builder.join(query.JoinQuery...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
@@ -59,18 +59,18 @@ func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 		args = append(args, arg...)
 	}
 
-	if s := builder.groupBy(query.GroupClause.Fields); s != "" {
+	if s := builder.groupBy(query.GroupQuery.Fields); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 
-		if s, arg := builder.having(query.GroupClause.Filter); s != "" {
+		if s, arg := builder.having(query.GroupQuery.Filter); s != "" {
 			buffer.WriteString(" ")
 			buffer.WriteString(s)
 			args = append(args, arg...)
 		}
 	}
 
-	if s := builder.orderBy(query.SortClause); s != "" {
+	if s := builder.orderBy(query.SortQuery); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
@@ -207,7 +207,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 }
 
 // Update generates query for update.
-func (builder *Builder) Update(collection string, changes change.Changes, filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) Update(collection string, changes change.Changes, filter query.FilterQuery) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		length = len(changes.Changes)
@@ -263,7 +263,7 @@ func (builder *Builder) Update(collection string, changes change.Changes, filter
 }
 
 // Delete generates query for delete.
-func (builder *Builder) Delete(collection string, filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) Delete(collection string, filter query.FilterQuery) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   []interface{}
@@ -317,7 +317,7 @@ func (builder *Builder) from(collection string) string {
 	return "FROM " + builder.config.EscapeChar + collection + builder.config.EscapeChar
 }
 
-func (builder *Builder) join(joins ...query.JoinClause) (string, []interface{}) {
+func (builder *Builder) join(joins ...query.JoinQuery) (string, []interface{}) {
 	if len(joins) == 0 {
 		return "", nil
 	}
@@ -348,7 +348,7 @@ func (builder *Builder) join(joins ...query.JoinClause) (string, []interface{}) 
 	return buffer.String(), args
 }
 
-func (builder *Builder) where(filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) where(filter query.FilterQuery) (string, []interface{}) {
 	if filter.None() {
 		return "", nil
 	}
@@ -377,7 +377,7 @@ func (builder *Builder) groupBy(fields []string) string {
 	return buffer.String()
 }
 
-func (builder *Builder) having(filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) having(filter query.FilterQuery) (string, []interface{}) {
 	if filter.None() {
 		return "", nil
 	}
@@ -386,7 +386,7 @@ func (builder *Builder) having(filter query.FilterClause) (string, []interface{}
 	return "HAVING " + qs, args
 }
 
-func (builder *Builder) orderBy(orders []query.SortClause) string {
+func (builder *Builder) orderBy(orders []query.SortQuery) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -422,7 +422,7 @@ func (builder *Builder) limitOffset(limit query.Limit, offset query.Offset) stri
 	return str
 }
 
-func (builder *Builder) filter(filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) filter(filter query.FilterQuery) (string, []interface{}) {
 	switch filter.Type {
 	case query.AndOp:
 		return builder.build("AND", filter.Inner)
@@ -456,7 +456,7 @@ func (builder *Builder) filter(filter query.FilterClause) (string, []interface{}
 	return "", nil
 }
 
-func (builder *Builder) build(op string, inner []query.FilterClause) (string, []interface{}) {
+func (builder *Builder) build(op string, inner []query.FilterQuery) (string, []interface{}) {
 	var (
 		qstring string
 		length  = len(inner)
@@ -484,7 +484,7 @@ func (builder *Builder) build(op string, inner []query.FilterClause) (string, []
 	return qstring, args
 }
 
-func (builder *Builder) buildComparison(filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) buildComparison(filter query.FilterQuery) (string, []interface{}) {
 	var (
 		cs string
 		op string
@@ -510,7 +510,7 @@ func (builder *Builder) buildComparison(filter query.FilterClause) (string, []in
 	return cs, filter.Values
 }
 
-func (builder *Builder) buildInclusion(filter query.FilterClause) (string, []interface{}) {
+func (builder *Builder) buildInclusion(filter query.FilterQuery) (string, []interface{}) {
 	var buffer bytes.Buffer
 	buffer.WriteString(builder.escape(filter.Field))
 

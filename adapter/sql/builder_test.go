@@ -464,7 +464,7 @@ func TestBuilder_Join(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).join(grimoire.Build("", test.Query).JoinClause...)
+			}).join(grimoire.Build("", test.Query).JoinQuery...)
 			assert.Equal(t, test.QueryString, qs)
 			assert.Nil(t, args)
 		})
@@ -475,7 +475,7 @@ func TestBuilder_Where(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -510,7 +510,7 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -564,7 +564,7 @@ func TestBuilder_Having(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -599,7 +599,7 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -642,12 +642,12 @@ func TestBuilder_OrderBy(t *testing.T) {
 	assert.Equal(t, "ORDER BY `name` ASC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy([]grimoire.SortClause{sort.Asc("name")}))
+	}).orderBy([]grimoire.SortQuery{sort.Asc("name")}))
 
 	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy([]grimoire.SortClause{sort.Asc("name"), sort.Desc("created_at")}))
+	}).orderBy([]grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")}))
 }
 
 func TestBuilder_LimitOffset(t *testing.T) {
@@ -676,7 +676,7 @@ func TestBuilder_Filter(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -831,7 +831,7 @@ func TestBuilder_Filter(t *testing.T) {
 		{
 			"",
 			nil,
-			grimoire.FilterClause{Type: grimoire.FilterOp(9999)},
+			grimoire.FilterQuery{Type: grimoire.FilterOp(9999)},
 		},
 	}
 
@@ -852,7 +852,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterClause
+		Filter      grimoire.FilterQuery
 	}{
 		{
 			"",
@@ -1007,7 +1007,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 		{
 			"",
 			nil,
-			grimoire.FilterClause{Type: grimoire.FilterOp(9999)},
+			grimoire.FilterQuery{Type: grimoire.FilterOp(9999)},
 		},
 	}
 

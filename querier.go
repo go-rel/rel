@@ -19,8 +19,8 @@ func BuildQuery(collection string, queriers ...Querier) Query {
 		q.empty = false
 	}
 
-	for i := range q.JoinClause {
-		q.JoinClause[i].buildJoin(q)
+	for i := range q.JoinQuery {
+		q.JoinQuery[i].buildJoin(q)
 	}
 
 	return q

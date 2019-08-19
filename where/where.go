@@ -6,82 +6,82 @@ import (
 )
 
 // And compares other filters using and.
-func And(inner ...grimoire.FilterClause) grimoire.FilterClause {
+func And(inner ...grimoire.FilterQuery) grimoire.FilterQuery {
 	return grimoire.FilterAnd(inner...)
 }
 
 // Or compares other filters using and.
-func Or(inner ...grimoire.FilterClause) grimoire.FilterClause {
+func Or(inner ...grimoire.FilterQuery) grimoire.FilterQuery {
 	return grimoire.FilterOr(inner...)
 }
 
 // Not wraps filters using not.
 // It'll negate the filter type if possible.
-func Not(inner ...grimoire.FilterClause) grimoire.FilterClause {
+func Not(inner ...grimoire.FilterQuery) grimoire.FilterQuery {
 	return grimoire.FilterNot(inner...)
 }
 
 // Eq expression field equal to value.
-func Eq(field string, value interface{}) grimoire.FilterClause {
+func Eq(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterEq(field, value)
 }
 
 // Ne compares that left value is not equal to right value.
-func Ne(field string, value interface{}) grimoire.FilterClause {
+func Ne(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterNe(field, value)
 }
 
 // Lt compares that left value is less than to right value.
-func Lt(field string, value interface{}) grimoire.FilterClause {
+func Lt(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterLt(field, value)
 }
 
 // Lte compares that left value is less than or equal to right value.
-func Lte(field string, value interface{}) grimoire.FilterClause {
+func Lte(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterLte(field, value)
 }
 
 // Gt compares that left value is greater than to right value.
-func Gt(field string, value interface{}) grimoire.FilterClause {
+func Gt(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterGt(field, value)
 }
 
 // Gte compares that left value is greater than or equal to right value.
-func Gte(field string, value interface{}) grimoire.FilterClause {
+func Gte(field string, value interface{}) grimoire.FilterQuery {
 	return grimoire.FilterGte(field, value)
 }
 
 // Nil check whether field is nil.
-func Nil(field string) grimoire.FilterClause {
+func Nil(field string) grimoire.FilterQuery {
 	return grimoire.FilterNil(field)
 }
 
 // NotNil check whether field is not nil.
-func NotNil(field string) grimoire.FilterClause {
+func NotNil(field string) grimoire.FilterQuery {
 	return grimoire.FilterNotNil(field)
 }
 
 // In check whethers value of the field is included in values.
-func In(field string, values ...interface{}) grimoire.FilterClause {
+func In(field string, values ...interface{}) grimoire.FilterQuery {
 	return grimoire.FilterIn(field, values...)
 }
 
 // Nin check whethers value of the field is not included in values.
-func Nin(field string, values ...interface{}) grimoire.FilterClause {
+func Nin(field string, values ...interface{}) grimoire.FilterQuery {
 	return grimoire.FilterNin(field, values...)
 }
 
 // Like compares value of field to match string pattern.
-func Like(field string, pattern string) grimoire.FilterClause {
+func Like(field string, pattern string) grimoire.FilterQuery {
 	return grimoire.FilterLike(field, pattern)
 }
 
 // NotLike compares value of field to not match string pattern.
-func NotLike(field string, pattern string) grimoire.FilterClause {
+func NotLike(field string, pattern string) grimoire.FilterQuery {
 	return grimoire.FilterNotLike(field, pattern)
 }
 
 // Fragment add custom filter.
-func Fragment(expr string, values ...interface{}) grimoire.FilterClause {
+func Fragment(expr string, values ...interface{}) grimoire.FilterQuery {
 	return grimoire.FilterFragment(expr, values...)
 }

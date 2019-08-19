@@ -8,7 +8,7 @@ import (
 )
 
 func TestJoinWith(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "JOIN",
 		Collection: "transactions",
 		From:       "user_id",
@@ -17,21 +17,21 @@ func TestJoinWith(t *testing.T) {
 }
 
 func TestJoinFragment(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:      "JOIN transactions ON id=?",
 		Arguments: []interface{}{1},
 	}, grimoire.NewJoinFragment("JOIN transactions ON id=?", 1))
 }
 
 func TestJoin(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "JOIN",
 		Collection: "transactions",
 	}, grimoire.NewJoin("transactions"))
 }
 
 func TestJoinOn(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "JOIN",
 		Collection: "transactions",
 		From:       "user_id",
@@ -40,14 +40,14 @@ func TestJoinOn(t *testing.T) {
 }
 
 func TestInnerJoin(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "INNER JOIN",
 		Collection: "transactions",
 	}, grimoire.NewInnerJoin("transactions"))
 }
 
 func TestInnerJoinOn(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "INNER JOIN",
 		Collection: "transactions",
 		From:       "user_id",
@@ -56,14 +56,14 @@ func TestInnerJoinOn(t *testing.T) {
 }
 
 func TestLeftJoin(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "LEFT JOIN",
 		Collection: "transactions",
 	}, grimoire.NewLeftJoin("transactions"))
 }
 
 func TestLeftJoinOn(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "LEFT JOIN",
 		Collection: "transactions",
 		From:       "user_id",
@@ -72,14 +72,14 @@ func TestLeftJoinOn(t *testing.T) {
 }
 
 func TestRightJoin(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "RIGHT JOIN",
 		Collection: "transactions",
 	}, grimoire.NewRightJoin("transactions"))
 }
 
 func TestRightJoinOn(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "RIGHT JOIN",
 		Collection: "transactions",
 		From:       "user_id",
@@ -88,14 +88,14 @@ func TestRightJoinOn(t *testing.T) {
 }
 
 func TestFullJoin(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "FULL JOIN",
 		Collection: "transactions",
 	}, grimoire.NewFullJoin("transactions"))
 }
 
 func TestFullJoinOn(t *testing.T) {
-	assert.Equal(t, grimoire.JoinClause{
+	assert.Equal(t, grimoire.JoinQuery{
 		Mode:       "FULL JOIN",
 		Collection: "transactions",
 		From:       "user_id",

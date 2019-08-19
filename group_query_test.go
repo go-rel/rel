@@ -8,13 +8,13 @@ import (
 )
 
 func TestGroup(t *testing.T) {
-	assert.Equal(t, grimoire.GroupClause{
+	assert.Equal(t, grimoire.GroupQuery{
 		Fields: []string{"status"},
 	}, grimoire.NewGroup("status"))
 }
 
 func TestGroup_Having(t *testing.T) {
-	q := grimoire.GroupClause{
+	q := grimoire.GroupQuery{
 		Fields: []string{"status"},
 		Filter: grimoire.FilterNe("status", "expired"),
 	}
@@ -24,7 +24,7 @@ func TestGroup_Having(t *testing.T) {
 }
 
 func TestGroup_OrHaving(t *testing.T) {
-	q := grimoire.GroupClause{
+	q := grimoire.GroupQuery{
 		Fields: []string{"status"},
 		Filter: grimoire.FilterNe("status", "expired").OrNotNil("deleted_at"),
 	}

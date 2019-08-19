@@ -3,6 +3,7 @@ package change
 // TODO: assoc changes
 // Use Assoc fields in Changges?
 // Table name not stored here, but handled by repo logic.
+// TODO: handle deleteion
 type Changes struct {
 	Fields       map[string]int // TODO: not copy friendly
 	Changes      []Change

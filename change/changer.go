@@ -1,19 +1,19 @@
 package change
 
-type Builder interface {
+type Changer interface {
 	Build(changes *Changes)
 }
 
-func Build(builders ...Builder) Changes {
+func BuildChanges(changers ...Changer) Changes {
 	changes := Changes{
 		Fields:       make(map[string]int),
-		Changes:      make([]Change, 0, len(builders)),
+		Changes:      make([]Change, 0, len(changers)),
 		Assoc:        make(map[string]int),
 		AssocChanges: make([][]Changes, 0),
 	}
 
-	for i := range builders {
-		builders[i].Build(&changes)
+	for i := range changers {
+		changers[i].Build(&changes)
 	}
 
 	return changes

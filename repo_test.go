@@ -208,10 +208,10 @@ func TestRepo_Insert(t *testing.T) {
 		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		cbuilders = []change.Builder{
+		cbuilders = []change.Changer{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders...)
+		changes = change.BuildChanges(cbuilders...)
 		cur     = createCursor(1)
 	)
 
@@ -232,10 +232,10 @@ func TestRepo_Insert_error(t *testing.T) {
 		user      User
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		cbuilders = []change.Builder{
+		cbuilders = []change.Changer{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders...)
+		changes = change.BuildChanges(cbuilders...)
 	)
 
 	adapter.On("Insert", From("users"), changes).Return(0, errors.NewUnexpected("error")).Once()
@@ -253,8 +253,8 @@ func TestRepo_InsertAll(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []change.Changes{
-			change.Build(change.Set("name", "name1")),
-			change.Build(change.Set("name", "name2")),
+			change.BuildChanges(change.Set("name", "name1")),
+			change.BuildChanges(change.Set("name", "name2")),
 		}
 		cur = createCursor(2)
 	)
@@ -276,10 +276,10 @@ func TestRepo_Update(t *testing.T) {
 		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		cbuilders = []change.Builder{
+		cbuilders = []change.Changer{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders...)
+		changes = change.BuildChanges(cbuilders...)
 		queries = From("users").Where(FilterEq("id", user.ID))
 		cur     = createCursor(1)
 	)
@@ -325,10 +325,10 @@ func TestRepo_Update_error(t *testing.T) {
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		cbuilders = []change.Builder{
+		cbuilders = []change.Changer{
 			change.Set("name", "name"),
 		}
-		changes = change.Build(cbuilders...)
+		changes = change.BuildChanges(cbuilders...)
 		queries = From("users").Where(FilterEq("id", user.ID))
 	)
 
@@ -346,7 +346,7 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
 		buyerDoc    = newDocument(&transaction.Buyer)
-		changes     = change.Build(
+		changes     = change.BuildChanges(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -378,7 +378,7 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
-		changes     = change.Build(
+		changes     = change.BuildChanges(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -404,7 +404,7 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
-		changes     = change.Build(
+		changes     = change.BuildChanges(
 			change.Map{
 				"Buyer": change.Map{
 					"id":   2,
@@ -429,7 +429,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
 		buyerDoc    = newDocument(&transaction.Buyer)
-		changes     = change.Build(
+		changes     = change.BuildChanges(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -466,7 +466,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
-		changes     = change.Build(
+		changes     = change.BuildChanges(
 			change.Map{
 				"Buyer": change.Map{
 					"name": "buyer1",
@@ -495,7 +495,7 @@ func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
-		changes     = change.Build()
+		changes     = change.BuildChanges()
 	)
 
 	err := repo.upsertBelongsTo(doc, &changes)
@@ -510,7 +510,7 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 		user       = &User{ID: 1, Address: Address{ID: 2}}
 		doc        = newDocument(user)
 		addressDoc = newDocument(&user.Address)
-		changes    = change.Build(
+		changes    = change.BuildChanges(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -541,7 +541,7 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -566,7 +566,7 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Address": change.Map{
 					"id":     1,
@@ -590,7 +590,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 		user       = &User{}
 		doc        = newDocument(user)
 		addressDoc = newDocument(&user.Address)
-		changes    = change.Build(
+		changes    = change.BuildChanges(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -598,7 +598,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 			},
 		)
 		q       = BuildQuery("addresses")
-		address = change.Build(change.Set("street", "street1"))
+		address = change.BuildChanges(change.Set("street", "street1"))
 		cur     = createCursor(1)
 	)
 
@@ -626,7 +626,7 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 		repo    = Repo{adapter: adapter}
 		user    = &User{}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Address": change.Map{
 					"street": "street1",
@@ -634,7 +634,7 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 			},
 		)
 		q       = BuildQuery("addresses")
-		address = change.Build(change.Set("street", "street1"))
+		address = change.BuildChanges(change.Set("street", "street1"))
 	)
 
 	// foreign value set after associations infered
@@ -656,7 +656,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 		user              = &User{ID: 1}
 		doc               = newDocument(user)
 		transactionCollec = newCollection(&user.Transactions)
-		changes           = change.Build(
+		changes           = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -699,7 +699,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -743,7 +743,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 		}
 		doc               = newDocument(user)
 		transactionCollec = newCollection(&user.Transactions)
-		changes           = change.Build(
+		changes           = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -794,7 +794,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 		}
 		doc               = newDocument(user)
 		transactionCollec = newCollection(&user.Transactions)
-		changes           = change.Build(
+		changes           = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -852,7 +852,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 			},
 		}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{
@@ -879,7 +879,7 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 		repo    = Repo{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
-		changes = change.Build(
+		changes = change.BuildChanges(
 			change.Map{
 				"Transactions": []change.Map{
 					{

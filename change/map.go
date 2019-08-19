@@ -6,11 +6,11 @@ func (m Map) Build(changes *Changes) {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
-			changes.SetAssoc(field, Build(v))
+			changes.SetAssoc(field, BuildChanges(v))
 		case []Map:
 			chs := make([]Changes, len(v))
 			for i := range v {
-				chs[i] = Build(v[i])
+				chs[i] = BuildChanges(v[i])
 			}
 			changes.SetAssoc(field, chs...)
 		default:

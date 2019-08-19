@@ -105,15 +105,15 @@ func (r Repo) MustAll(entities interface{}, queriers ...Querier) {
 
 // Insert a record to database.
 // TODO: insert all (multiple changes as multiple records)
-func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
+func (r Repo) Insert(record interface{}, changers ...change.Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(cbuilders) == 0 {
+	if record == nil || len(changers) == 0 {
 		return nil
 	}
 
 	// TODO: transform changeset error
-	return transformError(r.insert(record, change.Build(cbuilders...)))
+	return transformError(r.insert(record, change.BuildChanges(changers...)))
 }
 
 func (r Repo) insert(record interface{}, changes change.Changes) error {
@@ -151,8 +151,8 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 
 // MustInsert a record to database.
 // It'll panic if any error occurred.
-func (r Repo) MustInsert(record interface{}, cbuilders ...change.Builder) {
-	must(r.Insert(record, cbuilders...))
+func (r Repo) MustInsert(record interface{}, changers ...change.Changer) {
+	must(r.Insert(record, changers...))
 }
 
 func (r Repo) InsertAll(record interface{}, changes []change.Changes) error {
@@ -201,10 +201,10 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 
 // Update a record in database.
 // It'll panic if any error occurred.
-func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
+func (r Repo) Update(record interface{}, changers ...change.Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(cbuilders) == 0 {
+	if record == nil || len(changers) == 0 {
 		return nil
 	}
 
@@ -212,7 +212,7 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 		doc     = newDocument(record)
 		pField  = doc.PrimaryField()
 		pValue  = doc.PrimaryValue()
-		changes = change.Build(cbuilders...)
+		changes = change.BuildChanges(changers...)
 	)
 
 	return r.update(record, changes, FilterEq(pField, pValue))
@@ -242,8 +242,8 @@ func (r Repo) update(record interface{}, changes change.Changes, filter FilterQu
 
 // MustUpdate a record in database.
 // It'll panic if any error occurred.
-func (r Repo) MustUpdate(record interface{}, cbuilders ...change.Builder) {
-	must(r.Update(record, cbuilders...))
+func (r Repo) MustUpdate(record interface{}, changers ...change.Changer) {
+	must(r.Update(record, changers...))
 }
 
 func (r Repo) upsertBelongsTo(doc Document, changes *change.Changes) error {

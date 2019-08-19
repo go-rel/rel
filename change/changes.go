@@ -64,10 +64,10 @@ func (c *Changes) SetAssoc(field string, chs ...Changes) {
 type ChangeOp int
 
 const (
-	SetOp ChangeOp = iota
-	IncOp
-	DecOp
-	FragmentOp
+	ChangeSetOp ChangeOp = iota
+	ChangeIncOp
+	ChangeDecOp
+	ChangeFragmentOp
 )
 
 type Change struct {
@@ -82,7 +82,7 @@ func (c Change) Build(changes *Changes) {
 
 func Set(field string, value interface{}) Change {
 	return Change{
-		Type:  SetOp,
+		Type:  ChangeSetOp,
 		Field: field,
 		Value: value,
 	}
@@ -94,7 +94,7 @@ func Inc(field string) Change {
 
 func IncBy(field string, n int) Change {
 	return Change{
-		Type:  IncOp,
+		Type:  ChangeIncOp,
 		Field: field,
 		Value: n,
 	}
@@ -106,7 +106,7 @@ func Dec(field string) Change {
 
 func DecBy(field string, n int) Change {
 	return Change{
-		Type:  DecOp,
+		Type:  ChangeDecOp,
 		Field: field,
 		Value: n,
 	}
@@ -114,7 +114,7 @@ func DecBy(field string, n int) Change {
 
 func Fragment(raw string, args ...interface{}) Change {
 	return Change{
-		Type:  FragmentOp,
+		Type:  ChangeFragmentOp,
 		Field: raw,
 		Value: args,
 	}

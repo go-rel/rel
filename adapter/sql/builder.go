@@ -108,15 +108,15 @@ func (builder *Builder) Insert(collection string, changes change.Changes) (strin
 
 		for i, ch := range changes.Changes {
 			switch ch.Type {
-			case change.SetOp:
+			case change.ChangeSetOp:
 				buffer.WriteString(builder.config.EscapeChar)
 				buffer.WriteString(ch.Field)
 				buffer.WriteString(builder.config.EscapeChar)
 				args = append(args, ch.Value)
-			case change.FragmentOp:
+			case change.ChangeFragmentOp:
 				buffer.WriteString(ch.Field)
 				args = append(args, ch.Value.([]interface{})...)
-			case change.IncOp, change.DecOp:
+			case change.ChangeIncOp, change.ChangeDecOp:
 				continue
 			}
 
@@ -175,7 +175,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 	// 	buffer.WriteString("(")
 
 	// 	for j, field := range fields {
-	// 		if ch, ok := changes.Get(field); ok && ch.Type == change.SetOp {
+	// 		if ch, ok := changes.Get(field); ok && ch.Type == change.ChangeSetOp {
 	// 			buffer.WriteString(builder.ph())
 	// 			args = append(args, val)
 	// 		} else {
@@ -222,26 +222,26 @@ func (builder *Builder) Update(collection string, changes change.Changes, filter
 
 	for i, ch := range changes.Changes {
 		switch ch.Type {
-		case change.SetOp:
+		case change.ChangeSetOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.IncOp:
+		case change.ChangeIncOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("+")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.DecOp:
+		case change.ChangeDecOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("-")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.FragmentOp:
+		case change.ChangeFragmentOp:
 			buffer.WriteString(ch.Field)
 			args = append(args, ch.Value.([]interface{})...)
 		}
@@ -424,32 +424,32 @@ func (builder *Builder) limitOffset(limit query.Limit, offset query.Offset) stri
 
 func (builder *Builder) filter(filter query.FilterQuery) (string, []interface{}) {
 	switch filter.Type {
-	case query.AndOp:
+	case query.FilterAndOp:
 		return builder.build("AND", filter.Inner)
-	case query.OrOp:
+	case query.FilterOrOp:
 		return builder.build("OR", filter.Inner)
-	case query.NotOp:
+	case query.FilterNotOp:
 		qs, args := builder.build("AND", filter.Inner)
 		return "NOT " + qs, args
-	case query.EqOp,
-		query.NeOp,
-		query.LtOp,
-		query.LteOp,
-		query.GtOp,
-		query.GteOp:
+	case query.FilterEqOp,
+		query.FilterNeOp,
+		query.FilterLtOp,
+		query.FilterLteOp,
+		query.FilterGtOp,
+		query.FilterGteOp:
 		return builder.buildComparison(filter)
-	case query.NilOp:
+	case query.FilterNilOp:
 		return builder.escape(filter.Field) + " IS NULL", filter.Values
-	case query.NotNilOp:
+	case query.FilterNotNilOp:
 		return builder.escape(filter.Field) + " IS NOT NULL", filter.Values
-	case query.InOp,
-		query.NinOp:
+	case query.FilterInOp,
+		query.FilterNinOp:
 		return builder.buildInclusion(filter)
-	case query.LikeOp:
+	case query.FilterLikeOp:
 		return builder.escape(filter.Field) + " LIKE " + builder.ph(), filter.Values
-	case query.NotLikeOp:
+	case query.FilterNotLikeOp:
 		return builder.escape(filter.Field) + " NOT LIKE " + builder.ph(), filter.Values
-	case query.FragmentOp:
+	case query.FilterFragmentOp:
 		return filter.Field, filter.Values
 	}
 
@@ -491,17 +491,17 @@ func (builder *Builder) buildComparison(filter query.FilterQuery) (string, []int
 	)
 
 	switch filter.Type {
-	case query.EqOp:
+	case query.FilterEqOp:
 		op = "="
-	case query.NeOp:
+	case query.FilterNeOp:
 		op = "<>"
-	case query.LtOp:
+	case query.FilterLtOp:
 		op = "<"
-	case query.LteOp:
+	case query.FilterLteOp:
 		op = "<="
-	case query.GtOp:
+	case query.FilterGtOp:
 		op = ">"
-	case query.GteOp:
+	case query.FilterGteOp:
 		op = ">="
 	}
 
@@ -514,7 +514,7 @@ func (builder *Builder) buildInclusion(filter query.FilterQuery) (string, []inte
 	var buffer bytes.Buffer
 	buffer.WriteString(builder.escape(filter.Field))
 
-	if filter.Type == query.InOp {
+	if filter.Type == query.FilterInOp {
 		buffer.WriteString(" IN (")
 	} else {
 		buffer.WriteString(" NOT IN (")

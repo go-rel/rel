@@ -4,44 +4,44 @@ package grimoire
 type FilterOp int
 
 const (
-	// AndOp is filter type for and operator.
-	AndOp FilterOp = iota
-	// OrOp is filter type for or operator.
-	OrOp
-	// NotOp is filter type for not operator.
-	NotOp
+	// FilterAndOp is filter type for and operator.
+	FilterAndOp FilterOp = iota
+	// FilterOrOp is filter type for or operator.
+	FilterOrOp
+	// FilterNotOp is filter type for not operator.
+	FilterNotOp
 
-	// EqOp is filter type for equal comparison.
-	EqOp
-	// NeOp is filter type for not equal comparison.
-	NeOp
+	// FilterEqOp is filter type for equal comparison.
+	FilterEqOp
+	// FilterNeOp is filter type for not equal comparison.
+	FilterNeOp
 
-	// LtOp is filter type for less than comparison.
-	LtOp
-	// LteOp is filter type for less than or equal comparison.
-	LteOp
-	// GtOp is filter type for greater than comparison.
-	GtOp
-	// GteOp is filter type for greter than or equal comparison.
-	GteOp
+	// FilterLtOp is filter type for less than comparison.
+	FilterLtOp
+	// FilterLteOp is filter type for less than or equal comparison.
+	FilterLteOp
+	// FilterGtOp is filter type for greater than comparison.
+	FilterGtOp
+	// FilterGteOp is filter type for greter than or equal comparison.
+	FilterGteOp
 
-	// NilOp is filter type for nil check.
-	NilOp
-	// NotNilOp is filter type for not nil check.
-	NotNilOp
+	// FilterNilOp is filter type for nil check.
+	FilterNilOp
+	// FilterNotNilOp is filter type for not nil check.
+	FilterNotNilOp
 
-	// InOp is filter type for inclusion comparison.
-	InOp
-	// NinOp is filter type for not inclusion comparison.
-	NinOp
+	// FilterInOp is filter type for inclusion comparison.
+	FilterInOp
+	// FilterNinOp is filter type for not inclusion comparison.
+	FilterNinOp
 
-	// LikeOp is filter type for like comparison.
-	LikeOp
-	// NotLikeOp is filter type for not like comparison.
-	NotLikeOp
+	// FilterLikeOp is filter type for like comparison.
+	FilterLikeOp
+	// FilterNotLikeOp is filter type for not like comparison.
+	FilterNotLikeOp
 
-	// FragmentOp is filter type for custom filter.
-	FragmentOp
+	// FilterFragmentOp is filter type for custom filter.
+	FilterFragmentOp
 )
 
 // FilterQuery defines details of a coundition type.
@@ -59,9 +59,9 @@ func (fq FilterQuery) Build(query *Query) {
 
 // None returns true if no filter is specified.
 func (fq FilterQuery) None() bool {
-	return (fq.Type == AndOp ||
-		fq.Type == OrOp ||
-		fq.Type == NotOp) &&
+	return (fq.Type == FilterAndOp ||
+		fq.Type == FilterOrOp ||
+		fq.Type == FilterNotOp) &&
 		len(fq.Inner) == 0
 }
 
@@ -69,7 +69,7 @@ func (fq FilterQuery) None() bool {
 func (fq FilterQuery) And(filters ...FilterQuery) FilterQuery {
 	if fq.None() && len(filters) == 1 {
 		return filters[0]
-	} else if fq.Type == AndOp {
+	} else if fq.Type == FilterAndOp {
 		fq.Inner = append(fq.Inner, filters...)
 		return fq
 	}
@@ -82,8 +82,8 @@ func (fq FilterQuery) And(filters ...FilterQuery) FilterQuery {
 func (fq FilterQuery) Or(filter ...FilterQuery) FilterQuery {
 	if fq.None() && len(filter) == 1 {
 		return filter[0]
-	} else if fq.Type == OrOp || fq.None() {
-		fq.Type = OrOp
+	} else if fq.Type == FilterOrOp || fq.None() {
+		fq.Type = FilterOrOp
 		fq.Inner = append(fq.Inner, filter...)
 		return fq
 	}
@@ -93,7 +93,7 @@ func (fq FilterQuery) Or(filter ...FilterQuery) FilterQuery {
 }
 
 func (fq FilterQuery) and(other FilterQuery) FilterQuery {
-	if fq.Type == AndOp {
+	if fq.Type == FilterAndOp {
 		fq.Inner = append(fq.Inner, other)
 		return fq
 	}
@@ -102,8 +102,8 @@ func (fq FilterQuery) and(other FilterQuery) FilterQuery {
 }
 
 func (fq FilterQuery) or(other FilterQuery) FilterQuery {
-	if fq.Type == OrOp || fq.None() {
-		fq.Type = OrOp
+	if fq.Type == FilterOrOp || fq.None() {
+		fq.Type = FilterOrOp
 		fq.Inner = append(fq.Inner, other)
 		return fq
 	}
@@ -248,7 +248,7 @@ func FilterAnd(inner ...FilterQuery) FilterQuery {
 	}
 
 	return FilterQuery{
-		Type:  AndOp,
+		Type:  FilterAndOp,
 		Inner: inner,
 	}
 }
@@ -260,7 +260,7 @@ func FilterOr(inner ...FilterQuery) FilterQuery {
 	}
 
 	return FilterQuery{
-		Type:  OrOp,
+		Type:  FilterOrOp,
 		Inner: inner,
 	}
 }
@@ -271,26 +271,26 @@ func FilterNot(inner ...FilterQuery) FilterQuery {
 	if len(inner) == 1 {
 		fq := inner[0]
 		switch fq.Type {
-		case EqOp:
-			fq.Type = NeOp
+		case FilterEqOp:
+			fq.Type = FilterNeOp
 			return fq
-		case LtOp:
-			fq.Type = GteOp
-		case LteOp:
-			fq.Type = GtOp
-		case GtOp:
-			fq.Type = LteOp
-		case GteOp:
-			fq.Type = LtOp
-		case NilOp:
-			fq.Type = NotNilOp
-		case InOp:
-			fq.Type = NinOp
-		case LikeOp:
-			fq.Type = NotLikeOp
+		case FilterLtOp:
+			fq.Type = FilterGteOp
+		case FilterLteOp:
+			fq.Type = FilterGtOp
+		case FilterGtOp:
+			fq.Type = FilterLteOp
+		case FilterGteOp:
+			fq.Type = FilterLtOp
+		case FilterNilOp:
+			fq.Type = FilterNotNilOp
+		case FilterInOp:
+			fq.Type = FilterNinOp
+		case FilterLikeOp:
+			fq.Type = FilterNotLikeOp
 		default:
 			return FilterQuery{
-				Type:  NotOp,
+				Type:  FilterNotOp,
 				Inner: inner,
 			}
 		}
@@ -299,7 +299,7 @@ func FilterNot(inner ...FilterQuery) FilterQuery {
 	}
 
 	return FilterQuery{
-		Type:  NotOp,
+		Type:  FilterNotOp,
 		Inner: inner,
 	}
 }
@@ -307,7 +307,7 @@ func FilterNot(inner ...FilterQuery) FilterQuery {
 // FilterEq expression field equal to value.
 func FilterEq(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   EqOp,
+		Type:   FilterEqOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -316,7 +316,7 @@ func FilterEq(field string, value interface{}) FilterQuery {
 // FilterNe compares that left value is not equal to right value.
 func FilterNe(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   NeOp,
+		Type:   FilterNeOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -325,7 +325,7 @@ func FilterNe(field string, value interface{}) FilterQuery {
 // FilterLt compares that left value is less than to right value.
 func FilterLt(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   LtOp,
+		Type:   FilterLtOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -334,7 +334,7 @@ func FilterLt(field string, value interface{}) FilterQuery {
 // FilterLte compares that left value is less than or equal to right value.
 func FilterLte(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   LteOp,
+		Type:   FilterLteOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -343,7 +343,7 @@ func FilterLte(field string, value interface{}) FilterQuery {
 // FilterGt compares that left value is greater than to right value.
 func FilterGt(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   GtOp,
+		Type:   FilterGtOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -352,7 +352,7 @@ func FilterGt(field string, value interface{}) FilterQuery {
 // FilterGte compares that left value is greater than or equal to right value.
 func FilterGte(field string, value interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   GteOp,
+		Type:   FilterGteOp,
 		Field:  field,
 		Values: []interface{}{value},
 	}
@@ -361,7 +361,7 @@ func FilterGte(field string, value interface{}) FilterQuery {
 // FilterNil check whether field is nil.
 func FilterNil(field string) FilterQuery {
 	return FilterQuery{
-		Type:  NilOp,
+		Type:  FilterNilOp,
 		Field: field,
 	}
 }
@@ -369,7 +369,7 @@ func FilterNil(field string) FilterQuery {
 // FilterNotNil check whether field is not nil.
 func FilterNotNil(field string) FilterQuery {
 	return FilterQuery{
-		Type:  NotNilOp,
+		Type:  FilterNotNilOp,
 		Field: field,
 	}
 }
@@ -377,7 +377,7 @@ func FilterNotNil(field string) FilterQuery {
 // FilterIn check whethers value of the field is included in values.
 func FilterIn(field string, values ...interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   InOp,
+		Type:   FilterInOp,
 		Field:  field,
 		Values: values,
 	}
@@ -386,7 +386,7 @@ func FilterIn(field string, values ...interface{}) FilterQuery {
 // FilterNin check whethers value of the field is not included in values.
 func FilterNin(field string, values ...interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   NinOp,
+		Type:   FilterNinOp,
 		Field:  field,
 		Values: values,
 	}
@@ -395,7 +395,7 @@ func FilterNin(field string, values ...interface{}) FilterQuery {
 // FilterLike compares value of field to match string pattern.
 func FilterLike(field string, pattern string) FilterQuery {
 	return FilterQuery{
-		Type:   LikeOp,
+		Type:   FilterLikeOp,
 		Field:  field,
 		Values: []interface{}{pattern},
 	}
@@ -404,7 +404,7 @@ func FilterLike(field string, pattern string) FilterQuery {
 // FilterNotLike compares value of field to not match string pattern.
 func FilterNotLike(field string, pattern string) FilterQuery {
 	return FilterQuery{
-		Type:   NotLikeOp,
+		Type:   FilterNotLikeOp,
 		Field:  field,
 		Values: []interface{}{pattern},
 	}
@@ -413,7 +413,7 @@ func FilterNotLike(field string, pattern string) FilterQuery {
 // FilterFragment add custom filter.
 func FilterFragment(expr string, values ...interface{}) FilterQuery {
 	return FilterQuery{
-		Type:   FragmentOp,
+		Type:   FilterFragmentOp,
 		Field:  expr,
 		Values: values,
 	}

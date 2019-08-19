@@ -1,4 +1,4 @@
-package query
+package grimoire
 
 type GroupClause struct {
 	Fields []string

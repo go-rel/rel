@@ -1,4 +1,4 @@
-package query
+package grimoire
 
 type SelectClause struct {
 	OnlyDistinct bool

@@ -6,8 +6,6 @@ import (
 
 	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
-	"github.com/Fs02/grimoire/query"
-	"github.com/Fs02/grimoire/where"
 )
 
 // Repo defines grimoire repository.
@@ -37,37 +35,37 @@ func (r *Repo) SetLogger(logger ...Logger) {
 
 // Aggregate calculate aggregate over the given field.
 // Supported aggregate: count, sum, avg, max, min.
-func (r Repo) Aggregate(query query.Query, aggregate string, field string) (int, error) {
+func (r Repo) Aggregate(query Query, aggregate string, field string) (int, error) {
 	return r.adapter.Aggregate(query, aggregate, field, r.logger...)
 }
 
 // MustAggregate calculate aggregate over the given field.
 // It'll panic if any error eccured.
-func (r Repo) MustAggregate(query query.Query, aggregate string, field string) int {
+func (r Repo) MustAggregate(query Query, aggregate string, field string) int {
 	result, err := r.Aggregate(query, aggregate, field)
 	must(err)
 	return result
 }
 
 // Count retrieves count of results that match the query.
-func (r Repo) Count(collection string, queries ...query.Builder) (int, error) {
-	return r.Aggregate(query.Build(collection, queries...), "count", "*")
+func (r Repo) Count(collection string, queriers ...Querier) (int, error) {
+	return r.Aggregate(BuildQuery(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustCount(collection string, queries ...query.Builder) int {
-	count, err := r.Count(collection, queries...)
+func (r Repo) MustCount(collection string, queriers ...Querier) int {
+	count, err := r.Count(collection, queriers...)
 	must(err)
 	return count
 }
 
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
-func (r Repo) One(entity interface{}, queries ...query.Builder) error {
+func (r Repo) One(entity interface{}, queriers ...Querier) error {
 	var (
 		doc   = newDocument(entity)
-		query = query.Build(doc.Table(), queries...).Limit(1)
+		query = BuildQuery(doc.Table(), queriers...).Limit(1)
 	)
 
 	cur, err := r.adapter.Query(query, r.logger...)
@@ -80,15 +78,15 @@ func (r Repo) One(entity interface{}, queries ...query.Builder) error {
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
-func (r Repo) MustOne(entity interface{}, queries ...query.Builder) {
-	must(r.One(entity, queries...))
+func (r Repo) MustOne(entity interface{}, queriers ...Querier) {
+	must(r.One(entity, queriers...))
 }
 
 // All retrieves all results that match the query.
-func (r Repo) All(entities interface{}, queries ...query.Builder) error {
+func (r Repo) All(entities interface{}, queriers ...Querier) error {
 	var (
 		col   = newCollection(entities)
-		query = query.Build(col.Table(), queries...)
+		query = BuildQuery(col.Table(), queriers...)
 	)
 
 	cur, err := r.adapter.Query(query, r.logger...)
@@ -101,8 +99,8 @@ func (r Repo) All(entities interface{}, queries ...query.Builder) error {
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustAll(entities interface{}, queries ...query.Builder) {
-	must(r.All(entities, queries...))
+func (r Repo) MustAll(entities interface{}, queriers ...Querier) {
+	must(r.All(entities, queriers...))
 }
 
 // Insert a record to database.
@@ -120,9 +118,9 @@ func (r Repo) Insert(record interface{}, cbuilders ...change.Builder) error {
 
 func (r Repo) insert(record interface{}, changes change.Changes) error {
 	var (
-		doc     = newDocument(record)
-		pField  = doc.PrimaryField()
-		queries = query.Build(doc.Table())
+		doc      = newDocument(record)
+		pField   = doc.PrimaryField()
+		queriers = BuildQuery(doc.Table())
 	)
 
 	if err := r.upsertBelongsTo(doc, &changes); err != nil {
@@ -130,13 +128,13 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 	}
 
 	// TODO: put timestamp (updated_at, created_at) if those fields exist.
-	id, err := r.Adapter().Insert(queries, changes, r.logger...)
+	id, err := r.Adapter().Insert(queriers, changes, r.logger...)
 	if err != nil {
 		return err
 	}
 
 	// fetch record
-	if err := r.One(record, where.Eq(pField, id)); err != nil {
+	if err := r.One(record, FilterEq(pField, id)); err != nil {
 		return err
 	}
 
@@ -174,7 +172,7 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 	var (
 		col      = newCollection(record)
 		pField   = col.PrimaryField()
-		queries  = query.Build(col.Table())
+		queriers = BuildQuery(col.Table())
 		fields   = make([]string, 0, len(changes[0].Fields))
 		fieldMap = make(map[string]struct{}, len(changes[0].Fields))
 	)
@@ -188,12 +186,12 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 		}
 	}
 
-	ids, err := r.adapter.InsertAll(queries, fields, changes, r.logger...)
+	ids, err := r.adapter.InsertAll(queriers, fields, changes, r.logger...)
 	if err != nil {
 		return err
 	}
 
-	cur, err := r.adapter.Query(queries.Where(where.In(pField, ids...)), r.logger...)
+	cur, err := r.adapter.Query(queriers.Where(FilterIn(pField, ids...)), r.logger...)
 	if err != nil {
 		return err
 	}
@@ -217,29 +215,29 @@ func (r Repo) Update(record interface{}, cbuilders ...change.Builder) error {
 		changes = change.Build(cbuilders...)
 	)
 
-	return r.update(record, changes, where.Eq(pField, pValue))
+	return r.update(record, changes, FilterEq(pField, pValue))
 }
 
-func (r Repo) update(record interface{}, changes change.Changes, filter query.FilterClause) error {
+func (r Repo) update(record interface{}, changes change.Changes, filter FilterClause) error {
 	if changes.Empty() {
 		return nil
 	}
 
 	var (
-		doc     = newDocument(record)
-		queries = query.Build(doc.Table(), filter)
+		doc      = newDocument(record)
+		queriers = BuildQuery(doc.Table(), filter)
 	)
 
 	// TODO: update timestamp (updated_at) from form
 
 	// perform update
-	err := r.adapter.Update(queries, changes, r.logger...)
+	err := r.adapter.Update(queriers, changes, r.logger...)
 	if err != nil {
 		// TODO: changeset error
 		return transformError(err)
 	}
 
-	return r.One(record, queries)
+	return r.One(record, queriers)
 }
 
 // MustUpdate a record in database.
@@ -274,7 +272,7 @@ func (r Repo) upsertBelongsTo(doc Document, changes *change.Changes) error {
 			}
 
 			var (
-				filter = where.Eq(assoc.ForeignField(), fValue)
+				filter = FilterEq(assoc.ForeignField(), fValue)
 			)
 
 			if err := r.update(doc, assocChanges, filter); err != nil {
@@ -316,7 +314,7 @@ func (r Repo) upsertHasOne(doc Document, changes *change.Changes, id interface{}
 			}
 
 			var (
-				filter = where.Eq(pField, pValue).AndEq(fField, rValue)
+				filter = FilterEq(pField, pValue).AndEq(fField, rValue)
 			)
 
 			if err := r.update(target, assocChanges, filter); err != nil {
@@ -361,10 +359,10 @@ func (r Repo) upsertHasMany(doc Document, changes *change.Changes, id interface{
 
 			if len(pValues) > 0 {
 				var (
-					filter = where.Eq(fField, rValue).AndIn(pField, pValues...)
+					filter = FilterEq(fField, rValue).AndIn(pField, pValues...)
 				)
 
-				if err := r.deleteAll(query.Build(table, filter)); err != nil {
+				if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
 					return err
 				}
 			}
@@ -391,7 +389,7 @@ func (r Repo) Delete(entity interface{}) error {
 		table  = doc.Table()
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
-		q      = query.Build(table, where.Eq(pField, pValue))
+		q      = BuildQuery(table, FilterEq(pField, pValue))
 	)
 
 	return transformError(r.adapter.Delete(q, r.logger...))
@@ -403,24 +401,24 @@ func (r Repo) MustDelete(record interface{}) {
 	must(r.Delete(record))
 }
 
-func (r Repo) DeleteAll(queries ...query.Builder) error {
+func (r Repo) DeleteAll(queriers ...Querier) error {
 	var (
-		q = query.Build("", queries...)
+		q = BuildQuery("", queriers...)
 	)
 
 	return transformError(r.deleteAll(q))
 }
 
-func (r Repo) MustDeleteAll(queries ...query.Builder) {
-	must(r.DeleteAll(queries...))
+func (r Repo) MustDeleteAll(queriers ...Querier) {
+	must(r.DeleteAll(queriers...))
 }
 
-func (r Repo) deleteAll(q query.Query) error {
+func (r Repo) deleteAll(q Query) error {
 	return r.adapter.Delete(q, r.logger...)
 }
 
 // Preload loads association with given query.
-func (r Repo) Preload(entities interface{}, field string, queries ...query.Builder) error {
+func (r Repo) Preload(entities interface{}, field string, queriers ...Querier) error {
 	var (
 		col  Collection
 		path = strings.Split(field, ".")
@@ -456,7 +454,7 @@ func (r Repo) Preload(entities interface{}, field string, queries ...query.Build
 		i++
 	}
 
-	cur, err := r.adapter.Query(query.Build(table, where.In(keyField, ids...)), r.logger...)
+	cur, err := r.adapter.Query(BuildQuery(table, FilterIn(keyField, ids...)), r.logger...)
 	if err != nil {
 		return err
 	}
@@ -538,8 +536,8 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 
 // MustPreload loads association with given query.
 // It'll panic if any error occurred.
-func (r Repo) MustPreload(record interface{}, field string, queries ...query.Builder) {
-	must(r.Preload(record, field, queries...))
+func (r Repo) MustPreload(record interface{}, field string, queriers ...Querier) {
+	must(r.Preload(record, field, queriers...))
 }
 
 // Transaction performs transaction with given function argument.

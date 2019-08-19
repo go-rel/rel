@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/change"
-	"github.com/Fs02/grimoire/query"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -23,66 +23,66 @@ type Builder struct {
 }
 
 // Find generates query for select.
-func (builder *Builder) Find(q query.Query) (string, []interface{}) {
-	qs, args := builder.query(q)
-	return builder.fields(q.SelectClause.OnlyDistinct, q.SelectClause.Fields) + qs, args
+func (builder *Builder) Find(query grimoire.Query) (string, []interface{}) {
+	qs, args := builder.query(query)
+	return builder.fields(query.SelectClause.OnlyDistinct, query.SelectClause.Fields) + qs, args
 }
 
 // Aggregate generates query for aggregation.
-func (builder *Builder) Aggregate(q query.Query) (string, []interface{}) {
-	qs, args := builder.query(q)
-	field := "" //q.AggregateMode + "(" + q.AggregateField + ") AS " + q.AggregateMode
+func (builder *Builder) Aggregate(query grimoire.Query) (string, []interface{}) {
+	qs, args := builder.query(query)
+	field := "" //query.AggregateMode + "(" + query.AggregateField + ") AS " + query.AggregateMode
 
-	return builder.fields(false, append(q.GroupClause.Fields, field)) + qs, args
+	return builder.fields(false, append(query.GroupClause.Fields, field)) + qs, args
 }
 
-func (builder *Builder) query(q query.Query) (string, []interface{}) {
+func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   []interface{}
 	)
 
-	if s := builder.from(q.Collection); s != "" {
+	if s := builder.from(query.Collection); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s, arg := builder.join(q.JoinClause...); s != "" {
+	if s, arg := builder.join(query.JoinClause...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s, arg := builder.where(q.WhereClause); s != "" {
+	if s, arg := builder.where(query.WhereClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.groupBy(q.GroupClause.Fields); s != "" {
+	if s := builder.groupBy(query.GroupClause.Fields); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 
-		if s, arg := builder.having(q.GroupClause.Filter); s != "" {
+		if s, arg := builder.having(query.GroupClause.Filter); s != "" {
 			buffer.WriteString(" ")
 			buffer.WriteString(s)
 			args = append(args, arg...)
 		}
 	}
 
-	if s := builder.orderBy(q.SortClause); s != "" {
+	if s := builder.orderBy(query.SortClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.limitOffset(q.LimitClause, q.OffsetClause); s != "" {
+	if s := builder.limitOffset(query.LimitClause, query.OffsetClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if q.LockClause != "" {
+	if query.LockClause != "" {
 		buffer.WriteString(" ")
-		buffer.WriteString(string(q.LockClause))
+		buffer.WriteString(string(query.LockClause))
 	}
 
 	buffer.WriteString(";")

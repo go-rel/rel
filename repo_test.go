@@ -5,8 +5,6 @@ import (
 
 	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
-	"github.com/Fs02/grimoire/query"
-	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,7 +50,7 @@ func TestRepo_Aggregate(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		query     = query.From("users")
+		query     = From("users")
 		aggregate = "count"
 		field     = "*"
 	)
@@ -70,7 +68,7 @@ func TestRepo_MustAggregate(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
-		query     = query.From("users")
+		query     = From("users")
 		aggregate = "count"
 		field     = "*"
 	)
@@ -89,7 +87,7 @@ func TestRepo_Count(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		query   = query.From("users")
+		query   = From("users")
 	)
 
 	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
@@ -105,7 +103,7 @@ func TestRepo_MustCount(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		query   = query.From("users")
+		query   = From("users")
 	)
 
 	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
@@ -124,7 +122,7 @@ func TestRepo_One(t *testing.T) {
 		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		query   = query.From("users").Limit(1)
+		query   = From("users").Limit(1)
 		cur     = createCursor(1)
 	)
 
@@ -147,7 +145,7 @@ func TestRepo_One_queryError(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = &testCursor{}
-		query   = query.From("users").Limit(1)
+		query   = From("users").Limit(1)
 	)
 
 	doc.(*document).reflect()
@@ -167,7 +165,7 @@ func TestRepo_One_notFound(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = createCursor(0)
-		query   = query.From("users").Limit(1)
+		query   = From("users").Limit(1)
 	)
 
 	doc.(*document).reflect()
@@ -187,7 +185,7 @@ func TestRepo_All(t *testing.T) {
 		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		query   = query.From("users").Limit(1)
+		query   = From("users").Limit(1)
 		cur     = createCursor(2)
 	)
 
@@ -219,8 +217,8 @@ func TestRepo_Insert(t *testing.T) {
 
 	doc.(*document).reflect()
 
-	adapter.On("Insert", query.From("users"), changes).Return(1, nil).Once()
-	adapter.On("Query", query.From("users").Where(where.Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
+	adapter.On("Query", From("users").Where(FilterEq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Insert(&user, cbuilders...))
 	assert.False(t, cur.Next())
@@ -240,7 +238,7 @@ func TestRepo_Insert_error(t *testing.T) {
 		changes = change.Build(cbuilders...)
 	)
 
-	adapter.On("Insert", query.From("users"), changes).Return(0, errors.NewUnexpected("error")).Once()
+	adapter.On("Insert", From("users"), changes).Return(0, errors.NewUnexpected("error")).Once()
 
 	assert.NotNil(t, repo.Insert(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustInsert(&user, cbuilders...) })
@@ -263,8 +261,8 @@ func TestRepo_InsertAll(t *testing.T) {
 
 	collec.(*collection).reflect()
 
-	adapter.On("InsertAll", query.From("users"), changes).Return([]interface{}{1, 2}, nil).Once()
-	adapter.On("Query", query.From("users").Where(where.In("id", 1, 2))).Return(cur, nil).Once()
+	adapter.On("InsertAll", From("users"), changes).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("Query", From("users").Where(FilterIn("id", 1, 2))).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(&users, changes))
 
@@ -282,7 +280,7 @@ func TestRepo_Update(t *testing.T) {
 			change.Set("name", "name"),
 		}
 		changes = change.Build(cbuilders...)
-		queries = query.From("users").Where(where.Eq("id", user.ID))
+		queries = From("users").Where(FilterEq("id", user.ID))
 		cur     = createCursor(1)
 	)
 
@@ -331,7 +329,7 @@ func TestRepo_Update_error(t *testing.T) {
 			change.Set("name", "name"),
 		}
 		changes = change.Build(cbuilders...)
-		queries = query.From("users").Where(where.Eq("id", user.ID))
+		queries = From("users").Where(FilterEq("id", user.ID))
 	)
 
 	adapter.On("Update", queries, changes).Return(errors.NewUnexpected("error")).Once()
@@ -356,7 +354,7 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 				},
 			},
 		)
-		q        = query.Build("users", where.Eq("id", 1))
+		q        = BuildQuery("users", FilterEq("id", 1))
 		buyer, _ = changes.GetAssoc("Buyer")
 		cur      = createCursor(1)
 	)
@@ -388,7 +386,7 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 				},
 			},
 		)
-		q        = query.Build("users", where.Eq("id", 1))
+		q        = BuildQuery("users", FilterEq("id", 1))
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
@@ -439,7 +437,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 				},
 			},
 		)
-		q        = query.Build("users")
+		q        = BuildQuery("users")
 		buyer, _ = changes.GetAssoc("Buyer")
 		cur      = createCursor(1)
 	)
@@ -448,7 +446,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	buyerDoc.(*document).initAssociations()
 
 	adapter.On("Insert", q, buyer[0]).Return(1, nil).Once()
-	adapter.On("Query", q.Where(where.Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Query", q.Where(FilterEq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	err := repo.upsertBelongsTo(doc, &changes)
 	assert.Nil(t, err)
@@ -476,7 +474,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 				},
 			},
 		)
-		q        = query.Build("users")
+		q        = BuildQuery("users")
 		buyer, _ = changes.GetAssoc("Buyer")
 	)
 
@@ -519,7 +517,7 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 				},
 			},
 		)
-		q            = query.Build("addresses").Where(where.Eq("id", 2).AndEq("user_id", 1))
+		q            = BuildQuery("addresses").Where(FilterEq("id", 2).AndEq("user_id", 1))
 		addresses, _ = changes.GetAssoc("Address")
 		cur          = createCursor(1)
 	)
@@ -550,7 +548,7 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 				},
 			},
 		)
-		q            = query.Build("addresses").Where(where.Eq("id", 2).AndEq("user_id", 1))
+		q            = BuildQuery("addresses").Where(FilterEq("id", 2).AndEq("user_id", 1))
 		addresses, _ = changes.GetAssoc("Address")
 	)
 
@@ -599,7 +597,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 				},
 			},
 		)
-		q       = query.Build("addresses")
+		q       = BuildQuery("addresses")
 		address = change.Build(change.Set("street", "street1"))
 		cur     = createCursor(1)
 	)
@@ -612,7 +610,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	address.SetValue("user_id", user.ID)
 
 	adapter.On("Insert", q, address).Return(2, nil).Once()
-	adapter.On("Query", q.Where(where.Eq("id", 2)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Query", q.Where(FilterEq("id", 2)).Limit(1)).Return(cur, nil).Once()
 
 	err := repo.upsertHasOne(doc, &changes, nil)
 	assert.Nil(t, err)
@@ -635,7 +633,7 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 				},
 			},
 		)
-		q       = query.Build("addresses")
+		q       = BuildQuery("addresses")
 		address = change.Build(change.Set("street", "street1"))
 	)
 
@@ -670,7 +668,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 				},
 			},
 		)
-		q               = query.Build("transactions")
+		q               = BuildQuery("transactions")
 		transactions, _ = changes.GetAssoc("Transactions")
 		cur             = createCursor(2)
 	)
@@ -678,7 +676,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 	transactionCollec.(*collection).reflect()
 
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{2, 3}, nil).Once()
-	adapter.On("Query", q.Where(where.In("id", 2, 3))).Return(cur, nil).Once()
+	adapter.On("Query", q.Where(FilterIn("id", 2, 3))).Return(cur, nil).Once()
 
 	err := repo.upsertHasMany(doc, &changes, user.ID, true)
 	assert.Nil(t, err)
@@ -713,7 +711,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 				},
 			},
 		)
-		q               = query.Build("transactions")
+		q               = BuildQuery("transactions")
 		transactions, _ = changes.GetAssoc("Transactions")
 		rerr            = errors.NewUnexpected("insert all error")
 	)
@@ -760,16 +758,16 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 				},
 			},
 		)
-		q               = query.Build("transactions")
+		q               = BuildQuery("transactions")
 		transactions, _ = changes.GetAssoc("Transactions")
 		cur             = createCursor(3)
 	)
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).Once()
+	adapter.On("Delete", q.Where(FilterEq("user_id", 1).AndIn("id", 1, 2))).Return(nil).Once()
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
-	adapter.On("Query", q.Where(where.In("id", 3, 4, 5))).Return(cur, nil).Once()
+	adapter.On("Query", q.Where(FilterIn("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Nil(t, err)
@@ -811,7 +809,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 				},
 			},
 		)
-		q               = query.Build("transactions")
+		q               = BuildQuery("transactions")
 		transactions, _ = changes.GetAssoc("Transactions")
 		cur             = createCursor(3)
 	)
@@ -819,7 +817,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	transactionCollec.(*collection).reflect()
 
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
-	adapter.On("Query", q.Where(where.In("id", 3, 4, 5))).Return(cur, nil).Once()
+	adapter.On("Query", q.Where(FilterIn("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Nil(t, err)
@@ -863,11 +861,11 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 				},
 			},
 		)
-		q    = query.Build("transactions")
+		q    = BuildQuery("transactions")
 		rerr = errors.NewUnexpected("delete all error")
 	)
 
-	adapter.On("Delete", q.Where(where.Eq("user_id", 1).AndIn("id", 1, 2))).Return(rerr).Once()
+	adapter.On("Delete", q.Where(FilterEq("user_id", 1).AndIn("id", 1, 2))).Return(rerr).Once()
 
 	err := repo.upsertHasMany(doc, &changes, user.ID, false)
 	assert.Equal(t, rerr, err)
@@ -906,7 +904,7 @@ func TestRepo_Delete(t *testing.T) {
 		user    = &User{ID: 1}
 	)
 
-	adapter.On("Delete", query.From("users").Where(where.Eq("id", user.ID))).Return(nil).Once()
+	adapter.On("Delete", From("users").Where(FilterEq("id", user.ID))).Return(nil).Once()
 
 	assert.Nil(t, repo.Delete(user))
 
@@ -924,7 +922,7 @@ func TestRepo_Delete(t *testing.T) {
 // 	)
 
 // 	adapter.
-// 		On("Delete", query.From("users").Where(where.In("id", 1, 2))).Return(nil)
+// 		On("Delete", From("users").Where(FilterIn("id", 1, 2))).Return(nil)
 
 // 	assert.Nil(t, repo.Delete(users))
 // 	assert.NotPanics(t, func() { repo.MustDelete(users) })
@@ -947,10 +945,10 @@ func TestRepo_DeleteAll(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		queries = query.From("logs").Where(where.Eq("user_id", 1))
+		queries = From("logs").Where(FilterEq("user_id", 1))
 	)
 
-	adapter.On("Delete", query.From("logs").Where(where.Eq("user_id", 1))).Return(nil).Once()
+	adapter.On("Delete", From("logs").Where(FilterEq("user_id", 1))).Return(nil).Once()
 
 	assert.Nil(t, repo.DeleteAll(queries))
 
@@ -966,7 +964,7 @@ func TestRepo_Preload_hasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -994,8 +992,8 @@ func TestRepo_Preload_sliceHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1023,7 +1021,7 @@ func TestRepo_Preload_nestedHasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1054,8 +1052,8 @@ func TestRepo_Preload_sliceNestedHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("addresses").Where(where.In("user_id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(FilterIn("user_id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1084,7 +1082,7 @@ func TestRepo_Preload_hasMany(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1114,8 +1112,8 @@ func TestRepo_Preload_sliceHasMany(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1147,7 +1145,7 @@ func TestRepo_Preload_nestedHasMany(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1192,8 +1190,8 @@ func TestRepo_Preload_nestedSliceHasMany(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1229,8 +1227,8 @@ func TestRepo_Preload_nestedNullSliceHasMany(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 10, 15))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("transactions").Where(where.In("user_id", 15, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 10, 15))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("transactions").Where(FilterIn("user_id", 15, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -1258,7 +1256,7 @@ func TestRepo_Preload_belongsTo(t *testing.T) {
 		cur         = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("users").Where(where.In("id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(FilterIn("id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
@@ -1282,7 +1280,7 @@ func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("users").Where(where.In("id", 10))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(FilterIn("id", 10))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
@@ -1325,8 +1323,8 @@ func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("users").Where(where.In("id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("users").Where(where.In("id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("users").Where(FilterIn("id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("users").Where(FilterIn("id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
@@ -1358,8 +1356,8 @@ func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", query.From("users").Where(where.In("id", 10, 20))).Return(cur, nil).Maybe()
-	adapter.On("Query", query.From("users").Where(where.In("id", 20, 10))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("users").Where(FilterIn("id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("users").Where(FilterIn("id", 20, 10))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
@@ -1403,7 +1401,7 @@ func TestRepo_Preload_queryError(t *testing.T) {
 		err         = errors.NewUnexpected("error")
 	)
 
-	adapter.On("Query", query.From("users").Where(where.In("id", 10))).Return(cur, err).Once()
+	adapter.On("Query", From("users").Where(FilterIn("id", 10))).Return(cur, err).Once()
 
 	assert.Equal(t, err, repo.Preload(&transaction, "Buyer"))
 

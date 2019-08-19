@@ -1,5 +1,4 @@
-// Package where defines function for building filter in query.
-package query
+package grimoire
 
 // FilterOp defines enumeration of all supported filter types.
 type FilterOp int

@@ -3,20 +3,20 @@ package sql
 import (
 	"testing"
 
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/change"
-	"github.com/Fs02/grimoire/query"
 	"github.com/Fs02/grimoire/sort"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuilder_Find(t *testing.T) {
-	users := query.From("users")
+	users := grimoire.From("users")
 
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       query.Query
+		Query       grimoire.Query
 	}{
 		{
 			"SELECT * FROM `users`;",
@@ -88,12 +88,12 @@ func TestBuilder_Find(t *testing.T) {
 }
 
 func TestBuilder_Find_ordinal(t *testing.T) {
-	users := query.From("users")
+	users := grimoire.From("users")
 
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       query.Query
+		Query       grimoire.Query
 	}{
 		{
 			"SELECT * FROM \"users\";",
@@ -168,7 +168,7 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 // 		EscapeChar:  "`",
 // 	})
 
-// 	users := query.From("users")
+// 	users := grimoire.From("users")
 
 // 	users.AggregateMode = "count"
 // 	users.AggregateField = "*"
@@ -438,23 +438,23 @@ func TestBuilder_From(t *testing.T) {
 func TestBuilder_Join(t *testing.T) {
 	tests := []struct {
 		QueryString string
-		Query       query.Query
+		Query       grimoire.Query
 	}{
 		{
 			"",
-			query.From("trxs"),
+			grimoire.From("trxs"),
 		},
 		{
 			"JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			query.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
+			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
 		},
 		{
 			"INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			query.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
+			grimoire.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
 		},
 		{
 			"JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
-			query.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
+			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
 				JoinOn("payments", "payments.id", "trxs.payment_id"),
 		},
 	}
@@ -464,7 +464,7 @@ func TestBuilder_Join(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).join(query.Build("", test.Query).JoinClause...)
+			}).join(grimoire.Build("", test.Query).JoinClause...)
 			assert.Equal(t, test.QueryString, qs)
 			assert.Nil(t, args)
 		})
@@ -475,7 +475,7 @@ func TestBuilder_Where(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -510,7 +510,7 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -564,7 +564,7 @@ func TestBuilder_Having(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -599,7 +599,7 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -642,12 +642,12 @@ func TestBuilder_OrderBy(t *testing.T) {
 	assert.Equal(t, "ORDER BY `name` ASC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy([]query.SortClause{sort.Asc("name")}))
+	}).orderBy([]grimoire.SortClause{sort.Asc("name")}))
 
 	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", NewBuilder(&Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
-	}).orderBy([]query.SortClause{sort.Asc("name"), sort.Desc("created_at")}))
+	}).orderBy([]grimoire.SortClause{sort.Asc("name"), sort.Desc("created_at")}))
 }
 
 func TestBuilder_LimitOffset(t *testing.T) {
@@ -676,7 +676,7 @@ func TestBuilder_Filter(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -831,7 +831,7 @@ func TestBuilder_Filter(t *testing.T) {
 		{
 			"",
 			nil,
-			query.FilterClause{Type: query.FilterOp(9999)},
+			grimoire.FilterClause{Type: grimoire.FilterOp(9999)},
 		},
 	}
 
@@ -852,7 +852,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      query.FilterClause
+		Filter      grimoire.FilterClause
 	}{
 		{
 			"",
@@ -1007,7 +1007,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 		{
 			"",
 			nil,
-			query.FilterClause{Type: query.FilterOp(9999)},
+			grimoire.FilterClause{Type: grimoire.FilterOp(9999)},
 		},
 	}
 
@@ -1027,7 +1027,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 }
 
 func TestBuilder_Lock(t *testing.T) {
-	users := query.From("users").Lock(query.ForUpdate())
+	users := grimoire.From("users").Lock(grimoire.ForUpdate())
 
 	qs, args := NewBuilder(&Config{
 		Placeholder: "?",

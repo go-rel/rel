@@ -1,4 +1,4 @@
-package query
+package grimoire
 
 // SortClause defines sort information of query.
 type SortClause struct {

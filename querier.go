@@ -1,16 +1,16 @@
-package query
+package grimoire
 
-type Builder interface {
+type Querier interface {
 	Build(*Query)
 }
 
-func Build(collection string, builders ...Builder) Query {
+func BuildQuery(collection string, queriers ...Querier) Query {
 	q := Query{
 		empty: true,
 	}
 
-	for _, builder := range builders {
-		builder.Build(&q)
+	for _, querier := range queriers {
+		querier.Build(&q)
 		q.empty = false
 	}
 

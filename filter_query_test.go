@@ -12,7 +12,7 @@ var result grimoire.FilterQuery
 func BenchmarkFilterQuery_chain1(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterEq("id", 1)
+		f = grimoire.Eq("id", 1)
 	}
 	result = f
 }
@@ -20,7 +20,7 @@ func BenchmarkFilterQuery_chain1(b *testing.B) {
 func BenchmarkFilterQuery_chain2(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterEq("id", 1).AndNe("name", "foo")
+		f = grimoire.Eq("id", 1).AndNe("name", "foo")
 	}
 	result = f
 }
@@ -28,7 +28,7 @@ func BenchmarkFilterQuery_chain2(b *testing.B) {
 func BenchmarkFilterQuery_chain3(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80)
+		f = grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80)
 	}
 	result = f
 }
@@ -36,7 +36,7 @@ func BenchmarkFilterQuery_chain3(b *testing.B) {
 func BenchmarkFilterQuery_chain4(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterEq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10)
+		f = grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10)
 	}
 	result = f
 }
@@ -44,7 +44,7 @@ func BenchmarkFilterQuery_chain4(b *testing.B) {
 func BenchmarkFilterQuery_slice1(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterAnd(grimoire.FilterEq("id", 1))
+		f = grimoire.And(grimoire.Eq("id", 1))
 	}
 	result = f
 }
@@ -52,7 +52,7 @@ func BenchmarkFilterQuery_slice1(b *testing.B) {
 func BenchmarkFilterQuery_slice2(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterAnd(grimoire.FilterEq("id", 1), grimoire.FilterNe("name", "foo"))
+		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"))
 	}
 	result = f
 }
@@ -60,7 +60,7 @@ func BenchmarkFilterQuery_slice2(b *testing.B) {
 func BenchmarkFilterQuery_slice3(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterAnd(grimoire.FilterEq("id", 1), grimoire.FilterNe("name", "foo"), grimoire.FilterGt("score", 80))
+		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80))
 	}
 	result = f
 }
@@ -68,23 +68,23 @@ func BenchmarkFilterQuery_slice3(b *testing.B) {
 func BenchmarkFilterQuery_slice4(b *testing.B) {
 	var f grimoire.FilterQuery
 	for n := 0; n < b.N; n++ {
-		f = grimoire.FilterAnd(grimoire.FilterEq("id", 1), grimoire.FilterNe("name", "foo"), grimoire.FilterGt("score", 80), grimoire.FilterLt("avg", 10))
+		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80), grimoire.Lt("avg", 10))
 	}
 	result = f
 }
 
-var filter1 = grimoire.FilterEq("id", 1)
-var filter2 = grimoire.FilterNe("name", "foo")
-var filter3 = grimoire.FilterGt("score", 80)
-var filter4 = grimoire.FilterLt("avg", 10)
+var filter1 = grimoire.Eq("id", 1)
+var filter2 = grimoire.Ne("name", "foo")
+var filter3 = grimoire.Gt("score", 80)
+var filter4 = grimoire.Lt("avg", 10)
 
 func TestFilterQuery_None(t *testing.T) {
 	assert.True(t, grimoire.FilterQuery{}.None())
-	assert.True(t, grimoire.FilterAnd().None())
-	assert.True(t, grimoire.FilterNot().None())
+	assert.True(t, grimoire.And().None())
+	assert.True(t, grimoire.Not().None())
 
-	assert.False(t, grimoire.FilterAnd(filter1).None())
-	assert.False(t, grimoire.FilterAnd(filter1, filter2).None())
+	assert.False(t, grimoire.And(filter1).None())
+	assert.False(t, grimoire.And(filter1, filter2).None())
 	assert.False(t, filter1.None())
 }
 
@@ -97,7 +97,7 @@ func TestFilterQuery_And(t *testing.T) {
 		{
 			`grimoire.FilterQuery{}.And()`,
 			grimoire.FilterQuery{}.And(),
-			grimoire.FilterAnd(),
+			grimoire.And(),
 		},
 		{
 			`grimoire.FilterQuery{}.And(filter1)`,
@@ -112,42 +112,42 @@ func TestFilterQuery_And(t *testing.T) {
 		{
 			`grimoire.FilterQuery{}.And(filter1, filter2)`,
 			grimoire.FilterQuery{}.And(filter1, filter2),
-			grimoire.FilterAnd(filter1, filter2),
+			grimoire.And(filter1, filter2),
 		},
 		{
 			`grimoire.FilterQuery{}.And(filter1, filter2).And()`,
 			grimoire.FilterQuery{}.And(filter1, filter2).And(),
-			grimoire.FilterAnd(filter1, filter2),
+			grimoire.And(filter1, filter2),
 		},
 		{
 			`grimoire.FilterQuery{}.And(filter1, filter2, filter3)`,
 			grimoire.FilterQuery{}.And(filter1, filter2, filter3),
-			grimoire.FilterAnd(filter1, filter2, filter3),
+			grimoire.And(filter1, filter2, filter3),
 		},
 		{
 			`grimoire.FilterQuery{}.And(filter1, filter2, filter3).And()`,
 			grimoire.FilterQuery{}.And(filter1, filter2, filter3).And(),
-			grimoire.FilterAnd(filter1, filter2, filter3),
+			grimoire.And(filter1, filter2, filter3),
 		},
 		{
 			`filter1.And(filter2)`,
 			filter1.And(filter2),
-			grimoire.FilterAnd(filter1, filter2),
+			grimoire.And(filter1, filter2),
 		},
 		{
 			`filter1.And(filter2).And()`,
 			filter1.And(filter2).And(),
-			grimoire.FilterAnd(filter1, filter2),
+			grimoire.And(filter1, filter2),
 		},
 		{
 			`filter1.And(filter2).And(filter3)`,
 			filter1.And(filter2).And(filter3),
-			grimoire.FilterAnd(filter1, filter2, filter3),
+			grimoire.And(filter1, filter2, filter3),
 		},
 		{
 			`filter1.And(filter2).And(filter3).And()`,
 			filter1.And(filter2).And(filter3).And(),
-			grimoire.FilterAnd(filter1, filter2, filter3),
+			grimoire.And(filter1, filter2, filter3),
 		},
 	}
 
@@ -167,7 +167,7 @@ func TestFilterQuery_Or(t *testing.T) {
 		{
 			`grimoire.FilterQuery{}.Or()`,
 			grimoire.FilterQuery{}.Or(),
-			grimoire.FilterOr(),
+			grimoire.Or(),
 		},
 		{
 			`grimoire.FilterQuery{}.Or(filter1)`,
@@ -182,42 +182,42 @@ func TestFilterQuery_Or(t *testing.T) {
 		{
 			`grimoire.FilterQuery{}.Or(filter1, filter2)`,
 			grimoire.FilterQuery{}.Or(filter1, filter2),
-			grimoire.FilterOr(filter1, filter2),
+			grimoire.Or(filter1, filter2),
 		},
 		{
 			`grimoire.FilterQuery{}.Or(filter1, filter2).Or()`,
 			grimoire.FilterQuery{}.Or(filter1, filter2).Or(),
-			grimoire.FilterOr(filter1, filter2),
+			grimoire.Or(filter1, filter2),
 		},
 		{
 			`grimoire.FilterQuery{}.Or(filter1, filter2, filter3)`,
 			grimoire.FilterQuery{}.Or(filter1, filter2, filter3),
-			grimoire.FilterOr(filter1, filter2, filter3),
+			grimoire.Or(filter1, filter2, filter3),
 		},
 		{
 			`grimoire.FilterQuery{}.Or(filter1, filter2, filter3).Or()`,
 			grimoire.FilterQuery{}.Or(filter1, filter2, filter3).Or(),
-			grimoire.FilterOr(filter1, filter2, filter3),
+			grimoire.Or(filter1, filter2, filter3),
 		},
 		{
 			`filter1.Or(filter2)`,
 			filter1.Or(filter2),
-			grimoire.FilterOr(filter1, filter2),
+			grimoire.Or(filter1, filter2),
 		},
 		{
 			`filter1.Or(filter2).Or()`,
 			filter1.Or(filter2).Or(),
-			grimoire.FilterOr(filter1, filter2),
+			grimoire.Or(filter1, filter2),
 		},
 		{
 			`filter1.Or(filter2).Or(filter3)`,
 			filter1.Or(filter2).Or(filter3),
-			grimoire.FilterOr(filter1, filter2, filter3),
+			grimoire.Or(filter1, filter2, filter3),
 		},
 		{
 			`filter1.Or(filter2).Or(filter3).Or()`,
 			filter1.Or(filter2).Or(filter3).Or(),
-			grimoire.FilterOr(filter1, filter2, filter3),
+			grimoire.Or(filter1, filter2, filter3),
 		},
 	}
 
@@ -228,33 +228,33 @@ func TestFilterQuery_Or(t *testing.T) {
 	}
 }
 
-func TestFilterAnd(t *testing.T) {
+func TestAnd(t *testing.T) {
 	tests := []struct {
 		Case      string
 		Operation grimoire.FilterQuery
 		Result    grimoire.FilterQuery
 	}{
 		{
-			`grimoire.FilterAnd()`,
-			grimoire.FilterAnd(),
+			`grimoire.And()`,
+			grimoire.And(),
 			grimoire.FilterQuery{Type: grimoire.FilterAndOp},
 		},
 		{
-			`grimoire.FilterAnd(filter1)`,
-			grimoire.FilterAnd(filter1),
+			`grimoire.And(filter1)`,
+			grimoire.And(filter1),
 			filter1,
 		},
 		{
-			`grimoire.FilterAnd(filter1, filter2)`,
-			grimoire.FilterAnd(filter1, filter2),
+			`grimoire.And(filter1, filter2)`,
+			grimoire.And(filter1, filter2),
 			grimoire.FilterQuery{
 				Type:  grimoire.FilterAndOp,
 				Inner: []grimoire.FilterQuery{filter1, filter2},
 			},
 		},
 		{
-			`grimoire.FilterAnd(filter1, grimoire.FilterOr(filter2, filter3))`,
-			grimoire.FilterAnd(filter1, grimoire.FilterOr(filter2, filter3)),
+			`grimoire.And(filter1, grimoire.Or(filter2, filter3))`,
+			grimoire.And(filter1, grimoire.Or(filter2, filter3)),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterAndOp,
 				Inner: []grimoire.FilterQuery{
@@ -267,8 +267,8 @@ func TestFilterAnd(t *testing.T) {
 			},
 		},
 		{
-			`grimoire.FilterAnd(grimoire.FilterOr(filter1, filter2), filter3)`,
-			grimoire.FilterAnd(grimoire.FilterOr(filter1, filter2), filter3),
+			`grimoire.And(grimoire.Or(filter1, filter2), filter3)`,
+			grimoire.And(grimoire.Or(filter1, filter2), filter3),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterAndOp,
 				Inner: []grimoire.FilterQuery{
@@ -281,8 +281,8 @@ func TestFilterAnd(t *testing.T) {
 			},
 		},
 		{
-			`grimoire.FilterAnd(grimoire.FilterOr(filter1, filter2), grimoire.FilterOr(filter3, filter4))`,
-			grimoire.FilterAnd(grimoire.FilterOr(filter1, filter2), grimoire.FilterOr(filter3, filter4)),
+			`grimoire.And(grimoire.Or(filter1, filter2), grimoire.Or(filter3, filter4))`,
+			grimoire.And(grimoire.Or(filter1, filter2), grimoire.Or(filter3, filter4)),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterAndOp,
 				Inner: []grimoire.FilterQuery{
@@ -306,33 +306,33 @@ func TestFilterAnd(t *testing.T) {
 	}
 }
 
-func TestFilterOr(t *testing.T) {
+func TestOr(t *testing.T) {
 	tests := []struct {
 		Case      string
 		Operation grimoire.FilterQuery
 		Result    grimoire.FilterQuery
 	}{
 		{
-			`grimoire.FilterOr()`,
-			grimoire.FilterOr(),
+			`grimoire.Or()`,
+			grimoire.Or(),
 			grimoire.FilterQuery{Type: grimoire.FilterOrOp},
 		},
 		{
-			`grimoire.FilterOr(filter1)`,
-			grimoire.FilterOr(filter1),
+			`grimoire.Or(filter1)`,
+			grimoire.Or(filter1),
 			filter1,
 		},
 		{
-			`grimoire.FilterOr(filter1, filter2)`,
-			grimoire.FilterOr(filter1, filter2),
+			`grimoire.Or(filter1, filter2)`,
+			grimoire.Or(filter1, filter2),
 			grimoire.FilterQuery{
 				Type:  grimoire.FilterOrOp,
 				Inner: []grimoire.FilterQuery{filter1, filter2},
 			},
 		},
 		{
-			`grimoire.FilterOr(filter1, grimoire.FilterAnd(filter2, filter3))`,
-			grimoire.FilterOr(filter1, grimoire.FilterAnd(filter2, filter3)),
+			`grimoire.Or(filter1, grimoire.And(filter2, filter3))`,
+			grimoire.Or(filter1, grimoire.And(filter2, filter3)),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterOrOp,
 				Inner: []grimoire.FilterQuery{
@@ -345,8 +345,8 @@ func TestFilterOr(t *testing.T) {
 			},
 		},
 		{
-			`grimoire.FilterOr(grimoire.FilterAnd(filter1, filter2), filter3)`,
-			grimoire.FilterOr(grimoire.FilterAnd(filter1, filter2), filter3),
+			`grimoire.Or(grimoire.And(filter1, filter2), filter3)`,
+			grimoire.Or(grimoire.And(filter1, filter2), filter3),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterOrOp,
 				Inner: []grimoire.FilterQuery{
@@ -359,8 +359,8 @@ func TestFilterOr(t *testing.T) {
 			},
 		},
 		{
-			`grimoire.FilterOr(grimoire.FilterAnd(filter1, filter2), grimoire.FilterAnd(filter3, filter4))`,
-			grimoire.FilterOr(grimoire.FilterAnd(filter1, filter2), grimoire.FilterAnd(filter3, filter4)),
+			`grimoire.Or(grimoire.And(filter1, filter2), grimoire.And(filter3, filter4))`,
+			grimoire.Or(grimoire.And(filter1, filter2), grimoire.And(filter3, filter4)),
 			grimoire.FilterQuery{
 				Type: grimoire.FilterOrOp,
 				Inner: []grimoire.FilterQuery{
@@ -439,7 +439,7 @@ func TestFilterQuery_Not(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Expected, grimoire.FilterNot(grimoire.FilterQuery{Type: tt.Input}).Type)
+			assert.Equal(t, tt.Expected, grimoire.Not(grimoire.FilterQuery{Type: tt.Input}).Type)
 		})
 	}
 }
@@ -765,36 +765,36 @@ func TestFilterQuery_OrFragment(t *testing.T) {
 	}, grimoire.FilterQuery{}.OrFragment("expr", "value"))
 }
 
-func TestFilterEq(t *testing.T) {
+func TestEq(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterEqOp,
 		Field:  "field",
 		Values: []interface{}{"value"},
-	}, grimoire.FilterEq("field", "value"))
+	}, grimoire.Eq("field", "value"))
 }
 
-func FilterNe(t *testing.T) {
+func Ne(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterNeOp,
 		Field:  "field",
 		Values: []interface{}{"value"},
-	}, grimoire.FilterNe("field", "value"))
+	}, grimoire.Ne("field", "value"))
 }
 
-func TestFilterLt(t *testing.T) {
+func TestLt(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterLtOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, grimoire.FilterLt("field", 10))
+	}, grimoire.Lt("field", 10))
 }
 
-func TestFilterLte(t *testing.T) {
+func TestLte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterLteOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, grimoire.FilterLte("field", 10))
+	}, grimoire.Lte("field", 10))
 }
 
 func TestFilterQueryGt(t *testing.T) {
@@ -802,61 +802,61 @@ func TestFilterQueryGt(t *testing.T) {
 		Type:   grimoire.FilterGtOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, grimoire.FilterGt("field", 10))
+	}, grimoire.Gt("field", 10))
 }
 
-func TestFilterGte(t *testing.T) {
+func TestGte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterGteOp,
 		Field:  "field",
 		Values: []interface{}{10},
-	}, grimoire.FilterGte("field", 10))
+	}, grimoire.Gte("field", 10))
 }
 
-func TestFilterNil(t *testing.T) {
+func TestNil(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:  grimoire.FilterNilOp,
 		Field: "field",
-	}, grimoire.FilterNil("field"))
+	}, grimoire.Nil("field"))
 }
 
-func TestFilterNotNil(t *testing.T) {
+func TestNotNil(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:  grimoire.FilterNotNilOp,
 		Field: "field",
-	}, grimoire.FilterNotNil("field"))
+	}, grimoire.NotNil("field"))
 }
 
-func TestFilterIn(t *testing.T) {
+func TestIn(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterInOp,
 		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
-	}, grimoire.FilterIn("field", "value1", "value2"))
+	}, grimoire.In("field", "value1", "value2"))
 }
 
-func TestFilterNin(t *testing.T) {
+func TestNin(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterNinOp,
 		Field:  "field",
 		Values: []interface{}{"value1", "value2"},
-	}, grimoire.FilterNin("field", "value1", "value2"))
+	}, grimoire.Nin("field", "value1", "value2"))
 }
 
-func TestFilterLike(t *testing.T) {
+func TestLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterLikeOp,
 		Field:  "field",
 		Values: []interface{}{"%expr%"},
-	}, grimoire.FilterLike("field", "%expr%"))
+	}, grimoire.Like("field", "%expr%"))
 }
 
-func TestFilterNotLike(t *testing.T) {
+func TestNotLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Type:   grimoire.FilterNotLikeOp,
 		Field:  "field",
 		Values: []interface{}{"%expr%"},
-	}, grimoire.FilterNotLike("field", "%expr%"))
+	}, grimoire.NotLike("field", "%expr%"))
 }
 
 func TestFilterFragment(t *testing.T) {

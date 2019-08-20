@@ -133,7 +133,7 @@ func (r Repo) insert(record interface{}, changes Changes) error {
 	}
 
 	// fetch record
-	if err := r.One(record, FilterEq(pField, id)); err != nil {
+	if err := r.One(record, Eq(pField, id)); err != nil {
 		return err
 	}
 
@@ -190,7 +190,7 @@ func (r Repo) insertAll(record interface{}, changes []Changes) error {
 		return err
 	}
 
-	cur, err := r.adapter.Query(queriers.Where(FilterIn(pField, ids...)), r.logger...)
+	cur, err := r.adapter.Query(queriers.Where(In(pField, ids...)), r.logger...)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 		changes = BuildChanges(changers...)
 	)
 
-	return r.update(record, changes, FilterEq(pField, pValue))
+	return r.update(record, changes, Eq(pField, pValue))
 }
 
 func (r Repo) update(record interface{}, changes Changes, filter FilterQuery) error {
@@ -271,7 +271,7 @@ func (r Repo) upsertBelongsTo(doc Document, changes *Changes) error {
 			}
 
 			var (
-				filter = FilterEq(assoc.ForeignField(), fValue)
+				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
 			if err := r.update(doc, assocChanges, filter); err != nil {
@@ -313,7 +313,7 @@ func (r Repo) upsertHasOne(doc Document, changes *Changes, id interface{}) error
 			}
 
 			var (
-				filter = FilterEq(pField, pValue).AndEq(fField, rValue)
+				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
 			if err := r.update(target, assocChanges, filter); err != nil {
@@ -358,7 +358,7 @@ func (r Repo) upsertHasMany(doc Document, changes *Changes, id interface{}, inse
 
 			if len(pValues) > 0 {
 				var (
-					filter = FilterEq(fField, rValue).AndIn(pField, pValues...)
+					filter = Eq(fField, rValue).AndIn(pField, pValues...)
 				)
 
 				if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
@@ -388,7 +388,7 @@ func (r Repo) Delete(entity interface{}) error {
 		table  = doc.Table()
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
-		q      = BuildQuery(table, FilterEq(pField, pValue))
+		q      = BuildQuery(table, Eq(pField, pValue))
 	)
 
 	return transformError(r.adapter.Delete(q, r.logger...))
@@ -453,7 +453,7 @@ func (r Repo) Preload(entities interface{}, field string, queriers ...Querier) e
 		i++
 	}
 
-	cur, err := r.adapter.Query(BuildQuery(table, FilterIn(keyField, ids...)), r.logger...)
+	cur, err := r.adapter.Query(BuildQuery(table, In(keyField, ids...)), r.logger...)
 	if err != nil {
 		return err
 	}

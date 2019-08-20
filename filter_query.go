@@ -75,7 +75,7 @@ func (fq FilterQuery) And(filters ...FilterQuery) FilterQuery {
 	}
 
 	inner := append([]FilterQuery{fq}, filters...)
-	return FilterAnd(inner...)
+	return And(inner...)
 }
 
 // Or wraps filters using or.
@@ -89,7 +89,7 @@ func (fq FilterQuery) Or(filter ...FilterQuery) FilterQuery {
 	}
 
 	inner := append([]FilterQuery{fq}, filter...)
-	return FilterOr(inner...)
+	return Or(inner...)
 }
 
 func (fq FilterQuery) and(other FilterQuery) FilterQuery {
@@ -98,7 +98,7 @@ func (fq FilterQuery) and(other FilterQuery) FilterQuery {
 		return fq
 	}
 
-	return FilterAnd(fq, other)
+	return And(fq, other)
 }
 
 func (fq FilterQuery) or(other FilterQuery) FilterQuery {
@@ -108,67 +108,67 @@ func (fq FilterQuery) or(other FilterQuery) FilterQuery {
 		return fq
 	}
 
-	return FilterOr(fq, other)
+	return Or(fq, other)
 }
 
 // AndEq append equal expression using and.
 func (fq FilterQuery) AndEq(field string, value interface{}) FilterQuery {
-	return fq.and(FilterEq(field, value))
+	return fq.and(Eq(field, value))
 }
 
 // AndNe append not equal expression using and.
 func (fq FilterQuery) AndNe(field string, value interface{}) FilterQuery {
-	return fq.and(FilterNe(field, value))
+	return fq.and(Ne(field, value))
 }
 
 // AndLt append lesser than expression using and.
 func (fq FilterQuery) AndLt(field string, value interface{}) FilterQuery {
-	return fq.and(FilterLt(field, value))
+	return fq.and(Lt(field, value))
 }
 
 // AndLte append lesser than or equal expression using and.
 func (fq FilterQuery) AndLte(field string, value interface{}) FilterQuery {
-	return fq.and(FilterLte(field, value))
+	return fq.and(Lte(field, value))
 }
 
 // AndGt append greater than expression using and.
 func (fq FilterQuery) AndGt(field string, value interface{}) FilterQuery {
-	return fq.and(FilterGt(field, value))
+	return fq.and(Gt(field, value))
 }
 
 // AndGte append greater than or equal expression using and.
 func (fq FilterQuery) AndGte(field string, value interface{}) FilterQuery {
-	return fq.and(FilterGte(field, value))
+	return fq.and(Gte(field, value))
 }
 
 // AndNil append is nil expression using and.
 func (fq FilterQuery) AndNil(field string) FilterQuery {
-	return fq.and(FilterNil(field))
+	return fq.and(Nil(field))
 }
 
 // AndNotNil append is not nil expression using and.
 func (fq FilterQuery) AndNotNil(field string) FilterQuery {
-	return fq.and(FilterNotNil(field))
+	return fq.and(NotNil(field))
 }
 
 // AndIn append is in expression using and.
 func (fq FilterQuery) AndIn(field string, values ...interface{}) FilterQuery {
-	return fq.and(FilterIn(field, values...))
+	return fq.and(In(field, values...))
 }
 
 // AndNin append is not in expression using and.
 func (fq FilterQuery) AndNin(field string, values ...interface{}) FilterQuery {
-	return fq.and(FilterNin(field, values...))
+	return fq.and(Nin(field, values...))
 }
 
 // AndLike append like expression using and.
 func (fq FilterQuery) AndLike(field string, pattern string) FilterQuery {
-	return fq.and(FilterLike(field, pattern))
+	return fq.and(Like(field, pattern))
 }
 
 // AndNotLike append not like expression using and.
 func (fq FilterQuery) AndNotLike(field string, pattern string) FilterQuery {
-	return fq.and(FilterNotLike(field, pattern))
+	return fq.and(NotLike(field, pattern))
 }
 
 // AndFragment append fragment using and.
@@ -178,62 +178,62 @@ func (fq FilterQuery) AndFragment(expr string, values ...interface{}) FilterQuer
 
 // OrEq append equal expression using or.
 func (fq FilterQuery) OrEq(field string, value interface{}) FilterQuery {
-	return fq.or(FilterEq(field, value))
+	return fq.or(Eq(field, value))
 }
 
 // OrNe append not equal expression using or.
 func (fq FilterQuery) OrNe(field string, value interface{}) FilterQuery {
-	return fq.or(FilterNe(field, value))
+	return fq.or(Ne(field, value))
 }
 
 // OrLt append lesser than expression using or.
 func (fq FilterQuery) OrLt(field string, value interface{}) FilterQuery {
-	return fq.or(FilterLt(field, value))
+	return fq.or(Lt(field, value))
 }
 
 // OrLte append lesser than or equal expression using or.
 func (fq FilterQuery) OrLte(field string, value interface{}) FilterQuery {
-	return fq.or(FilterLte(field, value))
+	return fq.or(Lte(field, value))
 }
 
 // OrGt append greater than expression using or.
 func (fq FilterQuery) OrGt(field string, value interface{}) FilterQuery {
-	return fq.or(FilterGt(field, value))
+	return fq.or(Gt(field, value))
 }
 
 // OrGte append greater than or equal expression using or.
 func (fq FilterQuery) OrGte(field string, value interface{}) FilterQuery {
-	return fq.or(FilterGte(field, value))
+	return fq.or(Gte(field, value))
 }
 
 // OrNil append is nil expression using or.
 func (fq FilterQuery) OrNil(field string) FilterQuery {
-	return fq.or(FilterNil(field))
+	return fq.or(Nil(field))
 }
 
 // OrNotNil append is not nil expression using or.
 func (fq FilterQuery) OrNotNil(field string) FilterQuery {
-	return fq.or(FilterNotNil(field))
+	return fq.or(NotNil(field))
 }
 
 // OrIn append is in expression using or.
 func (fq FilterQuery) OrIn(field string, values ...interface{}) FilterQuery {
-	return fq.or(FilterIn(field, values...))
+	return fq.or(In(field, values...))
 }
 
 // OrNin append is not in expression using or.
 func (fq FilterQuery) OrNin(field string, values ...interface{}) FilterQuery {
-	return fq.or(FilterNin(field, values...))
+	return fq.or(Nin(field, values...))
 }
 
 // OrLike append like expression using or.
 func (fq FilterQuery) OrLike(field string, pattern string) FilterQuery {
-	return fq.or(FilterLike(field, pattern))
+	return fq.or(Like(field, pattern))
 }
 
 // OrNotLike append not like expression using or.
 func (fq FilterQuery) OrNotLike(field string, pattern string) FilterQuery {
-	return fq.or(FilterNotLike(field, pattern))
+	return fq.or(NotLike(field, pattern))
 }
 
 // OrFragment append fragment using or.
@@ -241,8 +241,8 @@ func (fq FilterQuery) OrFragment(expr string, values ...interface{}) FilterQuery
 	return fq.or(FilterFragment(expr, values...))
 }
 
-// FilterAnd compares other filters using and.
-func FilterAnd(inner ...FilterQuery) FilterQuery {
+// And compares other filters using and.
+func And(inner ...FilterQuery) FilterQuery {
 	if len(inner) == 1 {
 		return inner[0]
 	}
@@ -253,8 +253,8 @@ func FilterAnd(inner ...FilterQuery) FilterQuery {
 	}
 }
 
-// FilterOr compares other filters using and.
-func FilterOr(inner ...FilterQuery) FilterQuery {
+// Or compares other filters using and.
+func Or(inner ...FilterQuery) FilterQuery {
 	if len(inner) == 1 {
 		return inner[0]
 	}
@@ -265,9 +265,9 @@ func FilterOr(inner ...FilterQuery) FilterQuery {
 	}
 }
 
-// FilterNot wraps filters using not.
+// Not wraps filters using not.
 // It'll negate the filter type if possible.
-func FilterNot(inner ...FilterQuery) FilterQuery {
+func Not(inner ...FilterQuery) FilterQuery {
 	if len(inner) == 1 {
 		fq := inner[0]
 		switch fq.Type {
@@ -304,8 +304,8 @@ func FilterNot(inner ...FilterQuery) FilterQuery {
 	}
 }
 
-// FilterEq expression field equal to value.
-func FilterEq(field string, value interface{}) FilterQuery {
+// Eq expression field equal to value.
+func Eq(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterEqOp,
 		Field:  field,
@@ -313,8 +313,8 @@ func FilterEq(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterNe compares that left value is not equal to right value.
-func FilterNe(field string, value interface{}) FilterQuery {
+// Ne compares that left value is not equal to right value.
+func Ne(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterNeOp,
 		Field:  field,
@@ -322,8 +322,8 @@ func FilterNe(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterLt compares that left value is less than to right value.
-func FilterLt(field string, value interface{}) FilterQuery {
+// Lt compares that left value is less than to right value.
+func Lt(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterLtOp,
 		Field:  field,
@@ -331,8 +331,8 @@ func FilterLt(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterLte compares that left value is less than or equal to right value.
-func FilterLte(field string, value interface{}) FilterQuery {
+// Lte compares that left value is less than or equal to right value.
+func Lte(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterLteOp,
 		Field:  field,
@@ -340,8 +340,8 @@ func FilterLte(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterGt compares that left value is greater than to right value.
-func FilterGt(field string, value interface{}) FilterQuery {
+// Gt compares that left value is greater than to right value.
+func Gt(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterGtOp,
 		Field:  field,
@@ -349,8 +349,8 @@ func FilterGt(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterGte compares that left value is greater than or equal to right value.
-func FilterGte(field string, value interface{}) FilterQuery {
+// Gte compares that left value is greater than or equal to right value.
+func Gte(field string, value interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterGteOp,
 		Field:  field,
@@ -358,24 +358,24 @@ func FilterGte(field string, value interface{}) FilterQuery {
 	}
 }
 
-// FilterNil check whether field is nil.
-func FilterNil(field string) FilterQuery {
+// Nil check whether field is nil.
+func Nil(field string) FilterQuery {
 	return FilterQuery{
 		Type:  FilterNilOp,
 		Field: field,
 	}
 }
 
-// FilterNotNil check whether field is not nil.
-func FilterNotNil(field string) FilterQuery {
+// NotNil check whether field is not nil.
+func NotNil(field string) FilterQuery {
 	return FilterQuery{
 		Type:  FilterNotNilOp,
 		Field: field,
 	}
 }
 
-// FilterIn check whethers value of the field is included in values.
-func FilterIn(field string, values ...interface{}) FilterQuery {
+// In check whethers value of the field is included in values.
+func In(field string, values ...interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterInOp,
 		Field:  field,
@@ -383,8 +383,8 @@ func FilterIn(field string, values ...interface{}) FilterQuery {
 	}
 }
 
-// FilterNin check whethers value of the field is not included in values.
-func FilterNin(field string, values ...interface{}) FilterQuery {
+// Nin check whethers value of the field is not included in values.
+func Nin(field string, values ...interface{}) FilterQuery {
 	return FilterQuery{
 		Type:   FilterNinOp,
 		Field:  field,
@@ -392,8 +392,8 @@ func FilterNin(field string, values ...interface{}) FilterQuery {
 	}
 }
 
-// FilterLike compares value of field to match string pattern.
-func FilterLike(field string, pattern string) FilterQuery {
+// Like compares value of field to match string pattern.
+func Like(field string, pattern string) FilterQuery {
 	return FilterQuery{
 		Type:   FilterLikeOp,
 		Field:  field,
@@ -401,8 +401,8 @@ func FilterLike(field string, pattern string) FilterQuery {
 	}
 }
 
-// FilterNotLike compares value of field to not match string pattern.
-func FilterNotLike(field string, pattern string) FilterQuery {
+// NotLike compares value of field to not match string pattern.
+func NotLike(field string, pattern string) FilterQuery {
 	return FilterQuery{
 		Type:   FilterNotLikeOp,
 		Field:  field,

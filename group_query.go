@@ -15,7 +15,7 @@ func (gq GroupQuery) Having(filters ...FilterQuery) GroupQuery {
 }
 
 func (gq GroupQuery) OrHaving(filters ...FilterQuery) GroupQuery {
-	gq.Filter = gq.Filter.Or(FilterAnd(filters...))
+	gq.Filter = gq.Filter.Or(And(filters...))
 	return gq
 }
 

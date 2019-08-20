@@ -109,7 +109,7 @@ func (q Query) Where(filters ...FilterQuery) Query {
 }
 
 func (q Query) OrWhere(filters ...FilterQuery) Query {
-	q.WhereClause = q.WhereClause.Or(FilterAnd(filters...))
+	q.WhereClause = q.WhereClause.Or(And(filters...))
 	return q
 }
 
@@ -124,7 +124,7 @@ func (q Query) Having(filters ...FilterQuery) Query {
 }
 
 func (q Query) OrHaving(filters ...FilterQuery) Query {
-	q.GroupQuery.Filter = q.GroupQuery.Filter.Or(FilterAnd(filters...))
+	q.GroupQuery.Filter = q.GroupQuery.Filter.Or(And(filters...))
 	return q
 }
 
@@ -215,7 +215,7 @@ func JoinFragment(expr string, args ...interface{}) Query {
 
 func Where(filters ...FilterQuery) Query {
 	return Query{
-		WhereClause: FilterAnd(filters...),
+		WhereClause: And(filters...),
 	}
 }
 

@@ -112,7 +112,7 @@ func DecBy(field string, n int) Change {
 	}
 }
 
-func Fragment(raw string, args ...interface{}) Change {
+func ChangeFragment(raw string, args ...interface{}) Change {
 	return Change{
 		Type:  ChangeFragmentOp,
 		Field: raw,

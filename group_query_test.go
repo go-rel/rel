@@ -16,19 +16,19 @@ func TestGroup(t *testing.T) {
 func TestGroup_Having(t *testing.T) {
 	q := grimoire.GroupQuery{
 		Fields: []string{"status"},
-		Filter: grimoire.FilterNe("status", "expired"),
+		Filter: grimoire.Ne("status", "expired"),
 	}
 
-	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.FilterNe("status", "expired")))
-	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.FilterNe("status", "expired")))
+	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.Ne("status", "expired")))
+	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.Ne("status", "expired")))
 }
 
 func TestGroup_OrHaving(t *testing.T) {
 	q := grimoire.GroupQuery{
 		Fields: []string{"status"},
-		Filter: grimoire.FilterNe("status", "expired").OrNotNil("deleted_at"),
+		Filter: grimoire.Ne("status", "expired").OrNotNil("deleted_at"),
 	}
 
-	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.FilterNe("status", "expired")).OrHaving(grimoire.FilterNotNil("deleted_at")))
-	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.FilterNe("status", "expired")).OrWhere(grimoire.FilterNotNil("deleted_at")))
+	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.Ne("status", "expired")).OrHaving(grimoire.NotNil("deleted_at")))
+	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.Ne("status", "expired")).OrWhere(grimoire.NotNil("deleted_at")))
 }

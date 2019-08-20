@@ -348,14 +348,14 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 		buyerDoc    = newDocument(&transaction.Buyer)
 		changes     = change.BuildChanges(
 			change.Map{
-				"Buyer": change.Map{
+				"buyer": change.Map{
 					"name": "buyer1",
 					"age":  20,
 				},
 			},
 		)
 		q        = BuildQuery("users", FilterEq("id", 1))
-		buyer, _ = changes.GetAssoc("Buyer")
+		buyer, _ = changes.GetAssoc("buyer")
 		cur      = createCursor(1)
 	)
 
@@ -380,14 +380,14 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 		doc         = newDocument(transaction)
 		changes     = change.BuildChanges(
 			change.Map{
-				"Buyer": change.Map{
+				"buyer": change.Map{
 					"name": "buyer1",
 					"age":  20,
 				},
 			},
 		)
 		q        = BuildQuery("users", FilterEq("id", 1))
-		buyer, _ = changes.GetAssoc("Buyer")
+		buyer, _ = changes.GetAssoc("buyer")
 	)
 
 	adapter.On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error")).Once()
@@ -406,7 +406,7 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 		doc         = newDocument(transaction)
 		changes     = change.BuildChanges(
 			change.Map{
-				"Buyer": change.Map{
+				"buyer": change.Map{
 					"id":   2,
 					"name": "buyer1",
 					"age":  20,
@@ -431,14 +431,14 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 		buyerDoc    = newDocument(&transaction.Buyer)
 		changes     = change.BuildChanges(
 			change.Map{
-				"Buyer": change.Map{
+				"buyer": change.Map{
 					"name": "buyer1",
 					"age":  20,
 				},
 			},
 		)
 		q        = BuildQuery("users")
-		buyer, _ = changes.GetAssoc("Buyer")
+		buyer, _ = changes.GetAssoc("buyer")
 		cur      = createCursor(1)
 	)
 
@@ -468,14 +468,14 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 		doc         = newDocument(transaction)
 		changes     = change.BuildChanges(
 			change.Map{
-				"Buyer": change.Map{
+				"buyer": change.Map{
 					"name": "buyer1",
 					"age":  20,
 				},
 			},
 		)
 		q        = BuildQuery("users")
-		buyer, _ = changes.GetAssoc("Buyer")
+		buyer, _ = changes.GetAssoc("buyer")
 	)
 
 	adapter.On("Insert", q, buyer[0]).Return(0, errors.NewUnexpected("insert error")).Once()
@@ -512,13 +512,13 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 		addressDoc = newDocument(&user.Address)
 		changes    = change.BuildChanges(
 			change.Map{
-				"Address": change.Map{
+				"address": change.Map{
 					"street": "street1",
 				},
 			},
 		)
 		q            = BuildQuery("addresses").Where(FilterEq("id", 2).AndEq("user_id", 1))
-		addresses, _ = changes.GetAssoc("Address")
+		addresses, _ = changes.GetAssoc("address")
 		cur          = createCursor(1)
 	)
 
@@ -543,13 +543,13 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Address": change.Map{
+				"address": change.Map{
 					"street": "street1",
 				},
 			},
 		)
 		q            = BuildQuery("addresses").Where(FilterEq("id", 2).AndEq("user_id", 1))
-		addresses, _ = changes.GetAssoc("Address")
+		addresses, _ = changes.GetAssoc("address")
 	)
 
 	adapter.On("Update", q, addresses[0]).Return(errors.NewUnexpected("update error")).Once()
@@ -568,7 +568,7 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Address": change.Map{
+				"address": change.Map{
 					"id":     1,
 					"street": "street1",
 				},
@@ -592,7 +592,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 		addressDoc = newDocument(&user.Address)
 		changes    = change.BuildChanges(
 			change.Map{
-				"Address": change.Map{
+				"address": change.Map{
 					"street": "street1",
 				},
 			},
@@ -628,7 +628,7 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Address": change.Map{
+				"address": change.Map{
 					"street": "street1",
 				},
 			},
@@ -658,7 +658,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 		transactionCollec = newCollection(&user.Transactions)
 		changes           = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item1",
 					},
@@ -669,7 +669,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 			},
 		)
 		q               = BuildQuery("transactions")
-		transactions, _ = changes.GetAssoc("Transactions")
+		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(2)
 	)
 
@@ -701,7 +701,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item1",
 					},
@@ -712,7 +712,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 			},
 		)
 		q               = BuildQuery("transactions")
-		transactions, _ = changes.GetAssoc("Transactions")
+		transactions, _ = changes.GetAssoc("transactions")
 		rerr            = errors.NewUnexpected("insert all error")
 	)
 
@@ -745,7 +745,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 		transactionCollec = newCollection(&user.Transactions)
 		changes           = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item3",
 					},
@@ -759,7 +759,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 			},
 		)
 		q               = BuildQuery("transactions")
-		transactions, _ = changes.GetAssoc("Transactions")
+		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(3)
 	)
 
@@ -796,7 +796,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 		transactionCollec = newCollection(&user.Transactions)
 		changes           = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item3",
 					},
@@ -810,7 +810,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 			},
 		)
 		q               = BuildQuery("transactions")
-		transactions, _ = changes.GetAssoc("Transactions")
+		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(3)
 	)
 
@@ -854,7 +854,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item3",
 					},
@@ -881,7 +881,7 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 		doc     = newDocument(user)
 		changes = change.BuildChanges(
 			change.Map{
-				"Transactions": []change.Map{
+				"transactions": []change.Map{
 					{
 						"item": "item3",
 					},
@@ -972,7 +972,7 @@ func TestRepo_Preload_hasOne(t *testing.T) {
 	cur.MockScan(address.ID, *address.UserID).Times(2)
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&user, "Address"))
+	assert.Nil(t, repo.Preload(&user, "address"))
 	assert.Equal(t, address, user.Address)
 
 	adapter.AssertExpectations(t)
@@ -1002,7 +1002,7 @@ func TestRepo_Preload_sliceHasOne(t *testing.T) {
 	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&users, "Address"))
+	assert.Nil(t, repo.Preload(&users, "address"))
 	assert.Equal(t, addresses[0], users[0].Address)
 	assert.Equal(t, addresses[1], users[1].Address)
 
@@ -1029,7 +1029,7 @@ func TestRepo_Preload_nestedHasOne(t *testing.T) {
 	cur.MockScan(address.ID, *address.UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transaction, "Buyer.Address"))
+	assert.Nil(t, repo.Preload(&transaction, "buyer.address"))
 	assert.Equal(t, address, transaction.Buyer.Address)
 
 	adapter.AssertExpectations(t)
@@ -1062,7 +1062,7 @@ func TestRepo_Preload_sliceNestedHasOne(t *testing.T) {
 	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transactions, "Buyer.Address"))
+	assert.Nil(t, repo.Preload(&transactions, "buyer.address"))
 	assert.Equal(t, addresses[0], transactions[0].Buyer.Address)
 	assert.Equal(t, addresses[1], transactions[1].Buyer.Address)
 
@@ -1091,7 +1091,7 @@ func TestRepo_Preload_hasMany(t *testing.T) {
 	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&user, "Transactions"))
+	assert.Nil(t, repo.Preload(&user, "transactions"))
 	assert.Equal(t, transactions, user.Transactions)
 
 	adapter.AssertExpectations(t)
@@ -1124,7 +1124,7 @@ func TestRepo_Preload_sliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&users, "Transactions"))
+	assert.Nil(t, repo.Preload(&users, "transactions"))
 	assert.Equal(t, transactions[:2], users[0].Transactions)
 	assert.Equal(t, transactions[2:], users[1].Transactions)
 
@@ -1154,7 +1154,7 @@ func TestRepo_Preload_nestedHasMany(t *testing.T) {
 	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&address, "User.Transactions"))
+	assert.Nil(t, repo.Preload(&address, "user.transactions"))
 	assert.Equal(t, transactions, address.User.Transactions)
 
 	adapter.AssertExpectations(t)
@@ -1168,7 +1168,7 @@ func TestRepo_Preload_nestedNullHasMany(t *testing.T) {
 		address = Address{User: nil}
 	)
 
-	assert.Nil(t, repo.Preload(&address, "User.Transactions"))
+	assert.Nil(t, repo.Preload(&address, "user.transactions"))
 
 	adapter.AssertExpectations(t)
 }
@@ -1202,7 +1202,7 @@ func TestRepo_Preload_nestedSliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
+	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
 	assert.Equal(t, transactions[:2], addresses[0].User.Transactions)
 	assert.Equal(t, transactions[2:], addresses[1].User.Transactions)
 
@@ -1238,7 +1238,7 @@ func TestRepo_Preload_nestedNullSliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[2].ID, transactions[2].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
+	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
 	assert.Equal(t, transactions[:2], addresses[0].User.Transactions)
 	assert.Equal(t, []Transaction(nil), addresses[1].User.Transactions)
 	assert.Equal(t, transactions[2:], addresses[2].User.Transactions)
@@ -1264,7 +1264,7 @@ func TestRepo_Preload_belongsTo(t *testing.T) {
 	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transaction, "Buyer"))
+	assert.Nil(t, repo.Preload(&transaction, "buyer"))
 	assert.Equal(t, user, transaction.Buyer)
 
 	adapter.AssertExpectations(t)
@@ -1288,7 +1288,7 @@ func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
 	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&address, "User"))
+	assert.Nil(t, repo.Preload(&address, "user"))
 	assert.Equal(t, user, *address.User)
 
 	adapter.AssertExpectations(t)
@@ -1302,7 +1302,7 @@ func TestRepo_Preload_nullBelongsTo(t *testing.T) {
 		address = Address{}
 	)
 
-	assert.Nil(t, repo.Preload(&address, "User"))
+	assert.Nil(t, repo.Preload(&address, "user"))
 	assert.Nil(t, address.User)
 
 	adapter.AssertExpectations(t)
@@ -1333,7 +1333,7 @@ func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
 	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transactions, "Buyer"))
+	assert.Nil(t, repo.Preload(&transactions, "buyer"))
 	assert.Equal(t, users[0], transactions[0].Buyer)
 	assert.Equal(t, users[1], transactions[1].Buyer)
 
@@ -1366,7 +1366,7 @@ func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
 	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "User"))
+	assert.Nil(t, repo.Preload(&addresses, "user"))
 	assert.Equal(t, users[0], *addresses[0].User)
 	assert.Equal(t, users[1], *addresses[1].User)
 
@@ -1380,7 +1380,7 @@ func TestRepo_Preload_emptySlice(t *testing.T) {
 		addresses = []Address{}
 	)
 
-	assert.Nil(t, repo.Preload(&addresses, "User.Transactions"))
+	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
 }
 
 func TestQuery_Preload_notPointerPanic(t *testing.T) {
@@ -1403,7 +1403,7 @@ func TestRepo_Preload_queryError(t *testing.T) {
 
 	adapter.On("Query", From("users").Where(FilterIn("id", 10))).Return(cur, err).Once()
 
-	assert.Equal(t, err, repo.Preload(&transaction, "Buyer"))
+	assert.Equal(t, err, repo.Preload(&transaction, "buyer"))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

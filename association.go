@@ -23,8 +23,8 @@ type Association interface {
 }
 
 type associationKey struct {
-	rt   reflect.Type
-	name string
+	rt    reflect.Type
+	index int
 }
 
 type associationData struct {
@@ -121,7 +121,7 @@ func (a association) ForeignValue() interface{} {
 	return indirect(rv.FieldByIndex(a.data.foreignIndex))
 }
 
-func newAssociation(rv reflect.Value, name string) Association {
+func newAssociation(rv reflect.Value, index int) Association {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -129,8 +129,8 @@ func newAssociation(rv reflect.Value, name string) Association {
 	var (
 		rt  = rv.Type()
 		key = associationKey{
-			rt:   rt,
-			name: name,
+			rt:    rt,
+			index: index,
 		}
 	)
 
@@ -141,12 +141,8 @@ func newAssociation(rv reflect.Value, name string) Association {
 		}
 	}
 
-	st, exist := rt.FieldByName(name)
-	if !exist {
-		panic("grimoire: no field named (" + name + ") in type " + rt.String() + " found ")
-	}
-
 	var (
+		st   = rt.Field(index)
 		ft   = st.Type
 		ref  = st.Tag.Get("references")
 		fk   = st.Tag.Get("foreign_key")

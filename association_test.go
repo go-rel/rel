@@ -131,7 +131,8 @@ func TestAssociation(t *testing.T) {
 		t.Run(test.entity+"."+test.field, func(t *testing.T) {
 			var (
 				rv             = reflect.ValueOf(test.data)
-				assoc          = newAssociation(rv, test.field)
+				sf, _          = rv.Type().Elem().FieldByName(test.field)
+				assoc          = newAssociation(rv, sf.Index[0])
 				target, loaded = assoc.Target()
 			)
 

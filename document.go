@@ -107,6 +107,7 @@ func (d *document) Table() string {
 
 	d.reflect()
 
+	// TODO: handle anonymous struct
 	return tableName(d.rt)
 }
 
@@ -311,11 +312,10 @@ func (d *document) initAssociations() {
 		return
 	}
 
-	for i := 0; i < d.rt.NumField(); i++ {
+	for name, index := range d.Fields() {
 		var (
-			sf   = d.rt.Field(i)
-			name = sf.Name
-			typ  = sf.Type
+			sf  = d.rt.Field(index)
+			typ = sf.Type
 		)
 
 		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Interface || typ.Kind() == reflect.Slice {
@@ -331,7 +331,7 @@ func (d *document) initAssociations() {
 			continue
 		}
 
-		switch newAssociation(d.rv, name).Type() {
+		switch newAssociation(d.rv, index).Type() {
 		case BelongsTo:
 			d.belongsTo = append(d.belongsTo, name)
 		case HasOne:
@@ -373,7 +373,12 @@ func (d *document) Association(name string) Association {
 
 	d.reflect()
 
-	return newAssociation(d.rv, name)
+	index, ok := d.Fields()[name]
+	if !ok {
+		panic("grimoire: no field named (" + name + ") in type " + d.rt.String() + " found ")
+	}
+
+	return newAssociation(d.rv, index)
 }
 
 func (d *document) Reset() {

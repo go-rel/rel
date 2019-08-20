@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 )
 
@@ -105,7 +104,7 @@ func (r Repo) MustAll(entities interface{}, queriers ...Querier) {
 
 // Insert a record to database.
 // TODO: insert all (multiple changes as multiple records)
-func (r Repo) Insert(record interface{}, changers ...change.Changer) error {
+func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
 	if record == nil || len(changers) == 0 {
@@ -113,10 +112,10 @@ func (r Repo) Insert(record interface{}, changers ...change.Changer) error {
 	}
 
 	// TODO: transform changeset error
-	return transformError(r.insert(record, change.BuildChanges(changers...)))
+	return transformError(r.insert(record, BuildChanges(changers...)))
 }
 
-func (r Repo) insert(record interface{}, changes change.Changes) error {
+func (r Repo) insert(record interface{}, changes Changes) error {
 	var (
 		doc      = newDocument(record)
 		pField   = doc.PrimaryField()
@@ -151,20 +150,20 @@ func (r Repo) insert(record interface{}, changes change.Changes) error {
 
 // MustInsert a record to database.
 // It'll panic if any error occurred.
-func (r Repo) MustInsert(record interface{}, changers ...change.Changer) {
+func (r Repo) MustInsert(record interface{}, changers ...Changer) {
 	must(r.Insert(record, changers...))
 }
 
-func (r Repo) InsertAll(record interface{}, changes []change.Changes) error {
+func (r Repo) InsertAll(record interface{}, changes []Changes) error {
 	return transformError(r.insertAll(record, changes))
 }
 
-func (r Repo) MustInsertAll(record interface{}, changes []change.Changes) {
+func (r Repo) MustInsertAll(record interface{}, changes []Changes) {
 	must(r.InsertAll(record, changes))
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
+func (r Repo) insertAll(record interface{}, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -201,7 +200,7 @@ func (r Repo) insertAll(record interface{}, changes []change.Changes) error {
 
 // Update a record in database.
 // It'll panic if any error occurred.
-func (r Repo) Update(record interface{}, changers ...change.Changer) error {
+func (r Repo) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
 	if record == nil || len(changers) == 0 {
@@ -212,13 +211,13 @@ func (r Repo) Update(record interface{}, changers ...change.Changer) error {
 		doc     = newDocument(record)
 		pField  = doc.PrimaryField()
 		pValue  = doc.PrimaryValue()
-		changes = change.BuildChanges(changers...)
+		changes = BuildChanges(changers...)
 	)
 
 	return r.update(record, changes, FilterEq(pField, pValue))
 }
 
-func (r Repo) update(record interface{}, changes change.Changes, filter FilterQuery) error {
+func (r Repo) update(record interface{}, changes Changes, filter FilterQuery) error {
 	if changes.Empty() {
 		return nil
 	}
@@ -242,11 +241,11 @@ func (r Repo) update(record interface{}, changes change.Changes, filter FilterQu
 
 // MustUpdate a record in database.
 // It'll panic if any error occurred.
-func (r Repo) MustUpdate(record interface{}, changers ...change.Changer) {
+func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 	must(r.Update(record, changers...))
 }
 
-func (r Repo) upsertBelongsTo(doc Document, changes *change.Changes) error {
+func (r Repo) upsertBelongsTo(doc Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -290,7 +289,7 @@ func (r Repo) upsertBelongsTo(doc Document, changes *change.Changes) error {
 	return nil
 }
 
-func (r Repo) upsertHasOne(doc Document, changes *change.Changes, id interface{}) error {
+func (r Repo) upsertHasOne(doc Document, changes *Changes, id interface{}) error {
 	for _, field := range doc.HasOne() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -332,7 +331,7 @@ func (r Repo) upsertHasOne(doc Document, changes *change.Changes, id interface{}
 	return nil
 }
 
-func (r Repo) upsertHasMany(doc Document, changes *change.Changes, id interface{}, insertion bool) error {
+func (r Repo) upsertHasMany(doc Document, changes *Changes, id interface{}, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		changes, changed := changes.GetAssoc(field)
 		if !changed {

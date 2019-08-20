@@ -1,7 +1,6 @@
 package grimoire
 
 import (
-	"github.com/Fs02/grimoire/change"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -32,17 +31,17 @@ func (ta *testAdapter) Query(query Query, logger ...Logger) (Cursor, error) {
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(query Query, changes change.Changes, logger ...Logger) (interface{}, error) {
+func (ta *testAdapter) Insert(query Query, changes Changes, logger ...Logger) (interface{}, error) {
 	args := ta.Called(query, changes)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(query Query, fields []string, changess []change.Changes, logger ...Logger) ([]interface{}, error) {
+func (ta *testAdapter) InsertAll(query Query, fields []string, changess []Changes, logger ...Logger) ([]interface{}, error) {
 	args := ta.Called(query, changess)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(query Query, changes change.Changes, logger ...Logger) error {
+func (ta *testAdapter) Update(query Query, changes Changes, logger ...Logger) error {
 	args := ta.Called(query, changes)
 	return args.Error(0)
 }

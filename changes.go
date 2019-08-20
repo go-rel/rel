@@ -1,7 +1,7 @@
-package change
+package grimoire
 
 // TODO: assoc changes
-// Use Assoc fields in Changges?
+// Use Assoc fields in Changes?
 // Table name not stored here, but handled by repo logic.
 // TODO: handle deleteion
 type Changes struct {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/errors"
 )
 
@@ -51,14 +50,14 @@ func (adapter *Adapter) Aggregate(query grimoire.Query, doc interface{}, todo1 s
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes change.Changes, loggers ...grimoire.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) (interface{}, error) {
 	statement, args := NewBuilder(adapter.Config).Insert(query.Collection, changes)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []change.Changes, loggers ...grimoire.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []grimoire.Changes, loggers ...grimoire.Logger) ([]interface{}, error) {
 	statement, args := NewBuilder(adapter.Config).InsertAll(query.Collection, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
@@ -82,7 +81,7 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query grimoire.Query, changes change.Changes, loggers ...grimoire.Logger) error {
+func (adapter *Adapter) Update(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) error {
 	statement, args := NewBuilder(adapter.Config).Update(query.Collection, changes, q.WhereClause)
 	_, _, err := adapter.Exec(statement, args, loggers...)
 	return err

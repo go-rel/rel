@@ -4,13 +4,13 @@ package changeset
 import (
 	"reflect"
 
-	"github.com/Fs02/grimoire/change"
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/params"
 )
 
 // Changeset used to cast and validate data before saving it to the database.
 // TODO: use arrays (make use of schema inferer)
-// TODO: impement change.Builder
+// TODO: impement grimoire.Builder
 type Changeset struct {
 	errors      []error
 	params      params.Params
@@ -21,7 +21,7 @@ type Changeset struct {
 	zero        bool
 }
 
-func (c *Changeset) Build(changes *change.Changes) {
+func (c *Changeset) Build(changes *grimoire.Changes) {
 
 }
 

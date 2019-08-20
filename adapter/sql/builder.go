@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/change"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -25,15 +24,15 @@ type Builder struct {
 // Find generates query for select.
 func (builder *Builder) Find(query grimoire.Query) (string, []interface{}) {
 	qs, args := builder.query(query)
-	return builder.fields(query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields) + qs, args
+	return builder.fields(grimoire.SelectQuery.OnlyDistinct, grimoire.SelectQuery.Fields) + qs, args
 }
 
 // Aggregate generates query for aggregation.
 func (builder *Builder) Aggregate(query grimoire.Query) (string, []interface{}) {
 	qs, args := builder.query(query)
-	field := "" //query.AggregateMode + "(" + query.AggregateField + ") AS " + query.AggregateMode
+	field := "" //grimoire.AggregateMode + "(" + grimoire.AggregateField + ") AS " + grimoire.AggregateMode
 
-	return builder.fields(false, append(query.GroupQuery.Fields, field)) + qs, args
+	return builder.fields(false, append(grimoire.GroupQuery.Fields, field)) + qs, args
 }
 
 func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
@@ -42,47 +41,47 @@ func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 		args   []interface{}
 	)
 
-	if s := builder.from(query.Collection); s != "" {
+	if s := builder.from(grimoire.Collection); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s, arg := builder.join(query.JoinQuery...); s != "" {
+	if s, arg := builder.join(grimoire.JoinQuery...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s, arg := builder.where(query.WhereClause); s != "" {
+	if s, arg := builder.where(grimoire.WhereClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.groupBy(query.GroupQuery.Fields); s != "" {
+	if s := builder.groupBy(grimoire.GroupQuery.Fields); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 
-		if s, arg := builder.having(query.GroupQuery.Filter); s != "" {
+		if s, arg := builder.having(grimoire.GroupQuery.Filter); s != "" {
 			buffer.WriteString(" ")
 			buffer.WriteString(s)
 			args = append(args, arg...)
 		}
 	}
 
-	if s := builder.orderBy(query.SortQuery); s != "" {
+	if s := builder.orderBy(grimoire.SortQuery); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.limitOffset(query.LimitClause, query.OffsetClause); s != "" {
+	if s := builder.limitOffset(grimoire.LimitClause, grimoire.OffsetClause); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if query.LockClause != "" {
+	if grimoire.LockClause != "" {
 		buffer.WriteString(" ")
-		buffer.WriteString(string(query.LockClause))
+		buffer.WriteString(string(grimoire.LockClause))
 	}
 
 	buffer.WriteString(";")
@@ -91,7 +90,7 @@ func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 }
 
 // Insert generates query for insert.
-func (builder *Builder) Insert(collection string, changes change.Changes) (string, []interface{}) {
+func (builder *Builder) Insert(collection string, changes grimoire.Changes) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		length = len(changes.Changes)
@@ -108,15 +107,15 @@ func (builder *Builder) Insert(collection string, changes change.Changes) (strin
 
 		for i, ch := range changes.Changes {
 			switch ch.Type {
-			case change.ChangeSetOp:
+			case grimoire.ChangeSetOp:
 				buffer.WriteString(builder.config.EscapeChar)
 				buffer.WriteString(ch.Field)
 				buffer.WriteString(builder.config.EscapeChar)
 				args = append(args, ch.Value)
-			case change.ChangeFragmentOp:
+			case grimoire.ChangeFragmentOp:
 				buffer.WriteString(ch.Field)
 				args = append(args, ch.Value.([]interface{})...)
-			case change.ChangeIncOp, change.ChangeDecOp:
+			case grimoire.ChangeIncOp, grimoire.ChangeDecOp:
 				continue
 			}
 
@@ -151,7 +150,7 @@ func (builder *Builder) Insert(collection string, changes change.Changes) (strin
 }
 
 // InsertAll generates query for multiple insert.
-func (builder *Builder) InsertAll(collection string, fields []string, allchanges []change.Changes) (string, []interface{}) {
+func (builder *Builder) InsertAll(collection string, fields []string, allchanges []grimoire.Changes) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   = make([]interface{}, 0, len(fields)*len(allchanges))
@@ -175,7 +174,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 	// 	buffer.WriteString("(")
 
 	// 	for j, field := range fields {
-	// 		if ch, ok := changes.Get(field); ok && ch.Type == change.ChangeSetOp {
+	// 		if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
 	// 			buffer.WriteString(builder.ph())
 	// 			args = append(args, val)
 	// 		} else {
@@ -207,7 +206,7 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 }
 
 // Update generates query for update.
-func (builder *Builder) Update(collection string, changes change.Changes, filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) Update(collection string, changes grimoire.Changes, filter grimoire.FilterQuery) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		length = len(changes.Changes)
@@ -222,26 +221,26 @@ func (builder *Builder) Update(collection string, changes change.Changes, filter
 
 	for i, ch := range changes.Changes {
 		switch ch.Type {
-		case change.ChangeSetOp:
+		case grimoire.ChangeSetOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.ChangeIncOp:
+		case grimoire.ChangeIncOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("+")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.ChangeDecOp:
+		case grimoire.ChangeDecOp:
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(builder.escape(ch.Field))
 			buffer.WriteString("-")
 			buffer.WriteString(builder.ph())
 			args = append(args, ch.Value)
-		case change.ChangeFragmentOp:
+		case grimoire.ChangeFragmentOp:
 			buffer.WriteString(ch.Field)
 			args = append(args, ch.Value.([]interface{})...)
 		}
@@ -263,7 +262,7 @@ func (builder *Builder) Update(collection string, changes change.Changes, filter
 }
 
 // Delete generates query for delete.
-func (builder *Builder) Delete(collection string, filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) Delete(collection string, filter grimoire.FilterQuery) (string, []interface{}) {
 	var (
 		buffer bytes.Buffer
 		args   []interface{}
@@ -317,7 +316,7 @@ func (builder *Builder) from(collection string) string {
 	return "FROM " + builder.config.EscapeChar + collection + builder.config.EscapeChar
 }
 
-func (builder *Builder) join(joins ...query.JoinQuery) (string, []interface{}) {
+func (builder *Builder) join(joins ...grimoire.JoinQuery) (string, []interface{}) {
 	if len(joins) == 0 {
 		return "", nil
 	}
@@ -348,7 +347,7 @@ func (builder *Builder) join(joins ...query.JoinQuery) (string, []interface{}) {
 	return buffer.String(), args
 }
 
-func (builder *Builder) where(filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) where(filter grimoire.FilterQuery) (string, []interface{}) {
 	if filter.None() {
 		return "", nil
 	}
@@ -377,7 +376,7 @@ func (builder *Builder) groupBy(fields []string) string {
 	return buffer.String()
 }
 
-func (builder *Builder) having(filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) having(filter grimoire.FilterQuery) (string, []interface{}) {
 	if filter.None() {
 		return "", nil
 	}
@@ -386,7 +385,7 @@ func (builder *Builder) having(filter query.FilterQuery) (string, []interface{})
 	return "HAVING " + qs, args
 }
 
-func (builder *Builder) orderBy(orders []query.SortQuery) string {
+func (builder *Builder) orderBy(orders []grimoire.SortQuery) string {
 	length := len(orders)
 	if length == 0 {
 		return ""
@@ -408,7 +407,7 @@ func (builder *Builder) orderBy(orders []query.SortQuery) string {
 	return qs
 }
 
-func (builder *Builder) limitOffset(limit query.Limit, offset query.Offset) string {
+func (builder *Builder) limitOffset(limit grimoire.Limit, offset grimoire.Offset) string {
 	str := ""
 
 	if limit > 0 {
@@ -422,41 +421,41 @@ func (builder *Builder) limitOffset(limit query.Limit, offset query.Offset) stri
 	return str
 }
 
-func (builder *Builder) filter(filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) filter(filter grimoire.FilterQuery) (string, []interface{}) {
 	switch filter.Type {
-	case query.FilterAndOp:
+	case grimoire.FilterAndOp:
 		return builder.build("AND", filter.Inner)
-	case query.FilterOrOp:
+	case grimoire.FilterOrOp:
 		return builder.build("OR", filter.Inner)
-	case query.FilterNotOp:
+	case grimoire.FilterNotOp:
 		qs, args := builder.build("AND", filter.Inner)
 		return "NOT " + qs, args
-	case query.FilterEqOp,
-		query.FilterNeOp,
-		query.FilterLtOp,
-		query.FilterLteOp,
-		query.FilterGtOp,
-		query.FilterGteOp:
+	case grimoire.FilterEqOp,
+		grimoire.FilterNeOp,
+		grimoire.FilterLtOp,
+		grimoire.FilterLteOp,
+		grimoire.FilterGtOp,
+		grimoire.FilterGteOp:
 		return builder.buildComparison(filter)
-	case query.FilterNilOp:
+	case grimoire.FilterNilOp:
 		return builder.escape(filter.Field) + " IS NULL", filter.Values
-	case query.FilterNotNilOp:
+	case grimoire.FilterNotNilOp:
 		return builder.escape(filter.Field) + " IS NOT NULL", filter.Values
-	case query.FilterInOp,
-		query.FilterNinOp:
+	case grimoire.FilterInOp,
+		grimoire.FilterNinOp:
 		return builder.buildInclusion(filter)
-	case query.FilterLikeOp:
+	case grimoire.FilterLikeOp:
 		return builder.escape(filter.Field) + " LIKE " + builder.ph(), filter.Values
-	case query.FilterNotLikeOp:
+	case grimoire.FilterNotLikeOp:
 		return builder.escape(filter.Field) + " NOT LIKE " + builder.ph(), filter.Values
-	case query.FilterFragmentOp:
+	case grimoire.FilterFragmentOp:
 		return filter.Field, filter.Values
 	}
 
 	return "", nil
 }
 
-func (builder *Builder) build(op string, inner []query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) build(op string, inner []grimoire.FilterQuery) (string, []interface{}) {
 	var (
 		qstring string
 		length  = len(inner)
@@ -484,24 +483,24 @@ func (builder *Builder) build(op string, inner []query.FilterQuery) (string, []i
 	return qstring, args
 }
 
-func (builder *Builder) buildComparison(filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) buildComparison(filter grimoire.FilterQuery) (string, []interface{}) {
 	var (
 		cs string
 		op string
 	)
 
 	switch filter.Type {
-	case query.FilterEqOp:
+	case grimoire.FilterEqOp:
 		op = "="
-	case query.FilterNeOp:
+	case grimoire.FilterNeOp:
 		op = "<>"
-	case query.FilterLtOp:
+	case grimoire.FilterLtOp:
 		op = "<"
-	case query.FilterLteOp:
+	case grimoire.FilterLteOp:
 		op = "<="
-	case query.FilterGtOp:
+	case grimoire.FilterGtOp:
 		op = ">"
-	case query.FilterGteOp:
+	case grimoire.FilterGteOp:
 		op = ">="
 	}
 
@@ -510,11 +509,11 @@ func (builder *Builder) buildComparison(filter query.FilterQuery) (string, []int
 	return cs, filter.Values
 }
 
-func (builder *Builder) buildInclusion(filter query.FilterQuery) (string, []interface{}) {
+func (builder *Builder) buildInclusion(filter grimoire.FilterQuery) (string, []interface{}) {
 	var buffer bytes.Buffer
 	buffer.WriteString(builder.escape(filter.Field))
 
-	if filter.Type == query.FilterInOp {
+	if filter.Type == grimoire.FilterInOp {
 		buffer.WriteString(" IN (")
 	} else {
 		buffer.WriteString(" NOT IN (")
@@ -566,7 +565,7 @@ func (builder *Builder) escape(field string) string {
 	return escapedField.(string)
 }
 
-// Returning append returning to insert query.
+// Returning append returning to insert grimoire.
 func (builder *Builder) Returning(field string) *Builder {
 	builder.returnField = field
 	return builder

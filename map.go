@@ -1,4 +1,4 @@
-package change
+package grimoire
 
 type Map map[string]interface{}
 

@@ -4,11 +4,11 @@ package grimoire
 type Query struct {
 	empty        bool // todo: use bit to mark what is updated and use it when building
 	Collection   string
-	SelectQuery SelectQuery
-	JoinQuery   []JoinQuery
+	SelectQuery  SelectQuery
+	JoinQuery    []JoinQuery
 	WhereClause  FilterQuery
-	GroupQuery  GroupQuery
-	SortQuery   []SortQuery
+	GroupQuery   GroupQuery
+	SortQuery    []SortQuery
 	OffsetClause Offset
 	LimitClause  Limit
 	LockClause   Lock

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/change"
 	"github.com/Fs02/grimoire/sort"
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
@@ -191,10 +190,10 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 
 func TestBuilder_Insert(t *testing.T) {
 	var (
-		changes = change.Build(
-			change.Set("name", "foo"),
-			change.Set("age", 10),
-			change.Set("agree", true),
+		changes = BuildChanges(
+			Set("name", "foo"),
+			Set("age", 10),
+			Set("agree", true),
 		)
 		args = []interface{}{"foo", 10, true}
 	)
@@ -220,7 +219,7 @@ func TestBuilder_Insert(t *testing.T) {
 
 func TestBuilder_Insert_defaultValues(t *testing.T) {
 	var (
-		changes = change.Changes{}
+		changes = Changes{}
 		args    = []interface{}{}
 	)
 
@@ -313,10 +312,10 @@ func TestBuilder_Insert_defaultValues(t *testing.T) {
 
 func TestBuilder_Update(t *testing.T) {
 	var (
-		changes = change.Build(
-			change.Set("name", "foo"),
-			change.Set("age", 10),
-			change.Set("agree", true),
+		changes = BuildChanges(
+			Set("name", "foo"),
+			Set("age", 10),
+			Set("agree", true),
 		)
 		args = []interface{}{"foo", 10, true}
 		cond = where.And()

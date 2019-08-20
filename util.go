@@ -2,22 +2,11 @@ package grimoire
 
 import (
 	"reflect"
-
-	"github.com/Fs02/grimoire/changeset"
-	"github.com/Fs02/grimoire/errors"
 )
 
-func transformError(err error, chs ...*changeset.Changeset) error {
-	if err == nil {
-		return nil
-	} else if e, ok := err.(errors.Error); ok {
-		if len(chs) > 0 {
-			return chs[0].Constraints().GetError(e)
-		}
-		return e
-	} else {
-		return errors.NewUnexpected(err.Error())
-	}
+func transformError(err error) error {
+	// TODO
+	return err
 }
 
 func indirect(rv reflect.Value) interface{} {

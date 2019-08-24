@@ -1,9 +1,9 @@
 package grimoire
 
 import (
+	"errors"
 	"testing"
 
-	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -149,7 +149,7 @@ func TestRepo_One_queryError(t *testing.T) {
 
 	doc.(*document).reflect()
 
-	adapter.On("Query", query).Return(cur, errors.NewUnexpected("error")).Once()
+	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
 
 	assert.NotNil(t, repo.One(&user, query))
 
@@ -172,7 +172,7 @@ func TestRepo_One_notFound(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	err := repo.One(&user, query)
-	assert.Equal(t, errors.New("no result found", "", errors.NotFound), err)
+	assert.Equal(t, NoResultError{}, err)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -237,7 +237,7 @@ func TestRepo_Insert_error(t *testing.T) {
 		changes = BuildChanges(cbuilders...)
 	)
 
-	adapter.On("Insert", From("users"), changes).Return(0, errors.NewUnexpected("error")).Once()
+	adapter.On("Insert", From("users"), changes).Return(0, errors.New("error")).Once()
 
 	assert.NotNil(t, repo.Insert(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustInsert(&user, cbuilders...) })
@@ -331,7 +331,7 @@ func TestRepo_Update_error(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, changes).Return(errors.NewUnexpected("error")).Once()
+	adapter.On("Update", queries, changes).Return(errors.New("error")).Once()
 
 	assert.NotNil(t, repo.Update(&user, cbuilders...))
 	assert.Panics(t, func() { repo.MustUpdate(&user, cbuilders...) })
@@ -389,10 +389,10 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 	)
 
-	adapter.On("Update", q, buyer[0]).Return(errors.NewUnexpected("update error")).Once()
+	adapter.On("Update", q, buyer[0]).Return(errors.New("update error")).Once()
 
 	err := repo.upsertBelongsTo(doc, &changes)
-	assert.Equal(t, errors.NewUnexpected("update error"), err)
+	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
 }
@@ -477,10 +477,10 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 	)
 
-	adapter.On("Insert", q, buyer[0]).Return(0, errors.NewUnexpected("insert error")).Once()
+	adapter.On("Insert", q, buyer[0]).Return(0, errors.New("insert error")).Once()
 
 	err := repo.upsertBelongsTo(doc, &changes)
-	assert.Equal(t, errors.NewUnexpected("insert error"), err)
+	assert.Equal(t, errors.New("insert error"), err)
 
 	_, ok := changes.Get("user_id")
 	assert.False(t, ok)
@@ -551,10 +551,10 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 		addresses, _ = changes.GetAssoc("address")
 	)
 
-	adapter.On("Update", q, addresses[0]).Return(errors.NewUnexpected("update error")).Once()
+	adapter.On("Update", q, addresses[0]).Return(errors.New("update error")).Once()
 
 	err := repo.upsertHasOne(doc, &changes, nil)
-	assert.Equal(t, errors.NewUnexpected("update error"), err)
+	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
 }
@@ -640,10 +640,10 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 	user.ID = 1
 	address.SetValue("user_id", user.ID)
 
-	adapter.On("Insert", q, address).Return(nil, errors.NewUnexpected("insert error")).Once()
+	adapter.On("Insert", q, address).Return(nil, errors.New("insert error")).Once()
 
 	err := repo.upsertHasOne(doc, &changes, nil)
-	assert.Equal(t, errors.NewUnexpected("insert error"), err)
+	assert.Equal(t, errors.New("insert error"), err)
 
 	adapter.AssertExpectations(t)
 }
@@ -712,7 +712,7 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 		)
 		q               = BuildQuery("transactions")
 		transactions, _ = changes.GetAssoc("transactions")
-		rerr            = errors.NewUnexpected("insert all error")
+		rerr            = errors.New("insert all error")
 	)
 
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{}, rerr).Once()
@@ -861,7 +861,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 			},
 		)
 		q    = BuildQuery("transactions")
-		rerr = errors.NewUnexpected("delete all error")
+		rerr = errors.New("delete all error")
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(rerr).Once()
@@ -1397,7 +1397,7 @@ func TestRepo_Preload_queryError(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = Transaction{BuyerID: 10}
 		cur         = &testCursor{}
-		err         = errors.NewUnexpected("error")
+		err         = errors.New("error")
 	)
 
 	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, err).Once()
@@ -1427,28 +1427,28 @@ func TestRepo_Transaction(t *testing.T) {
 
 func TestRepo_Transaction_beginError(t *testing.T) {
 	adapter := &testAdapter{}
-	adapter.On("Begin").Return(errors.NewUnexpected("error")).Once()
+	adapter.On("Begin").Return(errors.New("error")).Once()
 
 	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
 		// doing good things
 		return nil
 	})
 
-	assert.Equal(t, errors.NewUnexpected("error"), err)
+	assert.Equal(t, errors.New("error"), err)
 	adapter.AssertExpectations(t)
 }
 
 func TestRepo_Transaction_commitError(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Commit").Return(errors.NewUnexpected("error")).Once()
+	adapter.On("Commit").Return(errors.New("error")).Once()
 
 	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
 		// doing good things
 		return nil
 	})
 
-	assert.Equal(t, errors.NewUnexpected("error"), err)
+	assert.Equal(t, errors.New("error"), err)
 	adapter.AssertExpectations(t)
 }
 
@@ -1459,28 +1459,28 @@ func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
 
 	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
 		// doing good things
-		return errors.NewUnexpected("error")
+		return errors.New("error")
 	})
 
-	assert.Equal(t, errors.NewUnexpected("error"), err)
+	assert.Equal(t, errors.New("error"), err)
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_panicWithKnownErrorAndRollback(t *testing.T) {
+func TestRepo_Transaction_panicWithErrorAndRollback(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
 		// doing good things
-		panic(errors.New("error", "", errors.NotFound))
+		panic(errors.New("error"))
 	})
 
-	assert.Equal(t, errors.New("error", "", errors.NotFound), err)
+	assert.Equal(t, errors.New("error"), err)
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_panicAndRollback(t *testing.T) {
+func TestRepo_Transaction_panicWithStringAndRollback(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
@@ -1488,7 +1488,7 @@ func TestRepo_Transaction_panicAndRollback(t *testing.T) {
 	assert.Panics(t, func() {
 		Repo{adapter: adapter}.Transaction(func(r Repo) error {
 			// doing good things
-			panic(errors.NewUnexpected("error"))
+			panic("error")
 		})
 	})
 

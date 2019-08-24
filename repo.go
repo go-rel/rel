@@ -3,8 +3,6 @@ package grimoire
 import (
 	"reflect"
 	"strings"
-
-	"github.com/Fs02/grimoire/errors"
 )
 
 // Repo defines grimoire repository.
@@ -554,10 +552,11 @@ func (r Repo) Transaction(fn func(Repo) error) error {
 			if p := recover(); p != nil {
 				txRepo.adapter.Rollback()
 
-				if e, ok := p.(errors.Error); ok && e.Kind() != errors.Unexpected {
+				if e, ok := p.(error); ok {
 					err = e
 				} else {
-					panic(p) // re-throw panic after Rollback
+					// re-throw panic after Rollback if it's not caused by error
+					panic(p)
 				}
 			} else if err != nil {
 				txRepo.adapter.Rollback()

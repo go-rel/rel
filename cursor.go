@@ -2,8 +2,6 @@ package grimoire
 
 import (
 	"reflect"
-
-	"github.com/Fs02/grimoire/errors"
 )
 
 type Cursor interface {
@@ -23,7 +21,7 @@ func scanOne(cur Cursor, col Collection) error {
 	}
 
 	if !cur.Next() {
-		return errors.New("no result found", "", errors.NotFound)
+		return NoResultError{}
 	}
 
 	var (

@@ -24,11 +24,13 @@ func BuildChanges(changers ...Changer) Changes {
 // Table name not stored here, but handled by repo logic.
 // TODO: handle deleteion
 //	- Answer: Changes should be forward only operation, no delete change is supported (use changeset instead).
+// Implement iterator to be used by adapter api?
 type Changes struct {
 	Fields       map[string]int // TODO: not copy friendly
 	Changes      []Change
 	Assoc        map[string]int
 	AssocChanges [][]Changes
+	constraints  constraints
 }
 
 func (c Changes) Empty() bool {

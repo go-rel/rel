@@ -26,9 +26,9 @@ func TestPutDefaultEmptyChanges(t *testing.T) {
 
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, 10, ch.Changes()["field1"])
-	assert.Nil(t, ch.Changes()["field2"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, 10, ch.Get("field1"))
+	assert.Nil(t, ch.Get("field2"))
 }
 
 func TestPutDefaultConditions(t *testing.T) {
@@ -84,7 +84,7 @@ func TestPutDefaultConditions(t *testing.T) {
 	for _, tt := range tts {
 		t.Run(tt.Field, func(t *testing.T) {
 			PutDefault(ch, tt.Field, 10)
-			assert.Equal(t, tt.Result, ch.Changes()[tt.Field])
+			assert.Equal(t, tt.Result, ch.Get(tt.Field))
 		})
 	}
 }
@@ -106,8 +106,8 @@ func TestPutDefaultExisting(t *testing.T) {
 
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, "default_val", ch.Changes()["field2"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, "default_val", ch.Get("field2"))
 }
 
 func TestPutDefaultNoValueWithInput(t *testing.T) {
@@ -125,8 +125,8 @@ func TestPutDefaultNoValueWithInput(t *testing.T) {
 
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, "input_val", ch.Changes()["field2"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, "input_val", ch.Get("field2"))
 }
 
 func TestPutDefaultNoValueNoChange(t *testing.T) {
@@ -142,8 +142,8 @@ func TestPutDefaultNoValueNoChange(t *testing.T) {
 
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, "must not be changed", ch.Changes()["field2"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, "must not be changed", ch.Get("field2"))
 }
 
 func TestPutDefaultInvalid(t *testing.T) {

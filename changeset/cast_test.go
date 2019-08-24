@@ -22,7 +22,7 @@ func ExampleCast() {
 	}
 
 	ch := Cast(user, input, []string{"name"})
-	fmt.Println(ch.Changes())
+	fmt.Println(ch.changes)
 	// Output: map[name:name]
 }
 
@@ -96,18 +96,18 @@ func TestCast(t *testing.T) {
 
 	ch := Cast(data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 
 	ch = Cast(&data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 
-	assert.NotNil(t, ch.Changes())
-	assert.NotNil(t, ch.Values())
+	assert.NotNil(t, ch.changes)
+	assert.NotNil(t, ch.values)
 }
 
 func TestCast_existingChangeset(t *testing.T) {
@@ -144,16 +144,16 @@ func TestCast_existingChangeset(t *testing.T) {
 
 	ch := Cast(data, input, []string{})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 0, len(ch.Changes()))
+	assert.Equal(t, 0, len(ch.changes))
 
 	ch = Cast(ch, input, []string{"field1", "field2"})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 2, len(ch.Changes()))
+	assert.Equal(t, 2, len(ch.changes))
 
 	ch = Cast(*ch, input, []string{"field1", "field3"})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 3, len(ch.Changes()))
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, 3, len(ch.changes))
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 }
@@ -195,7 +195,7 @@ func TestCast_unchanged(t *testing.T) {
 
 	ch := Cast(data, input, []string{"field1", "field2", "field3", "field4"})
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
 }
@@ -334,7 +334,7 @@ func TestCast_basic(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -411,7 +411,7 @@ func TestCast_basicWithValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -508,7 +508,7 @@ func TestCast_basicZeroValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -551,7 +551,7 @@ func TestCast_ptr(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, map[string]interface{}{}, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -645,7 +645,7 @@ func TestCast_ptrWithValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -775,7 +775,7 @@ func TestCast_ptrWithNilValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, expectedTypes, ch.types)
 }
@@ -890,7 +890,7 @@ func TestCast_slice(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, sliceExpectedChanges, ch.Changes())
+	assert.Equal(t, sliceExpectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, sliceExpectedTypes, ch.types)
 }
@@ -967,7 +967,7 @@ func TestCast_sliceWithValue(t *testing.T) {
 	})
 
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, sliceExpectedChanges, ch.Changes())
+	assert.Equal(t, sliceExpectedChanges, ch.changes)
 	assert.Equal(t, expectedValues, ch.values)
 	assert.Equal(t, sliceExpectedTypes, ch.types)
 }

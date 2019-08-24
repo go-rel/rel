@@ -21,14 +21,14 @@ func TestPutChange(t *testing.T) {
 
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 0, len(ch.Changes()))
+	assert.Equal(t, 0, len(ch.changes))
 
 	// normal put changes
 	PutChange(ch, "field1", 10)
 	assert.Nil(t, ch.Error())
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, 10, ch.Changes()["field1"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, 10, ch.Get("field1"))
 
 	// put changes not valid and not allowed to error
 	PutChange(ch, "field1", "10")
@@ -36,8 +36,8 @@ func TestPutChange(t *testing.T) {
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, 1, len(ch.Errors()))
 	assert.Equal(t, "field1 is invalid", ch.Error().Error())
-	assert.Equal(t, 1, len(ch.Changes()))
-	assert.Equal(t, 10, ch.Changes()["field1"])
+	assert.Equal(t, 1, len(ch.changes))
+	assert.Equal(t, 10, ch.Get("field1"))
 }
 
 func TestPutChange_nil(t *testing.T) {
@@ -49,7 +49,7 @@ func TestPutChange_nil(t *testing.T) {
 	PutChange(ch, "nullable", nil)
 
 	assert.Nil(t, ch.Error())
-	assert.Equal(t, (*bool)(nil), ch.Changes()["nullable"])
+	assert.Equal(t, (*bool)(nil), ch.Get("nullable"))
 }
 
 func TestPutChange_typedNil(t *testing.T) {
@@ -61,5 +61,5 @@ func TestPutChange_typedNil(t *testing.T) {
 	PutChange(ch, "nullable", (*bool)(nil))
 
 	assert.Nil(t, ch.Error())
-	assert.Equal(t, (*bool)(nil), ch.Changes()["nullable"])
+	assert.Equal(t, (*bool)(nil), ch.Get("nullable"))
 }

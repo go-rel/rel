@@ -20,5 +20,5 @@ func TestUnescapeString(t *testing.T) {
 	ch := Cast(user, input, []string{"name"})
 	UnescapeString(ch, "name")
 
-	assert.Equal(t, `"Fran & Freddie's Diner" <tasty@example.com>`, ch.Changes()["name"])
+	assert.Equal(t, `"Fran & Freddie's Diner" <tasty@example.com>`, ch.Get("name"))
 }

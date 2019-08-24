@@ -21,10 +21,10 @@ func TestDeleteChange(t *testing.T) {
 	}
 
 	assert.Nil(t, ch.Error())
-	assert.Equal(t, 1, len(ch.Changes()))
+	assert.Equal(t, 1, len(ch.changes))
 
 	// delete change
 	DeleteChange(ch, "field1")
 	assert.Nil(t, ch.Error())
-	assert.Equal(t, 0, len(ch.Changes()))
+	assert.Equal(t, 0, len(ch.changes))
 }

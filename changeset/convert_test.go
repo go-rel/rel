@@ -28,6 +28,6 @@ func TestConvert(t *testing.T) {
 
 	ch := Convert(data)
 	assert.Nil(t, ch.Errors())
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 	assert.Equal(t, expectedTypes, ch.types)
 }

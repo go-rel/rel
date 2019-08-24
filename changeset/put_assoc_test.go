@@ -55,7 +55,7 @@ func TestPutAssoc_one(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 
 	PutAssoc(ch, "field3", inner)
 	assert.NotNil(t, ch.Error())
@@ -124,5 +124,5 @@ func TestPutAssoc_many(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }

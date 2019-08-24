@@ -60,7 +60,7 @@ func TestCastAssoc_one(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }
 
 func TestCastAssoc_oneDifferentSourceField(t *testing.T) {
@@ -109,7 +109,7 @@ func TestCastAssoc_oneDifferentSourceField(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }
 
 func TestCastAssoc_onePointer(t *testing.T) {
@@ -157,7 +157,7 @@ func TestCastAssoc_onePointer(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }
 
 func TestCastAssoc_oneErrorParamsNotAMap(t *testing.T) {
@@ -270,7 +270,7 @@ func TestCastAssoc_many(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }
 
 func TestCastAssoc_manyPointer(t *testing.T) {
@@ -329,7 +329,7 @@ func TestCastAssoc_manyPointer(t *testing.T) {
 	assert.Nil(t, ch.Errors())
 	assert.Equal(t, expectedTypes, ch.types)
 	assert.Equal(t, expectedValues, ch.values)
-	assert.Equal(t, expectedChanges, ch.Changes())
+	assert.Equal(t, expectedChanges, ch.changes)
 }
 
 func TestCastAssoc_manyErrorParamsNotASliceOfAMap(t *testing.T) {

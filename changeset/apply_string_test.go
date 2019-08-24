@@ -23,7 +23,7 @@ func TestApplyString(t *testing.T) {
 		return strings.TrimPrefix(s, "¡¡¡Hello, ")
 	})
 
-	assert.Equal(t, "Gophers!!!", ch.Changes()["name"])
+	assert.Equal(t, "Gophers!!!", ch.Get("name"))
 }
 
 func TestApplyString_ignored(t *testing.T) {
@@ -41,5 +41,5 @@ func TestApplyString_ignored(t *testing.T) {
 		return strings.TrimPrefix(s, "¡¡¡Hello, ")
 	})
 
-	assert.Equal(t, 1, ch.Changes()["name"])
+	assert.Equal(t, 1, ch.Get("name"))
 }

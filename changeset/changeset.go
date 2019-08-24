@@ -52,21 +52,6 @@ func (changeset *Changeset) Fetch(field string) interface{} {
 	return changeset.values[field]
 }
 
-// Changes of changeset.
-func (changeset *Changeset) Changes() map[string]interface{} {
-	return changeset.changes
-}
-
-// Values of changeset.
-func (changeset *Changeset) Values() map[string]interface{} {
-	return changeset.values
-}
-
-// Types of changeset.
-func (changeset *Changeset) Types() map[string]reflect.Type {
-	return changeset.types
-}
-
 // Constraints of changeset.
 func (changeset *Changeset) Constraints() Constraints {
 	return changeset.constraints

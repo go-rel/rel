@@ -33,10 +33,14 @@ type isZeroer interface {
 }
 
 // isZero shallowly check wether a field in struct is zero or not
-func isZero(i interface{}) bool {
-	zero := true
+func isZero(value interface{}) bool {
+	var (
+		zero = false
+	)
 
-	switch v := i.(type) {
+	switch v := value.(type) {
+	case nil:
+		zero = true
 	case bool:
 		zero = v == false
 	case string:
@@ -69,6 +73,8 @@ func isZero(i interface{}) bool {
 		zero = v == 0
 	case isZeroer:
 		zero = v.IsZero()
+	default:
+		zero = reflect.DeepEqual(value, reflect.Zero(reflect.TypeOf(v)).Interface())
 	}
 
 	return zero

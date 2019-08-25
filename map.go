@@ -8,13 +8,16 @@ func (m Map) Build(changes *Changes) {
 		case Map:
 			changes.SetAssoc(field, BuildChanges(v))
 		case []Map:
-			chs := make([]Changes, len(v))
+			var (
+				chs = make([]Changes, len(v))
+			)
+
 			for i := range v {
 				chs[i] = BuildChanges(v[i])
 			}
 			changes.SetAssoc(field, chs...)
 		default:
-			changes.Set(Set(field, v))
+			changes.SetValue(field, v)
 		}
 	}
 }

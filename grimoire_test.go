@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+type Status string
+
 type User struct {
 	ID           int
 	Name         string
@@ -17,6 +19,7 @@ type User struct {
 type Transaction struct {
 	ID      int
 	Item    string
+	Status  Status
 	BuyerID int  `db:"user_id"`
 	Buyer   User `references:"BuyerID" foreign_key:"ID"`
 }

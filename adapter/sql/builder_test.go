@@ -190,10 +190,10 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 
 func TestBuilder_Insert(t *testing.T) {
 	var (
-		changes = BuildChanges(
-			Set("name", "foo"),
-			Set("age", 10),
-			Set("agree", true),
+		changes = grimoire.BuildChanges(
+			grimoire.Set("name", "foo"),
+			grimoire.Set("age", 10),
+			grimoire.Set("agree", true),
 		)
 		args = []interface{}{"foo", 10, true}
 	)
@@ -219,7 +219,7 @@ func TestBuilder_Insert(t *testing.T) {
 
 func TestBuilder_Insert_defaultValues(t *testing.T) {
 	var (
-		changes = Changes{}
+		changes = grimoire.Changes{}
 		args    = []interface{}{}
 	)
 
@@ -312,10 +312,10 @@ func TestBuilder_Insert_defaultValues(t *testing.T) {
 
 func TestBuilder_Update(t *testing.T) {
 	var (
-		changes = BuildChanges(
-			Set("name", "foo"),
-			Set("age", 10),
-			Set("agree", true),
+		changes = grimoire.BuildChanges(
+			grimoire.Set("name", "foo"),
+			grimoire.Set("age", 10),
+			grimoire.Set("agree", true),
 		)
 		args = []interface{}{"foo", 10, true}
 		cond = where.And()
@@ -463,7 +463,7 @@ func TestBuilder_Join(t *testing.T) {
 			qs, args := NewBuilder(&Config{
 				Placeholder: "?",
 				EscapeChar:  "`",
-			}).join(grimoire.Build("", test.Query).JoinQuery...)
+			}).join(grimoire.BuildQuery("", test.Query).JoinQuery...)
 			assert.Equal(t, test.QueryString, qs)
 			assert.Nil(t, args)
 		})

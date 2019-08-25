@@ -3,11 +3,11 @@ package sql
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 	"time"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/errors"
 )
 
 // Config holds configuration for adapter.
@@ -35,24 +35,76 @@ func (adapter *Adapter) Close() error {
 	return adapter.DB.Close()
 }
 
-// All retrieves all record that match the query.
-func (adapter *Adapter) All(query grimoire.Query, doc interface{}, loggers ...grimoire.Logger) (int, error) {
-	statement, args := NewBuilder(adapter.Config).Find(query)
-	count, err := adapter.Query(doc, statement, args, loggers...)
-	return int(count), err
+// Aggregate record using given query.
+func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field string, loggers ...grimoire.Logger) (int, error) {
+	// var (
+	// 	out struct{
+	// 	}
+	// 	statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
+	// )
+
+	// _, err := adapter.Query(statement, args, loggers...)
+	// return err
+	return 0, nil
 }
 
-// Aggregate record using given query.
-func (adapter *Adapter) Aggregate(query grimoire.Query, doc interface{}, todo1 string, todo2 string, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Aggregate(query)
-	_, err := adapter.Query(doc, statement, args, loggers...)
-	return err
+// Query performs query operation.
+func (adapter *Adapter) Query(query grimoire.Query, loggers ...grimoire.Logger) (grimoire.Cursor, error) {
+	var (
+		rows            *sql.Rows
+		err             error
+		statement, args = NewBuilder(adapter.Config).Find(query)
+	)
+
+	start := time.Now()
+	if adapter.Tx != nil {
+		rows, err = adapter.Tx.Query(statement, args...)
+	} else {
+		rows, err = adapter.DB.Query(statement, args...)
+	}
+
+	go grimoire.Log(loggers, statement, time.Since(start), err)
+
+	if err != nil {
+		return nil, adapter.Config.ErrorFunc(err)
+	}
+
+	return &Cursor{rows}, adapter.Config.ErrorFunc(err)
+}
+
+// Exec performs exec operation.
+func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...grimoire.Logger) (int64, int64, error) {
+	var (
+		res sql.Result
+		err error
+	)
+
+	start := time.Now()
+	if adapter.Tx != nil {
+		res, err = adapter.Tx.Exec(statement, args...)
+	} else {
+		res, err = adapter.DB.Exec(statement, args...)
+	}
+
+	go grimoire.Log(loggers, statement, time.Since(start), err)
+
+	if err != nil {
+		return 0, 0, adapter.Config.ErrorFunc(err)
+	}
+
+	lastID, _ := res.LastInsertId()
+	rowCount, _ := res.RowsAffected()
+
+	return lastID, rowCount, nil
 }
 
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) (interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).Insert(query.Collection, changes)
-	id, _, err := adapter.Exec(statement, args, loggers...)
+	var (
+		statement, args = NewBuilder(adapter.Config).Insert(query.Collection, changes)
+		id, _, err      = adapter.Exec(statement, args, loggers...)
+	)
+
 	return id, err
 }
 
@@ -82,15 +134,21 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 
 // Update updates a record in database.
 func (adapter *Adapter) Update(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Update(query.Collection, changes, q.WhereClause)
-	_, _, err := adapter.Exec(statement, args, loggers...)
+	var (
+		statement, args = NewBuilder(adapter.Config).Update(query.Collection, changes, query.WhereQuery)
+		_, _, err       = adapter.Exec(statement, args, loggers...)
+	)
+
 	return err
 }
 
 // Delete deletes all results that match the query.
 func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger) error {
-	statement, args := NewBuilder(adapter.Config).Delete(query.Collection, q.WhereClause)
-	_, _, err := adapter.Exec(statement, args, loggers...)
+	var (
+		statement, args = NewBuilder(adapter.Config).Delete(query.Collection, query.WhereQuery)
+		_, _, err       = adapter.Exec(statement, args, loggers...)
+	)
+
 	return err
 }
 
@@ -122,7 +180,7 @@ func (adapter *Adapter) Commit() error {
 	var err error
 
 	if adapter.Tx == nil {
-		err = errors.NewUnexpected("unable to commit outside transaction")
+		err = errors.New("unable to commit outside transaction")
 	} else if adapter.savepoint > 0 {
 		_, _, err = adapter.Exec("RELEASE SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
 	} else {
@@ -137,7 +195,7 @@ func (adapter *Adapter) Rollback() error {
 	var err error
 
 	if adapter.Tx == nil {
-		err = errors.NewUnexpected("unable to rollback outside transaction")
+		err = errors.New("unable to rollback outside transaction")
 	} else if adapter.savepoint > 0 {
 		_, _, err = adapter.Exec("ROLLBACK TO SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
 	} else {
@@ -145,57 +203,6 @@ func (adapter *Adapter) Rollback() error {
 	}
 
 	return adapter.Config.ErrorFunc(err)
-}
-
-// Query performs query operation.
-func (adapter *Adapter) Query(out interface{}, statement string, args []interface{}, loggers ...grimoire.Logger) (int64, error) {
-	var (
-		rows *sql.Rows
-		err  error
-	)
-
-	start := time.Now()
-	if adapter.Tx != nil {
-		rows, err = adapter.Tx.Query(statement, args...)
-	} else {
-		rows, err = adapter.DB.Query(statement, args...)
-	}
-
-	go grimoire.Log(loggers, statement, time.Since(start), err)
-
-	if err != nil {
-		return 0, adapter.Config.ErrorFunc(err)
-	}
-
-	defer rows.Close()
-	count, err := Scan(out, rows)
-	return count, adapter.Config.ErrorFunc(err)
-}
-
-// Exec performs exec operation.
-func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...grimoire.Logger) (int64, int64, error) {
-	var (
-		res sql.Result
-		err error
-	)
-
-	start := time.Now()
-	if adapter.Tx != nil {
-		res, err = adapter.Tx.Exec(statement, args...)
-	} else {
-		res, err = adapter.DB.Exec(statement, args...)
-	}
-
-	go grimoire.Log(loggers, statement, time.Since(start), err)
-
-	if err != nil {
-		return 0, 0, adapter.Config.ErrorFunc(err)
-	}
-
-	lastID, _ := res.LastInsertId()
-	rowCount, _ := res.RowsAffected()
-
-	return lastID, rowCount, nil
 }
 
 // New initialize adapter without db.

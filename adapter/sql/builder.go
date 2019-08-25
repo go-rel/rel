@@ -23,16 +23,21 @@ type Builder struct {
 
 // Find generates query for select.
 func (builder *Builder) Find(query grimoire.Query) (string, []interface{}) {
-	qs, args := builder.query(query)
-	return builder.fields(grimoire.SelectQuery.OnlyDistinct, grimoire.SelectQuery.Fields) + qs, args
+	var (
+		qs, args = builder.query(query)
+	)
+
+	return builder.fields(query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields) + qs, args
 }
 
 // Aggregate generates query for aggregation.
-func (builder *Builder) Aggregate(query grimoire.Query) (string, []interface{}) {
-	qs, args := builder.query(query)
-	field := "" //grimoire.AggregateMode + "(" + grimoire.AggregateField + ") AS " + grimoire.AggregateMode
+func (builder *Builder) Aggregate(query grimoire.Query, mode string, field string) (string, []interface{}) {
+	var (
+		qs, args    = builder.query(query)
+		selectfield = mode + "(" + field + ") AS " + mode
+	)
 
-	return builder.fields(false, append(grimoire.GroupQuery.Fields, field)) + qs, args
+	return builder.fields(false, append(query.GroupQuery.Fields, selectfield)) + qs, args
 }
 
 func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
@@ -41,47 +46,47 @@ func (builder *Builder) query(query grimoire.Query) (string, []interface{}) {
 		args   []interface{}
 	)
 
-	if s := builder.from(grimoire.Collection); s != "" {
+	if s := builder.from(query.Collection); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s, arg := builder.join(grimoire.JoinQuery...); s != "" {
+	if s, arg := builder.join(query.JoinQuery...); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s, arg := builder.where(grimoire.WhereClause); s != "" {
+	if s, arg := builder.where(query.WhereQuery); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 		args = append(args, arg...)
 	}
 
-	if s := builder.groupBy(grimoire.GroupQuery.Fields); s != "" {
+	if s := builder.groupBy(query.GroupQuery.Fields); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 
-		if s, arg := builder.having(grimoire.GroupQuery.Filter); s != "" {
+		if s, arg := builder.having(query.GroupQuery.Filter); s != "" {
 			buffer.WriteString(" ")
 			buffer.WriteString(s)
 			args = append(args, arg...)
 		}
 	}
 
-	if s := builder.orderBy(grimoire.SortQuery); s != "" {
+	if s := builder.orderBy(query.SortQuery); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if s := builder.limitOffset(grimoire.LimitClause, grimoire.OffsetClause); s != "" {
+	if s := builder.limitOffset(query.LimitQuery, query.OffsetQuery); s != "" {
 		buffer.WriteString(" ")
 		buffer.WriteString(s)
 	}
 
-	if grimoire.LockClause != "" {
+	if query.LockQuery != "" {
 		buffer.WriteString(" ")
-		buffer.WriteString(string(grimoire.LockClause))
+		buffer.WriteString(string(query.LockQuery))
 	}
 
 	buffer.WriteString(";")

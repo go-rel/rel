@@ -174,32 +174,28 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 	}
 }
 
-// func TestBuilder_Aggregate(t *testing.T) {
-// 	builder := NewBuilder(&Config{
-// 		Placeholder: "?",
-// 		EscapeChar:  "`",
-// 	})
+func TestBuilder_Aggregate(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+		query   = grimoire.From("users")
+	)
 
-// 	users := grimoire.From("users")
+	qs, args := builder.Aggregate(query, "count", "*")
+	assert.Nil(t, args)
+	assert.Equal(t, "SELECT count(*) AS count FROM `users`;", qs)
 
-// 	users.AggregateMode = "count"
-// 	users.AggregateField = "*"
+	qs, args = builder.Aggregate(query, "sum", "transactions.total")
+	assert.Nil(t, args)
+	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
 
-// 	qs, args := builder.Aggregate(users)
-// 	assert.Nil(t, args)
-// 	assert.Equal(t, "SELECT count(*) AS count FROM `users`;", qs)
-
-// 	users.AggregateMode = "sum"
-// 	users.AggregateField = "transactions.total"
-
-// 	qs, args = builder.Aggregate(users)
-// 	assert.Nil(t, args)
-// 	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum FROM `users`;", qs)
-
-// 	qs, args = builder.Aggregate(users.Group("gender"))
-// 	assert.Nil(t, args)
-// 	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
-// }
+	qs, args = builder.Aggregate(query.Group("gender"), "sum", "transactions.total")
+	assert.Nil(t, args)
+	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
+}
 
 func TestBuilder_Insert(t *testing.T) {
 	var (
@@ -273,74 +269,70 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 	assert.Equal(t, []interface{}{}, args)
 }
 
-// func TestBuilder_InsertAll(t *testing.T) {
-// 	fields := []string{"name"}
-// 	allchanges := []map[string]interface{}{
-// 		{"name": "foo"},
-// 		{"age": 12},
-// 		{"name": "boo"},
-// 	}
+func TestBuilder_InsertAll(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder    = NewBuilder(config)
+		allchanges = []grimoire.Changes{
+			grimoire.BuildChanges(
+				grimoire.Set("name", "foo"),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("age", 10),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("name", "boo"),
+				grimoire.Set("age", 20),
+			),
+		}
+	)
 
-// 	statement, args := NewBuilder(&Config{
-// 		Placeholder: "?",
-// 		EscapeChar:  "`",
-// 	}).InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
-// 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+	statement, args := builder.InsertAll("users", []string{"name"}, allchanges)
+	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
+	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
-// 	// ordinal
-// 	statement, args = NewBuilder(&Config{
-// 		Placeholder:         "$",
-// 		EscapeChar:          "\"",
-// 		Ordinal:             true,
-// 		InsertDefaultValues: true,
-// 	}).Returning("id").InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
-// 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
+	// with age
+	statement, args = builder.InsertAll("users", []string{"name", "age"}, allchanges)
+	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,?);", statement)
+	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
+}
 
-// 	// with age
-// 	fields = append(fields, "age")
-// 	statement, args = NewBuilder(&Config{
-// 		Placeholder: "?",
-// 		EscapeChar:  "`",
-// 	}).InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,DEFAULT);", statement)
-// 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+func TestBuilder_InsertAll_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+		builder    = NewBuilder(config)
+		allchanges = []grimoire.Changes{
+			grimoire.BuildChanges(
+				grimoire.Set("name", "foo"),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("age", 10),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("name", "boo"),
+				grimoire.Set("age", 20),
+			),
+		}
+	)
 
-// 	// ordinal
-// 	statement, args = NewBuilder(&Config{
-// 		Placeholder:         "$",
-// 		EscapeChar:          "\"",
-// 		Ordinal:             true,
-// 		InsertDefaultValues: true,
-// 	}).Returning("id").InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,DEFAULT) RETURNING \"id\";", statement)
-// 	assert.Equal(t, []interface{}{"foo", 12, "boo"}, args)
+	statement, args := builder.Returning("id").InsertAll("users", []string{"name"}, allchanges)
+	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
+	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
-// 	// all changes have value
-// 	allchanges = []map[string]interface{}{
-// 		{"name": "foo", "age": 10},
-// 		{"name": "zoo", "age": 12},
-// 		{"name": "boo", "age": 20},
-// 	}
-
-// 	statement, args = NewBuilder(&Config{
-// 		Placeholder: "?",
-// 		EscapeChar:  "`",
-// 	}).InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,?),(?,?),(?,?);", statement)
-// 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
-
-// 	// ordinal
-// 	statement, args = NewBuilder(&Config{
-// 		Placeholder:         "$",
-// 		EscapeChar:          "\"",
-// 		Ordinal:             true,
-// 		InsertDefaultValues: true,
-// 	}).InsertAll("users", fields, allchanges)
-// 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,$2),($3,$4),($5,$6);", statement)
-// 	assert.Equal(t, []interface{}{"foo", 10, "zoo", 12, "boo", 20}, args)
-// }
+	// with age
+	builder.count = 0
+	statement, args = builder.Returning("id").InsertAll("users", []string{"name", "age"}, allchanges)
+	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,$4) RETURNING \"id\";", statement)
+	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
+}
 
 func TestBuilder_Update(t *testing.T) {
 	var (

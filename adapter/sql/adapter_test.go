@@ -45,23 +45,35 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, New(nil))
 }
 
-// func TestAdapter_Count(t *testing.T) {
-// 	adapter, err := open()
-// 	paranoid.Panic(err, "failed to open database connection")
-// 	defer adapter.Close()
+func TestAdapter_Aggregate(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = grimoire.New(adapter)
+	)
 
-// 	_, err = repo.From("test").Count()
-// 	assert.Nil(t, err)
-// }
+	defer adapter.Close()
 
-// func TestAdapter_All(t *testing.T) {
-// 	adapter, err := open()
-// 	paranoid.Panic(err, "failed to open database connection")
-// 	defer adapter.Close()
+	count, err := repo.Aggregate(grimoire.From("names"), "count", "id")
+	assert.Equal(t, 0, count)
+	assert.Nil(t, err)
+}
 
-// 	result := []Name{}
-// 	assert.Nil(t, repo.All(&result)) //From("test").All(&result))
-// }
+func TestAdapter_Aggregate_transaction(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = grimoire.New(adapter)
+	)
+
+	defer adapter.Close()
+
+	repo.Transaction(func(repo grimoire.Repo) error {
+		count, err := repo.Aggregate(grimoire.From("names"), "count", "id")
+		assert.Equal(t, 0, count)
+		assert.Nil(t, err)
+
+		return nil
+	})
+}
 
 func TestAdapter_Insert(t *testing.T) {
 	var (

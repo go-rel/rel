@@ -37,15 +37,22 @@ func (adapter *Adapter) Close() error {
 
 // Aggregate record using given query.
 func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field string, loggers ...grimoire.Logger) (int, error) {
-	// var (
-	// 	out struct{
-	// 	}
-	// 	statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
-	// )
+	var (
+		err             error
+		out             int
+		statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
+	)
 
-	// _, err := adapter.Query(statement, args, loggers...)
-	// return err
-	return 0, nil
+	start := time.Now()
+	if adapter.Tx != nil {
+		err = adapter.Tx.QueryRow(statement, args...).Scan(&out)
+	} else {
+		err = adapter.DB.QueryRow(statement, args...).Scan(&out)
+	}
+
+	go grimoire.Log(loggers, statement, time.Since(start), err)
+
+	return out, err
 }
 
 // Query performs query operation.

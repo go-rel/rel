@@ -21,7 +21,6 @@ func indirect(rv reflect.Value) interface{} {
 	return rv.Interface()
 }
 
-// must is grimoire version of paranoid.Panic without context, but only original error.
 func must(err error) {
 	if err != nil {
 		panic(err)

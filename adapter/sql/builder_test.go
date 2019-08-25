@@ -10,7 +10,13 @@ import (
 )
 
 func TestBuilder_Find(t *testing.T) {
-	users := grimoire.From("users")
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		query = grimoire.From("users")
+	)
 
 	tests := []struct {
 		QueryString string
@@ -20,66 +26,67 @@ func TestBuilder_Find(t *testing.T) {
 		{
 			"SELECT * FROM `users`;",
 			nil,
-			users,
+			query,
 		},
 		{
 			"SELECT `users`.* FROM `users`;",
 			nil,
-			users.Select("users.*"),
+			query.Select("users.*"),
 		},
 		{
 			"SELECT `id`,`name` FROM `users`;",
 			nil,
-			users.Select("id", "name"),
+			query.Select("id", "name"),
 		},
 		{
 			"SELECT `id`,FIELD(`gender`, \"male\") AS `order` FROM `users` ORDER BY `order` ASC;",
 			nil,
-			users.Select("id", "^FIELD(`gender`, \"male\") AS `order`").SortAsc("order"),
+			query.Select("id", "^FIELD(`gender`, \"male\") AS `order`").SortAsc("order"),
 		},
 		{
 			"SELECT * FROM `users` JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
-			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
+			query.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM `users` WHERE `id`=?;",
 			[]interface{}{10},
-			users.Where(where.Eq("id", 10)),
+			query.Where(where.Eq("id", 10)),
 		},
 		{
 			"SELECT DISTINCT * FROM `users` GROUP BY `type` HAVING `price`>?;",
 			[]interface{}{1000},
-			users.Distinct().Group("type").Having(where.Gt("price", 1000)),
+			query.Distinct().Group("type").Having(where.Gt("price", 1000)),
 		},
 		{
 			"SELECT * FROM `users` INNER JOIN `transactions` ON `transactions`.`id`=`users`.`transaction_id`;",
 			nil,
-			users.JoinWith("INNER JOIN", "transactions", "transactions.id", "users.transaction_id"),
+			query.JoinWith("INNER JOIN", "transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM `users` ORDER BY `created_at` ASC;",
 			nil,
-			users.SortAsc("created_at"),
+			query.SortAsc("created_at"),
 		},
 		{
 			"SELECT * FROM `users` ORDER BY `created_at` ASC, `id` DESC;",
 			nil,
-			users.SortAsc("created_at").SortDesc("id"),
+			query.SortAsc("created_at").SortDesc("id"),
 		},
 		{
 			"SELECT * FROM `users` LIMIT 10 OFFSET 10;",
 			nil,
-			users.Offset(10).Limit(10),
+			query.Offset(10).Limit(10),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder: "?",
-				EscapeChar:  "`",
-			}).Find(test.Query)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.Find(test.Query)
+			)
+
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
 		})
@@ -87,7 +94,15 @@ func TestBuilder_Find(t *testing.T) {
 }
 
 func TestBuilder_Find_ordinal(t *testing.T) {
-	users := grimoire.From("users")
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+		query = grimoire.From("users")
+	)
 
 	tests := []struct {
 		QueryString string
@@ -97,63 +112,61 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 		{
 			"SELECT * FROM \"users\";",
 			nil,
-			users,
+			query,
 		},
 		{
 			"SELECT \"users\".* FROM \"users\";",
 			nil,
-			users.Select("users.*"),
+			query.Select("users.*"),
 		},
 		{
 			"SELECT \"id\",\"name\" FROM \"users\";",
 			nil,
-			users.Select("id", "name"),
+			query.Select("id", "name"),
 		},
 		{
 			"SELECT * FROM \"users\" JOIN \"transactions\" ON \"transactions\".\"id\"=\"users\".\"transaction_id\";",
 			nil,
-			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
+			query.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM \"users\" WHERE \"id\"=$1;",
 			[]interface{}{10},
-			users.Where(where.Eq("id", 10)),
+			query.Where(where.Eq("id", 10)),
 		},
 		{
 			"SELECT DISTINCT * FROM \"users\" GROUP BY \"type\" HAVING \"price\">$1;",
 			[]interface{}{1000},
-			users.Distinct().Group("type").Having(where.Gt("price", 1000)),
+			query.Distinct().Group("type").Having(where.Gt("price", 1000)),
 		},
 		{
 			"SELECT * FROM \"users\" JOIN \"transactions\" ON \"transactions\".\"id\"=\"users\".\"transaction_id\";",
 			nil,
-			users.JoinOn("transactions", "transactions.id", "users.transaction_id"),
+			query.JoinOn("transactions", "transactions.id", "users.transaction_id"),
 		},
 		{
 			"SELECT * FROM \"users\" ORDER BY \"created_at\" ASC;",
 			nil,
-			users.SortAsc("created_at"),
+			query.SortAsc("created_at"),
 		},
 		{
 			"SELECT * FROM \"users\" ORDER BY \"created_at\" ASC, \"id\" DESC;",
 			nil,
-			users.SortAsc("created_at").SortDesc("id"),
+			query.SortAsc("created_at").SortDesc("id"),
 		},
 		{
 			"SELECT * FROM \"users\" LIMIT 10 OFFSET 10;",
 			nil,
-			users.Offset(10).Limit(10),
+			query.Offset(10).Limit(10),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder:         "$",
-				EscapeChar:          "\"",
-				Ordinal:             true,
-				InsertDefaultValues: true,
-			}).Find(test.Query)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.Find(test.Query)
+			)
 
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
@@ -190,55 +203,74 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 
 func TestBuilder_Insert(t *testing.T) {
 	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
 		changes = grimoire.BuildChanges(
 			grimoire.Set("name", "foo"),
 			grimoire.Set("age", 10),
 			grimoire.Set("agree", true),
 		)
-		args = []interface{}{"foo", 10, true}
+		qs, args = builder.Insert("users", changes)
 	)
-
-	qs, qargs := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Insert("users", changes)
 
 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`,`agree`) VALUES (?,?,?);", qs)
-	assert.Equal(t, args, qargs)
-
-	qs, qargs = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Returning("id").Insert("users", changes)
-
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\",\"agree\") VALUES ($1,$2,$3) RETURNING \"id\";", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{"foo", 10, true}, args)
 }
 
-func TestBuilder_Insert_defaultValues(t *testing.T) {
+func TestBuilder_Insert_ordinal(t *testing.T) {
 	var (
-		changes = grimoire.Changes{}
-		args    = []interface{}{}
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+		builder = NewBuilder(config)
+		changes = grimoire.BuildChanges(
+			grimoire.Set("name", "foo"),
+			grimoire.Set("age", 10),
+			grimoire.Set("agree", true),
+		)
+		qs, args = builder.Returning("id").Insert("users", changes)
 	)
 
-	qs, qargs := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Insert("users", changes)
+	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\",\"agree\") VALUES ($1,$2,$3) RETURNING \"id\";", qs)
+	assert.Equal(t, []interface{}{"foo", 10, true}, args)
+}
+
+func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "?",
+			EscapeChar:          "`",
+			InsertDefaultValues: false,
+		}
+		builder  = NewBuilder(config)
+		changes  = grimoire.Changes{}
+		qs, args = builder.Insert("users", changes)
+	)
 
 	assert.Equal(t, "INSERT INTO `users` () VALUES ();", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{}, args)
+}
 
-	qs, qargs = NewBuilder(&Config{
-		Placeholder:         "?",
-		InsertDefaultValues: true,
-		EscapeChar:          "`",
-	}).Returning("id").Insert("users", changes)
+func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "?",
+			InsertDefaultValues: true,
+			EscapeChar:          "`",
+		}
+		builder  = NewBuilder(config)
+		changes  = grimoire.Changes{}
+		qs, args = builder.Returning("id").Insert("users", changes)
+	)
 
 	assert.Equal(t, "INSERT INTO `users` DEFAULT VALUES RETURNING `id`;", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{}, args)
 }
 
 // func TestBuilder_InsertAll(t *testing.T) {
@@ -312,129 +344,130 @@ func TestBuilder_Insert_defaultValues(t *testing.T) {
 
 func TestBuilder_Update(t *testing.T) {
 	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
 		changes = grimoire.BuildChanges(
 			grimoire.Set("name", "foo"),
 			grimoire.Set("age", 10),
 			grimoire.Set("agree", true),
 		)
-		args = []interface{}{"foo", 10, true}
-		cond = where.And()
 	)
 
-	qs, qargs := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Update("users", changes, cond)
-
+	qs, qargs := builder.Update("users", changes, where.And())
 	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=?;", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{"foo", 10, true}, qargs)
 
-	qs, qargs = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Update("users", changes, cond)
-
-	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3;", qs)
-	assert.Equal(t, args, qargs)
-
-	args = []interface{}{"foo", 10, true, 1}
-	cond = where.Eq("id", 1)
-
-	qs, qargs = NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Update("users", changes, cond)
-
+	qs, qargs = builder.Update("users", changes, where.Eq("id", 1))
 	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=? WHERE `id`=?;", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{"foo", 10, true, 1}, qargs)
+}
 
-	qs, qargs = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Update("users", changes, cond)
+func TestBuilder_Update_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+		builder = NewBuilder(config)
+		changes = grimoire.BuildChanges(
+			grimoire.Set("name", "foo"),
+			grimoire.Set("age", 10),
+			grimoire.Set("agree", true),
+		)
+	)
+
+	qs, args := builder.Update("users", changes, where.And())
+	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3;", qs)
+	assert.Equal(t, []interface{}{"foo", 10, true}, args)
+
+	builder.count = 0
+	qs, args = builder.Update("users", changes, where.Eq("id", 1))
 	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3 WHERE \"id\"=$4;", qs)
-	assert.Equal(t, args, qargs)
+	assert.Equal(t, []interface{}{"foo", 10, true, 1}, args)
 }
 
 func TestBuilder_Delete(t *testing.T) {
-	qs, args := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Delete("users", where.And())
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	qs, args := builder.Delete("users", where.And())
 	assert.Equal(t, "DELETE FROM `users`;", qs)
 	assert.Equal(t, []interface{}(nil), args)
 
-	qs, args = NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Delete("users", where.Eq("id", 1))
+	qs, args = builder.Delete("users", where.Eq("id", 1))
 	assert.Equal(t, "DELETE FROM `users` WHERE `id`=?;", qs)
 	assert.Equal(t, []interface{}{1}, args)
+}
 
-	qs, args = NewBuilder(&Config{
-		Placeholder:         "$",
-		EscapeChar:          "\"",
-		Ordinal:             true,
-		InsertDefaultValues: true,
-	}).Delete("users", where.Eq("id", 1))
+func TestBuilder_Delete_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+		builder = NewBuilder(config)
+	)
+
+	qs, args := builder.Delete("users", where.And())
+	assert.Equal(t, "DELETE FROM \"users\";", qs)
+	assert.Equal(t, []interface{}(nil), args)
+
+	qs, args = builder.Delete("users", where.Eq("id", 1))
 	assert.Equal(t, "DELETE FROM \"users\" WHERE \"id\"=$1;", qs)
 	assert.Equal(t, []interface{}{1}, args)
 }
 
 func TestBuilder_Select(t *testing.T) {
-	assert.Equal(t, "SELECT *", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, nil))
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
 
-	assert.Equal(t, "SELECT *", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, []string{"*"}))
-
-	assert.Equal(t, "SELECT `id`,`name`", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, []string{"id", "name"}))
-
-	assert.Equal(t, "SELECT DISTINCT *", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(true, []string{"*"}))
-
-	assert.Equal(t, "SELECT DISTINCT `id`,`name`", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(true, []string{"id", "name"}))
-
-	assert.Equal(t, "SELECT COUNT(*) AS count", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, []string{"COUNT(*) AS count"}))
-
-	assert.Equal(t, "SELECT COUNT(`transactions`.*) AS count", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, []string{"COUNT(transactions.*) AS count"}))
-
-	assert.Equal(t, "SELECT SUM(`transactions`.`total`) AS total", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).fields(false, []string{"SUM(transactions.total) AS total"}))
+	assert.Equal(t, "SELECT *", builder.fields(false, nil))
+	assert.Equal(t, "SELECT *", builder.fields(false, []string{"*"}))
+	assert.Equal(t, "SELECT `id`,`name`", builder.fields(false, []string{"id", "name"}))
+	assert.Equal(t, "SELECT DISTINCT *", builder.fields(true, []string{"*"}))
+	assert.Equal(t, "SELECT DISTINCT `id`,`name`", builder.fields(true, []string{"id", "name"}))
+	assert.Equal(t, "SELECT COUNT(*) AS count", builder.fields(false, []string{"COUNT(*) AS count"}))
+	assert.Equal(t, "SELECT COUNT(`transactions`.*) AS count", builder.fields(false, []string{"COUNT(transactions.*) AS count"}))
+	assert.Equal(t, "SELECT SUM(`transactions`.`total`) AS total", builder.fields(false, []string{"SUM(transactions.total) AS total"}))
 }
 
 func TestBuilder_From(t *testing.T) {
-	assert.Equal(t, "FROM `users`", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).from("users"))
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	assert.Equal(t, "FROM `users`", builder.from("users"))
 }
 
 func TestBuilder_Join(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Query       grimoire.Query
@@ -460,10 +493,11 @@ func TestBuilder_Join(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder: "?",
-				EscapeChar:  "`",
-			}).join(grimoire.BuildQuery("", test.Query).JoinQuery...)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.join(grimoire.BuildQuery("", test.Query).JoinQuery...)
+			)
+
 			assert.Equal(t, test.QueryString, qs)
 			assert.Nil(t, args)
 		})
@@ -471,6 +505,13 @@ func TestBuilder_Join(t *testing.T) {
 }
 
 func TestBuilder_Where(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -495,10 +536,11 @@ func TestBuilder_Where(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder: "?",
-				EscapeChar:  "`",
-			}).where(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.where(test.Filter)
+			)
+
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
 		})
@@ -506,6 +548,15 @@ func TestBuilder_Where(t *testing.T) {
 }
 
 func TestBuilder_Where_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -530,12 +581,11 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder:         "$",
-				EscapeChar:          "\"",
-				Ordinal:             true,
-				InsertDefaultValues: true,
-			}).where(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.where(test.Filter)
+			)
+
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
 		})
@@ -543,23 +593,27 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 }
 
 func TestBuilder_GroupBy(t *testing.T) {
-	assert.Equal(t, "", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).groupBy(nil))
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
 
-	assert.Equal(t, "GROUP BY `city`", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).groupBy([]string{"city"}))
-
-	assert.Equal(t, "GROUP BY `city`,`nation`", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).groupBy([]string{"city", "nation"}))
+	assert.Equal(t, "", builder.groupBy(nil))
+	assert.Equal(t, "GROUP BY `city`", builder.groupBy([]string{"city"}))
+	assert.Equal(t, "GROUP BY `city`,`nation`", builder.groupBy([]string{"city", "nation"}))
 }
 
 func TestBuilder_Having(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -584,10 +638,11 @@ func TestBuilder_Having(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder: "?",
-				EscapeChar:  "`",
-			}).having(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.having(test.Filter)
+			)
+
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
 		})
@@ -595,6 +650,15 @@ func TestBuilder_Having(t *testing.T) {
 }
 
 func TestBuilder_Having_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -619,12 +683,10 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder:         "$",
-				EscapeChar:          "\"",
-				Ordinal:             true,
-				InsertDefaultValues: true,
-			}).having(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.having(test.Filter)
+			)
 
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
@@ -633,45 +695,42 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 }
 
 func TestBuilder_OrderBy(t *testing.T) {
-	assert.Equal(t, "", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).orderBy(nil))
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
 
-	assert.Equal(t, "ORDER BY `name` ASC", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).orderBy([]grimoire.SortQuery{sort.Asc("name")}))
-
-	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).orderBy([]grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")}))
+	assert.Equal(t, "", builder.orderBy(nil))
+	assert.Equal(t, "ORDER BY `name` ASC", builder.orderBy([]grimoire.SortQuery{sort.Asc("name")}))
+	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", builder.orderBy([]grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")}))
 }
 
 func TestBuilder_LimitOffset(t *testing.T) {
-	assert.Equal(t, "", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).limitOffset(0, 0))
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
 
-	assert.Equal(t, "", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).limitOffset(0, 10))
-
-	assert.Equal(t, "LIMIT 10", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).limitOffset(10, 0))
-
-	assert.Equal(t, "LIMIT 10 OFFSET 10", NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).limitOffset(10, 10))
+	assert.Equal(t, "", builder.limitOffset(0, 0))
+	assert.Equal(t, "", builder.limitOffset(0, 10))
+	assert.Equal(t, "LIMIT 10", builder.limitOffset(10, 0))
+	assert.Equal(t, "LIMIT 10 OFFSET 10", builder.limitOffset(10, 10))
 }
 
 func TestBuilder_Filter(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -836,10 +895,10 @@ func TestBuilder_Filter(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder: "?",
-				EscapeChar:  "`",
-			}).filter(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.filter(test.Filter)
+			)
 
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
@@ -848,6 +907,15 @@ func TestBuilder_Filter(t *testing.T) {
 }
 
 func TestBuilder_Filter_ordinal(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+	)
+
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
@@ -1012,12 +1080,10 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
-			qs, args := NewBuilder(&Config{
-				Placeholder:         "$",
-				EscapeChar:          "\"",
-				Ordinal:             true,
-				InsertDefaultValues: true,
-			}).filter(test.Filter)
+			var (
+				builder  = NewBuilder(config)
+				qs, args = builder.filter(test.Filter)
+			)
 
 			assert.Equal(t, test.QueryString, qs)
 			assert.Equal(t, test.Args, args)
@@ -1026,12 +1092,15 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 }
 
 func TestBuilder_Lock(t *testing.T) {
-	users := grimoire.From("users").Lock(grimoire.ForUpdate())
-
-	qs, args := NewBuilder(&Config{
-		Placeholder: "?",
-		EscapeChar:  "`",
-	}).Find(users)
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder  = NewBuilder(config)
+		query    = grimoire.From("users").Lock(grimoire.ForUpdate())
+		qs, args = builder.Find(query)
+	)
 
 	assert.Equal(t, "SELECT * FROM `users` FOR UPDATE;", qs)
 	assert.Nil(t, args)

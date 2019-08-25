@@ -178,8 +178,8 @@ func (c *collection) Add() Document {
 	return newDocument(c.rv.Index(index).Addr().Interface())
 }
 
-func newCollection(entities interface{}) Collection {
-	switch v := entities.(type) {
+func newCollection(records interface{}) Collection {
+	switch v := records.(type) {
 	case Collection:
 		return v
 	case reflect.Value:

@@ -18,7 +18,7 @@ func TestAssociation(t *testing.T) {
 	)
 
 	tests := []struct {
-		entity         string
+		record         string
 		field          string
 		data           interface{}
 		typ            AssociationType
@@ -30,7 +30,7 @@ func TestAssociation(t *testing.T) {
 		foreignValue   interface{}
 	}{
 		{
-			entity:         "Transaction",
+			record:         "Transaction",
 			field:          "Buyer",
 			data:           transaction,
 			typ:            BelongsTo,
@@ -42,7 +42,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   transaction.Buyer.ID,
 		},
 		{
-			entity:         "Transaction",
+			record:         "Transaction",
 			field:          "Buyer",
 			data:           transactionLoaded,
 			typ:            BelongsTo,
@@ -54,7 +54,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   transactionLoaded.Buyer.ID,
 		},
 		{
-			entity:         "User",
+			record:         "User",
 			field:          "Transactions",
 			data:           user,
 			typ:            HasMany,
@@ -66,7 +66,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   nil,
 		},
 		{
-			entity:         "User",
+			record:         "User",
 			field:          "Transactions",
 			data:           userLoaded,
 			typ:            HasMany,
@@ -78,7 +78,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   nil,
 		},
 		{
-			entity:         "User",
+			record:         "User",
 			field:          "Address",
 			data:           user,
 			typ:            HasOne,
@@ -90,7 +90,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   nil,
 		},
 		{
-			entity:         "User",
+			record:         "User",
 			field:          "Address",
 			data:           userLoaded,
 			typ:            HasOne,
@@ -102,7 +102,7 @@ func TestAssociation(t *testing.T) {
 			foreignValue:   nil,
 		},
 		// {
-		// 	entity:         "Address",
+		// 	record:         "Address",
 		// 	field:          "User",
 		// 	data:           address,
 		// 	typ:            BelongsTo,
@@ -114,7 +114,7 @@ func TestAssociation(t *testing.T) {
 		// 	foreignValue:   0,
 		// },
 		{
-			entity:         "Address",
+			record:         "Address",
 			field:          "User",
 			data:           addressLoaded,
 			typ:            BelongsTo,
@@ -128,7 +128,7 @@ func TestAssociation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.entity+"."+test.field, func(t *testing.T) {
+		t.Run(test.record+"."+test.field, func(t *testing.T) {
 			var (
 				rv             = reflect.ValueOf(test.data)
 				sf, _          = rv.Type().Elem().FieldByName(test.field)

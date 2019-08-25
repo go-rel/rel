@@ -59,9 +59,9 @@ func (r Repo) MustCount(collection string, queriers ...Querier) int {
 
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
-func (r Repo) One(entity interface{}, queriers ...Querier) error {
+func (r Repo) One(record interface{}, queriers ...Querier) error {
 	var (
-		doc   = newDocument(entity)
+		doc   = newDocument(record)
 		query = BuildQuery(doc.Table(), queriers...).Limit(1)
 	)
 
@@ -75,14 +75,14 @@ func (r Repo) One(entity interface{}, queriers ...Querier) error {
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
-func (r Repo) MustOne(entity interface{}, queriers ...Querier) {
-	must(r.One(entity, queriers...))
+func (r Repo) MustOne(record interface{}, queriers ...Querier) {
+	must(r.One(record, queriers...))
 }
 
 // All retrieves all results that match the query.
-func (r Repo) All(entities interface{}, queriers ...Querier) error {
+func (r Repo) All(records interface{}, queriers ...Querier) error {
 	var (
-		col   = newCollection(entities)
+		col   = newCollection(records)
 		query = BuildQuery(col.Table(), queriers...)
 	)
 
@@ -96,11 +96,11 @@ func (r Repo) All(entities interface{}, queriers ...Querier) error {
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustAll(entities interface{}, queriers ...Querier) {
-	must(r.All(entities, queriers...))
+func (r Repo) MustAll(records interface{}, queriers ...Querier) {
+	must(r.All(records, queriers...))
 }
 
-// Insert a record to database.
+// Insert an record to database.
 // TODO: insert all (multiple changes as multiple records)
 func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
@@ -150,7 +150,7 @@ func (r Repo) insert(record interface{}, changes Changes) error {
 	return nil
 }
 
-// MustInsert a record to database.
+// MustInsert an record to database.
 // It'll panic if any error occurred.
 func (r Repo) MustInsert(record interface{}, changers ...Changer) {
 	must(r.Insert(record, changers...))
@@ -160,18 +160,18 @@ func (r Repo) InsertAll(record interface{}, changes []Changes) error {
 	return transformError(r.insertAll(record, changes))
 }
 
-func (r Repo) MustInsertAll(record interface{}, changes []Changes) {
-	must(r.InsertAll(record, changes))
+func (r Repo) MustInsertAll(records interface{}, changes []Changes) {
+	must(r.InsertAll(records, changes))
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(record interface{}, changes []Changes) error {
+func (r Repo) insertAll(records interface{}, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
 
 	var (
-		col      = newCollection(record)
+		col      = newCollection(records)
 		pField   = col.PrimaryField()
 		queriers = BuildQuery(col.Table())
 		fields   = make([]string, 0, len(changes[0].Fields))
@@ -200,7 +200,7 @@ func (r Repo) insertAll(record interface{}, changes []Changes) error {
 	return scanMany(cur, col)
 }
 
-// Update a record in database.
+// Update an record in database.
 // It'll panic if any error occurred.
 func (r Repo) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
@@ -246,7 +246,7 @@ func (r Repo) update(record interface{}, changes Changes, filter FilterQuery) er
 	return r.One(record, queriers)
 }
 
-// MustUpdate a record in database.
+// MustUpdate an record in database.
 // It'll panic if any error occurred.
 func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 	must(r.Update(record, changers...))
@@ -389,9 +389,9 @@ func (r Repo) upsertHasMany(doc Document, changes *Changes, id interface{}, inse
 }
 
 // Delete single entry.
-func (r Repo) Delete(entity interface{}) error {
+func (r Repo) Delete(record interface{}) error {
 	var (
-		doc    = newDocument(entity)
+		doc    = newDocument(record)
 		table  = doc.Table()
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -424,11 +424,11 @@ func (r Repo) deleteAll(q Query) error {
 }
 
 // Preload loads association with given query.
-func (r Repo) Preload(entities interface{}, field string, queriers ...Querier) error {
+func (r Repo) Preload(records interface{}, field string, queriers ...Querier) error {
 	var (
 		col  Collection
 		path = strings.Split(field, ".")
-		rt   = reflect.TypeOf(entities)
+		rt   = reflect.TypeOf(records)
 	)
 
 	if rt.Kind() != reflect.Ptr {
@@ -437,9 +437,9 @@ func (r Repo) Preload(entities interface{}, field string, queriers ...Querier) e
 
 	rt = rt.Elem()
 	if rt.Kind() == reflect.Slice {
-		col = newCollection(entities)
+		col = newCollection(records)
 	} else {
-		col = newDocument(entities)
+		col = newDocument(records)
 	}
 
 	var (

@@ -396,8 +396,8 @@ func (d *document) Len() int {
 	return 1
 }
 
-func newDocument(entity interface{}) Document {
-	switch v := entity.(type) {
+func newDocument(record interface{}) Document {
+	switch v := record.(type) {
 	case Document:
 		return v
 	case reflect.Value:

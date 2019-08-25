@@ -32,9 +32,9 @@ func (it *Items) PrimaryValue() interface{} {
 
 func TestCollection_Table(t *testing.T) {
 	var (
-		entities = []User{}
-		rt       = reflect.TypeOf(entities).Elem()
-		col      = newCollection(&entities)
+		records = []User{}
+		rt      = reflect.TypeOf(records).Elem()
+		col     = newCollection(&records)
 	)
 
 	// infer table name
@@ -49,9 +49,9 @@ func TestCollection_Table(t *testing.T) {
 
 func TestCollection_Table_usingInterface(t *testing.T) {
 	var (
-		entities = Items{}
-		rt       = reflect.TypeOf(entities).Elem()
-		col      = newCollection(&entities)
+		records = Items{}
+		rt      = reflect.TypeOf(records).Elem()
+		col     = newCollection(&records)
 	)
 
 	// infer table name
@@ -64,9 +64,9 @@ func TestCollection_Table_usingInterface(t *testing.T) {
 
 func TestCollection_Table_usingElemInterface(t *testing.T) {
 	var (
-		entities = []Item{}
-		rt       = reflect.TypeOf(entities).Elem()
-		col      = newCollection(&entities)
+		records = []Item{}
+		rt      = reflect.TypeOf(records).Elem()
+		col     = newCollection(&records)
 	)
 
 	// infer table name
@@ -81,12 +81,12 @@ func TestCollection_Table_usingElemInterface(t *testing.T) {
 
 func TestCollection_Primary(t *testing.T) {
 	var (
-		entities = []User{
+		records = []User{
 			{ID: 1},
 			{ID: 2},
 		}
-		rt  = reflect.TypeOf(entities).Elem()
-		col = newCollection(&entities)
+		rt  = reflect.TypeOf(records).Elem()
+		col = newCollection(&records)
 	)
 
 	// infer primary key
@@ -97,7 +97,7 @@ func TestCollection_Primary(t *testing.T) {
 	_, cached := primariesCache.Load(rt)
 	assert.True(t, cached)
 
-	entities[1].ID = 4
+	records[1].ID = 4
 
 	// infer primary key using cache
 	assert.Equal(t, "id", col.PrimaryField())
@@ -108,12 +108,12 @@ func TestCollection_Primary(t *testing.T) {
 
 func TestCollection_Primary_usingInterface(t *testing.T) {
 	var (
-		entities = Items{
+		records = Items{
 			{UUID: "abc123"},
 			{UUID: "def456"},
 		}
-		rt  = reflect.TypeOf(entities).Elem()
-		col = newCollection(&entities)
+		rt  = reflect.TypeOf(records).Elem()
+		col = newCollection(&records)
 	)
 
 	// should not be cached yet
@@ -131,12 +131,12 @@ func TestCollection_Primary_usingInterface(t *testing.T) {
 
 func TestCollection_Primary_usingElemInterface(t *testing.T) {
 	var (
-		entities = []Item{
+		records = []Item{
 			{UUID: "abc123"},
 			{UUID: "def456"},
 		}
-		rt  = reflect.TypeOf(entities).Elem()
-		col = newCollection(&entities)
+		rt  = reflect.TypeOf(records).Elem()
+		col = newCollection(&records)
 	)
 
 	// should not be cached yet
@@ -156,7 +156,7 @@ func TestCollection_Primary_usingElemInterface(t *testing.T) {
 
 func TestCollection_Primary_usingTag(t *testing.T) {
 	var (
-		entities = []struct {
+		records = []struct {
 			ID         uint
 			ExternalID int `db:",primary"`
 			Name       string
@@ -164,7 +164,7 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 			{ExternalID: 1},
 			{ExternalID: 2},
 		}
-		doc = newCollection(&entities)
+		doc = newCollection(&records)
 	)
 
 	// infer primary key
@@ -195,45 +195,45 @@ func TestCollection_Slice(t *testing.T) {
 
 func TestCollection(t *testing.T) {
 	tests := []struct {
-		entity interface{}
+		record interface{}
 		panics bool
 	}{
 		{
-			entity: &[]User{},
+			record: &[]User{},
 		},
 		{
-			entity: newCollection(&[]User{}),
+			record: newCollection(&[]User{}),
 		},
 		{
-			entity: reflect.ValueOf(&[]User{}),
+			record: reflect.ValueOf(&[]User{}),
 		},
 		{
-			entity: reflect.ValueOf([]User{}),
+			record: reflect.ValueOf([]User{}),
 			panics: true,
 		},
 		{
-			entity: reflect.ValueOf(&User{}),
+			record: reflect.ValueOf(&User{}),
 			panics: true,
 		},
 		{
-			entity: reflect.TypeOf(&[]User{}),
+			record: reflect.TypeOf(&[]User{}),
 			panics: true,
 		},
 		{
-			entity: nil,
+			record: nil,
 			panics: true,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%T", test.entity), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%T", test.record), func(t *testing.T) {
 			if test.panics {
 				assert.Panics(t, func() {
-					newCollection(test.entity)
+					newCollection(test.record)
 				})
 			} else {
 				assert.NotPanics(t, func() {
-					newCollection(test.entity)
+					newCollection(test.record)
 				})
 			}
 		})

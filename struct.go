@@ -81,8 +81,8 @@ func (cs structChanger) buildAssocMany(field string, changes *Changes) {
 	}
 }
 
-func Struct(entity interface{}) Changer {
+func Struct(record interface{}) Changer {
 	return structChanger{
-		doc: newDocument(entity),
+		doc: newDocument(record),
 	}
 }

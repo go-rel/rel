@@ -80,9 +80,9 @@ func (i Item) Association(field string) Association {
 
 func TestDocument_Table(t *testing.T) {
 	var (
-		entity = User{}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		record = User{}
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 	)
 
 	// infer table name
@@ -95,9 +95,9 @@ func TestDocument_Table(t *testing.T) {
 
 func TestDocument_Table_usingInterface(t *testing.T) {
 	var (
-		entity = Item{}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		record = Item{}
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 	)
 
 	// infer table name
@@ -110,9 +110,9 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 
 func TestDocument_Primary(t *testing.T) {
 	var (
-		entity = User{ID: 1}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		record = User{ID: 1}
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 	)
 
 	// infer primary key
@@ -123,7 +123,7 @@ func TestDocument_Primary(t *testing.T) {
 	_, cached := primariesCache.Load(rt)
 	assert.True(t, cached)
 
-	entity.ID = 2
+	record.ID = 2
 
 	// infer primary key using cache
 	assert.Equal(t, "id", doc.PrimaryField())
@@ -134,11 +134,11 @@ func TestDocument_Primary(t *testing.T) {
 
 func TestDocument_Primary_usingInterface(t *testing.T) {
 	var (
-		entity = Item{
+		record = Item{
 			UUID: "abc123",
 		}
-		rt  = reflect.TypeOf(entity)
-		doc = newDocument(&entity)
+		rt  = reflect.TypeOf(record)
+		doc = newDocument(&record)
 	)
 
 	// should not be cached yet
@@ -156,14 +156,14 @@ func TestDocument_Primary_usingInterface(t *testing.T) {
 
 func TestDocument_Primary_usingTag(t *testing.T) {
 	var (
-		entity = struct {
+		record = struct {
 			ID         uint
 			ExternalID int `db:",primary"`
 			Name       string
 		}{
 			ExternalID: 12345,
 		}
-		doc = newDocument(&entity)
+		doc = newDocument(&record)
 	)
 
 	// infer primary key
@@ -173,14 +173,14 @@ func TestDocument_Primary_usingTag(t *testing.T) {
 
 func TestDocument_Primary_usingTagAmdCustomName(t *testing.T) {
 	var (
-		entity = struct {
+		record = struct {
 			ID         uint
 			ExternalID int `db:"partner_id,primary"`
 			Name       string
 		}{
 			ExternalID: 1111,
 		}
-		doc = newDocument(&entity)
+		doc = newDocument(&record)
 	)
 
 	// infer primary key
@@ -190,11 +190,11 @@ func TestDocument_Primary_usingTagAmdCustomName(t *testing.T) {
 
 func TestDocument_Primary_notFound(t *testing.T) {
 	var (
-		entity = struct {
+		record = struct {
 			ExternalID int
 			Name       string
 		}{}
-		doc = newDocument(&entity)
+		doc = newDocument(&record)
 	)
 
 	assert.Panics(t, func() {
@@ -208,15 +208,15 @@ func TestDocument_Primary_notFound(t *testing.T) {
 
 func TestDocument_Fields(t *testing.T) {
 	var (
-		entity = struct {
+		record = struct {
 			A string
 			B *int
 			C []byte     `db:",primary"`
 			D bool       `db:"D"`
 			E []*float64 `db:"-"`
 		}{}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 		fields = map[string]int{
 			"a": 0,
 			"b": 1,
@@ -237,12 +237,12 @@ func TestDocument_Fields(t *testing.T) {
 
 func TestDocument_Fields_usingInterface(t *testing.T) {
 	var (
-		entity = Item{}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		record = Item{}
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 	)
 
-	assert.Equal(t, entity.Fields(), doc.Fields())
+	assert.Equal(t, record.Fields(), doc.Fields())
 
 	_, cached := fieldsCache.Load(rt)
 	assert.False(t, cached)
@@ -250,7 +250,7 @@ func TestDocument_Fields_usingInterface(t *testing.T) {
 
 func TestDocument_Types(t *testing.T) {
 	var (
-		entity = struct {
+		record = struct {
 			A string
 			B *int
 			C []byte
@@ -259,8 +259,8 @@ func TestDocument_Types(t *testing.T) {
 			F userDefined
 			G time.Time
 		}{}
-		rt    = reflect.TypeOf(entity)
-		doc   = newDocument(&entity)
+		rt    = reflect.TypeOf(record)
+		doc   = newDocument(&record)
 		types = []reflect.Type{
 			String,
 			Int,
@@ -283,15 +283,15 @@ func TestDocument_Types(t *testing.T) {
 
 func TestDocument_Types_usingInterface(t *testing.T) {
 	var (
-		entity = Item{}
-		rt     = reflect.TypeOf(entity)
-		doc    = newDocument(&entity)
+		record = Item{}
+		rt     = reflect.TypeOf(record)
+		doc    = newDocument(&record)
 	)
 
 	_, cached := typesCache.Load(rt)
 	assert.False(t, cached)
 
-	assert.Equal(t, entity.Types(), doc.Types())
+	assert.Equal(t, record.Types(), doc.Types())
 
 	_, cached = typesCache.Load(rt)
 	assert.False(t, cached)
@@ -300,7 +300,7 @@ func TestDocument_Types_usingInterface(t *testing.T) {
 func TestDocument_Scanners(t *testing.T) {
 	var (
 		address = "address"
-		entity  = struct {
+		record  = struct {
 			ID      int
 			Name    string
 			Skip    bool `db:"-"`
@@ -314,15 +314,15 @@ func TestDocument_Scanners(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc      = newDocument(&entity)
+		doc      = newDocument(&record)
 		fields   = []string{"name", "id", "skip", "data", "number", "address", "not_exist"}
 		scanners = []interface{}{
-			Nullable(&entity.Name),
-			Nullable(&entity.ID),
+			Nullable(&record.Name),
+			Nullable(&record.ID),
 			&sql.RawBytes{},
-			Nullable(&entity.Data),
-			Nullable(&entity.Number),
-			&entity.Address,
+			Nullable(&record.Data),
+			Nullable(&record.Number),
+			&record.Address,
 			&sql.RawBytes{},
 		}
 	)
@@ -332,13 +332,13 @@ func TestDocument_Scanners(t *testing.T) {
 
 func TestDocument_Scanners_usingInterface(t *testing.T) {
 	var (
-		entity = Item{
+		record = Item{
 			UUID:  "abc123",
 			Price: 100,
 		}
-		doc      = newDocument(&entity)
+		doc      = newDocument(&record)
 		fields   = []string{"_uuid", "_price"}
-		scanners = []interface{}{Nullable(&entity.UUID), Nullable(&entity.Price)}
+		scanners = []interface{}{Nullable(&record.UUID), Nullable(&record.Price)}
 	)
 
 	assert.Equal(t, scanners, doc.Scanners(fields))
@@ -346,8 +346,8 @@ func TestDocument_Scanners_usingInterface(t *testing.T) {
 
 func TestDocument_Scanners_sqlScanner(t *testing.T) {
 	var (
-		entity   = sql.NullBool{}
-		doc      = newDocument(&entity)
+		record   = sql.NullBool{}
+		doc      = newDocument(&record)
 		fields   = []string{}
 		scanners = []interface{}{&sql.NullBool{}}
 	)
@@ -358,7 +358,7 @@ func TestDocument_Scanners_sqlScanner(t *testing.T) {
 func TestDocument_Values(t *testing.T) {
 	var (
 		address = "address"
-		entity  = struct {
+		record  = struct {
 			ID      int
 			Name    string
 			Skip    bool `db:"-"`
@@ -372,7 +372,7 @@ func TestDocument_Values(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc    = newDocument(&entity)
+		doc    = newDocument(&record)
 		values = []interface{}{1, "name", 10.5, address, []byte("data")}
 	)
 
@@ -381,11 +381,11 @@ func TestDocument_Values(t *testing.T) {
 
 func TestDocument_Values_usingInterface(t *testing.T) {
 	var (
-		entity = Item{
+		record = Item{
 			UUID:  "abc123",
 			Price: 100,
 		}
-		doc    = newDocument(&entity)
+		doc    = newDocument(&record)
 		values = []interface{}{"abc123", 100}
 	)
 
@@ -466,45 +466,45 @@ func TestDocument_Association_interface(t *testing.T) {
 
 func TestDocument(t *testing.T) {
 	tests := []struct {
-		entity interface{}
+		record interface{}
 		panics bool
 	}{
 		{
-			entity: &User{},
+			record: &User{},
 		},
 		{
-			entity: newDocument(&User{}),
+			record: newDocument(&User{}),
 		},
 		{
-			entity: reflect.ValueOf(&User{}),
+			record: reflect.ValueOf(&User{}),
 		},
 		{
-			entity: reflect.ValueOf(User{}),
+			record: reflect.ValueOf(User{}),
 			panics: true,
 		},
 		{
-			entity: reflect.ValueOf(&[]User{}),
+			record: reflect.ValueOf(&[]User{}),
 			panics: true,
 		},
 		{
-			entity: reflect.TypeOf(&User{}),
+			record: reflect.TypeOf(&User{}),
 			panics: true,
 		},
 		{
-			entity: nil,
+			record: nil,
 			panics: true,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%T", test.entity), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%T", test.record), func(t *testing.T) {
 			if test.panics {
 				assert.Panics(t, func() {
-					newDocument(test.entity)
+					newDocument(test.record)
 				})
 			} else {
 				assert.NotPanics(t, func() {
-					newDocument(test.entity)
+					newDocument(test.record)
 				})
 			}
 		})

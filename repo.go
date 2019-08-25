@@ -105,8 +105,12 @@ func (r Repo) MustAll(entities interface{}, queriers ...Querier) {
 func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(changers) == 0 {
+	if record == nil {
 		return nil
+	}
+
+	if len(changers) == 0 {
+		changers = []Changer{Struct(record)}
 	}
 
 	// TODO: transform changeset error
@@ -201,8 +205,13 @@ func (r Repo) insertAll(record interface{}, changes []Changes) error {
 func (r Repo) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
-	if record == nil || len(changers) == 0 {
+	// TODO: make sure primary id not changed
+	if record == nil {
 		return nil
+	}
+
+	if len(changers) == 0 {
+		changers = []Changer{Struct(record)}
 	}
 
 	var (

@@ -3,7 +3,7 @@ package grimoire
 type Lock string
 
 func (l Lock) Build(query *Query) {
-	query.LockClause = l
+	query.LockQuery = l
 }
 
 func ForUpdate() Lock {

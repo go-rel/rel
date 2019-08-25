@@ -54,7 +54,7 @@ type FilterQuery struct {
 
 // Build Filter query.
 func (fq FilterQuery) Build(query *Query) {
-	query.WhereClause = query.WhereClause.And(fq)
+	query.WhereQuery = query.WhereQuery.And(fq)
 }
 
 // None returns true if no filter is specified.

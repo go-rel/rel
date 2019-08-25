@@ -28,7 +28,7 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: grimoire.Query{
-				WhereClause: where.Eq("id", 1),
+				WhereQuery: where.Eq("id", 1),
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: grimoire.Query{
-				WhereClause: where.Eq("id", 1).AndLt("age", 10),
+				WhereQuery: where.Eq("id", 1).AndLt("age", 10),
 			},
 		},
 		{
@@ -65,9 +65,9 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: grimoire.Query{
-				WhereClause:  where.Gt("age", 10),
-				LimitClause:  10,
-				OffsetClause: 10,
+				WhereQuery: where.Gt("age", 10),
+				LimitQuery:  10,
+				OffsetQuery: 10,
 				SortQuery: []grimoire.SortQuery{
 					grimoire.NewSortAsc("name"),
 					grimoire.NewSortDesc("age"),
@@ -107,8 +107,8 @@ func TestQuerier(t *testing.T) {
 					Fields: []string{"name"},
 					Filter: where.Gt("amount", 10),
 				},
-				OffsetClause: 10,
-				LimitClause:  5,
+				OffsetQuery: 10,
+				LimitQuery:  5,
 			},
 		},
 	}
@@ -214,14 +214,14 @@ func TestQuery_Where(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`where id=1 AND deleted_at IS NIL`,
 			grimoire.Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
@@ -229,7 +229,7 @@ func TestQuery_Where(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).Where(where.Ne("active", false)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 			},
 		},
 		{
@@ -237,7 +237,7 @@ func TestQuery_Where(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
@@ -245,7 +245,7 @@ func TestQuery_Where(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 	}
@@ -268,7 +268,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").OrWhere(where.Eq("id", 1), where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
@@ -276,14 +276,14 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
 			grimoire.Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
 			grimoire.Query{
-				WhereClause: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
@@ -291,7 +291,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
+				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
 			},
 		},
 		{
@@ -299,7 +299,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
+				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
 			},
 		},
 		{
@@ -307,7 +307,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
 		},
 		{
@@ -315,7 +315,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
 		},
 		{
@@ -323,7 +323,7 @@ func TestQuery_OrWhere(t *testing.T) {
 			grimoire.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
 			grimoire.Query{
 				Collection:  "users",
-				WhereClause: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
 		},
 	}
@@ -558,15 +558,15 @@ func TestQuery_Sort(t *testing.T) {
 
 func TestQuery_Offset(t *testing.T) {
 	assert.Equal(t, grimoire.Query{
-		Collection:   "users",
-		OffsetClause: 10,
+		Collection:  "users",
+		OffsetQuery: 10,
 	}, grimoire.From("users").Offset(10))
 }
 
 func TestQuery_Limit(t *testing.T) {
 	assert.Equal(t, grimoire.Query{
-		Collection:  "users",
-		LimitClause: 10,
+		Collection: "users",
+		LimitQuery: 10,
 	}, grimoire.From("users").Limit(10))
 }
 
@@ -590,13 +590,13 @@ func TestQuery_Limit(t *testing.T) {
 // 		repo:       &repo,
 // 		Collection: "users",
 // 		Fields:     []string{"users.*"},
-// 		LockClause: "FOR UPDATE",
+// 		LockQuery: "FOR UPDATE",
 // 	})
 
 // 	assert.Equal(t, repo.From("users").Lock("FOR SHARE"), Query{
 // 		repo:       &repo,
 // 		Collection: "users",
 // 		Fields:     []string{"users.*"},
-// 		LockClause: "FOR SHARE",
+// 		LockQuery: "FOR SHARE",
 // 	})
 // }

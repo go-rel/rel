@@ -18,7 +18,7 @@ func open(t *testing.T) *Adapter {
 			EscapeChar:          "`",
 			InsertDefaultValues: true,
 			ErrorFunc:           func(err error) error { return err },
-			IncrementFunc:       func(Adapter) int { return 1 },
+			IncrementFunc:       func(Adapter) int { return -1 },
 		}
 		adapter = New(config)
 	)
@@ -75,6 +75,25 @@ func TestAdapter_Insert(t *testing.T) {
 
 	assert.Nil(t, repo.Insert(&name))
 	assert.NotEqual(t, 0, name.ID)
+}
+
+func TestAdapter_InsertAll(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = grimoire.New(adapter)
+		names   = []Name{
+			{Name: "Luffy"},
+			{Name: "Zoro"},
+		}
+	)
+	defer adapter.Close()
+
+	assert.Nil(t, repo.InsertAll(&names))
+	assert.Len(t, names, 2)
+	assert.NotEqual(t, 0, names[0].ID)
+	assert.NotEqual(t, 0, names[1].ID)
+	assert.Equal(t, "Luffy", names[0].Name)
+	assert.Equal(t, "Zoro", names[1].Name)
 }
 
 func TestAdapter_Update(t *testing.T) {

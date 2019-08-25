@@ -175,28 +175,28 @@ func (builder *Builder) InsertAll(collection string, fields []string, allchanges
 	buffer.WriteString(builder.config.EscapeChar)
 	buffer.WriteString(") VALUES ")
 
-	// for i, changes := range allchanges {
-	// 	buffer.WriteString("(")
+	for i, changes := range allchanges {
+		buffer.WriteString("(")
 
-	// 	for j, field := range fields {
-	// 		if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
-	// 			buffer.WriteString(builder.ph())
-	// 			args = append(args, val)
-	// 		} else {
-	// 			buffer.WriteString("DEFAULT")
-	// 		}
+		for j, field := range fields {
+			if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
+				buffer.WriteString(builder.ph())
+				args = append(args, ch.Value)
+			} else {
+				buffer.WriteString("DEFAULT")
+			}
 
-	// 		if j < len(fields)-1 {
-	// 			buffer.WriteString(",")
-	// 		}
-	// 	}
+			if j < len(fields)-1 {
+				buffer.WriteString(",")
+			}
+		}
 
-	// 	if i < len(allchanges)-1 {
-	// 		buffer.WriteString("),")
-	// 	} else {
-	// 		buffer.WriteString(")")
-	// 	}
-	// }
+		if i < len(allchanges)-1 {
+			buffer.WriteString("),")
+		} else {
+			buffer.WriteString(")")
+		}
+	}
 
 	if builder.returnField != "" {
 		buffer.WriteString(" RETURNING ")

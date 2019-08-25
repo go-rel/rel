@@ -105,6 +105,8 @@ func (r Repo) all(col Collection, query Query) error {
 		return err
 	}
 
+	col.Reset()
+
 	return scanMany(cur, col)
 }
 

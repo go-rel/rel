@@ -65,10 +65,6 @@ func (adapter *Adapter) Query(query grimoire.Query, loggers ...grimoire.Logger) 
 
 	go grimoire.Log(loggers, statement, time.Since(start), err)
 
-	if err != nil {
-		return nil, adapter.Config.ErrorFunc(err)
-	}
-
 	return &Cursor{rows}, adapter.Config.ErrorFunc(err)
 }
 

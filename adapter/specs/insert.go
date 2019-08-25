@@ -3,110 +3,143 @@ package specs
 import (
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/changeset"
-	"github.com/Fs02/grimoire/params"
 	"github.com/stretchr/testify/assert"
 )
 
 // Insert tests insert specifications.
 func Insert(t *testing.T, repo grimoire.Repo) {
-	user := User{}
-	repo.From(users).MustSave(&user)
+	var (
+		user User
+		note = "note"
+	)
 
-	tests := []struct {
-		query  grimoire.Query
-		record interface{}
-		input  params.Params
-	}{
-		{repo.From(users), &User{}, params.Map{}},
-		{repo.From(users), &User{}, params.Map{"name": "insert", "age": 100}},
-		{repo.From(users), &User{}, params.Map{"name": "insert", "age": 100, "note": "note"}},
-		{repo.From(users), &User{}, params.Map{"note": "note"}},
-		{repo.From(addresses), &Address{}, params.Map{}},
-		{repo.From(addresses), &Address{}, params.Map{"address": "address"}},
-		{repo.From(addresses), &Address{}, params.Map{"user_id": user.ID}},
-		{repo.From(addresses), &Address{}, params.Map{"address": "address", "user_id": user.ID}},
+	repo.MustInsert(&user)
+
+	tests := []interface{}{
+		&User{},
+		&User{Name: "insert", Age: 100},
+		&User{Name: "insert", Age: 100, Note: &note},
+		&User{Note: &note},
+		&Address{},
+		&Address{Address: "address"},
+		&Address{UserID: &user.ID},
+		&Address{Address: "address", UserID: &user.ID},
 	}
 
-	for _, test := range tests {
-		ch := changeset.Cast(test.record, test.input, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := builder.Insert(test.query.Collection, ch.Changes())
+	for _, record := range tests {
+		var (
+			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			statement, _ = builder.Insert("collection", changes)
+		)
 
 		t.Run("Insert|"+statement, func(t *testing.T) {
-			assert.Nil(t, ch.Error())
+			assert.Nil(t, repo.Insert(record))
+		})
+	}
+}
 
-			assert.Nil(t, test.query.Insert(nil, ch))
-			assert.Nil(t, test.query.Insert(test.record, ch))
+// InsertExplicit tests insert specifications.
+func InsertExplicit(t *testing.T, repo grimoire.Repo) {
+	var (
+		user User
+	)
 
-			// multiple insert
-			assert.Nil(t, test.query.Insert(nil, ch, ch, ch))
+	repo.MustInsert(&user)
+
+	tests := []struct {
+		record  interface{}
+		changer grimoire.Changer
+	}{
+		{&User{}, grimoire.Map{}},
+		{&User{}, grimoire.Map{"name": "insert", "age": 100}},
+		{&User{}, grimoire.Map{"name": "insert", "age": 100, "note": "note"}},
+		{&User{}, grimoire.Map{"note": "note"}},
+		{&Address{}, grimoire.Map{}},
+		{&Address{}, grimoire.Map{"address": "address"}},
+		{&Address{}, grimoire.Map{"user_id": user.ID}},
+		{&Address{}, grimoire.Map{"address": "address", "user_id": user.ID}},
+	}
+
+	for _, record := range tests {
+		var (
+			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			statement, _ = builder.Insert("collection", changes)
+		)
+
+		t.Run("Insert|"+statement, func(t *testing.T) {
+			assert.Nil(t, repo.Insert(record))
 		})
 	}
 }
 
 // InsertAll tests insert multiple specifications.
 func InsertAll(t *testing.T, repo grimoire.Repo) {
-	user := User{}
-	repo.From(users).MustSave(&user)
+	var (
+		user User
+		note = "note"
+	)
 
-	tests := []struct {
-		query  grimoire.Query
-		schema interface{}
-		record interface{}
-		params params.Params
-	}{
-		{repo.From(users), User{}, &[]User{}, params.Map{}},
-		{repo.From(users), User{}, &[]User{}, params.Map{"name": "insert", "age": 100}},
-		{repo.From(users), User{}, &[]User{}, params.Map{"name": "insert", "age": 100, "note": "note"}},
-		{repo.From(users), User{}, &[]User{}, params.Map{"note": "note"}},
-		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{}},
-		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"address": "address"}},
-		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"user_id": user.ID}},
-		{repo.From(addresses), &Address{}, &[]Address{}, params.Map{"address": "address", "user_id": user.ID}},
+	repo.MustInsert(&user)
+
+	tests := []interface{}{
+		&[]User{{}},
+		&[]User{{Name: "insert", Age: 100}},
+		&[]User{{Name: "insert", Age: 100, Note: &note}},
+		&[]User{{Note: &note}},
+		&[]Address{{}},
+		&[]Address{{Address: "address"}},
+		&[]Address{{UserID: &user.ID}},
+		&[]Address{{Address: "address", UserID: &user.ID}},
 	}
 
-	for _, test := range tests {
-		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := builder.Insert(test.query.Collection, ch.Changes())
+	for _, record := range tests {
+		var (
+			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			statement, _ = builder.Insert("collection", changes)
+		)
 
 		t.Run("InsertAll|"+statement, func(t *testing.T) {
-			assert.Nil(t, ch.Error())
-
 			// multiple insert
-			assert.Nil(t, test.query.Insert(test.record, ch, ch, ch))
-			assert.Equal(t, 3, reflect.ValueOf(test.record).Elem().Len())
+			assert.Nil(t, repo.InsertAll(record))
+			assert.Equal(t, 1, reflect.ValueOf(record).Elem().Len())
 		})
 	}
 }
 
-// InsertSet tests insert specifications only using Set query.
-func InsertSet(t *testing.T, repo grimoire.Repo) {
-	user := User{}
-	repo.From(users).MustSave(&user)
-	now := time.Now()
+// InsertAllExplicit tests insert multiple specifications.
+func InsertAllExplicit(t *testing.T, repo grimoire.Repo) {
+	var (
+		user User
+	)
+
+	repo.MustInsert(&user)
 
 	tests := []struct {
-		query  grimoire.Query
-		record interface{}
+		record  interface{}
+		changer grimoire.Changer
 	}{
-		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set"), &User{}},
-		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set").Set("age", 100), &User{}},
-		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("name", "insert set").Set("age", 100).Set("note", "note"), &User{}},
-		{repo.From(users).Set("created_at", now).Set("updated_at", now).Set("note", "note"), &User{}},
-		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("address", "address"), &Address{}},
-		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("address", "address").Set("user_id", user.ID), &Address{}},
-		{repo.From(addresses).Set("created_at", now).Set("updated_at", now).Set("user_id", user.ID), &Address{}},
+		{&[]User{}, grimoire.Map{}},
+		{&[]User{}, grimoire.Map{"name": "insert", "age": 100}},
+		{&[]User{}, grimoire.Map{"name": "insert", "age": 100, "note": "note"}},
+		{&[]User{}, grimoire.Map{"note": "note"}},
+		{&[]Address{}, grimoire.Map{}},
+		{&[]Address{}, grimoire.Map{"address": "address"}},
+		{&[]Address{}, grimoire.Map{"user_id": user.ID}},
+		{&[]Address{}, grimoire.Map{"address": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {
-		statement, _ := builder.Insert(test.query.Collection, test.query.Changes)
+		var (
+			changes      = grimoire.BuildChanges(test.changer)
+			statement, _ = builder.Insert("collection", changes)
+		)
 
-		t.Run("InsertSet|"+statement, func(t *testing.T) {
-			assert.Nil(t, test.query.Insert(nil))
-			assert.Nil(t, test.query.Insert(test.record))
+		t.Run("InsertAllExplicit|"+statement, func(t *testing.T) {
+			// multiple insert
+			assert.Nil(t, repo.InsertAll(test.record, changes, changes, changes))
+			assert.Equal(t, 3, reflect.ValueOf(test.record).Elem().Len())
 		})
 	}
 }

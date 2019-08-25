@@ -4,50 +4,71 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
 // Preload tests query specifications for preloading.
 func Preload(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
-	user := User{Name: "preload", Gender: "male", Age: 10}
-	repo.From(users).MustSave(&user)
+	var (
+		user = User{
+			Name:   "preload",
+			Gender: "male",
+			Age:    10,
+			Addresses: []Address{
+				{Address: "preload1"},
+				{Address: "preload2"},
+				{Address: "preload3"},
+			},
+		}
+	)
 
-	userAddresses := []Address{
-		{Address: "preload1", UserID: &user.ID},
-		{Address: "preload2", UserID: &user.ID},
-		{Address: "preload3", UserID: &user.ID},
-	}
-
-	repo.From(addresses).MustSave(&userAddresses[0])
-	repo.From(addresses).MustSave(&userAddresses[1])
-	repo.From(addresses).MustSave(&userAddresses[2])
-
-	assert.Nil(t, user.Addresses)
+	repo.MustInsert(&user)
 
 	t.Run("Preload Addresses", func(t *testing.T) {
-		repo.From(addresses).Preload(&user, "Addresses")
-		assert.Equal(t, userAddresses, user.Addresses)
+		var (
+			emptyUser = User{ID: user.ID}
+		)
+
+		err := repo.Preload(&emptyUser, "Addresses")
+		assert.Nil(t, err)
+		assert.Equal(t, len(emptyUser.Addresses), len(user.Addresses))
 	})
 
 	t.Run("Preload Addresses with query", func(t *testing.T) {
-		repo.From(addresses).Where(c.Eq(address, "preload1")).Preload(&user, "Addresses")
-		assert.Equal(t, 1, len(user.Addresses))
-		assert.Equal(t, userAddresses[0], user.Addresses[0])
+		var (
+			emptyUser = User{ID: user.ID}
+		)
+
+		repo.Preload(&emptyUser, "Addresses", where.Eq("address", "preload1"))
+		assert.Equal(t, 1, len(emptyUser.Addresses))
+		assert.Equal(t, user.Addresses[0].Address, emptyUser.Addresses[0].Address)
 	})
 
+	// unload
 	user.Addresses = nil
 
 	t.Run("Preload User", func(t *testing.T) {
-		repo.From(users).Preload(&userAddresses[0], "User")
-		assert.Equal(t, user, userAddresses[0].User)
+		var (
+			emptyAddress = Address{UserID: &user.ID}
+		)
+
+		repo.Preload(&emptyAddress, "User")
+		assert.Equal(t, user, emptyAddress.User)
 	})
 
 	t.Run("Preload User slice", func(t *testing.T) {
-		repo.From(users).Preload(&userAddresses, "User")
-		assert.Equal(t, user, userAddresses[0].User)
-		assert.Equal(t, user, userAddresses[1].User)
-		assert.Equal(t, user, userAddresses[2].User)
+		var (
+			emptyAddresses = []Address{
+				{UserID: &user.ID},
+				{UserID: &user.ID},
+			}
+		)
+
+		repo.Preload(&emptyAddresses, "User")
+		assert.Len(t, emptyAddresses, 2)
+		assert.Equal(t, user, emptyAddresses[0].User)
+		assert.Equal(t, user, emptyAddresses[0].User)
 	})
 }

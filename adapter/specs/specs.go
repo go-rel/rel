@@ -39,6 +39,7 @@ type Extra struct {
 	ID    uint
 	Slug  *string
 	Score int
+	UserID int
 }
 
 // User table identifiers
@@ -60,9 +61,9 @@ var builder = sql.NewBuilder(&sql.Config{
 	EscapeChar:  "`",
 })
 
-func assertConstraint(t *testing.T, err error, kind errors.Kind, field string) {
+func assertConstraint(t *testing.T, err error, ctype grimoire.ConstraintType, key string) {
 	assert.NotNil(t, err)
-	gerr, _ := err.(errors.Error)
-	assert.True(t, strings.Contains(gerr.Field, field))
-	assert.Equal(t, kind, gerr.Kind())
+	cerr, _ := err.(grimoire.ConstraintError)
+	assert.True(t, strings.Contains(cerr.Key, key))
+	assert.Equal(t, ctype, cerr.Type)
 }

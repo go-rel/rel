@@ -4,63 +4,56 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/c"
+	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
 // Aggregate tests count specifications.
 func Aggregate(t *testing.T, repo grimoire.Repo) {
 	// preparte tests data
-	user := User{Name: "name1", Gender: "male", Age: 10}
-	repo.From(users).MustSave(&user)
+	var (
+		user = User{Name: "name1", Gender: "male", Age: 10}
+	)
+
+	repo.MustInsert(&user)
 
 	tests := []grimoire.Query{
-		repo.From(users).Where(c.Eq(id, user.ID)),
-		repo.From(users).Where(c.Eq(name, "name1")),
-		repo.From(users).Where(c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, user.ID), c.Eq(name, "name1")),
-		repo.From(users).Where(c.Eq(id, user.ID), c.Eq(name, "name1"), c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1")),
-		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1"), c.Eq(age, 10)),
-		repo.From(users).Where(c.Eq(id, user.ID)).OrWhere(c.Eq(name, "name1")).OrWhere(c.Eq(age, 10)),
-		repo.From(users).Where(c.Ne(gender, "male")),
-		repo.From(users).Where(c.Gt(age, 59)),
-		repo.From(users).Where(c.Gte(age, 60)),
-		repo.From(users).Where(c.Lt(age, 11)),
-		repo.From(users).Where(c.Lte(age, 10)),
-		repo.From(users).Where(c.Nil(note)),
-		repo.From(users).Where(c.NotNil(name)),
-		repo.From(users).Where(c.In(id, 1, 2, 3)),
-		repo.From(users).Where(c.Nin(id, 1, 2, 3)),
-		repo.From(users).Where(c.Like(name, "name%")),
-		repo.From(users).Where(c.NotLike(name, "noname%")),
-		repo.From(users).Where(c.Fragment("id > 0")),
-		repo.From(users).Where(c.Not(c.Eq(id, 1), c.Eq(name, "name1"), c.Eq(age, 10))),
-		repo.From(users).Group("gender"),
-		repo.From(users).Group("age").Having(c.Gt(age, 10)),
+		grimoire.From("users").Where(where.Eq("id", user.ID)),
+		grimoire.From("users").Where(where.Eq("name", "name1")),
+		grimoire.From("users").Where(where.Eq("age", 10)),
+		grimoire.From("users").Where(where.Eq("id", user.ID), where.Eq("name", "name1")),
+		grimoire.From("users").Where(where.Eq("id", user.ID), where.Eq("name", "name1"), where.Eq("age", 10)),
+		grimoire.From("users").Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")),
+		grimoire.From("users").Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1"), where.Eq("age", 10)),
+		grimoire.From("users").Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")).OrWhere(where.Eq("age", 10)),
+		grimoire.From("users").Where(where.Ne("gender", "male")),
+		grimoire.From("users").Where(where.Gt("age", 59)),
+		grimoire.From("users").Where(where.Gte("age", 60)),
+		grimoire.From("users").Where(where.Lt("age", 11)),
+		grimoire.From("users").Where(where.Lte("age", 10)),
+		grimoire.From("users").Where(where.Nil("note")),
+		grimoire.From("users").Where(where.NotNil("name")),
+		grimoire.From("users").Where(where.In("id", 1, 2, 3)),
+		grimoire.From("users").Where(where.Nin("id", 1, 2, 3)),
+		grimoire.From("users").Where(where.Like("name", "name%")),
+		grimoire.From("users").Where(where.NotLike("name", "noname%")),
+		grimoire.From("users").Where(where.Fragment("id > 0")),
+		grimoire.From("users").Where(where.Not(where.Eq("id", 1), where.Eq("name", "name1"), where.Eq("age", 10))),
+		grimoire.From("users").Group("gender"),
+		grimoire.From("users").Group("age").Having(where.Gt("age", 10)),
 	}
 
 	for _, query := range tests {
-		field := "id"
+		statement, _ := builder.Find(query.Select("count(id) AS count"))
 
-		statement, _ := builder.Find(query.Select("count(" + field + ") AS count"))
 		t.Run("Aggregate|"+statement, func(t *testing.T) {
-			var counts []struct {
-				Count int
-			}
-
-			err := query.Aggregate("count", field, &counts)
-			assert.True(t, len(counts) > 0)
+			count, err := repo.Aggregate(query, "count", "id")
 			assert.Nil(t, err)
+			assert.True(t, count > 0)
 
-			var sums []struct {
-				Sum int
-			}
-
-			err = query.Aggregate("sum", field, &sums)
-			assert.True(t, len(sums) > 0)
+			sum, err := repo.Aggregate(query, "sum", "id")
 			assert.Nil(t, err)
-
+			assert.True(t, sum > 0)
 		})
 	}
 }

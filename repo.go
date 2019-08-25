@@ -62,21 +62,25 @@ func (r Repo) MustCount(collection string, queriers ...Querier) int {
 func (r Repo) One(record interface{}, queriers ...Querier) error {
 	var (
 		doc   = newDocument(record)
-		query = BuildQuery(doc.Table(), queriers...).Limit(1)
+		query = BuildQuery(doc.Table(), queriers...)
 	)
 
-	cur, err := r.adapter.Query(query, r.logger...)
-	if err != nil {
-		return err
-	}
-
-	return scanOne(cur, doc)
+	return r.one(doc, query)
 }
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
 func (r Repo) MustOne(record interface{}, queriers ...Querier) {
 	must(r.One(record, queriers...))
+}
+
+func (r Repo) one(doc Document, query Query) error {
+	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
+	if err != nil {
+		return err
+	}
+
+	return scanOne(cur, doc)
 }
 
 // All retrieves all results that match the query.
@@ -86,18 +90,22 @@ func (r Repo) All(records interface{}, queriers ...Querier) error {
 		query = BuildQuery(col.Table(), queriers...)
 	)
 
-	cur, err := r.adapter.Query(query, r.logger...)
-	if err != nil {
-		return err
-	}
-
-	return scanMany(cur, col)
+	return r.all(col, query)
 }
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
 func (r Repo) MustAll(records interface{}, queriers ...Querier) {
 	must(r.All(records, queriers...))
+}
+
+func (r Repo) all(col Collection, query Query) error {
+	cur, err := r.adapter.Query(query, r.logger...)
+	if err != nil {
+		return err
+	}
+
+	return scanMany(cur, col)
 }
 
 // Insert an record to database.
@@ -109,17 +117,21 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 		return nil
 	}
 
+	var (
+		doc = newDocument(record)
+	)
+
 	if len(changers) == 0 {
-		changers = []Changer{Struct(record)}
+		// TODO: call newDoc only once between here and insert
+		changers = []Changer{changeDoc(doc)}
 	}
 
 	// TODO: transform changeset error
-	return transformError(r.insert(record, BuildChanges(changers...)))
+	return transformError(r.insert(doc, BuildChanges(changers...)))
 }
 
-func (r Repo) insert(record interface{}, changes Changes) error {
+func (r Repo) insert(doc Document, changes Changes) error {
 	var (
-		doc      = newDocument(record)
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
 	)
@@ -135,7 +147,7 @@ func (r Repo) insert(record interface{}, changes Changes) error {
 	}
 
 	// fetch record
-	if err := r.One(record, Eq(pField, id)); err != nil {
+	if err := r.One(doc, Eq(pField, id)); err != nil {
 		return err
 	}
 
@@ -156,22 +168,36 @@ func (r Repo) MustInsert(record interface{}, changers ...Changer) {
 	must(r.Insert(record, changers...))
 }
 
-func (r Repo) InsertAll(record interface{}, changes []Changes) error {
-	return transformError(r.insertAll(record, changes))
+func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
+	if records == nil {
+		return nil
+	}
+
+	var (
+		col = newCollection(records)
+	)
+
+	if len(changes) == 0 {
+		changes = make([]Changes, col.Len())
+		for i := range changes {
+			changes[i] = BuildChanges(changeDoc(col.Get(i)))
+		}
+	}
+
+	return transformError(r.insertAll(col, changes))
 }
 
-func (r Repo) MustInsertAll(records interface{}, changes []Changes) {
-	must(r.InsertAll(records, changes))
+func (r Repo) MustInsertAll(records interface{}, changes ...Changes) {
+	must(r.InsertAll(records, changes...))
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(records interface{}, changes []Changes) error {
+func (r Repo) insertAll(col Collection, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
 
 	var (
-		col      = newCollection(records)
 		pField   = col.PrimaryField()
 		queriers = BuildQuery(col.Table())
 		fields   = make([]string, 0, len(changes[0].Fields))
@@ -192,12 +218,7 @@ func (r Repo) insertAll(records interface{}, changes []Changes) error {
 		return err
 	}
 
-	cur, err := r.adapter.Query(queriers.Where(In(pField, ids...)), r.logger...)
-	if err != nil {
-		return err
-	}
-
-	return scanMany(cur, col)
+	return r.all(col, queriers.Where(In(pField, ids...)))
 }
 
 // Update an record in database.
@@ -210,27 +231,25 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 		return nil
 	}
 
-	if len(changers) == 0 {
-		changers = []Changer{Struct(record)}
-	}
-
 	var (
-		doc     = newDocument(record)
-		pField  = doc.PrimaryField()
-		pValue  = doc.PrimaryValue()
-		changes = BuildChanges(changers...)
+		doc    = newDocument(record)
+		pField = doc.PrimaryField()
+		pValue = doc.PrimaryValue()
 	)
 
-	return r.update(record, changes, Eq(pField, pValue))
+	if len(changers) == 0 {
+		changers = []Changer{changeDoc(doc)}
+	}
+
+	return r.update(doc, BuildChanges(changers...), Eq(pField, pValue))
 }
 
-func (r Repo) update(record interface{}, changes Changes, filter FilterQuery) error {
+func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
 	if changes.Empty() {
 		return nil
 	}
 
 	var (
-		doc      = newDocument(record)
 		queriers = BuildQuery(doc.Table(), filter)
 	)
 
@@ -243,7 +262,7 @@ func (r Repo) update(record interface{}, changes Changes, filter FilterQuery) er
 		return transformError(err)
 	}
 
-	return r.One(record, queriers)
+	return r.one(doc, queriers)
 }
 
 // MustUpdate an record in database.
@@ -323,13 +342,13 @@ func (r Repo) upsertHasOne(doc Document, changes *Changes, id interface{}) error
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(target, assocChanges, filter); err != nil {
+			if err := r.update(newDocument(target), assocChanges, filter); err != nil {
 				return err
 			}
 		} else {
 			assocChanges.SetValue(fField, rValue)
 
-			if err := r.insert(target, assocChanges); err != nil {
+			if err := r.insert(newDocument(target), assocChanges); err != nil {
 				return err
 			}
 		}

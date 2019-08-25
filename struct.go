@@ -1,33 +1,33 @@
 package grimoire
 
-type structChanger struct {
+type documentChanger struct {
 	doc Document
 }
 
-func (cs structChanger) Build(changes *Changes) {
+func (dc documentChanger) Build(changes *Changes) {
 	var (
-		fields      = cs.doc.Fields()
-		values      = cs.doc.Values()
-		pField      = cs.doc.PrimaryField()
-		belongsTo   = cs.doc.BelongsTo()
-		hasOne      = cs.doc.HasOne()
-		hasMany     = cs.doc.HasMany()
+		fields      = dc.doc.Fields()
+		values      = dc.doc.Values()
+		pField      = dc.doc.PrimaryField()
+		belongsTo   = dc.doc.BelongsTo()
+		hasOne      = dc.doc.HasOne()
+		hasMany     = dc.doc.HasMany()
 		assocFields = make(map[string]struct{}, len(belongsTo)+len(hasOne)+len(hasMany))
 	)
 
 	for _, field := range belongsTo {
 		assocFields[field] = struct{}{}
-		cs.buildAssoc(field, changes)
+		dc.buildAssoc(field, changes)
 	}
 
 	for _, field := range hasOne {
 		assocFields[field] = struct{}{}
-		cs.buildAssoc(field, changes)
+		dc.buildAssoc(field, changes)
 	}
 
 	for _, field := range hasMany {
 		assocFields[field] = struct{}{}
-		cs.buildAssocMany(field, changes)
+		dc.buildAssocMany(field, changes)
 	}
 
 	for field, i := range fields {
@@ -49,23 +49,23 @@ func (cs structChanger) Build(changes *Changes) {
 	}
 }
 
-func (cs structChanger) buildAssoc(field string, changes *Changes) {
+func (dc documentChanger) buildAssoc(field string, changes *Changes) {
 	var (
-		assoc = cs.doc.Association(field)
+		assoc = dc.doc.Association(field)
 	)
 
 	if col, loaded := assoc.Target(); loaded {
 		var (
-			ch = BuildChanges(structChanger{doc: col.Get(0)})
+			ch = BuildChanges(documentChanger{doc: col.Get(0)})
 		)
 
 		changes.SetAssoc(field, ch)
 	}
 }
 
-func (cs structChanger) buildAssocMany(field string, changes *Changes) {
+func (dc documentChanger) buildAssocMany(field string, changes *Changes) {
 	var (
-		assoc = cs.doc.Association(field)
+		assoc = dc.doc.Association(field)
 	)
 
 	if col, loaded := assoc.Target(); loaded {
@@ -74,15 +74,19 @@ func (cs structChanger) buildAssocMany(field string, changes *Changes) {
 		)
 
 		for i := range chs {
-			chs[i] = BuildChanges(structChanger{doc: col.Get(i)})
+			chs[i] = BuildChanges(changeDoc(col.Get(i)))
 		}
 
 		changes.SetAssoc(field, chs...)
 	}
 }
 
-func Struct(record interface{}) Changer {
-	return structChanger{
-		doc: newDocument(record),
+func changeDoc(doc Document) Changer {
+	return documentChanger{
+		doc: doc,
 	}
+}
+
+func Struct(record interface{}) Changer {
+	return changeDoc(newDocument(record))
 }

@@ -263,7 +263,7 @@ func TestRepo_InsertAll(t *testing.T) {
 	adapter.On("InsertAll", From("users"), changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.InsertAll(&users, changes))
+	assert.Nil(t, repo.InsertAll(&users, changes...))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

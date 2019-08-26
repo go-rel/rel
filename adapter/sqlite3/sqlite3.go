@@ -18,7 +18,6 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/Fs02/grimoire/errors"
 	"github.com/mattn/go-sqlite3"
 )
 
@@ -62,9 +61,17 @@ func errorFunc(err error) error {
 	e, _ := err.(sqlite3.Error)
 	switch e.ExtendedCode {
 	case sqlite3.ErrConstraintUnique:
-		return errors.New(e.Error(), strings.Split(e.Error(), "failed: ")[1], errors.UniqueConstraint)
+		return grimoire.ConstraintError{
+			Key:  strings.Split(e.Error(), "failed: ")[1],
+			Type: grimoire.UniqueConstraint,
+			Err:  err,
+		}
 	case sqlite3.ErrConstraintCheck:
-		return errors.New(e.Error(), strings.Split(e.Error(), "failed: ")[1], errors.CheckConstraint)
+		return grimoire.ConstraintError{
+			Key:  strings.Split(e.Error(), "failed: ")[1],
+			Type: grimoire.CheckConstraint,
+			Err:  err,
+		}
 	default:
 		return err
 	}

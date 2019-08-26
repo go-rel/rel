@@ -231,9 +231,8 @@ func (d *document) Scanners(fields []string) []interface{} {
 	d.reflect()
 
 	var (
-		mapping   = fieldMapping(d.rt)
-		result    = make([]interface{}, len(fields))
-		tempValue = sql.RawBytes{}
+		mapping = fieldMapping(d.rt)
+		result  = make([]interface{}, len(fields))
 	)
 
 	for index, field := range fields {
@@ -249,7 +248,7 @@ func (d *document) Scanners(fields []string) []interface{} {
 				result[index] = Nullable(fv.Addr().Interface())
 			}
 		} else {
-			result[index] = &tempValue
+			result[index] = &sql.RawBytes{}
 		}
 	}
 

@@ -15,7 +15,7 @@ func Preload(t *testing.T, repo grimoire.Repo) {
 		user = User{
 			Name:   "preload",
 			Gender: "male",
-			Age:    10,
+			Age:    25,
 			Addresses: []Address{
 				{Address: "preload1"},
 				{Address: "preload2"},
@@ -26,22 +26,22 @@ func Preload(t *testing.T, repo grimoire.Repo) {
 
 	repo.MustInsert(&user)
 
-	t.Run("Preload Addresses", func(t *testing.T) {
-		var (
-			emptyUser = User{ID: user.ID}
-		)
+	// t.Run("Preload Addresses", func(t *testing.T) {
+	// 	var (
+	// 		emptyUser = User{ID: user.ID}
+	// 	)
 
-		err := repo.Preload(&emptyUser, "Addresses")
-		assert.Nil(t, err)
-		assert.Equal(t, len(emptyUser.Addresses), len(user.Addresses))
-	})
+	// 	err := repo.Preload(&emptyUser, "addresses")
+	// 	assert.Nil(t, err)
+	// 	assert.Equal(t, len(emptyUser.Addresses), len(user.Addresses))
+	// })
 
 	t.Run("Preload Addresses with query", func(t *testing.T) {
 		var (
 			emptyUser = User{ID: user.ID}
 		)
 
-		repo.Preload(&emptyUser, "Addresses", where.Eq("address", "preload1"))
+		repo.Preload(&emptyUser, "addresses", where.Eq("address", "preload1"))
 		assert.Equal(t, 1, len(emptyUser.Addresses))
 		assert.Equal(t, user.Addresses[0].Address, emptyUser.Addresses[0].Address)
 	})
@@ -54,7 +54,7 @@ func Preload(t *testing.T, repo grimoire.Repo) {
 			emptyAddress = Address{UserID: &user.ID}
 		)
 
-		repo.Preload(&emptyAddress, "User")
+		repo.Preload(&emptyAddress, "user")
 		assert.Equal(t, user, emptyAddress.User)
 	})
 
@@ -66,7 +66,7 @@ func Preload(t *testing.T, repo grimoire.Repo) {
 			}
 		)
 
-		repo.Preload(&emptyAddresses, "User")
+		repo.Preload(&emptyAddresses, "user")
 		assert.Len(t, emptyAddresses, 2)
 		assert.Equal(t, user, emptyAddresses[0].User)
 		assert.Equal(t, user, emptyAddresses[0].User)

@@ -18,7 +18,6 @@ import (
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/Fs02/grimoire/errors"
 	"github.com/Fs02/grimoire/internal"
 	"github.com/go-sql-driver/mysql"
 )
@@ -71,9 +70,17 @@ func errorFunc(err error) error {
 	if e, ok := err.(*mysql.MySQLError); ok {
 		switch e.Number {
 		case 1062:
-			return errors.New(e.Message, internal.ExtractString(e.Message, "key '", "'"), errors.UniqueConstraint)
+			return grimoire.ConstraintError{
+				Key:  internal.ExtractString(e.Message, "key '", "'"),
+				Type: grimoire.UniqueConstraint,
+				Err:  err,
+			}
 		case 1452:
-			return errors.New(e.Message, internal.ExtractString(e.Message, "CONSTRAINT `", "`"), errors.ForeignKeyConstraint)
+			return grimoire.ConstraintError{
+				Key:  internal.ExtractString(e.Message, "CONSTRAINT `", "`"),
+				Type: grimoire.ForeignKeyConstraint,
+				Err:  err,
+			}
 		}
 	}
 

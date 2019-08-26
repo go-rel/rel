@@ -68,59 +68,59 @@ func TestAdapter_specs(t *testing.T) {
 
 	repo := grimoire.New(adapter)
 
-	// Query Specs
-	specs.Query(t, repo)
-	specs.QueryJoin(t, repo)
-	specs.QueryNotFound(t, repo)
+	// // Query Specs
+	// specs.Query(t, repo)
+	// specs.QueryJoin(t, repo)
+	// specs.QueryNotFound(t, repo)
 
 	// Preload specs
 	specs.Preload(t, repo)
 
-	// Aggregate Specs
-	specs.Aggregate(t, repo)
+	// // Aggregate Specs
+	// specs.Aggregate(t, repo)
 
-	// Insert Specs
-	specs.Insert(t, repo)
-	specs.InsertAll(t, repo)
-	specs.InsertSet(t, repo)
+	// // Insert Specs
+	// specs.Insert(t, repo)
+	// specs.InsertAll(t, repo)
+	// specs.InsertSet(t, repo)
 
-	// Update Specs
-	specs.Update(t, repo)
-	specs.UpdateWhere(t, repo)
-	specs.UpdateSet(t, repo)
+	// // Update Specs
+	// specs.Update(t, repo)
+	// specs.UpdateWhere(t, repo)
+	// specs.UpdateSet(t, repo)
 
-	// Put Specs
-	specs.SaveInsert(t, repo)
-	specs.SaveInsertAll(t, repo)
-	specs.SaveUpdate(t, repo)
+	// // Put Specs
+	// specs.SaveInsert(t, repo)
+	// specs.SaveInsertAll(t, repo)
+	// specs.SaveUpdate(t, repo)
 
-	// Delete specs
-	specs.Delete(t, repo)
+	// // Delete specs
+	// specs.Delete(t, repo)
 
-	// Transaction specs
-	specs.Transaction(t, repo)
+	// // Transaction specs
+	// specs.Transaction(t, repo)
 
-	// Constraint specs
-	// - Check constraint is not supported by mysql
-	specs.UniqueConstraint(t, repo)
-	specs.ForeignKeyConstraint(t, repo)
+	// // Constraint specs
+	// // - Check constraint is not supported by mysql
+	// specs.UniqueConstraint(t, repo)
+	// specs.ForeignKeyConstraint(t, repo)
 }
 
-func TestAdapter_InsertAll_error(t *testing.T) {
-	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
-	defer adapter.Close()
+// func TestAdapter_InsertAll_error(t *testing.T) {
+// 	adapter, err := Open(dsn())
+// 	paranoid.Panic(err, "failed to open database connection")
+// 	defer adapter.Close()
 
-	fields := []string{"notexist"}
-	allchanges := []map[string]interface{}{
-		{"notexist": "12"},
-		{"notexist": "13"},
-	}
+// 	fields := []string{"notexist"}
+// 	allchanges := []map[string]interface{}{
+// 		{"notexist": "12"},
+// 		{"notexist": "13"},
+// 	}
 
-	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
 
-	assert.NotNil(t, err)
-}
+// 	assert.NotNil(t, err)
+// }
 
 func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := Open(dsn())
@@ -138,16 +138,16 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 	assert.NotNil(t, adapter.Rollback())
 }
 
-func TestAdapter_Query_error(t *testing.T) {
-	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
-	defer adapter.Close()
+// func TestAdapter_Query_error(t *testing.T) {
+// 	adapter, err := Open(dsn())
+// 	paranoid.Panic(err, "failed to open database connection")
+// 	defer adapter.Close()
 
-	out := struct{}{}
+// 	out := struct{}{}
 
-	_, err = adapter.Query(&out, "error", nil)
-	assert.NotNil(t, err)
-}
+// 	_, err = adapter.Query(&out, "error", nil)
+// 	assert.NotNil(t, err)
+// }
 
 func TestAdapter_Exec_error(t *testing.T) {
 	adapter, err := Open(dsn())

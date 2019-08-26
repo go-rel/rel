@@ -141,6 +141,7 @@ func newAssociation(rv reflect.Value, index int) Association {
 		}
 	}
 
+	// TODO: maybe use column name instead of field name for ref and fk key
 	var (
 		st   = rt.Field(index)
 		ft   = st.Type

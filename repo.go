@@ -481,7 +481,11 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 		i++
 	}
 
-	cur, err := r.adapter.Query(BuildQuery(table, In(keyField, ids...)), r.logger...)
+	var (
+		query    = BuildQuery(table, append(queriers, In(keyField, ids...))...)
+		cur, err = r.adapter.Query(query, r.logger...)
+	)
+
 	if err != nil {
 		return err
 	}

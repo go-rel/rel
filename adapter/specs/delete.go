@@ -23,7 +23,6 @@ func Delete(t *testing.T, repo grimoire.Repo) {
 }
 
 // DeleteAll tests delete specifications.
-// TODO: use it
 func DeleteAll(t *testing.T, repo grimoire.Repo) {
 	var (
 		user = User{Name: "delete", Age: 100}
@@ -40,8 +39,8 @@ func DeleteAll(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&User{Name: "other delete", Age: 110})
 
 	tests := []grimoire.Query{
-		grimoire.From("users").Where(where.Eq(name, "delete")),
-		grimoire.From("users").Where(where.Eq(name, "other delete"), where.Gt(age, 100)),
+		grimoire.From("users").Where(where.Eq("name", "delete")),
+		grimoire.From("users").Where(where.Eq("name", "other delete"), where.Gt("age", 100)),
 	}
 
 	for _, query := range tests {

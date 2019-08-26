@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/Fs02/grimoire/c"
-	"github.com/Fs02/grimoire/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,30 +35,19 @@ type Address struct {
 
 // Extra defines baz schema.
 type Extra struct {
-	ID    uint
-	Slug  *string
-	Score int
+	ID     uint
+	Slug   *string
+	Score  int
 	UserID int
 }
 
-// User table identifiers
-const (
-	users     = "users"
-	addresses = "addresses"
-	extras    = "extras"
-	id        = c.I("id")
-	name      = c.I("name")
-	gender    = c.I("gender")
-	age       = c.I("age")
-	note      = c.I("note")
-	createdAt = c.I("created_at")
-	address   = c.I("address")
+var (
+	config = &sql.Config{
+		Placeholder: "?",
+		EscapeChar:  "`",
+	}
+	builder = sql.NewBuilder(config)
 )
-
-var builder = sql.NewBuilder(&sql.Config{
-	Placeholder: "?",
-	EscapeChar:  "`",
-})
 
 func assertConstraint(t *testing.T, err error, ctype grimoire.ConstraintType, key string) {
 	assert.NotNil(t, err)

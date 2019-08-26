@@ -2,7 +2,7 @@ package grimoire
 
 type NoResultError struct{}
 
-func (no NoResultError) Error() string {
+func (nre NoResultError) Error() string {
 	return "No result found"
 }
 

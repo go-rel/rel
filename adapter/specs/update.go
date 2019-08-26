@@ -4,102 +4,74 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/c"
-	"github.com/Fs02/grimoire/changeset"
-	"github.com/Fs02/grimoire/params"
+	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
 // Update tests update specifications.
+// TODO: atomic update
+// TODO: update all
+// TODO: update with assoc
 func Update(t *testing.T, repo grimoire.Repo) {
-	user := User{Name: "update"}
-	repo.From(users).MustSave(&user)
+	var (
+		note    = "note"
+		user    = User{Name: "update"}
+		address = Address{Address: "update"}
+	)
 
-	address := Address{Address: "update"}
-	repo.From(addresses).MustSave(&address)
+	repo.MustInsert(&user)
+	repo.MustInsert(&address)
 
-	tests := []struct {
-		query  grimoire.Query
-		record interface{}
-		params params.Params
-	}{
-		{repo.From(users).Find(user.ID), &User{}, params.Map{"name": "insert", "age": 100}},
-		{repo.From(users).Find(user.ID), &User{}, params.Map{"name": "insert", "age": 100, "note": "note"}},
-		{repo.From(users).Find(user.ID), &User{}, params.Map{"note": "note"}},
-		{repo.From(addresses).Find(address.ID), &Address{}, params.Map{"address": "address"}},
-		{repo.From(addresses).Find(address.ID), &Address{}, params.Map{"user_id": user.ID}},
-		{repo.From(addresses).Find(address.ID), &Address{}, params.Map{"address": "address", "user_id": user.ID}},
+	tests := []interface{}{
+		&User{ID: user.ID, Name: "changed", Age: 100},
+		&User{ID: user.ID, Name: "changed", Age: 100, Note: &note},
+		&User{ID: user.ID, Note: &note},
+		&Address{ID: address.ID, Address: "address"},
+		&Address{ID: address.ID, UserID: &user.ID},
+		&Address{ID: address.ID, Address: "address", UserID: &user.ID},
 	}
 
-	for _, test := range tests {
-		ch := changeset.Cast(test.record, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := builder.Update(test.query.Collection, ch.Changes(), test.query.Condition)
+	for _, record := range tests {
+		var (
+			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
+		)
 
 		t.Run("Update|"+statement, func(t *testing.T) {
-			assert.Nil(t, ch.Error())
-
-			assert.Nil(t, test.query.Update(nil, ch))
-			assert.Nil(t, test.query.Update(test.record, ch))
+			assert.Nil(t, repo.Update(record))
 		})
 	}
 }
 
-// UpdateWhere tests update specifications.
-func UpdateWhere(t *testing.T, repo grimoire.Repo) {
-	user := User{Name: "update all"}
-	repo.From(users).MustSave(&user)
+func UpdateExplicit(t *testing.T, repo grimoire.Repo) {
+	var (
+		user    = User{Name: "update"}
+		address = Address{Address: "update"}
+	)
 
-	address := Address{Address: "update all"}
-	repo.From(addresses).MustSave(&address)
+	repo.MustInsert(&user)
+	repo.MustInsert(&address)
 
 	tests := []struct {
-		query  grimoire.Query
-		schema interface{}
-		record interface{}
-		params params.Params
+		record  interface{}
+		changer grimoire.Changer
 	}{
-		{repo.From(users).Where(c.Eq(name, "update all")), User{}, &[]User{}, params.Map{"name": "insert", "age": 100}},
-		{repo.From(addresses).Where(c.Eq(c.I("address"), "update_all")), Address{}, &[]Address{}, params.Map{"address": "address", "user_id": user.ID}},
+		{&user, grimoire.Map{"name": "changed", "age": 100}},
+		{&user, grimoire.Map{"name": "changed", "age": 100, "note": "note"}},
+		{&user, grimoire.Map{"note": "note"}},
+		{&address, grimoire.Map{"address": "address"}},
+		{&address, grimoire.Map{"user_id": user.ID}},
+		{&address, grimoire.Map{"address": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {
-		ch := changeset.Cast(test.schema, test.params, []string{"name", "age", "note", "address", "user_id"})
-		statement, _ := builder.Update(test.query.Collection, ch.Changes(), test.query.Condition)
+		var (
+			changes      = grimoire.BuildChanges(test.changer)
+			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
+		)
 
-		t.Run("UpdateWhere|"+statement, func(t *testing.T) {
-			assert.Nil(t, ch.Error())
-
-			assert.Nil(t, test.query.Update(nil, ch))
-			assert.Nil(t, test.query.Update(test.record, ch))
-		})
-	}
-}
-
-// UpdateSet tests update specifications using Set query.
-func UpdateSet(t *testing.T, repo grimoire.Repo) {
-	user := User{Name: "update"}
-	repo.From(users).MustSave(&user)
-
-	address := Address{Address: "update"}
-	repo.From(addresses).MustSave(&address)
-
-	tests := []struct {
-		query  grimoire.Query
-		record interface{}
-	}{
-		{repo.From(users).Find(user.ID).Set("name", "update set"), &User{}},
-		{repo.From(users).Find(user.ID).Set("name", "update set").Set("age", 18), &User{}},
-		{repo.From(users).Find(user.ID).Set("note", "note set"), &User{}},
-		{repo.From(addresses).Find(address.ID).Set("address", "address set"), &Address{}},
-		{repo.From(addresses).Find(address.ID).Set("user_id", user.ID), &Address{}},
-	}
-
-	for _, test := range tests {
-		statement, _ := builder.Update(test.query.Collection, test.query.Changes, test.query.Condition)
-
-		t.Run("UpdateSet|"+statement, func(t *testing.T) {
-			assert.Nil(t, test.query.Update(nil))
-			assert.Nil(t, test.query.Update(test.record))
+		t.Run("Update|"+statement, func(t *testing.T) {
+			assert.Nil(t, repo.Update(test.record, test.changer))
 		})
 	}
 }

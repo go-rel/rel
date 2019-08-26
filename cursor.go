@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"database/sql"
 	"reflect"
 )
 
@@ -64,7 +65,6 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 	var (
 		found       = false
 		keyValue    = reflect.New(keyType)
-		nopScanner  = cur.NopScanner()
 		keyScanners = make([]interface{}, len(fields))
 	)
 
@@ -73,7 +73,9 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 			found = true
 			keyScanners[i] = keyValue.Interface()
 		} else {
-			keyScanners[i] = nopScanner
+			// need to create distinct copies
+			// otherwise next scan result will be corrupted
+			keyScanners[i] = &sql.RawBytes{}
 		}
 	}
 

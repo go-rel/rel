@@ -68,42 +68,41 @@ func TestAdapter_specs(t *testing.T) {
 
 	repo := grimoire.New(adapter)
 
-	// // Query Specs
-	// specs.Query(t, repo)
-	// specs.QueryJoin(t, repo)
-	// specs.QueryNotFound(t, repo)
+	// Query Specs
+	specs.Query(t, repo)
+	specs.QueryJoin(t, repo)
+	specs.QueryNotFound(t, repo)
 
 	// Preload specs
 	specs.Preload(t, repo)
 
-	// // Aggregate Specs
-	// specs.Aggregate(t, repo)
+	// Aggregate Specs
+	specs.Aggregate(t, repo)
 
-	// // Insert Specs
-	// specs.Insert(t, repo)
-	// specs.InsertAll(t, repo)
-	// specs.InsertSet(t, repo)
+	// Insert Specs
+	specs.InsertBasic(t, repo)
+	specs.Insert(t, repo)
+	specs.InsertExplicit(t, repo)
+	specs.InsertAll(t, repo)
+	specs.InsertAllExplicit(t, repo)
 
-	// // Update Specs
-	// specs.Update(t, repo)
-	// specs.UpdateWhere(t, repo)
-	// specs.UpdateSet(t, repo)
+	// Update Specs
+	specs.Update(t, repo)
+	specs.UpdateExplicit(t, repo)
 
 	// // Put Specs
 	// specs.SaveInsert(t, repo)
 	// specs.SaveInsertAll(t, repo)
 	// specs.SaveUpdate(t, repo)
 
-	// // Delete specs
-	// specs.Delete(t, repo)
+	// Delete specs
+	specs.Delete(t, repo)
+	specs.DeleteAll(t, repo)
 
-	// // Transaction specs
-	// specs.Transaction(t, repo)
-
-	// // Constraint specs
-	// // - Check constraint is not supported by mysql
-	// specs.UniqueConstraint(t, repo)
-	// specs.ForeignKeyConstraint(t, repo)
+	// Constraint specs
+	// - Check constraint is not supported by mysql
+	specs.UniqueConstraint(t, repo)
+	specs.ForeignKeyConstraint(t, repo)
 }
 
 // func TestAdapter_InsertAll_error(t *testing.T) {

@@ -39,7 +39,7 @@ func (adapter *Adapter) Close() error {
 func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field string, loggers ...grimoire.Logger) (int, error) {
 	var (
 		err             error
-		out             int
+		out             sql.NullInt64
 		statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
 	)
 
@@ -52,7 +52,7 @@ func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field strin
 
 	go grimoire.Log(loggers, statement, time.Since(start), err)
 
-	return out, err
+	return int(out.Int64), err
 }
 
 // Query performs query operation.

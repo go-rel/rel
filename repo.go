@@ -32,7 +32,14 @@ func (r *Repo) SetLogger(logger ...Logger) {
 
 // Aggregate calculate aggregate over the given field.
 // Supported aggregate: count, sum, avg, max, min.
+// Any select, group, offset, limit and sort query will be ignored automatically.
+// If complex aggregation is needed, consider using All instead,
 func (r Repo) Aggregate(query Query, aggregate string, field string) (int, error) {
+	query.GroupQuery = GroupQuery{}
+	query.LimitQuery = 0
+	query.OffsetQuery = 0
+	query.SortQuery = nil
+
 	return r.adapter.Aggregate(query, aggregate, field, r.logger...)
 }
 

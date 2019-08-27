@@ -39,6 +39,10 @@ func Aggregate(t *testing.T, repo grimoire.Repo) {
 		grimoire.From("users").Where(where.NotLike("name", "noname%")),
 		grimoire.From("users").Where(where.Fragment("id > 0")),
 		grimoire.From("users").Where(where.Not(where.Eq("id", 1), where.Eq("name", "name1"), where.Eq("age", 10))),
+		// this query is not supported.
+		// group query is automatically removed.
+		// use all instead for complex aggregation.
+		grimoire.From("users").Limit(10),
 		grimoire.From("users").Group("gender"),
 		grimoire.From("users").Group("age").Having(where.Gt("age", 10)),
 	}
@@ -49,11 +53,11 @@ func Aggregate(t *testing.T, repo grimoire.Repo) {
 		t.Run("Aggregate|"+statement, func(t *testing.T) {
 			count, err := repo.Aggregate(query, "count", "id")
 			assert.Nil(t, err)
-			assert.True(t, count > 0)
+			assert.True(t, count >= 0)
 
 			sum, err := repo.Aggregate(query, "sum", "id")
 			assert.Nil(t, err)
-			assert.True(t, sum > 0)
+			assert.True(t, sum >= 0)
 		})
 	}
 }

@@ -10,7 +10,6 @@ func TestChangeset(t *testing.T) {
 	ch := Changeset{}
 	assert.Nil(t, ch.Errors())
 	assert.Nil(t, ch.Error())
-	assert.Nil(t, ch.Constraints())
 }
 
 func TestChangeset_Get(t *testing.T) {

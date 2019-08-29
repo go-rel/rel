@@ -13,7 +13,7 @@ func TestApplyString(t *testing.T) {
 		Name string
 	}
 
-	user := User{}
+	user := &User{}
 	input := params.Map{
 		"name": "¡¡¡Hello, Gophers!!!",
 	}
@@ -31,7 +31,7 @@ func TestApplyString_ignored(t *testing.T) {
 		Name int
 	}
 
-	user := User{}
+	user := &User{}
 	input := params.Map{
 		"name": 1,
 	}

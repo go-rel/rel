@@ -3,7 +3,7 @@ package changeset
 import (
 	"strings"
 
-	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire"
 )
 
 // ForeignKeyConstraintMessage is the default error message for ForeignKeyConstraint.
@@ -13,17 +13,20 @@ var ForeignKeyConstraintMessage = "does not exist"
 func ForeignKeyConstraint(ch *Changeset, field string, opts ...Option) {
 	options := Options{
 		message: ForeignKeyConstraintMessage,
-		name:    field,
+		key:     field,
 		exact:   false,
 	}
 	options.apply(opts)
 
-	ch.constraints = append(ch.constraints, Constraint{
-		Field:   field,
-		Message: strings.Replace(options.message, "{field}", field, 1),
-		Code:    options.code,
-		Name:    options.name,
-		Exact:   options.exact,
-		Kind:    errors.ForeignKeyConstraint,
-	})
+	var (
+		constraint = grimoire.Constraint(
+			grimoire.ForeignKeyConstraint,
+			options.key,
+			options.exact,
+			field,
+			strings.Replace(options.message, "{field}", field, 1), // todo: defer evaluation
+		)
+	)
+
+	ch.changers = append(ch.changers, constraint)
 }

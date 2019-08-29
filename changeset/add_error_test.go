@@ -16,11 +16,11 @@ func TestAddError(t *testing.T) {
 	assert.NotNil(t, ch.Error())
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, 1, len(ch.Errors()))
-	assert.Equal(t, "field1 is required", ch.Error().Error())
+	assert.Equal(t, "ValidationError: field1 is required", ch.Error().Error())
 
 	AddError(ch, "field2", "field2 is not valid")
 	assert.NotNil(t, ch.Error())
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, 2, len(ch.Errors()))
-	assert.Equal(t, "field2 is not valid", ch.Errors()[1].Error())
+	assert.Equal(t, "ValidationError: field2 is not valid", ch.Errors()[1].Error())
 }

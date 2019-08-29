@@ -35,7 +35,7 @@ func TestPutChange(t *testing.T) {
 	assert.NotNil(t, ch.Error())
 	assert.NotNil(t, ch.Errors())
 	assert.Equal(t, 1, len(ch.Errors()))
-	assert.Equal(t, "field1 is invalid", ch.Error().Error())
+	assert.Equal(t, "ValidationError: field1 is invalid", ch.Error().Error())
 	assert.Equal(t, 1, len(ch.changes))
 	assert.Equal(t, 10, ch.Get("field1"))
 }
@@ -45,7 +45,7 @@ func TestPutChange_nil(t *testing.T) {
 		Nullable *bool
 	}
 
-	ch := Cast(a, params.Map{}, []string{})
+	ch := Cast(&a, params.Map{}, []string{})
 	PutChange(ch, "nullable", nil)
 
 	assert.Nil(t, ch.Error())
@@ -57,7 +57,7 @@ func TestPutChange_typedNil(t *testing.T) {
 		Nullable *bool
 	}
 
-	ch := Cast(a, params.Map{}, []string{})
+	ch := Cast(&a, params.Map{}, []string{})
 	PutChange(ch, "nullable", (*bool)(nil))
 
 	assert.Nil(t, ch.Error())

@@ -13,7 +13,7 @@ func TestEscapeString(t *testing.T) {
 		Username string
 	}
 
-	user := User{}
+	user := &User{}
 	input := params.Map{
 		"name":     `"Fran & Freddie's Diner" <tasty@example.com>`,
 		"username": `"Fran & Freddie's Diner" <tasty@example.com>`,

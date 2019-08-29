@@ -12,13 +12,13 @@ import (
 // TODO: use arrays (make use of schema inferer)
 // TODO: impement grimoire.Builder
 type Changeset struct {
-	errors      []error
-	params      params.Params
-	changes     map[string]interface{}
-	values      map[string]interface{}
-	types       map[string]reflect.Type
-	constraints Constraints
-	zero        bool
+	errors   []error
+	params   params.Params
+	changes  map[string]interface{}
+	values   map[string]interface{}
+	types    map[string]reflect.Type
+	changers []grimoire.Changer
+	zero     bool
 }
 
 func (c *Changeset) Build(changes *grimoire.Changes) {
@@ -26,33 +26,28 @@ func (c *Changeset) Build(changes *grimoire.Changes) {
 }
 
 // Errors of changeset.
-func (changeset *Changeset) Errors() []error {
-	return changeset.errors
+func (c *Changeset) Errors() []error {
+	return c.errors
 }
 
 // Error of changeset, returns the first error if any.
-func (changeset *Changeset) Error() error {
-	if changeset.errors != nil {
-		return changeset.errors[0]
+func (c *Changeset) Error() error {
+	if c.errors != nil {
+		return c.errors[0]
 	}
 	return nil
 }
 
 // Get a change from changeset.
-func (changeset *Changeset) Get(field string) interface{} {
-	return changeset.changes[field]
+func (c *Changeset) Get(field string) interface{} {
+	return c.changes[field]
 }
 
 // Fetch a change or value from changeset.
-func (changeset *Changeset) Fetch(field string) interface{} {
-	if change, ok := changeset.changes[field]; ok {
+func (c *Changeset) Fetch(field string) interface{} {
+	if change, ok := c.changes[field]; ok {
 		return change
 	}
 
-	return changeset.values[field]
-}
-
-// Constraints of changeset.
-func (changeset *Changeset) Constraints() Constraints {
-	return changeset.constraints
+	return c.values[field]
 }

@@ -1,7 +1,7 @@
 package changeset
 
 import (
-	"github.com/Fs02/grimoire/errors"
+	"github.com/Fs02/grimoire"
 )
 
 // AddError adds an error to changeset.
@@ -9,5 +9,5 @@ import (
 //	changeset.AddError(ch, "field", "error")
 //	ch.Errors() // []errors.Error{{Field: "field", Message: "error"}}
 func AddError(ch *Changeset, field string, message string) {
-	ch.errors = append(ch.errors, errors.New(message, field, errors.Changeset))
+	ch.errors = append(ch.errors, grimoire.ValidationError{Field: field, Message: message})
 }

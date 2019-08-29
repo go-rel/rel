@@ -54,7 +54,7 @@ func TestCastAssoc_one(t *testing.T) {
 		"field3": inner,
 	}
 
-	ch := Cast(data, input, []string{"field1", "field2"})
+	ch := Cast(&data, input, []string{"field1", "field2"})
 	CastAssoc(ch, "field3", changeInner)
 
 	assert.Nil(t, ch.Errors())

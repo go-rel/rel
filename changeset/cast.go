@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/params"
-	"github.com/Fs02/grimoire/schema"
 )
 
 // CastErrorMessage is the default error message for Cast.
 var CastErrorMessage = "{field} is invalid"
 
-// Cast params as changes for the given data according to the permitted fields. Returns a new changeset.
-// params will only be added as changes if it does not have the same value as the field in the data.
-func Cast(data interface{}, params params.Params, fields []string, opts ...Option) *Changeset {
+// Cast params as changes for the given entity according to the permitted fields. Returns a new changeset.
+// params will only be added as changes if it does not have the same value as the field in the entity.
+func Cast(entity interface{}, params params.Params, fields []string, opts ...Option) *Changeset {
 	options := Options{
 		message:     CastErrorMessage,
 		emptyValues: []interface{}{""},
@@ -21,15 +21,15 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 	options.apply(opts)
 
 	var ch *Changeset
-	if existingCh, ok := data.(Changeset); ok {
+	if existingCh, ok := entity.(Changeset); ok {
 		ch = &existingCh
-	} else if existingCh, ok := data.(*Changeset); ok {
+	} else if existingCh, ok := entity.(*Changeset); ok {
 		ch = existingCh
 	} else {
 		ch = &Changeset{}
 		ch.params = params
 		ch.changes = make(map[string]interface{})
-		ch.values, ch.types, ch.zero = mapSchema(data, true)
+		ch.values, ch.types, ch.zero = mapSchema(entity, true)
 	}
 
 	for _, field := range fields {
@@ -59,11 +59,12 @@ func Cast(data interface{}, params params.Params, fields []string, opts ...Optio
 	return ch
 }
 
-func mapSchema(data interface{}, zero bool) (map[string]interface{}, map[string]reflect.Type, bool) {
+func mapSchema(entity interface{}, zero bool) (map[string]interface{}, map[string]reflect.Type, bool) {
 	var (
-		fields    = schema.InferFields(data)
-		types     = schema.InferTypes(data)
-		values    = schema.InferValues(data)
+		doc       = grimoire.newDocument(entity)
+		fields    = doc.Fields()
+		types     = doc.Types()
+		values    = doc.Values()
 		valuesMap = make(map[string]interface{}, len(fields))
 		typesMap  = make(map[string]reflect.Type, len(fields))
 	)

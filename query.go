@@ -196,6 +196,14 @@ func (q Query) Lock(lock Lock) Query {
 	return q
 }
 
+func Select(fields ...string) Query {
+	return Query{
+		SelectQuery: SelectQuery{
+			Fields: fields,
+		},
+	}
+}
+
 // From create query for collection.
 func From(collection string) Query {
 	return Query{

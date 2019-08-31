@@ -5,6 +5,7 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/grimoire/sort"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,8 @@ func Query(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&Address{Name: "address2", UserID: &user.ID})
 	repo.MustInsert(&Address{Name: "address3", UserID: &user.ID})
 
-	tests := []grimoire.Query{
+	tests := []grimoire.Querier{
+		where.Eq("id", user.ID),
 		grimoire.Where(where.Eq("id", user.ID)),
 		grimoire.Where(where.Eq("name", "name1")),
 		grimoire.Where(where.Eq("age", 10)),
@@ -48,17 +50,17 @@ func Query(t *testing.T, repo grimoire.Repo) {
 		grimoire.Where(where.NotLike("name", "noname%")),
 		grimoire.Where(where.Fragment("id > 0")),
 		grimoire.Where(where.Not(where.Eq("id", 1), where.Eq("name", "name1"), where.Eq("age", 10))),
-		// grimoire.Order(where.Asc(name)),
-		// grimoire.Order(where.Desc(name)),
-		// grimoire.Order(where.Asc(name), where.Desc(age)),
+		sort.Asc("name"),
+		sort.Desc("name"),
+		grimoire.Select().SortAsc("name").SortDesc("age"),
 		grimoire.Group("gender").Select("COUNT(id)"),
 		grimoire.Group("age").Having(where.Gt("age", 10)).Select("COUNT(id)"),
-		// grimoire.Limit(5),
-		// grimoire.Limit(5).Offset(5),
-		// grimoire.Find(1),
-		// grimoire.Select("name").Where(where.Eq("id", 1)),
-		// grimoire.Select("name", "age").Where(where.Eq("id", 1)),
-		// grimoire.Distinct().Find(1),
+		grimoire.Limit(5),
+		grimoire.Select().Limit(5),
+		grimoire.Select().Limit(5).Offset(5),
+		grimoire.Select("name").Where(where.Eq("id", 1)),
+		grimoire.Select("name", "age").Where(where.Eq("id", 1)),
+		grimoire.Select().Distinct().Where(where.Eq("id", 1)),
 	}
 
 	run(t, repo, tests)
@@ -66,7 +68,7 @@ func Query(t *testing.T, repo grimoire.Repo) {
 
 // QueryJoin tests query specifications with join.
 func QueryJoin(t *testing.T, repo grimoire.Repo) {
-	tests := []grimoire.Query{
+	tests := []grimoire.Querier{
 		// grimoire.Join(users),
 		// grimoire.Join(users, where.Eq(where.I("addresses.user_id"), where.I("users.id"))),
 		// grimoire.Join(users).Where(where.Eq("id", 1)),
@@ -92,10 +94,9 @@ func QueryNotFound(t *testing.T, repo grimoire.Repo) {
 	})
 }
 
-func run(t *testing.T, repo grimoire.Repo, queries []grimoire.Query) {
-	for _, query := range queries {
-		statement, _ := builder.Find(query)
-		t.Run("All|"+statement, func(t *testing.T) {
+func run(t *testing.T, repo grimoire.Repo, queriers []grimoire.Querier) {
+	for _, query := range queriers {
+		t.Run("All", func(t *testing.T) {
 			var (
 				users []User
 				err   = repo.All(&users, query)
@@ -106,9 +107,8 @@ func run(t *testing.T, repo grimoire.Repo, queries []grimoire.Query) {
 		})
 	}
 
-	for _, query := range queries {
-		statement, _ := builder.Find(query)
-		t.Run("One|"+statement, func(t *testing.T) {
+	for _, query := range queriers {
+		t.Run("One", func(t *testing.T) {
 			var (
 				user User
 				err  = repo.One(&user, query)

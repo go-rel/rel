@@ -160,11 +160,11 @@ func (r Repo) insert(doc Document, changes Changes) error {
 		return err
 	}
 
-	if err := r.upsertHasOne(doc, &changes, id); err != nil {
+	if err := r.upsertHasOne(doc, &changes); err != nil {
 		return err
 	}
 
-	if err := r.upsertHasMany(doc, &changes, id, true); err != nil {
+	if err := r.upsertHasMany(doc, &changes, true); err != nil {
 		return err
 	}
 
@@ -232,6 +232,9 @@ func (r Repo) insertAll(col Collection, changes []Changes) error {
 
 // Update an record in database.
 // It'll panic if any error occurred.
+// not supported:
+// - update has many (will be replaced by default)
+// - replace has one or has many - may cause duplicate record, update instead
 func (r Repo) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
@@ -250,7 +253,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 		changers = []Changer{changeDoc(doc)}
 	}
 
-	return r.update(doc, BuildChanges(changers...), Eq(pField, pValue))
+	return transformError(r.update(doc, BuildChanges(changers...), Eq(pField, pValue)))
 }
 
 func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
@@ -262,16 +265,28 @@ func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
 		queriers = BuildQuery(doc.Table(), filter)
 	)
 
-	// TODO: update timestamp (updated_at) from form
-
-	// perform update
-	err := r.adapter.Update(queriers, changes, r.logger...)
-	if err != nil {
-		// TODO: changeset error
-		return transformError(err)
+	if err := r.upsertBelongsTo(doc, &changes); err != nil {
+		return err
 	}
 
-	return r.one(doc, queriers)
+	// TODO: update timestamp (updated_at) from form
+	if err := r.adapter.Update(queriers, changes, r.logger...); err != nil {
+		return err
+	}
+
+	if err := r.one(doc, queriers); err != nil {
+		return err
+	}
+
+	if err := r.upsertHasOne(doc, &changes); err != nil {
+		return err
+	}
+
+	if err := r.upsertHasMany(doc, &changes, false); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MustUpdate an record in database.
@@ -324,7 +339,7 @@ func (r Repo) upsertBelongsTo(doc Document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) upsertHasOne(doc Document, changes *Changes, id interface{}) error {
+func (r Repo) upsertHasOne(doc Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -366,7 +381,7 @@ func (r Repo) upsertHasOne(doc Document, changes *Changes, id interface{}) error
 	return nil
 }
 
-func (r Repo) upsertHasMany(doc Document, changes *Changes, id interface{}, insertion bool) error {
+func (r Repo) upsertHasMany(doc Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		changes, changed := changes.GetAssoc(field)
 		if !changed {
@@ -386,14 +401,9 @@ func (r Repo) upsertHasMany(doc Document, changes *Changes, id interface{}, inse
 				panic("grimoire: association must be loaded to update")
 			}
 
-			var (
-				pField  = target.PrimaryField()
-				pValues = target.PrimaryValue().([]interface{})
-			)
-
-			if len(pValues) > 0 {
+			if target.Len() > 0 {
 				var (
-					filter = Eq(fField, rValue).AndIn(pField, pValues...)
+					filter = Eq(fField, rValue)
 				)
 
 				if err := r.deleteAll(BuildQuery(table, filter)); err != nil {

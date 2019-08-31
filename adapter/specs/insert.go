@@ -13,7 +13,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 	var (
 		note   = "swordsman"
 		user   = User{
-			Name:   "zoro",
+			Name:   "insert",
 			Gender: "male",
 			Age:    23,
 			Note:   &note,
@@ -23,7 +23,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 	err := repo.Insert(&user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
-	assert.Equal(t, "zoro", user.Name)
+	assert.Equal(t, "insert", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 	assert.Equal(t, &note, user.Note)
@@ -42,7 +42,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 	var (
 		user   = User{
-			Name:   "zoro",
+			Name:   "insert has many",
 			Gender: "male",
 			Age:    23,
 			Addresses: []Address{
@@ -55,7 +55,7 @@ func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 	err := repo.Insert(&user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
-	assert.Equal(t, "zoro", user.Name)
+	assert.Equal(t, "insert has many", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 
@@ -71,7 +71,7 @@ func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 	var (
 		user   = User{
-			Name:   "zoro",
+			Name:   "insert has one",
 			Gender: "male",
 			Age:    23,
 			PrimaryAddress: &Address{Name: "primary"},
@@ -81,7 +81,7 @@ func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 	err := repo.Insert(&user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
-	assert.Equal(t, "zoro", user.Name)
+	assert.Equal(t, "insert has one", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 
@@ -94,7 +94,7 @@ func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
 	var (
 		address = Address{
-			Name: "insert has one",
+			Name: "insert belongs to",
 			User: User{
 				Name:   "zoro",
 				Gender: "male",
@@ -108,7 +108,7 @@ func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
 
 	assert.NotEqual(t, 0, address.ID)
 	assert.Equal(t, address.User.ID, *address.UserID)
-	assert.Equal(t, "insert has one", address.Name)
+	assert.Equal(t, "insert belongs to", address.Name)
 
 	assert.NotEqual(t, 0, address.User.ID)
 	assert.Equal(t, "zoro", address.User.Name)

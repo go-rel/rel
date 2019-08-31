@@ -156,7 +156,7 @@ func (r Repo) insert(doc Document, changes Changes) error {
 	}
 
 	// fetch record
-	if err := r.One(doc, Eq(pField, id)); err != nil {
+	if err := r.one(doc, queriers.Where(Eq(pField, id))); err != nil {
 		return err
 	}
 

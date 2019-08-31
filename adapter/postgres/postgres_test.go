@@ -89,6 +89,9 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Insert Specs
 	specs.Insert(t, repo)
+	specs.InsertHasMany(t, repo)
+	specs.InsertHasOne(t, repo)
+	specs.InsertBelongsTo(t, repo)
 	specs.Inserts(t, repo)
 	specs.InsertAll(t, repo)
 

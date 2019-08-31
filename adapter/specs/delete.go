@@ -18,7 +18,7 @@ func Delete(t *testing.T, repo grimoire.Repo) {
 	assert.NotEqual(t, 0, user.ID)
 
 	assert.Nil(t, repo.Delete(&user))
-	assert.NotNil(t, repo.One(&user, where.Eq("id", user.ID)))
+	assert.Equal(t, grimoire.NoResultError{}, repo.One(&user, where.Eq("id", user.ID)))
 
 }
 

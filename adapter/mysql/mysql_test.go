@@ -90,14 +90,11 @@ func TestAdapter_specs(t *testing.T) {
 	// Insert Specs
 	specs.Insert(t, repo)
 	specs.Inserts(t, repo)
-	specs.InsertsExplicit(t, repo)
 	specs.InsertAll(t, repo)
-	specs.InsertAllExplicit(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)
 	specs.Updates(t, repo)
-	specs.UpdatesExplicit(t, repo)
 
 	// // Put Specs
 	// specs.SaveInsert(t, repo)

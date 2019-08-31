@@ -78,36 +78,3 @@ func Updates(t *testing.T, repo grimoire.Repo) {
 		})
 	}
 }
-
-func UpdatesExplicit(t *testing.T, repo grimoire.Repo) {
-	var (
-		user    = User{Name: "update"}
-		address = Address{Name: "update"}
-	)
-
-	repo.MustInsert(&user)
-	repo.MustInsert(&address)
-
-	tests := []struct {
-		record  interface{}
-		changer grimoire.Changer
-	}{
-		{&user, grimoire.Map{"name": "changed", "age": 100}},
-		{&user, grimoire.Map{"name": "changed", "age": 100, "note": "note"}},
-		{&user, grimoire.Map{"note": "note"}},
-		{&address, grimoire.Map{"name": "address"}},
-		{&address, grimoire.Map{"user_id": user.ID}},
-		{&address, grimoire.Map{"name": "address", "user_id": user.ID}},
-	}
-
-	for _, test := range tests {
-		var (
-			changes      = grimoire.BuildChanges(test.changer)
-			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
-		)
-
-		t.Run("Update|"+statement, func(t *testing.T) {
-			assert.Nil(t, repo.Update(test.record, test.changer))
-		})
-	}
-}

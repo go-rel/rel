@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func InsertBasic(t *testing.T, repo grimoire.Repo) {
+func Insert(t *testing.T, repo grimoire.Repo) {
 	var (
-		name       = "zoro"
-		gender     = "male"
-		age        = 23
-		note       = "swordsman"
-		insertUser = User{
+		name   = "zoro"
+		gender = "male"
+		age    = 23
+		note   = "swordsman"
+		user   = User{
 			Name:   name,
 			Gender: gender,
 			Age:    age,
@@ -23,27 +23,27 @@ func InsertBasic(t *testing.T, repo grimoire.Repo) {
 		}
 	)
 
-	err := repo.Insert(&insertUser)
+	err := repo.Insert(&user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, insertUser.ID)
-	assert.Equal(t, name, insertUser.Name)
-	assert.Equal(t, gender, insertUser.Gender)
-	assert.Equal(t, age, insertUser.Age)
-	assert.Equal(t, &note, insertUser.Note)
+	assert.NotEqual(t, 0, user.ID)
+	assert.Equal(t, name, user.Name)
+	assert.Equal(t, gender, user.Gender)
+	assert.Equal(t, age, user.Age)
+	assert.Equal(t, &note, user.Note)
 
 	var (
-		queryUser User
+		queried User
 	)
 
-	insertUser.Addresses = nil
-	err = repo.One(&queryUser, where.Eq("id", insertUser.ID))
+	user.Addresses = nil
+	err = repo.One(&queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
-	assert.Equal(t, insertUser, queryUser)
+	assert.Equal(t, user, queried)
 }
 
 // Insert tests insert specifications.
 // TODO: insert with assocs
-func Insert(t *testing.T, repo grimoire.Repo) {
+func Inserts(t *testing.T, repo grimoire.Repo) {
 	var (
 		user User
 		note = "note"
@@ -57,9 +57,9 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 		&User{Name: "insert", Age: 100, Note: &note},
 		&User{Note: &note},
 		&Address{},
-		&Address{Address: "address"},
+		&Address{Name: "work"},
 		&Address{UserID: &user.ID},
-		&Address{Address: "address", UserID: &user.ID},
+		&Address{Name: "work", UserID: &user.ID},
 	}
 
 	for _, record := range tests {
@@ -75,7 +75,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 }
 
 // InsertExplicit tests insert specifications.
-func InsertExplicit(t *testing.T, repo grimoire.Repo) {
+func InsertsExplicit(t *testing.T, repo grimoire.Repo) {
 	var (
 		user User
 	)
@@ -91,9 +91,9 @@ func InsertExplicit(t *testing.T, repo grimoire.Repo) {
 		{&User{}, grimoire.Map{"name": "insert", "age": 100, "note": "note"}},
 		{&User{}, grimoire.Map{"note": "note"}},
 		{&Address{}, grimoire.Map{}},
-		{&Address{}, grimoire.Map{"address": "address"}},
+		{&Address{}, grimoire.Map{"name": "address"}},
 		{&Address{}, grimoire.Map{"user_id": user.ID}},
-		{&Address{}, grimoire.Map{"address": "address", "user_id": user.ID}},
+		{&Address{}, grimoire.Map{"name": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {
@@ -123,9 +123,9 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
 		// &[]Address{{}},
-		&[]Address{{Address: "address"}},
+		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
-		&[]Address{{Address: "address", UserID: &user.ID}},
+		&[]Address{{Name: "work", UserID: &user.ID}},
 	}
 
 	for _, record := range tests {
@@ -159,9 +159,9 @@ func InsertAllExplicit(t *testing.T, repo grimoire.Repo) {
 		{&[]User{}, grimoire.Map{"name": "insert", "age": 100, "note": "note"}},
 		{&[]User{}, grimoire.Map{"note": "note"}},
 		// {&[]Address{}, grimoire.Map{}},
-		{&[]Address{}, grimoire.Map{"address": "address"}},
+		{&[]Address{}, grimoire.Map{"name": "address"}},
 		{&[]Address{}, grimoire.Map{"user_id": user.ID}},
-		{&[]Address{}, grimoire.Map{"address": "address", "user_id": user.ID}},
+		{&[]Address{}, grimoire.Map{"name": "address", "user_id": user.ID}},
 	}
 
 	for _, test := range tests {

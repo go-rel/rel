@@ -8,67 +8,164 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Preload tests query specifications for preloading.
-func Preload(t *testing.T, repo grimoire.Repo) {
-	// preparte tests data
+func createPreloadUser(repo grimoire.Repo) User {
 	var (
 		user = User{
 			Name:   "preload",
 			Gender: "male",
 			Age:    25,
 			Addresses: []Address{
-				{Address: "preload1"},
-				{Address: "preload2"},
-				{Address: "preload3"},
+				{Name: "primary"},
+				{Name: "home"},
+				{Name: "work"},
 			},
 		}
 	)
 
 	repo.MustInsert(&user)
 
-	// t.Run("Preload Addresses", func(t *testing.T) {
-	// 	var (
-	// 		emptyUser = User{ID: user.ID}
-	// 	)
+	return user
+}
 
-	// 	err := repo.Preload(&emptyUser, "addresses")
-	// 	assert.Nil(t, err)
-	// 	assert.Equal(t, len(emptyUser.Addresses), len(user.Addresses))
-	// })
+func PreloadHasMany(t *testing.T, repo grimoire.Repo) {
+	var (
+		result User
+		user   = createPreloadUser(repo)
+	)
 
-	t.Run("Preload Addresses with query", func(t *testing.T) {
-		var (
-			emptyUser = User{ID: user.ID}
-		)
+	err := repo.One(&result, where.Eq("id", user.ID))
+	assert.Nil(t, err)
 
-		repo.Preload(&emptyUser, "addresses", where.Eq("address", "preload1"))
-		assert.Equal(t, 1, len(emptyUser.Addresses))
-		assert.Equal(t, user.Addresses[0].Address, emptyUser.Addresses[0].Address)
-	})
+	err = repo.Preload(&result, "addresses")
+	assert.Nil(t, err)
+	assert.Equal(t, user, result)
+}
 
-	// unload
+func PreloadHasManyWithQuery(t *testing.T, repo grimoire.Repo) {
+	var (
+		result User
+		user   = createPreloadUser(repo)
+	)
+
+	err := repo.One(&result, where.Eq("id", user.ID))
+	assert.Nil(t, err)
+
+	err = repo.Preload(&result, "addresses", where.Eq("name", "primary"))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(result.Addresses))
+	assert.Equal(t, user.Addresses[0], result.Addresses[0])
+}
+
+func PreloadHasManySlice(t *testing.T, repo grimoire.Repo) {
+	var (
+		result []User
+		users  = []User{
+			createPreloadUser(repo),
+			createPreloadUser(repo),
+		}
+	)
+
+	err := repo.All(&result, where.In("id", users[0].ID, users[1].ID))
+	assert.Nil(t, err)
+
+	err = repo.Preload(&result, "addresses")
+	assert.Nil(t, err)
+	assert.Equal(t, users, result)
+}
+
+
+func PreloadHasOne(t *testing.T, repo grimoire.Repo) {
+	var (
+		result User
+		user   = createPreloadUser(repo)
+	)
+
+	err := repo.One(&result, where.Eq("id", user.ID))
+	assert.Nil(t, err)
+
+	err = repo.Preload(&result, "primary_address")
+	assert.Nil(t, err)
+	assert.NotNil(t, result.PrimaryAddress)
+}
+
+func PreloadHasOneWithQuery(t *testing.T, repo grimoire.Repo) {
+	var (
+		result User
+		user   = createPreloadUser(repo)
+	)
+
+	err := repo.One(&result, where.Eq("id", user.ID))
+	assert.Nil(t, err)
+
+	err = repo.Preload(&result, "primary_address", where.Eq("name", "primary"))
+	assert.Nil(t, err)
+	assert.Equal(t, user.Addresses[0], *result.PrimaryAddress)
+}
+
+func PreloadHasOneSlice(t *testing.T, repo grimoire.Repo) {
+	var (
+		result []User
+		users  = []User{
+			createPreloadUser(repo),
+			createPreloadUser(repo),
+		}
+	)
+
+	err := repo.All(&result, where.In("id", users[0].ID, users[1].ID))
+	assert.Nil(t, err)
+
+	err = repo.Preload(&result, "primary_address")
+	assert.Nil(t, err)
+	assert.NotNil(t, result[0].PrimaryAddress)
+	assert.NotNil(t, result[1].PrimaryAddress)
+}
+
+func PreloadBelongsTo(t *testing.T, repo grimoire.Repo) {
+	var (
+		result Address
+		user   = createPreloadUser(repo)
+	)
+
+	err := repo.One(&result, where.Eq("id", user.Addresses[0].ID))
+	assert.Nil(t, err)
+
 	user.Addresses = nil
 
-	t.Run("Preload User", func(t *testing.T) {
-		var (
-			emptyAddress = Address{UserID: &user.ID}
-		)
+	err = repo.Preload(&result, "user")
+	assert.Nil(t, err)
+	assert.Equal(t, user, result.User)
+}
 
-		repo.Preload(&emptyAddress, "user")
-		assert.Equal(t, user, emptyAddress.User)
-	})
+func PreloadBelongsToWithQuery(t *testing.T, repo grimoire.Repo) {
+	var (
+		result Address
+		user   = createPreloadUser(repo)
+	)
 
-	t.Run("Preload User slice", func(t *testing.T) {
-		var (
-			emptyAddresses = []Address{
-				{UserID: &user.ID},
-				{UserID: &user.ID},
-			}
-		)
+	err := repo.One(&result, where.Eq("id", user.Addresses[0].ID))
+	assert.Nil(t, err)
 
-		repo.Preload(&emptyAddresses, "user")
-		assert.Len(t, emptyAddresses, 2)
-		assert.Equal(t, user, emptyAddresses[0].User)
-		assert.Equal(t, user, emptyAddresses[0].User)
-	})
+	user.Addresses = nil
+
+	err = repo.Preload(&result, "user", where.Eq("name", "not exists"))
+	assert.Nil(t, err)
+	assert.Zero(t, result.User)
+}
+
+func PreloadBelongsToSlice(t *testing.T, repo grimoire.Repo) {
+	var (
+		user      = createPreloadUser(repo)
+		result    = user.Addresses
+		resultLen = len(result)
+	)
+
+	user.Addresses = nil
+
+	err := repo.Preload(&result, "user")
+	assert.Nil(t, err)
+	assert.Len(t, result, resultLen)
+
+	for i := range result {
+		assert.Equal(t, user, result[i].User)
+	}
 }

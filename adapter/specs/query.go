@@ -22,9 +22,9 @@ func Query(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&User{Name: "name5", Gender: "female", Age: 50})
 	repo.MustInsert(&User{Name: "name6", Gender: "female", Age: 60})
 
-	repo.MustInsert(&Address{Address: "address1", UserID: &user.ID})
-	repo.MustInsert(&Address{Address: "address2", UserID: &user.ID})
-	repo.MustInsert(&Address{Address: "address3", UserID: &user.ID})
+	repo.MustInsert(&Address{Name: "address1", UserID: &user.ID})
+	repo.MustInsert(&Address{Name: "address2", UserID: &user.ID})
+	repo.MustInsert(&Address{Name: "address3", UserID: &user.ID})
 
 	tests := []grimoire.Query{
 		grimoire.Where(where.Eq("id", user.ID)),

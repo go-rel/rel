@@ -13,14 +13,15 @@ import (
 
 // User defines users schema.
 type User struct {
-	ID        int64
-	Name      string
-	Gender    string
-	Age       int
-	Note      *string
-	Addresses []Address
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID             int64
+	Name           string
+	Gender         string
+	Age            int
+	Note           *string
+	Addresses      []Address
+	PrimaryAddress 	*Address
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 // Address defines addresses schema.
@@ -28,7 +29,7 @@ type Address struct {
 	ID        int64
 	User      User
 	UserID    *int64
-	Address   string
+	Name   string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

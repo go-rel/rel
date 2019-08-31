@@ -35,7 +35,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		user_id INT UNSIGNED,
-		address VARCHAR(60) NOT NULL DEFAULT '',
+		name VARCHAR(60) NOT NULL DEFAULT '',
 		created_at DATETIME,
 		updated_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id)
@@ -58,7 +58,7 @@ func dsn() string {
 		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True&loc=Local"
 	}
 
-	return "root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local"
+	return "root@tcp(localhost:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -74,21 +74,30 @@ func TestAdapter_specs(t *testing.T) {
 	specs.QueryNotFound(t, repo)
 
 	// Preload specs
-	specs.Preload(t, repo)
+	specs.PreloadHasMany(t, repo)
+	specs.PreloadHasManyWithQuery(t, repo)
+	specs.PreloadHasManySlice(t, repo)
+	specs.PreloadHasOne(t, repo)
+	specs.PreloadHasOneWithQuery(t, repo)
+	specs.PreloadHasOneSlice(t, repo)
+	specs.PreloadBelongsTo(t, repo)
+	specs.PreloadBelongsToWithQuery(t, repo)
+	specs.PreloadBelongsToSlice(t, repo)
 
 	// Aggregate Specs
 	specs.Aggregate(t, repo)
 
 	// Insert Specs
-	specs.InsertBasic(t, repo)
 	specs.Insert(t, repo)
-	specs.InsertExplicit(t, repo)
+	specs.Inserts(t, repo)
+	specs.InsertsExplicit(t, repo)
 	specs.InsertAll(t, repo)
 	specs.InsertAllExplicit(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)
-	specs.UpdateExplicit(t, repo)
+	specs.Updates(t, repo)
+	specs.UpdatesExplicit(t, repo)
 
 	// // Put Specs
 	// specs.SaveInsert(t, repo)

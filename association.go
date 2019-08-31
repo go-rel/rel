@@ -16,6 +16,7 @@ const (
 type Association interface {
 	Type() AssociationType
 	Target() (Collection, bool)
+	IsZero() bool
 	ReferenceField() string
 	ReferenceValue() interface{}
 	ForeignField() string
@@ -78,7 +79,12 @@ func (a association) Target() (Collection, bool) {
 			return newCollection(rv), loaded
 		}
 
-		return newDocument(rv), loaded
+		var (
+			doc = newDocument(rv)
+			id  = doc.PrimaryValue()
+		)
+
+		return doc, loaded && !isZero(id)
 	default:
 		var (
 			doc = newDocument(rv.Addr())
@@ -87,6 +93,15 @@ func (a association) Target() (Collection, bool) {
 
 		return doc, !isZero(id)
 	}
+}
+
+func (a association) IsZero() bool {
+	var (
+		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		val = rv.Interface()
+	)
+
+	return isZero(val)
 }
 
 func (a association) ReferenceField() string {

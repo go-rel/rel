@@ -38,7 +38,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE addresses (
 		id SERIAL NOT NULL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
-		address VARCHAR(60) NOT NULL DEFAULT '',
+		name VARCHAR(60) NOT NULL DEFAULT '',
 		created_at TIMESTAMP,
 		updated_at TIMESTAMP
 	);`, nil)
@@ -58,7 +58,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://postgres@localhost/grimoire_test?sslmode=disable"
+	return "postgres://grimoire@localhost:9920/grimoire_test?sslmode=disable"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -74,21 +74,30 @@ func TestAdapter_specs(t *testing.T) {
 	specs.QueryNotFound(t, repo)
 
 	// Preload specs
-	specs.Preload(t, repo)
+	specs.PreloadHasMany(t, repo)
+	specs.PreloadHasManyWithQuery(t, repo)
+	specs.PreloadHasManySlice(t, repo)
+	specs.PreloadHasOne(t, repo)
+	specs.PreloadHasOneWithQuery(t, repo)
+	specs.PreloadHasOneSlice(t, repo)
+	specs.PreloadBelongsTo(t, repo)
+	specs.PreloadBelongsToWithQuery(t, repo)
+	specs.PreloadBelongsToSlice(t, repo)
 
 	// Aggregate Specs
 	specs.Aggregate(t, repo)
 
 	// Insert Specs
-	specs.InsertBasic(t, repo)
 	specs.Insert(t, repo)
-	specs.InsertExplicit(t, repo)
+	specs.Inserts(t, repo)
+	specs.InsertsExplicit(t, repo)
 	specs.InsertAll(t, repo)
 	specs.InsertAllExplicit(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)
-	specs.UpdateExplicit(t, repo)
+	specs.Updates(t, repo)
+	specs.UpdatesExplicit(t, repo)
 
 	// // Put Specs
 	// specs.SaveInsert(t, repo)

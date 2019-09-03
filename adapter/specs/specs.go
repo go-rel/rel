@@ -19,7 +19,7 @@ type User struct {
 	Age            int
 	Note           *string
 	Addresses      []Address
-	PrimaryAddress 	*Address
+	PrimaryAddress *Address
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -29,7 +29,7 @@ type Address struct {
 	ID        int64
 	User      User
 	UserID    *int64
-	Name   string
+	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -52,7 +52,8 @@ var (
 
 func assertConstraint(t *testing.T, err error, ctype grimoire.ConstraintType, key string) {
 	assert.NotNil(t, err)
-	cerr, _ := err.(grimoire.ConstraintError)
+	cerr, ok := err.(grimoire.ConstraintError)
+	assert.True(t, ok)
 	assert.True(t, strings.Contains(cerr.Key, key))
 	assert.Equal(t, ctype, cerr.Type)
 }

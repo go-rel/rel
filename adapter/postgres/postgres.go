@@ -98,7 +98,7 @@ func (adapter *Adapter) query(statement string, args []interface{}, loggers []gr
 
 	go grimoire.Log(loggers, statement, time.Since(start), err)
 
-	return rows, err
+	return rows, errorFunc(err)
 }
 
 // Begin begins a new transaction.

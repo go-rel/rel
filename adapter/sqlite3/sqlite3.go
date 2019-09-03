@@ -18,7 +18,6 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/mattn/go-sqlite3"
 )
 
 // Adapter definition for mysql database.
@@ -58,17 +57,27 @@ func errorFunc(err error) error {
 		return nil
 	}
 
-	e, _ := err.(sqlite3.Error)
-	switch e.ExtendedCode {
-	case sqlite3.ErrConstraintUnique:
+	var (
+		msg         = err.Error()
+		failedSep   = " failed: "
+		failedIndex = strings.Index(msg, failedSep)
+		failedLen   = 9 // len(failedSep)
+	)
+
+	if failedIndex < 0 {
+		failedIndex = 0
+	}
+
+	switch msg[:failedIndex] {
+	case "UNIQUE constraint":
 		return grimoire.ConstraintError{
-			Key:  strings.Split(e.Error(), "failed: ")[1],
+			Key:  msg[failedIndex+failedLen:],
 			Type: grimoire.UniqueConstraint,
 			Err:  err,
 		}
-	case sqlite3.ErrConstraintCheck:
+	case "CHECK constraint":
 		return grimoire.ConstraintError{
-			Key:  strings.Split(e.Error(), "failed: ")[1],
+			Key:  msg[failedIndex+failedLen:],
 			Type: grimoire.CheckConstraint,
 			Err:  err,
 		}

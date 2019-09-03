@@ -18,7 +18,6 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/Fs02/grimoire/internal"
 	"github.com/lib/pq"
 )
 
@@ -119,19 +118,19 @@ func errorFunc(err error) error {
 		switch e.Code {
 		case "23505":
 			return grimoire.ConstraintError{
-				Key:  internal.ExtractString(e.Message, "constraint \"", "\""),
+				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
 				Type: grimoire.UniqueConstraint,
 				Err:  err,
 			}
 		case "23503":
 			return grimoire.ConstraintError{
-				Key:  internal.ExtractString(e.Message, "constraint \"", "\""),
+				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
 				Type: grimoire.ForeignKeyConstraint,
 				Err:  err,
 			}
 		case "23514":
 			return grimoire.ConstraintError{
-				Key:  internal.ExtractString(e.Message, "constraint \"", "\""),
+				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
 				Type: grimoire.CheckConstraint,
 				Err:  err,
 			}

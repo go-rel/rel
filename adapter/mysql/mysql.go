@@ -14,12 +14,11 @@ package mysql
 
 import (
 	db "database/sql"
+	"strings"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/Fs02/grimoire/internal"
-	"github.com/go-sql-driver/mysql"
 )
 
 // Adapter definition for mysql database.
@@ -67,22 +66,30 @@ func errorFunc(err error) error {
 		return nil
 	}
 
-	if e, ok := err.(*mysql.MySQLError); ok {
-		switch e.Number {
-		case 1062:
-			return grimoire.ConstraintError{
-				Key:  internal.ExtractString(e.Message, "key '", "'"),
-				Type: grimoire.UniqueConstraint,
-				Err:  err,
-			}
-		case 1452:
-			return grimoire.ConstraintError{
-				Key:  internal.ExtractString(e.Message, "CONSTRAINT `", "`"),
-				Type: grimoire.ForeignKeyConstraint,
-				Err:  err,
-			}
-		}
+	var (
+		msg          = err.Error()
+		errCodeSep   = ':'
+		errCodeIndex = strings.IndexRune(msg, errCodeSep)
+	)
+
+	if errCodeIndex < 0 {
+		errCodeIndex = 0
 	}
 
-	return err
+	switch msg[:errCodeIndex] {
+	case "Error 1062":
+		return grimoire.ConstraintError{
+			Key:  sql.ExtractString(msg, "key '", "'"),
+			Type: grimoire.UniqueConstraint,
+			Err:  err,
+		}
+	case "Error 1452":
+		return grimoire.ConstraintError{
+			Key:  sql.ExtractString(msg, "CONSTRAINT `", "`"),
+			Type: grimoire.ForeignKeyConstraint,
+			Err:  err,
+		}
+	default:
+		return err
+	}
 }

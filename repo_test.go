@@ -764,7 +764,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
@@ -864,7 +864,7 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 		rerr = errors.New("delete all error")
 	)
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(rerr).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(rerr).Once()
 
 	err := repo.upsertHasMany(doc, &changes, false)
 	assert.Equal(t, rerr, err)

@@ -73,7 +73,6 @@ func PreloadHasManySlice(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, users, result)
 }
 
-
 func PreloadHasOne(t *testing.T, repo grimoire.Repo) {
 	var (
 		result User

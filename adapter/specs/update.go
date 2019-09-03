@@ -10,8 +10,8 @@ import (
 
 func Update(t *testing.T, repo grimoire.Repo) {
 	var (
-		note   = "swordsman"
-		user   = User{
+		note = "swordsman"
+		user = User{
 			Name: "update",
 		}
 	)
@@ -43,7 +43,7 @@ func Update(t *testing.T, repo grimoire.Repo) {
 
 func UpdateHasManyInsert(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
+		user = User{
 			Name: "update init",
 		}
 	)
@@ -74,7 +74,7 @@ func UpdateHasManyInsert(t *testing.T, repo grimoire.Repo) {
 
 func UpdateHasManyReplace(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
+		user = User{
 			Name: "update init",
 			Addresses: []Address{
 				{Name: "old address"},
@@ -108,7 +108,7 @@ func UpdateHasManyReplace(t *testing.T, repo grimoire.Repo) {
 
 func UpdateHasOneInsert(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
+		user = User{
 			Name: "update init",
 		}
 	)
@@ -132,8 +132,8 @@ func UpdateHasOneInsert(t *testing.T, repo grimoire.Repo) {
 
 func UpdateHasOneUpdate(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
-			Name: "update init",
+		user = User{
+			Name:           "update init",
 			PrimaryAddress: &Address{Name: "primary"},
 		}
 	)
@@ -157,8 +157,8 @@ func UpdateHasOneUpdate(t *testing.T, repo grimoire.Repo) {
 
 func UpdateHasOneReplace(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
-			Name: "update init",
+		user = User{
+			Name:           "update init",
 			PrimaryAddress: &Address{Name: "primary"},
 		}
 	)
@@ -211,7 +211,7 @@ func UpdateBelongsToUpdate(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&address)
 
 	address.Name = "update address belongs to"
-	address.User.Name =  "updated user"
+	address.User.Name = "updated user"
 
 	err := repo.Update(&address)
 	assert.Nil(t, err)

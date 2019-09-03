@@ -97,7 +97,7 @@ func (a association) Target() (Collection, bool) {
 
 func (a association) IsZero() bool {
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv  = a.rv.FieldByIndex(a.data.targetIndex)
 		val = rv.Interface()
 	)
 

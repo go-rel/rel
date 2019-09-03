@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/where"
 	"github.com/Fs02/grimoire/sort"
+	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,7 +69,7 @@ func Query(t *testing.T, repo grimoire.Repo) {
 // QueryJoin tests query specifications with join.
 func QueryJoin(t *testing.T, repo grimoire.Repo) {
 	tests := []grimoire.Querier{
-		// grimoire.Join(users),
+		// grimoire.Join("users"),
 		// grimoire.Join(users, where.Eq(where.I("addresses.user_id"), where.I("users.id"))),
 		// grimoire.Join(users).Where(where.Eq("id", 1)),
 		// grimoire.Join(users).Where(where.Eq(address, "address1")),

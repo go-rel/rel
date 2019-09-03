@@ -57,7 +57,7 @@ func (dc documentChanger) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			col, _ = assoc.Target()
-			ch = BuildChanges(documentChanger{doc: col.Get(0)})
+			ch     = BuildChanges(documentChanger{doc: col.Get(0)})
 		)
 
 		changes.SetAssoc(field, ch)
@@ -71,8 +71,8 @@ func (dc documentChanger) buildAssocMany(field string, changes *Changes) {
 
 	if !assoc.IsZero() {
 		var (
-			col,_ = assoc.Target()
-			chs = make([]Changes, col.Len())
+			col, _ = assoc.Target()
+			chs    = make([]Changes, col.Len())
 		)
 
 		for i := range chs {

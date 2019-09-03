@@ -11,8 +11,8 @@ import (
 
 func Insert(t *testing.T, repo grimoire.Repo) {
 	var (
-		note   = "swordsman"
-		user   = User{
+		note = "swordsman"
+		user = User{
 			Name:   "insert",
 			Gender: "male",
 			Age:    23,
@@ -38,10 +38,9 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, user, queried)
 }
 
-
 func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
+		user = User{
 			Name:   "insert has many",
 			Gender: "male",
 			Age:    23,
@@ -70,10 +69,10 @@ func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 
 func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 	var (
-		user   = User{
-			Name:   "insert has one",
-			Gender: "male",
-			Age:    23,
+		user = User{
+			Name:           "insert has one",
+			Gender:         "male",
+			Age:            23,
 			PrimaryAddress: &Address{Name: "primary"},
 		}
 	)
@@ -89,7 +88,6 @@ func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 }
-
 
 func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
 	var (

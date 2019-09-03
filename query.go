@@ -32,12 +32,12 @@ type Query struct {
 	Collection  string
 	SelectQuery SelectQuery
 	JoinQuery   []JoinQuery
-	WhereQuery FilterQuery
+	WhereQuery  FilterQuery
 	GroupQuery  GroupQuery
 	SortQuery   []SortQuery
 	OffsetQuery Offset
 	LimitQuery  Limit
-	LockQuery  Lock
+	LockQuery   Lock
 }
 
 func (q Query) Build(query *Query) {

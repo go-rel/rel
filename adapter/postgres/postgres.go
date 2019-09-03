@@ -18,7 +18,6 @@ import (
 
 	"github.com/Fs02/grimoire"
 	"github.com/Fs02/grimoire/adapter/sql"
-	"github.com/lib/pq"
 )
 
 // Adapter definition for postgrees database.
@@ -114,28 +113,31 @@ func errorFunc(err error) error {
 		return nil
 	}
 
-	if e, ok := err.(*pq.Error); ok {
-		switch e.Code {
-		case "23505":
-			return grimoire.ConstraintError{
-				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-				Type: grimoire.UniqueConstraint,
-				Err:  err,
-			}
-		case "23503":
-			return grimoire.ConstraintError{
-				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-				Type: grimoire.ForeignKeyConstraint,
-				Err:  err,
-			}
-		case "23514":
-			return grimoire.ConstraintError{
-				Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-				Type: grimoire.CheckConstraint,
-				Err:  err,
-			}
-		}
-	}
+	var (
+		msg            = err.Error()
+		constraintType = sql.ExtractString(msg, "violates ", " constraint")
+	)
 
-	return err
+	switch constraintType {
+	case "unique":
+		return grimoire.ConstraintError{
+			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
+			Type: grimoire.UniqueConstraint,
+			Err:  err,
+		}
+	case "foreign key":
+		return grimoire.ConstraintError{
+			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
+			Type: grimoire.ForeignKeyConstraint,
+			Err:  err,
+		}
+	case "check":
+		return grimoire.ConstraintError{
+			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
+			Type: grimoire.CheckConstraint,
+			Err:  err,
+		}
+	default:
+		return err
+	}
 }

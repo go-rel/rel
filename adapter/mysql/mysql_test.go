@@ -106,11 +106,6 @@ func TestAdapter_specs(t *testing.T) {
 	specs.UpdateBelongsToUpdate(t, repo)
 	specs.Updates(t, repo)
 
-	// // Put Specs
-	// specs.SaveInsert(t, repo)
-	// specs.SaveInsertAll(t, repo)
-	// specs.SaveUpdate(t, repo)
-
 	// Delete specs
 	specs.Delete(t, repo)
 	specs.DeleteAll(t, repo)

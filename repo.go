@@ -426,6 +426,35 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 	return nil
 }
 
+func (r Repo) Save(record interface{}, changers ...Changer) error {
+	if record == nil {
+		return nil
+	}
+
+	var (
+		doc = newDocument(record)
+	)
+
+	if len(changers) == 0 {
+		changers = []Changer{changeDoc(doc)}
+	}
+
+	return transformError(r.save(doc, BuildChanges(changers...)))
+}
+
+func (r Repo) save(doc Document, changes Changes) error {
+	var (
+		pField = doc.PrimaryField()
+		pValue = doc.PrimaryValue()
+	)
+
+	if isZero(pValue) {
+		return r.insert(doc, changes)
+	}
+
+	return r.update(doc, changes, Eq(pField, pValue))
+}
+
 // Delete single entry.
 func (r Repo) Delete(record interface{}) error {
 	var (

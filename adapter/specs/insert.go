@@ -114,8 +114,7 @@ func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 23, address.User.Age)
 }
 
-// Insert tests insert specifications.
-// TODO: insert with assocs
+// Inserts tests insert specifications.
 func Inserts(t *testing.T, repo grimoire.Repo) {
 	var (
 		user User

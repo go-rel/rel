@@ -69,13 +69,12 @@ func Query(t *testing.T, repo grimoire.Repo) {
 // QueryJoin tests query specifications with join.
 func QueryJoin(t *testing.T, repo grimoire.Repo) {
 	tests := []grimoire.Querier{
-		// grimoire.Join("users"),
-		// grimoire.Join(users, where.Eq(where.I("addresses.user_id"), where.I("users.id"))),
-		// grimoire.Join(users).Where(where.Eq("id", 1)),
-		// grimoire.Join(users).Where(where.Eq(address, "address1")),
-		// grimoire.Join(users).Where(where.Eq(address, "address1")).Sort("name"),
-		// grimoire.JoinWith("LEFT JOIN", users),
-		// grimoire.JoinWith("LEFT OUTER JOIN", users),
+		grimoire.From("addresses").Join("users"),
+		grimoire.From("addresses").JoinOn("users", "addresses.user_id", "users.id"),
+		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.id", 1)),
+		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")),
+		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")).SortAsc("addresses.name"),
+		grimoire.From("addresses").JoinWith("LEFT JOIN", "users", "addresses.user_id", "users.id"),
 	}
 
 	run(t, repo, tests)

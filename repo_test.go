@@ -338,7 +338,7 @@ func TestRepo_Update_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_update(t *testing.T) {
+func TestRepo_saveBelongsTo_update(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -363,7 +363,7 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 	adapter.On("Update", q, buyer[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
 
-	err := repo.upsertBelongsTo(doc, &changes)
+	err := repo.saveBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 	assert.False(t, cur.Next())
 
@@ -371,7 +371,7 @@ func TestRepo_upsertBelongsTo_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
+func TestRepo_saveBelongsTo_updateError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -391,13 +391,13 @@ func TestRepo_upsertBelongsTo_updateError(t *testing.T) {
 
 	adapter.On("Update", q, buyer[0]).Return(errors.New("update error")).Once()
 
-	err := repo.upsertBelongsTo(doc, &changes)
+	err := repo.saveBelongsTo(doc, &changes)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
+func TestRepo_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -415,13 +415,13 @@ func TestRepo_upsertBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertBelongsTo(doc, &changes)
+		repo.saveBelongsTo(doc, &changes)
 	})
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
+func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -447,7 +447,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	adapter.On("Insert", q, buyer[0]).Return(1, nil).Once()
 	adapter.On("Query", q.Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
-	err := repo.upsertBelongsTo(doc, &changes)
+	err := repo.saveBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 	assert.False(t, cur.Next())
 
@@ -459,7 +459,7 @@ func TestRepo_upsertBelongsTo_insertNew(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
+func TestRepo_saveBelongsTo_insertNewError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -479,7 +479,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, buyer[0]).Return(0, errors.New("insert error")).Once()
 
-	err := repo.upsertBelongsTo(doc, &changes)
+	err := repo.saveBelongsTo(doc, &changes)
 	assert.Equal(t, errors.New("insert error"), err)
 
 	_, ok := changes.Get("user_id")
@@ -488,7 +488,7 @@ func TestRepo_upsertBelongsTo_insertNewError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
+func TestRepo_saveBelongsTo_notChanged(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
 		repo        = Repo{adapter: adapter}
@@ -497,12 +497,12 @@ func TestRepo_upsertBelongsTo_notChanged(t *testing.T) {
 		changes     = BuildChanges()
 	)
 
-	err := repo.upsertBelongsTo(doc, &changes)
+	err := repo.saveBelongsTo(doc, &changes)
 	assert.Nil(t, err)
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasOne_update(t *testing.T) {
+func TestRepo_saveHasOne_update(t *testing.T) {
 	var (
 		adapter    = &testAdapter{}
 		repo       = Repo{adapter: adapter}
@@ -526,7 +526,7 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 	adapter.On("Update", q, addresses[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
 
-	err := repo.upsertHasOne(doc, &changes)
+	err := repo.saveHasOne(doc, &changes)
 	assert.Nil(t, err)
 	assert.False(t, cur.Next())
 
@@ -534,7 +534,7 @@ func TestRepo_upsertHasOne_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasOne_updateError(t *testing.T) {
+func TestRepo_saveHasOne_updateError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -553,13 +553,13 @@ func TestRepo_upsertHasOne_updateError(t *testing.T) {
 
 	adapter.On("Update", q, addresses[0]).Return(errors.New("update error")).Once()
 
-	err := repo.upsertHasOne(doc, &changes)
+	err := repo.saveHasOne(doc, &changes)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
+func TestRepo_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -576,13 +576,13 @@ func TestRepo_upsertHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertHasOne(doc, &changes)
+		repo.saveHasOne(doc, &changes)
 	})
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasOne_insertNew(t *testing.T) {
+func TestRepo_saveHasOne_insertNew(t *testing.T) {
 	var (
 		adapter    = &testAdapter{}
 		repo       = Repo{adapter: adapter}
@@ -611,7 +611,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	adapter.On("Insert", q, address).Return(2, nil).Once()
 	adapter.On("Query", q.Where(Eq("id", 2)).Limit(1)).Return(cur, nil).Once()
 
-	err := repo.upsertHasOne(doc, &changes)
+	err := repo.saveHasOne(doc, &changes)
 	assert.Nil(t, err)
 	assert.False(t, cur.Next())
 
@@ -619,7 +619,7 @@ func TestRepo_upsertHasOne_insertNew(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
+func TestRepo_saveHasOne_insertNewError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -642,13 +642,13 @@ func TestRepo_upsertHasOne_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, address).Return(nil, errors.New("insert error")).Once()
 
-	err := repo.upsertHasOne(doc, &changes)
+	err := repo.saveHasOne(doc, &changes)
 	assert.Equal(t, errors.New("insert error"), err)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_insert(t *testing.T) {
+func TestRepo_saveHasMany_insert(t *testing.T) {
 	var (
 		adapter           = &testAdapter{}
 		repo              = Repo{adapter: adapter}
@@ -677,7 +677,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{2, 3}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 2, 3))).Return(cur, nil).Once()
 
-	err := repo.upsertHasMany(doc, &changes, true)
+	err := repo.saveHasMany(doc, &changes, true)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, len(transactions))
@@ -692,7 +692,7 @@ func TestRepo_upsertHasMany_insert(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_insertError(t *testing.T) {
+func TestRepo_saveHasMany_insertError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -717,13 +717,13 @@ func TestRepo_upsertHasMany_insertError(t *testing.T) {
 
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{}, rerr).Once()
 
-	err := repo.upsertHasMany(doc, &changes, true)
+	err := repo.saveHasMany(doc, &changes, true)
 	assert.Equal(t, rerr, err)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_update(t *testing.T) {
+func TestRepo_saveHasMany_update(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -768,7 +768,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
-	err := repo.upsertHasMany(doc, &changes, false)
+	err := repo.saveHasMany(doc, &changes, false)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 3, len(transactions))
@@ -783,7 +783,7 @@ func TestRepo_upsertHasMany_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
+func TestRepo_saveHasMany_updateEmptyAssoc(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -818,7 +818,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
-	err := repo.upsertHasMany(doc, &changes, false)
+	err := repo.saveHasMany(doc, &changes, false)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 3, len(transactions))
@@ -833,7 +833,7 @@ func TestRepo_upsertHasMany_updateEmptyAssoc(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
+func TestRepo_saveHasMany_updateDeleteAllError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -866,13 +866,13 @@ func TestRepo_upsertHasMany_updateDeleteAllError(t *testing.T) {
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(rerr).Once()
 
-	err := repo.upsertHasMany(doc, &changes, false)
+	err := repo.saveHasMany(doc, &changes, false)
 	assert.Equal(t, rerr, err)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
+func TestRepo_saveHasMany_updateAssocNotLoaded(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
@@ -890,7 +890,7 @@ func TestRepo_upsertHasMany_updateAssocNotLoaded(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		repo.upsertHasMany(doc, &changes, false)
+		repo.saveHasMany(doc, &changes, false)
 	})
 
 	adapter.AssertExpectations(t)

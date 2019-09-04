@@ -145,7 +145,7 @@ func (r Repo) insert(doc Document, changes Changes) error {
 		queriers = BuildQuery(doc.Table())
 	)
 
-	if err := r.upsertBelongsTo(doc, &changes); err != nil {
+	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
 
@@ -160,11 +160,11 @@ func (r Repo) insert(doc Document, changes Changes) error {
 		return err
 	}
 
-	if err := r.upsertHasOne(doc, &changes); err != nil {
+	if err := r.saveHasOne(doc, &changes); err != nil {
 		return err
 	}
 
-	if err := r.upsertHasMany(doc, &changes, true); err != nil {
+	if err := r.saveHasMany(doc, &changes, true); err != nil {
 		return err
 	}
 
@@ -265,7 +265,7 @@ func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
 		queriers = BuildQuery(doc.Table(), filter)
 	)
 
-	if err := r.upsertBelongsTo(doc, &changes); err != nil {
+	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
 
@@ -278,11 +278,11 @@ func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
 		return err
 	}
 
-	if err := r.upsertHasOne(doc, &changes); err != nil {
+	if err := r.saveHasOne(doc, &changes); err != nil {
 		return err
 	}
 
-	if err := r.upsertHasMany(doc, &changes, false); err != nil {
+	if err := r.saveHasMany(doc, &changes, false); err != nil {
 		return err
 	}
 
@@ -295,7 +295,7 @@ func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 	must(r.Update(record, changers...))
 }
 
-func (r Repo) upsertBelongsTo(doc Document, changes *Changes) error {
+func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -339,7 +339,7 @@ func (r Repo) upsertBelongsTo(doc Document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) upsertHasOne(doc Document, changes *Changes) error {
+func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		allAssocChanges, changed := changes.GetAssoc(field)
 		if !changed || len(allAssocChanges) == 0 {
@@ -381,7 +381,7 @@ func (r Repo) upsertHasOne(doc Document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) upsertHasMany(doc Document, changes *Changes, insertion bool) error {
+func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		changes, changed := changes.GetAssoc(field)
 		if !changed {

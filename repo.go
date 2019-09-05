@@ -383,7 +383,7 @@ func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 
 func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		changes, changed := changes.GetAssoc(field)
+		allchanges, changed := changes.GetAssoc(field)
 		if !changed {
 			continue
 		}
@@ -413,14 +413,13 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 		}
 
 		// set assocs
-		for i := range changes {
-			changes[i].SetValue(fField, rValue)
+		for i := range allchanges {
+			allchanges[i].SetValue(fField, rValue)
 		}
 
-		if err := r.insertAll(target, changes); err != nil {
+		if err := r.insertAll(target, allchanges); err != nil {
 			return err
 		}
-
 	}
 
 	return nil

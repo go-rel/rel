@@ -178,6 +178,31 @@ func TestRepo_One_notFound(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepo_MustOne(t *testing.T) {
+	var (
+		user    User
+		doc     = newDocument(&user)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = From("users").Limit(1)
+		cur     = createCursor(1)
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustOne(&user, query)
+	})
+
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepo_All(t *testing.T) {
 	var (
 		users   []User
@@ -193,6 +218,51 @@ func TestRepo_All(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.All(&users, query))
+	assert.Len(t, users, 2)
+	assert.Equal(t, 10, users[0].ID)
+	assert.Equal(t, 10, users[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_All_error(t *testing.T) {
+	var (
+		users   []User
+		collec  = newCollection(&users)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = From("users").Limit(1)
+		err     = errors.New("error")
+	)
+
+	collec.(*collection).reflect()
+
+	adapter.On("Query", query).Return(&testCursor{}, err).Once()
+
+	assert.Equal(t, err, repo.All(&users, query))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_MustAll(t *testing.T) {
+	var (
+		users   []User
+		collec  = newCollection(&users)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		query   = From("users").Limit(1)
+		cur     = createCursor(2)
+	)
+
+	collec.(*collection).reflect()
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustAll(&users, query)
+	})
+
 	assert.Len(t, users, 2)
 	assert.Equal(t, 10, users[0].ID)
 	assert.Equal(t, 10, users[1].ID)
@@ -910,35 +980,21 @@ func TestRepo_Delete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-// func TestRepo_Delete_slice(t *testing.T) {
-// 	var (
-// 		adapter = &testAdapter{}
-// 		repo    = Repo{adapter: adapter}
-// 		users   = []User{
-// 			{ID: 1},
-// 			{ID: 2},
-// 		}
-// 	)
+func TestRepo_MustDelete(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = &User{ID: 1}
+	)
 
-// 	adapter.
-// 		On("Delete", From("users").Where(In("id", 1, 2))).Return(nil)
+	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(nil).Once()
 
-// 	assert.Nil(t, repo.Delete(users))
-// 	assert.NotPanics(t, func() { repo.MustDelete(users) })
-// 	adapter.AssertExpectations(t)
-// }
+	assert.NotPanics(t, func() {
+		repo.MustDelete(user)
+	})
 
-// func TestRepo_Delete_emptySlice(t *testing.T) {
-// 	var (
-// 		adapter = &testAdapter{}
-// 		repo    = Repo{adapter: adapter}
-// 		users   = []User{}
-// 	)
-
-// 	assert.Nil(t, repo.Delete(users))
-// 	assert.NotPanics(t, func() { repo.MustDelete(users) })
-// 	adapter.AssertExpectations(t)
-// }
+	adapter.AssertExpectations(t)
+}
 
 func TestRepo_DeleteAll(t *testing.T) {
 	var (
@@ -950,6 +1006,22 @@ func TestRepo_DeleteAll(t *testing.T) {
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(nil).Once()
 
 	assert.Nil(t, repo.DeleteAll(queries))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_MustDeleteAll(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		queries = From("logs").Where(Eq("user_id", 1))
+	)
+
+	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustDeleteAll(queries)
+	})
 
 	adapter.AssertExpectations(t)
 }
@@ -1403,6 +1475,24 @@ func TestRepo_Preload_queryError(t *testing.T) {
 	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, err).Once()
 
 	assert.Equal(t, err, repo.Preload(&transaction, "buyer"))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_MustPreload(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = Repo{adapter: adapter}
+		transaction = Transaction{BuyerID: 10}
+		cur         = createCursor(0)
+	)
+
+	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustPreload(&transaction, "buyer")
+	})
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

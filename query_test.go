@@ -111,6 +111,18 @@ func TestQuerier(t *testing.T) {
 				LimitQuery:  5,
 			},
 		},
+		{
+			name: "where id=1 for update",
+			queriers: [][]grimoire.Querier{
+				{
+					where.Eq("id", 1), grimoire.ForUpdate(),
+				},
+			},
+			query: grimoire.Query{
+				WhereQuery: where.Eq("id", 1),
+				LockQuery:  "FOR UPDATE",
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -570,33 +582,9 @@ func TestQuery_Limit(t *testing.T) {
 	}, grimoire.From("users").Limit(10))
 }
 
-// func TestQuery_Lock_outsideTransaction(t *testing.T) {
-// 	assert.Equal(t, repo.From("users").Lock(), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 	})
-
-// 	assert.Equal(t, repo.From("users").Lock("FOR SHARE"), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 	})
-// }
-
-// func TestQuery_Lock_insideTransaction(t *testing.T) {
-// 	repo := Repo{inTransaction: true}
-// 	assert.Equal(t, repo.From("users").Lock(), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 		LockQuery: "FOR UPDATE",
-// 	})
-
-// 	assert.Equal(t, repo.From("users").Lock("FOR SHARE"), Query{
-// 		repo:       &repo,
-// 		Collection: "users",
-// 		Fields:     []string{"users.*"},
-// 		LockQuery: "FOR SHARE",
-// 	})
-// }
+func TestQuery_Lock_outsideTransaction(t *testing.T) {
+	assert.Equal(t, grimoire.Query{
+		Collection: "users",
+		LockQuery:  "FOR UPDATE",
+	}, grimoire.From("users").Lock(grimoire.ForUpdate()))
+}

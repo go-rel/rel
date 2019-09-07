@@ -460,6 +460,57 @@ func TestRepo_InsertAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepo_InsertAll_collection(t *testing.T) {
+	var (
+		users = []User{
+			{Name: "name1"},
+			{Name: "name2"},
+		}
+		collec  = newCollection(&users)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		changes = []Changes{
+			BuildChanges(Set("name", "name1")),
+			BuildChanges(Set("name", "name2")),
+		}
+		cur = createCursor(2)
+	)
+
+	collec.(*collection).reflect()
+
+	adapter.On("InsertAll", From("users"), []string{"name"}, changes).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.InsertAll(&users))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_InsertAll_unchanged(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
+
+	assert.Nil(t, repo.InsertAll(&users))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_InsertAll_nothing(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
+
+	assert.Nil(t, repo.InsertAll(nil))
+	assert.NotPanics(t, func() { repo.MustInsertAll(nil) })
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}

@@ -127,16 +127,24 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		doc = newDocument(record)
+		changes Changes
+		doc     = newDocument(record)
 	)
 
 	if len(changers) == 0 {
-		// TODO: call newDoc only once between here and insert
-		changers = []Changer{changeDoc(doc)}
+		changes = BuildChanges(changeDoc(doc))
+	} else {
+		changes = BuildChanges(changers...)
+	}
+
+	if len(changes.Assoc) > 0 {
+		return r.Transaction(func(r Repo) error {
+			return transformError(r.insert(doc, changes))
+		})
 	}
 
 	// TODO: transform changeset error
-	return transformError(r.insert(doc, BuildChanges(changers...)))
+	return transformError(r.insert(doc, changes))
 }
 
 func (r Repo) insert(doc Document, changes Changes) error {
@@ -244,38 +252,45 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		doc    = newDocument(record)
-		pField = doc.PrimaryField()
-		pValue = doc.PrimaryValue()
+		changes Changes
+		doc     = newDocument(record)
+		pField  = doc.PrimaryField()
+		pValue  = doc.PrimaryValue()
 	)
 
 	if len(changers) == 0 {
-		changers = []Changer{changeDoc(doc)}
+		changes = BuildChanges(changeDoc(doc))
+	} else {
+		changes = BuildChanges(changers...)
 	}
 
-	return transformError(r.update(doc, BuildChanges(changers...), Eq(pField, pValue)))
+	if len(changes.Assoc) > 0 {
+		return r.Transaction(func(r Repo) error {
+			return transformError(r.update(doc, changes, Eq(pField, pValue)))
+		})
+	}
+
+	return transformError(r.update(doc, changes, Eq(pField, pValue)))
 }
 
 func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
-	if changes.Empty() {
-		return nil
-	}
-
-	var (
-		queriers = BuildQuery(doc.Table(), filter)
-	)
-
 	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
 
 	// TODO: update timestamp (updated_at) from form
-	if err := r.adapter.Update(queriers, changes, r.logger...); err != nil {
-		return err
-	}
+	if !changes.Empty() {
+		var (
+			queriers = BuildQuery(doc.Table(), filter)
+		)
 
-	if err := r.one(doc, queriers); err != nil {
-		return err
+		if err := r.adapter.Update(queriers, changes, r.logger...); err != nil {
+			return err
+		}
+
+		if err := r.one(doc, queriers); err != nil {
+			return err
+		}
 	}
 
 	if err := r.saveHasOne(doc, &changes); err != nil {

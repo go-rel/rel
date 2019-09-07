@@ -37,7 +37,7 @@ func (ta *testAdapter) Insert(query Query, changes Changes, logger ...Logger) (i
 }
 
 func (ta *testAdapter) InsertAll(query Query, fields []string, changess []Changes, logger ...Logger) ([]interface{}, error) {
-	args := ta.Called(query, changess)
+	args := ta.Called(query, fields, changess)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 

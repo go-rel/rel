@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var repo = Repo{}
@@ -296,6 +297,114 @@ func TestRepo_Insert(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepo_Insert_oneError(t *testing.T) {
+	var (
+		user      User
+		doc       = newDocument(&user)
+		adapter   = &testAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []Changer{
+			Set("name", "name"),
+		}
+		changes = BuildChanges(cbuilders...)
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Insert(&user, cbuilders...))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Insert_saveBelongsToError(t *testing.T) {
+	var (
+		address = Address{
+			Street: "street",
+			User:   &User{Name: "name"},
+		}
+		doc     = newDocument(&address)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(0, err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Insert(&address))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Insert_saveHasOneError(t *testing.T) {
+	var (
+		user = User{
+			Name: "name",
+			Address: Address{
+				Street: "street",
+			},
+		}
+		doc     = newDocument(&user)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		cur     = createCursor(1)
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Insert", From("addresses"), mock.Anything).Return(0, err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Insert(&user))
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Insert_saveHasManyError(t *testing.T) {
+	var (
+		user = User{
+			Name: "name",
+			Transactions: []Transaction{
+				{Item: "soap"},
+			},
+		}
+		doc     = newDocument(&user)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		cur     = createCursor(1)
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Insert(&user))
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepo_Insert_error(t *testing.T) {
 	var (
 		user      User
@@ -315,6 +424,18 @@ func TestRepo_Insert_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepo_Insert_nothing(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
+
+	assert.Nil(t, repo.Insert(nil))
+	assert.NotPanics(t, func() { repo.MustInsert(nil) })
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_InsertAll(t *testing.T) {
 	var (
 		users   []User
@@ -330,7 +451,7 @@ func TestRepo_InsertAll(t *testing.T) {
 
 	collec.(*collection).reflect()
 
-	adapter.On("InsertAll", From("users"), changes).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), []string{"name"}, changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(&users, changes...))
@@ -360,6 +481,116 @@ func TestRepo_Update(t *testing.T) {
 
 	assert.Nil(t, repo.Update(&user, cbuilders...))
 	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Update_oneError(t *testing.T) {
+	var (
+		user      = User{ID: 1}
+		doc       = newDocument(&user)
+		adapter   = &testAdapter{}
+		repo      = Repo{adapter: adapter}
+		cbuilders = []Changer{
+			Set("name", "name"),
+		}
+		changes = BuildChanges(cbuilders...)
+		queries = From("users").Where(Eq("id", user.ID))
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Update", queries, changes).Return(nil).Once()
+	adapter.On("Query", queries.Limit(1)).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Update(&user, cbuilders...))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Update_saveBelongsToError(t *testing.T) {
+	var (
+		address = Address{
+			ID: 1,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		doc     = newDocument(&address)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		queries = From("users").Where(Eq("id", address.ID))
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", queries, mock.Anything).Return(err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Update(&address))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Update_saveHasOneError(t *testing.T) {
+	var (
+		user = User{
+			ID: 1,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+			},
+		}
+		doc     = newDocument(&user)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		queries = From("addresses").Where(Eq("id", 1).AndEq("user_id", 1))
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", queries, mock.Anything).Return(err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Update(&user))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepo_Update_saveHasManyError(t *testing.T) {
+	var (
+		user = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "soap",
+				},
+			},
+		}
+		doc     = newDocument(&user)
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		queries = From("transactions").Where(Eq("user_id", 1))
+		err     = errors.New("error")
+	)
+
+	doc.(*document).reflect()
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Delete", queries).Return(err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Update(&user))
 
 	adapter.AssertExpectations(t)
 }
@@ -744,7 +975,7 @@ func TestRepo_saveHasMany_insert(t *testing.T) {
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{2, 3}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{2, 3}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 2, 3))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, true)
@@ -785,7 +1016,7 @@ func TestRepo_saveHasMany_insertError(t *testing.T) {
 		rerr            = errors.New("insert all error")
 	)
 
-	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{}, rerr).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{}, rerr).Once()
 
 	err := repo.saveHasMany(doc, &changes, true)
 	assert.Equal(t, rerr, err)
@@ -835,7 +1066,7 @@ func TestRepo_saveHasMany_update(t *testing.T) {
 	transactionCollec.(*collection).reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
-	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, false)
@@ -885,7 +1116,7 @@ func TestRepo_saveHasMany_updateEmptyAssoc(t *testing.T) {
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("InsertAll", q, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, false)

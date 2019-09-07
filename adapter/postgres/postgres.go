@@ -56,6 +56,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, l
 	)
 
 	if err == nil && rows.Next() {
+		defer rows.Close()
 		rows.Scan(&id)
 	}
 
@@ -71,6 +72,7 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 	)
 
 	if err == nil {
+		defer rows.Close()
 		for rows.Next() {
 			var id int64
 			rows.Scan(&id)

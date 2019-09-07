@@ -1248,16 +1248,70 @@ func TestRepo_saveHasMany_updateAssocNotLoaded(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepo_Save_insert(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = User{Name: "name"}
+		changes = BuildChanges(Map{
+			"name": "name",
+		})
+		cur = createCursor(1)
+	)
+
+	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.Save(&user))
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Save_update(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = User{ID: 1, Name: "name"}
+		changes = BuildChanges(Map{
+			"name": "name",
+		})
+		queries = From("users").Where(Eq("id", 1))
+		cur     = createCursor(1)
+	)
+
+	adapter.On("Update", queries, changes).Return(nil).Once()
+	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.Save(&user))
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepo_Save_nothing(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+	)
+
+	assert.Nil(t, repo.Save(nil))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepo_Delete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		user    = &User{ID: 1}
+		user    = User{ID: 1}
 	)
 
 	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(nil).Once()
 
-	assert.Nil(t, repo.Delete(user))
+	assert.Nil(t, repo.Delete(&user))
 
 	adapter.AssertExpectations(t)
 }
@@ -1266,13 +1320,13 @@ func TestRepo_MustDelete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		user    = &User{ID: 1}
+		user    = User{ID: 1}
 	)
 
 	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustDelete(user)
+		repo.MustDelete(&user)
 	})
 
 	adapter.AssertExpectations(t)

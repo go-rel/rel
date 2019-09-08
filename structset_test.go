@@ -23,7 +23,7 @@ func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
 	}
 }
 
-func TestStruct(t *testing.T) {
+func TestStructset(t *testing.T) {
 	var (
 		user = &User{
 			ID:        1,
@@ -38,10 +38,10 @@ func TestStruct(t *testing.T) {
 		)
 	)
 
-	assertChanges(t, changes, BuildChanges(Struct(user)))
+	assertChanges(t, changes, BuildChanges(NewStructset(user)))
 }
 
-func TestStruct_withAssoc(t *testing.T) {
+func TestStructset_withAssoc(t *testing.T) {
 	var (
 		user = &User{
 			ID:   1,
@@ -76,5 +76,5 @@ func TestStruct_withAssoc(t *testing.T) {
 	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
 	userChanges.SetAssoc("address", addressChanges)
 
-	assertChanges(t, userChanges, BuildChanges(Struct(user)))
+	assertChanges(t, userChanges, BuildChanges(NewStructset(user)))
 }

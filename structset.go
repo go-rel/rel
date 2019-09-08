@@ -1,33 +1,33 @@
 package grimoire
 
-type documentChanger struct {
+type Structset struct {
 	doc Document
 }
 
-func (dc documentChanger) Build(changes *Changes) {
+func (s Structset) Build(changes *Changes) {
 	var (
-		fields      = dc.doc.Fields()
-		values      = dc.doc.Values()
-		pField      = dc.doc.PrimaryField()
-		belongsTo   = dc.doc.BelongsTo()
-		hasOne      = dc.doc.HasOne()
-		hasMany     = dc.doc.HasMany()
+		fields      = s.doc.Fields()
+		values      = s.doc.Values()
+		pField      = s.doc.PrimaryField()
+		belongsTo   = s.doc.BelongsTo()
+		hasOne      = s.doc.HasOne()
+		hasMany     = s.doc.HasMany()
 		assocFields = make(map[string]struct{}, len(belongsTo)+len(hasOne)+len(hasMany))
 	)
 
 	for _, field := range belongsTo {
 		assocFields[field] = struct{}{}
-		dc.buildAssoc(field, changes)
+		s.buildAssoc(field, changes)
 	}
 
 	for _, field := range hasOne {
 		assocFields[field] = struct{}{}
-		dc.buildAssoc(field, changes)
+		s.buildAssoc(field, changes)
 	}
 
 	for _, field := range hasMany {
 		assocFields[field] = struct{}{}
-		dc.buildAssocMany(field, changes)
+		s.buildAssocMany(field, changes)
 	}
 
 	for field, i := range fields {
@@ -49,24 +49,24 @@ func (dc documentChanger) Build(changes *Changes) {
 	}
 }
 
-func (dc documentChanger) buildAssoc(field string, changes *Changes) {
+func (s Structset) buildAssoc(field string, changes *Changes) {
 	var (
-		assoc = dc.doc.Association(field)
+		assoc = s.doc.Association(field)
 	)
 
 	if !assoc.IsZero() {
 		var (
 			col, _ = assoc.Target()
-			ch     = BuildChanges(documentChanger{doc: col.Get(0)})
+			ch     = BuildChanges(Structset{doc: col.Get(0)})
 		)
 
 		changes.SetAssoc(field, ch)
 	}
 }
 
-func (dc documentChanger) buildAssocMany(field string, changes *Changes) {
+func (s Structset) buildAssocMany(field string, changes *Changes) {
 	var (
-		assoc = dc.doc.Association(field)
+		assoc = s.doc.Association(field)
 	)
 
 	if !assoc.IsZero() {
@@ -76,19 +76,19 @@ func (dc documentChanger) buildAssocMany(field string, changes *Changes) {
 		)
 
 		for i := range chs {
-			chs[i] = BuildChanges(changeDoc(col.Get(i)))
+			chs[i] = BuildChanges(newStructset(col.Get(i)))
 		}
 
 		changes.SetAssoc(field, chs...)
 	}
 }
 
-func changeDoc(doc Document) Changer {
-	return documentChanger{
+func newStructset(doc Document) Structset {
+	return Structset{
 		doc: doc,
 	}
 }
 
-func Struct(record interface{}) Changer {
-	return changeDoc(newDocument(record))
+func NewStructset(record interface{}) Structset {
+	return newStructset(newDocument(record))
 }

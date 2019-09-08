@@ -132,7 +132,7 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(changeDoc(doc))
+		changes = BuildChanges(newStructset(doc))
 	} else {
 		changes = BuildChanges(changers...)
 	}
@@ -197,7 +197,7 @@ func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
 	if len(changes) == 0 {
 		changes = make([]Changes, col.Len())
 		for i := range changes {
-			changes[i] = BuildChanges(changeDoc(col.Get(i)))
+			changes[i] = BuildChanges(newStructset(col.Get(i)))
 		}
 	}
 
@@ -259,7 +259,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(changeDoc(doc))
+		changes = BuildChanges(newStructset(doc))
 	} else {
 		changes = BuildChanges(changers...)
 	}
@@ -450,7 +450,7 @@ func (r Repo) Save(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changers = []Changer{changeDoc(doc)}
+		changers = []Changer{newStructset(doc)}
 	}
 
 	return transformError(r.save(doc, BuildChanges(changers...)))

@@ -201,6 +201,8 @@ func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
 		}
 	}
 
+	col.Reset()
+
 	return transformError(r.insertAll(col, changes))
 }
 

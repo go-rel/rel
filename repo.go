@@ -310,15 +310,16 @@ func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 	must(r.Update(record, changers...))
 }
 
+// TODO: support deletion
 func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
-		allAssocChanges, changed := changes.GetAssoc(field)
-		if !changed || len(allAssocChanges) == 0 {
+		ac, changed := changes.GetAssoc(field)
+		if !changed || len(ac.Changes) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges   = allAssocChanges[0]
+			assocChanges   = ac.Changes[0]
 			assoc          = doc.Association(field)
 			fValue         = assoc.ForeignValue()
 			target, loaded = assoc.Target()
@@ -354,15 +355,16 @@ func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
 	return nil
 }
 
+// TODO: suppprt deletion
 func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
-		allAssocChanges, changed := changes.GetAssoc(field)
-		if !changed || len(allAssocChanges) == 0 {
+		ac, changed := changes.GetAssoc(field)
+		if !changed || len(ac.Changes) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges   = allAssocChanges[0]
+			assocChanges   = ac.Changes[0]
 			assoc          = doc.Association(field)
 			fField         = assoc.ForeignField()
 			rValue         = assoc.ReferenceValue()
@@ -398,7 +400,7 @@ func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 
 func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		allchanges, changed := changes.GetAssoc(field)
+		ac, changed := changes.GetAssoc(field)
 		if !changed {
 			continue
 		}
@@ -410,6 +412,14 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 			fField         = assoc.ForeignField()
 			rValue         = assoc.ReferenceValue()
 		)
+
+		// always use replace ops when using struct
+		// on replace opts: error, invalid, delete, replace
+		// update first and while collecting updated id, newly inserted records and deleted ids
+		// if replace detected: delete all that's not in updated ids?
+		// else delete marked for deletion
+		// insert records
+		// add primary value and action to changes
 
 		if !insertion {
 			if !loaded {
@@ -428,11 +438,11 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 		}
 
 		// set assocs
-		for i := range allchanges {
-			allchanges[i].SetValue(fField, rValue)
+		for i := range ac.Changes {
+			ac.Changes[i].SetValue(fField, rValue)
 		}
 
-		if err := r.insertAll(target, allchanges); err != nil {
+		if err := r.insertAll(target, ac.Changes); err != nil {
 			return err
 		}
 	}

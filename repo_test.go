@@ -712,7 +712,7 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 
 	buyerDoc.(*document).reflect()
 
-	adapter.On("Update", q, buyer[0]).Return(nil).Once()
+	adapter.On("Update", q, buyer.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
 
 	err := repo.saveBelongsTo(doc, &changes)
@@ -741,7 +741,7 @@ func TestRepo_saveBelongsTo_updateError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 	)
 
-	adapter.On("Update", q, buyer[0]).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, buyer.Changes[0]).Return(errors.New("update error")).Once()
 
 	err := repo.saveBelongsTo(doc, &changes)
 	assert.Equal(t, errors.New("update error"), err)
@@ -796,7 +796,7 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 	buyerDoc.(*document).reflect()
 	buyerDoc.(*document).initAssociations()
 
-	adapter.On("Insert", q, buyer[0]).Return(1, nil).Once()
+	adapter.On("Insert", q, buyer.Changes[0]).Return(1, nil).Once()
 	adapter.On("Query", q.Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	err := repo.saveBelongsTo(doc, &changes)
@@ -829,7 +829,7 @@ func TestRepo_saveBelongsTo_insertNewError(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 	)
 
-	adapter.On("Insert", q, buyer[0]).Return(0, errors.New("insert error")).Once()
+	adapter.On("Insert", q, buyer.Changes[0]).Return(0, errors.New("insert error")).Once()
 
 	err := repo.saveBelongsTo(doc, &changes)
 	assert.Equal(t, errors.New("insert error"), err)
@@ -875,7 +875,7 @@ func TestRepo_saveHasOne_update(t *testing.T) {
 
 	addressDoc.(*document).reflect()
 
-	adapter.On("Update", q, addresses[0]).Return(nil).Once()
+	adapter.On("Update", q, addresses.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
 
 	err := repo.saveHasOne(doc, &changes)
@@ -903,7 +903,7 @@ func TestRepo_saveHasOne_updateError(t *testing.T) {
 		addresses, _ = changes.GetAssoc("address")
 	)
 
-	adapter.On("Update", q, addresses[0]).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, addresses.Changes[0]).Return(errors.New("update error")).Once()
 
 	err := repo.saveHasOne(doc, &changes)
 	assert.Equal(t, errors.New("update error"), err)
@@ -1026,16 +1026,16 @@ func TestRepo_saveHasMany_insert(t *testing.T) {
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{2, 3}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{2, 3}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 2, 3))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, true)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 2, len(transactions))
+	assert.Equal(t, 2, len(transactions.Changes))
 
-	for i := range transactions {
-		id, ok := transactions[i].GetValue("user_id")
+	for i := range transactions.Changes {
+		id, ok := transactions.Changes[i].GetValue("user_id")
 		assert.True(t, ok)
 		assert.Equal(t, user.ID, id)
 	}
@@ -1067,7 +1067,7 @@ func TestRepo_saveHasMany_insertError(t *testing.T) {
 		rerr            = errors.New("insert all error")
 	)
 
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{}, rerr).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{}, rerr).Once()
 
 	err := repo.saveHasMany(doc, &changes, true)
 	assert.Equal(t, rerr, err)
@@ -1117,16 +1117,16 @@ func TestRepo_saveHasMany_update(t *testing.T) {
 	transactionCollec.(*collection).reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, false)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 3, len(transactions))
+	assert.Equal(t, 3, len(transactions.Changes))
 
-	for i := range transactions {
-		id, ok := transactions[i].GetValue("user_id")
+	for i := range transactions.Changes {
+		id, ok := transactions.Changes[i].GetValue("user_id")
 		assert.True(t, ok)
 		assert.Equal(t, user.ID, id)
 	}
@@ -1167,16 +1167,16 @@ func TestRepo_saveHasMany_updateEmptyAssoc(t *testing.T) {
 
 	transactionCollec.(*collection).reflect()
 
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 3, 4, 5))).Return(cur, nil).Once()
 
 	err := repo.saveHasMany(doc, &changes, false)
 	assert.Nil(t, err)
 
-	assert.Equal(t, 3, len(transactions))
+	assert.Equal(t, 3, len(transactions.Changes))
 
-	for i := range transactions {
-		id, ok := transactions[i].GetValue("user_id")
+	for i := range transactions.Changes {
+		id, ok := transactions.Changes[i].GetValue("user_id")
 		assert.True(t, ok)
 		assert.Equal(t, user.ID, id)
 	}

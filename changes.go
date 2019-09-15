@@ -9,7 +9,7 @@ func BuildChanges(changers ...Changer) Changes {
 		Fields:       make(map[string]int),
 		Changes:      make([]Change, 0, len(changers)),
 		Assoc:        make(map[string]int),
-		AssocChanges: make([][]Changes, 0),
+		AssocChanges: make([]AssocChanges, 0),
 	}
 
 	for i := range changers {
@@ -29,8 +29,14 @@ type Changes struct {
 	Fields       map[string]int // TODO: not copy friendly
 	Changes      []Change
 	Assoc        map[string]int
-	AssocChanges [][]Changes
+	AssocChanges []AssocChanges
 	constraints  constraints
+}
+
+type AssocChanges struct {
+	Changes []Changes
+	// if nil, has many associations will be cleared.
+	DeletedIDs []interface{}
 }
 
 func (c Changes) Empty() bool {
@@ -66,20 +72,26 @@ func (c *Changes) SetValue(field string, value interface{}) {
 	c.Set(Set(field, value))
 }
 
-func (c Changes) GetAssoc(field string) ([]Changes, bool) {
+func (c Changes) GetAssoc(field string) (AssocChanges, bool) {
 	if index, ok := c.Assoc[field]; ok {
 		return c.AssocChanges[index], true
 	}
 
-	return nil, false
+	return AssocChanges{}, false
 }
 
 func (c *Changes) SetAssoc(field string, chs ...Changes) {
 	if index, exist := c.Assoc[field]; exist {
-		c.AssocChanges[index] = chs
+		c.AssocChanges[index].Changes = chs
 	} else {
+		var (
+			ac = AssocChanges{
+				Changes: chs,
+			}
+		)
+
 		c.Assoc[field] = len(c.AssocChanges)
-		c.AssocChanges = append(c.AssocChanges, chs)
+		c.AssocChanges = append(c.AssocChanges, ac)
 	}
 }
 

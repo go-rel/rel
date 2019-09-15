@@ -34,7 +34,7 @@ func TestBuildChanges(t *testing.T) {
 				ChangeFragment("field6=?", true),
 			},
 			Assoc:        map[string]int{},
-			AssocChanges: [][]Changes{},
+			AssocChanges: []AssocChanges{},
 		}
 	)
 

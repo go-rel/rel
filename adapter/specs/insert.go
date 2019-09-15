@@ -136,7 +136,7 @@ func Inserts(t *testing.T, repo grimoire.Repo) {
 
 	for _, record := range tests {
 		var (
-			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			changes      = grimoire.BuildChanges(grimoire.NewStructset(record))
 			statement, _ = builder.Insert("collection", changes)
 		)
 

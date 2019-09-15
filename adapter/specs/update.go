@@ -72,6 +72,7 @@ func UpdateHasManyInsert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
+// TODO: HasManyDelete
 func UpdateHasManyReplace(t *testing.T, repo grimoire.Repo) {
 	var (
 		user = User{
@@ -248,7 +249,7 @@ func Updates(t *testing.T, repo grimoire.Repo) {
 
 	for _, record := range tests {
 		var (
-			changes      = grimoire.BuildChanges(grimoire.Struct(record))
+			changes      = grimoire.BuildChanges(grimoire.NewStructset(record))
 			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
 		)
 

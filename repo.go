@@ -97,6 +97,8 @@ func (r Repo) All(records interface{}, queriers ...Querier) error {
 		query = BuildQuery(col.Table(), queriers...)
 	)
 
+	col.Reset()
+
 	return r.all(col, query)
 }
 
@@ -111,8 +113,6 @@ func (r Repo) all(col Collection, query Query) error {
 	if err != nil {
 		return err
 	}
-
-	col.Reset()
 
 	return scanMany(cur, col)
 }
@@ -409,38 +409,54 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 			assoc          = doc.Association(field)
 			target, loaded = assoc.Target()
 			table          = target.Table()
+			pField         = target.PrimaryField()
 			fField         = assoc.ForeignField()
 			rValue         = assoc.ReferenceValue()
 		)
 
-		// always use replace ops when using struct
-		// on replace opts: error, invalid, delete, replace
-		// update first and while collecting updated id, newly inserted records and deleted ids
-		// if replace detected: delete all that's not in updated ids?
-		// else delete marked for deletion
-		// insert records
-		// add primary value and action to changes
+		target.Reset()
 
 		if !insertion {
 			if !loaded {
 				panic("grimoire: association must be loaded to update")
 			}
 
-			if target.Len() > 0 {
-				var (
-					filter = Eq(fField, rValue)
-				)
+			var (
+				filter = Eq(fField, rValue)
+			)
 
+			// if deleted ids is specified, then only delete those.
+			// if it's nill, then clear old association (used by structset).
+			if len(ac.StaleIDs) > 0 {
+				if err := r.deleteAll(BuildQuery(table, filter.AndIn(pField, ac.StaleIDs...))); err != nil {
+					return err
+				}
+			} else if ac.StaleIDs == nil {
 				if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
 					return err
 				}
 			}
 		}
 
-		// set assocs
-		for i := range ac.Changes {
-			ac.Changes[i].SetValue(fField, rValue)
+		// update and filter for bulk insertion in place
+		// TODO: load updated result once
+		n := 0
+		for _, ch := range ac.Changes {
+			if pChange, changed := ch.Get(pField); changed {
+				var (
+					filter = Eq(pField, pChange.Value).AndEq(fField, rValue)
+				)
+
+				if err := r.update(target.Add(), ch, filter); err != nil {
+					return err
+				}
+			} else {
+				ch.SetValue(fField, rValue)
+				ac.Changes[n] = ch
+				n++
+			}
 		}
+		ac.Changes = ac.Changes[:n]
 
 		if err := r.insertAll(target, ac.Changes); err != nil {
 			return err

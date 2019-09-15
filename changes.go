@@ -25,6 +25,7 @@ func BuildChanges(changers ...Changer) Changes {
 // TODO: handle deleteion
 //	- Answer: Changes should be forward only operation, no delete change is supported (use changeset instead).
 // Implement iterator to be used by adapter api?
+// Not safe to be used multiple time. some operation my alter changes data.
 type Changes struct {
 	Fields       map[string]int // TODO: not copy friendly
 	Changes      []Change
@@ -36,7 +37,7 @@ type Changes struct {
 type AssocChanges struct {
 	Changes []Changes
 	// if nil, has many associations will be cleared.
-	DeletedIDs []interface{}
+	StaleIDs []interface{}
 }
 
 func (c Changes) Empty() bool {

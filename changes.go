@@ -85,15 +85,25 @@ func (c *Changes) SetAssoc(field string, chs ...Changes) {
 	if index, exist := c.Assoc[field]; exist {
 		c.AssocChanges[index].Changes = chs
 	} else {
-		var (
-			ac = AssocChanges{
-				Changes: chs,
-			}
-		)
-
-		c.Assoc[field] = len(c.AssocChanges)
-		c.AssocChanges = append(c.AssocChanges, ac)
+		c.appendAssoc(field, AssocChanges{
+			Changes: chs,
+		})
 	}
+}
+
+func (c *Changes) SetStaleAssoc(field string, ids []interface{}) {
+	if index, exist := c.Assoc[field]; exist {
+		c.AssocChanges[index].StaleIDs = ids
+	} else {
+		c.appendAssoc(field, AssocChanges{
+			StaleIDs: ids,
+		})
+	}
+}
+
+func (c *Changes) appendAssoc(field string, ac AssocChanges) {
+	c.Assoc[field] = len(c.AssocChanges)
+	c.AssocChanges = append(c.AssocChanges, ac)
 }
 
 type ChangeOp int

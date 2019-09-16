@@ -11,10 +11,11 @@ type Changeset struct {
 	values []interface{}
 }
 
+type emptyChangeset struct{}
+
 func (c Changeset) Build(changes *Changes) {
 	var (
-		values    = c.doc.Values()
-		structset = newStructset(c.doc)
+		values = c.doc.Values()
 	)
 
 	for f, i := range c.fields {
@@ -25,8 +26,10 @@ func (c Changeset) Build(changes *Changes) {
 		switch v := c.values[i].(type) {
 		case Changeset:
 			changes.SetAssoc(f, BuildChanges(v))
-		case []Changeset:
-			structset.buildAssocMany(f, changes)
+		case map[interface{}]Changeset:
+			c.buildAssocMany(f, changes, v)
+		case emptyChangeset:
+			// do nothing
 		default:
 			if c.types[i].Comparable() && v == cur {
 				continue
@@ -39,10 +42,50 @@ func (c Changeset) Build(changes *Changes) {
 	}
 }
 
+func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[interface{}]Changeset) {
+	var (
+		assoc         = c.doc.Association(field)
+		col, _        = assoc.Target()
+		lenght        = col.Len()
+		chs           = make([]Changes, lenght)
+		staleIDs      = []interface{}{}
+		unstaleIDsMap = make(map[interface{}]struct{}, lenght)
+	)
+
+	for i := range chs {
+		var (
+			doc    = col.Get(i)
+			pField = doc.PrimaryField()
+			pValue = doc.PrimaryValue()
+		)
+
+		if isZero(pValue) {
+			chs[i] = BuildChanges(newStructset(doc))
+		} else if cs, ok := changemap[pValue]; ok {
+			chs[i] = BuildChanges(cs)
+			chs[i].SetValue(pField, pValue)
+			unstaleIDsMap[pValue] = struct{}{}
+		} else {
+			panic("grimoire: cannot update unloaded association")
+		}
+	}
+	changes.SetAssoc(field, chs...)
+
+	// add stale ids
+	for id := range changemap {
+		if _, ok := unstaleIDsMap[id]; !ok {
+			staleIDs = append(staleIDs, id)
+		}
+	}
+
+	changes.SetStaleAssoc(field, staleIDs)
+}
+
 // stores old document values
 func newChangeset(doc Document) Changeset {
 	var (
 		c = Changeset{
+			doc:    doc,
 			fields: doc.Fields(),
 			types:  doc.Types(),
 			values: doc.Values(),
@@ -57,12 +100,33 @@ func newChangeset(doc Document) Changeset {
 
 		if col, loaded := assoc.Target(); loaded {
 			c.values[c.fields[f]] = newChangeset(col.Get(0))
+		} else {
+			c.values[c.fields[f]] = emptyChangeset{}
 		}
 	}
 
-	// don't track has many
 	for _, f := range doc.HasMany() {
-		c.values[c.fields[f]] = []Changeset{}
+		if col, loaded := doc.Association(f).Target(); loaded {
+			var (
+				docCount  = col.Len()
+				changemap = make(map[interface{}]Changeset, docCount)
+			)
+
+			for i := 0; i < docCount; i++ {
+				var (
+					doc    = col.Get(i)
+					pValue = doc.PrimaryValue()
+				)
+
+				if !isZero(pValue) {
+					changemap[pValue] = newChangeset(doc)
+				}
+			}
+
+			c.values[c.fields[f]] = changemap
+		} else {
+			c.values[c.fields[f]] = emptyChangeset{}
+		}
 	}
 
 	return c

@@ -103,6 +103,8 @@ func TestAdapter_specs(t *testing.T) {
 	specs.Update(t, repo)
 	specs.UpdateHasManyInsert(t, repo)
 	specs.UpdateHasManyReplace(t, repo)
+	specs.UpdateHasManyUpdate(t, repo)
+	specs.UpdateHasManyDelete(t, repo)
 	specs.UpdateHasOneInsert(t, repo)
 	specs.UpdateHasOneUpdate(t, repo)
 	specs.UpdateBelongsToInsert(t, repo)

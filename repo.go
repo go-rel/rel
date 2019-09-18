@@ -2,6 +2,7 @@ package grimoire
 
 import (
 	"reflect"
+	"runtime"
 	"strings"
 )
 
@@ -674,11 +675,13 @@ func (r Repo) Transaction(fn func(Repo) error) error {
 			if p := recover(); p != nil {
 				txRepo.adapter.Rollback()
 
-				if e, ok := p.(error); ok {
+				switch e := p.(type) {
+				case runtime.Error:
+					panic(e)
+				case error:
 					err = e
-				} else {
-					// re-throw panic after Rollback if it's not caused by error
-					panic(p)
+				default:
+					panic(e)
 				}
 			} else if err != nil {
 				txRepo.adapter.Rollback()

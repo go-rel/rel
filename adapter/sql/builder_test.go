@@ -23,7 +23,7 @@ func BenchmarkBuilder_Find(b *testing.B) {
 		query := grimoire.From("users").
 			Select("id", "name").
 			Join("transactions").
-			Where(where.Eq("id", 10)).
+			Where(where.Eq("id", 10), where.In("status", 1, 2, 3)).
 			Group("type").Having(where.Gt("price", 1000)).
 			SortAsc("created_at").SortDesc("id").
 			Offset(10).Limit(10)
@@ -578,17 +578,12 @@ func TestBuilder_Where(t *testing.T) {
 		Filter      grimoire.FilterQuery
 	}{
 		{
-			"",
-			nil,
-			where.And(),
-		},
-		{
-			"WHERE `field`=?",
+			" WHERE `field`=?",
 			[]interface{}{"value"},
 			where.Eq("field", "value"),
 		},
 		{
-			"WHERE (`field1`=? AND `field2`=?)",
+			" WHERE (`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
@@ -597,11 +592,12 @@ func TestBuilder_Where(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.where(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.where(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}
@@ -623,17 +619,12 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 		Filter      grimoire.FilterQuery
 	}{
 		{
-			"",
-			nil,
-			where.And(),
-		},
-		{
-			"WHERE \"field\"=$1",
+			" WHERE \"field\"=$1",
 			[]interface{}{"value"},
 			where.Eq("field", "value"),
 		},
 		{
-			"WHERE (\"field1\"=$1 AND \"field2\"=$2)",
+			" WHERE (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
@@ -642,11 +633,12 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.where(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.where(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}
@@ -684,17 +676,12 @@ func TestBuilder_Having(t *testing.T) {
 		Filter      grimoire.FilterQuery
 	}{
 		{
-			"",
-			nil,
-			where.And(),
-		},
-		{
-			"HAVING `field`=?",
+			" HAVING `field`=?",
 			[]interface{}{"value"},
 			where.Eq("field", "value"),
 		},
 		{
-			"HAVING (`field1`=? AND `field2`=?)",
+			" HAVING (`field1`=? AND `field2`=?)",
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
@@ -703,11 +690,12 @@ func TestBuilder_Having(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.having(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.having(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}
@@ -729,17 +717,12 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 		Filter      grimoire.FilterQuery
 	}{
 		{
-			"",
-			nil,
-			where.And(),
-		},
-		{
-			"HAVING \"field\"=$1",
+			" HAVING \"field\"=$1",
 			[]interface{}{"value"},
 			where.Eq("field", "value"),
 		},
 		{
-			"HAVING (\"field1\"=$1 AND \"field2\"=$2)",
+			" HAVING (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
@@ -748,11 +731,12 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.having(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.having(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}
@@ -967,11 +951,12 @@ func TestBuilder_Filter(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.filter(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.filter(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}
@@ -1152,11 +1137,12 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.filter(test.Filter)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.filter(&buffer, test.Filter)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Equal(t, test.Args, args)
 		})
 	}

@@ -57,18 +57,16 @@ func (b *Builder) query(buffer *bytes.Buffer, query grimoire.Query) []interface{
 		args = append(args, arg...)
 	}
 
-	if s, arg := b.where(query.WhereQuery); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if !query.WhereQuery.None() {
+		arg := b.where(buffer, query.WhereQuery)
 		args = append(args, arg...)
 	}
 
 	if len(query.GroupQuery.Fields) > 0 {
 		b.groupBy(buffer, query.GroupQuery.Fields)
 
-		if s, arg := b.having(query.GroupQuery.Filter); s != "" {
-			buffer.WriteString(" ")
-			buffer.WriteString(s)
+		if !query.GroupQuery.Filter.None() {
+			arg := b.having(buffer, query.GroupQuery.Filter)
 			args = append(args, arg...)
 		}
 	}
@@ -250,9 +248,8 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 		}
 	}
 
-	if s, arg := b.where(filter); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if !filter.None() {
+		arg := b.where(&buffer, filter)
 		args = append(args, arg...)
 	}
 
@@ -273,9 +270,8 @@ func (b *Builder) Delete(collection string, filter grimoire.FilterQuery) (string
 	buffer.WriteString(collection)
 	buffer.WriteString(b.config.EscapeChar)
 
-	if s, arg := b.where(filter); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if !filter.None() {
+		arg := b.where(&buffer, filter)
 		args = append(args, arg...)
 	}
 
@@ -344,13 +340,9 @@ func (b *Builder) join(buffer *bytes.Buffer, joins ...grimoire.JoinQuery) []inte
 	return args
 }
 
-func (b *Builder) where(filter grimoire.FilterQuery) (string, []interface{}) {
-	if filter.None() {
-		return "", nil
-	}
-
-	qs, args := b.filter(filter)
-	return "WHERE " + qs, args
+func (b *Builder) where(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+	buffer.WriteString(" WHERE ")
+	return b.filter(buffer, filter)
 }
 
 func (b *Builder) groupBy(buffer *bytes.Buffer, fields []string) {
@@ -366,13 +358,9 @@ func (b *Builder) groupBy(buffer *bytes.Buffer, fields []string) {
 	}
 }
 
-func (b *Builder) having(filter grimoire.FilterQuery) (string, []interface{}) {
-	if filter.None() {
-		return "", nil
-	}
-
-	qs, args := b.filter(filter)
-	return "HAVING " + qs, args
+func (b *Builder) having(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+	buffer.WriteString(" HAVING ")
+	return b.filter(buffer, filter)
 }
 
 func (b *Builder) orderBy(buffer *bytes.Buffer, orders []grimoire.SortQuery) {
@@ -407,96 +395,107 @@ func (b *Builder) limitOffset(buffer *bytes.Buffer, limit grimoire.Limit, offset
 	}
 }
 
-func (b *Builder) filter(filter grimoire.FilterQuery) (string, []interface{}) {
+func (b *Builder) filter(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+	var (
+		args []interface{}
+	)
+
 	switch filter.Type {
 	case grimoire.FilterAndOp:
-		return b.build("AND", filter.Inner)
+		args = b.build(buffer, "AND", filter.Inner)
 	case grimoire.FilterOrOp:
-		return b.build("OR", filter.Inner)
+		args = b.build(buffer, "OR", filter.Inner)
 	case grimoire.FilterNotOp:
-		qs, args := b.build("AND", filter.Inner)
-		return "NOT " + qs, args
+		buffer.WriteString("NOT ")
+		args = b.build(buffer, "AND", filter.Inner)
 	case grimoire.FilterEqOp,
 		grimoire.FilterNeOp,
 		grimoire.FilterLtOp,
 		grimoire.FilterLteOp,
 		grimoire.FilterGtOp,
 		grimoire.FilterGteOp:
-		return b.buildComparison(filter)
+		args = b.buildComparison(buffer, filter)
 	case grimoire.FilterNilOp:
-		return b.escape(filter.Field) + " IS NULL", filter.Values
+		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(" IS NULL")
+		args = filter.Values
 	case grimoire.FilterNotNilOp:
-		return b.escape(filter.Field) + " IS NOT NULL", filter.Values
+		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(" IS NOT NULL")
+		args = filter.Values
 	case grimoire.FilterInOp,
 		grimoire.FilterNinOp:
-		return b.buildInclusion(filter)
+		args = b.buildInclusion(buffer, filter)
 	case grimoire.FilterLikeOp:
-		return b.escape(filter.Field) + " LIKE " + b.ph(), filter.Values
+		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(" LIKE ")
+		buffer.WriteString(b.ph())
+		args = filter.Values
 	case grimoire.FilterNotLikeOp:
-		return b.escape(filter.Field) + " NOT LIKE " + b.ph(), filter.Values
+		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(" NOT LIKE ")
+		buffer.WriteString(b.ph())
+		args = filter.Values
 	case grimoire.FilterFragmentOp:
-		return filter.Field, filter.Values
+		buffer.WriteString(filter.Field)
+		args = filter.Values
 	}
 
-	return "", nil
+	return args
 }
 
-func (b *Builder) build(op string, inner []grimoire.FilterQuery) (string, []interface{}) {
+func (b *Builder) build(buffer *bytes.Buffer, op string, inner []grimoire.FilterQuery) []interface{} {
 	var (
-		qstring string
-		length  = len(inner)
-		args    []interface{}
+		length = len(inner)
+		args   []interface{}
 	)
 
 	if length > 1 {
-		qstring += "("
+		buffer.WriteByte('(')
 	}
 
 	for i, c := range inner {
-		cQstring, cArgs := b.filter(c)
-		qstring += cQstring
+		cArgs := b.filter(buffer, c)
 		args = append(args, cArgs...)
 
 		if i < length-1 {
-			qstring += " " + op + " "
+			buffer.WriteByte(' ')
+			buffer.WriteString(op)
+			buffer.WriteByte(' ')
 		}
 	}
 
 	if length > 1 {
-		qstring += ")"
+		buffer.WriteByte(')')
 	}
 
-	return qstring, args
+	return args
 }
 
-func (b *Builder) buildComparison(filter grimoire.FilterQuery) (string, []interface{}) {
-	var (
-		cs string
-		op string
-	)
+func (b *Builder) buildComparison(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+	buffer.WriteString(b.escape(filter.Field))
 
 	switch filter.Type {
 	case grimoire.FilterEqOp:
-		op = "="
+		buffer.WriteByte('=')
 	case grimoire.FilterNeOp:
-		op = "<>"
+		buffer.WriteString("<>")
 	case grimoire.FilterLtOp:
-		op = "<"
+		buffer.WriteByte('<')
 	case grimoire.FilterLteOp:
-		op = "<="
+		buffer.WriteString("<=")
 	case grimoire.FilterGtOp:
-		op = ">"
+		buffer.WriteByte('>')
 	case grimoire.FilterGteOp:
-		op = ">="
+		buffer.WriteString(">=")
 	}
 
-	cs = b.escape(filter.Field) + op + b.ph()
+	buffer.WriteString(b.ph())
 
-	return cs, filter.Values
+	return filter.Values
 }
 
-func (b *Builder) buildInclusion(filter grimoire.FilterQuery) (string, []interface{}) {
-	var buffer bytes.Buffer
+func (b *Builder) buildInclusion(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
 	buffer.WriteString(b.escape(filter.Field))
 
 	if filter.Type == grimoire.FilterInOp {
@@ -512,7 +511,7 @@ func (b *Builder) buildInclusion(filter grimoire.FilterQuery) (string, []interfa
 	}
 	buffer.WriteString(")")
 
-	return buffer.String(), filter.Values
+	return filter.Values
 }
 
 func (b *Builder) ph() string {

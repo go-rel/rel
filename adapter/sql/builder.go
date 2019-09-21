@@ -24,36 +24,36 @@ type Builder struct {
 // Find generates query for select.
 func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
 	var (
-		qs, args = b.query(query)
+		buffer bytes.Buffer
 	)
 
-	return b.fields(query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields) + qs, args
+	b.fields(&buffer, query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields)
+	args := b.query(&buffer, query)
+
+	return buffer.String(), args
 }
 
 // Aggregate generates query for aggregation.
 func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (string, []interface{}) {
 	var (
-		qs, args    = b.query(query)
+		buffer      bytes.Buffer
 		selectfield = mode + "(" + field + ") AS " + mode
 	)
 
-	return b.fields(false, append(query.GroupQuery.Fields, selectfield)) + qs, args
+	b.fields(&buffer, false, append(query.GroupQuery.Fields, selectfield))
+	args := b.query(&buffer, query)
+
+	return buffer.String(), args
 }
 
-func (b *Builder) query(query grimoire.Query) (string, []interface{}) {
+func (b *Builder) query(buffer *bytes.Buffer, query grimoire.Query) []interface{} {
 	var (
-		buffer bytes.Buffer
-		args   []interface{}
+		args []interface{}
 	)
 
-	if s := b.from(query.Collection); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
-	}
+	b.from(buffer, query.Collection)
 
-	if s, arg := b.join(query.JoinQuery...); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if arg := b.join(buffer, query.JoinQuery...); arg != nil {
 		args = append(args, arg...)
 	}
 
@@ -63,9 +63,8 @@ func (b *Builder) query(query grimoire.Query) (string, []interface{}) {
 		args = append(args, arg...)
 	}
 
-	if s := b.groupBy(query.GroupQuery.Fields); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if len(query.GroupQuery.Fields) > 0 {
+		b.groupBy(buffer, query.GroupQuery.Fields)
 
 		if s, arg := b.having(query.GroupQuery.Filter); s != "" {
 			buffer.WriteString(" ")
@@ -74,15 +73,11 @@ func (b *Builder) query(query grimoire.Query) (string, []interface{}) {
 		}
 	}
 
-	if s := b.orderBy(query.SortQuery); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
+	if len(query.SortQuery) > 0 {
+		b.orderBy(buffer, query.SortQuery)
 	}
 
-	if s := b.limitOffset(query.LimitQuery, query.OffsetQuery); s != "" {
-		buffer.WriteString(" ")
-		buffer.WriteString(s)
-	}
+	b.limitOffset(buffer, query.LimitQuery, query.OffsetQuery)
 
 	if query.LockQuery != "" {
 		buffer.WriteString(" ")
@@ -91,7 +86,7 @@ func (b *Builder) query(query grimoire.Query) (string, []interface{}) {
 
 	buffer.WriteString(";")
 
-	return buffer.String(), args
+	return args
 }
 
 // Insert generates query for insert.
@@ -289,15 +284,15 @@ func (b *Builder) Delete(collection string, filter grimoire.FilterQuery) (string
 	return buffer.String(), args
 }
 
-func (b *Builder) fields(distinct bool, fields []string) string {
+func (b *Builder) fields(buffer *bytes.Buffer, distinct bool, fields []string) {
 	if len(fields) == 0 {
 		if distinct {
-			return "SELECT DISTINCT *"
+			buffer.WriteString("SELECT DISTINCT *")
+			return
 		}
-		return "SELECT *"
+		buffer.WriteString("SELECT *")
+		return
 	}
-
-	var buffer bytes.Buffer
 
 	buffer.WriteString("SELECT ")
 
@@ -313,25 +308,26 @@ func (b *Builder) fields(distinct bool, fields []string) string {
 			buffer.WriteString(",")
 		}
 	}
-
-	return buffer.String()
 }
 
-func (b *Builder) from(collection string) string {
-	return "FROM " + b.config.EscapeChar + collection + b.config.EscapeChar
+func (b *Builder) from(buffer *bytes.Buffer, collection string) {
+	buffer.WriteString(" FROM ")
+	buffer.WriteString(b.config.EscapeChar)
+	buffer.WriteString(collection)
+	buffer.WriteString(b.config.EscapeChar)
 }
 
-func (b *Builder) join(joins ...grimoire.JoinQuery) (string, []interface{}) {
+func (b *Builder) join(buffer *bytes.Buffer, joins ...grimoire.JoinQuery) []interface{} {
 	if len(joins) == 0 {
-		return "", nil
+		return nil
 	}
 
 	var (
-		buffer bytes.Buffer
-		args   []interface{}
+		args []interface{}
 	)
 
-	for i, join := range joins {
+	for _, join := range joins {
+		buffer.WriteString(" ")
 		buffer.WriteString(join.Mode)
 		buffer.WriteString(" ")
 		buffer.WriteString(b.config.EscapeChar)
@@ -343,13 +339,9 @@ func (b *Builder) join(joins ...grimoire.JoinQuery) (string, []interface{}) {
 		buffer.WriteString(b.escape(join.To))
 
 		args = append(args, join.Arguments...)
-
-		if i < len(joins)-1 {
-			buffer.WriteString(" ")
-		}
 	}
 
-	return buffer.String(), args
+	return args
 }
 
 func (b *Builder) where(filter grimoire.FilterQuery) (string, []interface{}) {
@@ -361,13 +353,8 @@ func (b *Builder) where(filter grimoire.FilterQuery) (string, []interface{}) {
 	return "WHERE " + qs, args
 }
 
-func (b *Builder) groupBy(fields []string) string {
-	if len(fields) == 0 {
-		return ""
-	}
-
-	var buffer bytes.Buffer
-	buffer.WriteString("GROUP BY ")
+func (b *Builder) groupBy(buffer *bytes.Buffer, fields []string) {
+	buffer.WriteString(" GROUP BY ")
 
 	l := len(fields) - 1
 	for i, f := range fields {
@@ -377,8 +364,6 @@ func (b *Builder) groupBy(fields []string) string {
 			buffer.WriteString(",")
 		}
 	}
-
-	return buffer.String()
 }
 
 func (b *Builder) having(filter grimoire.FilterQuery) (string, []interface{}) {
@@ -390,40 +375,36 @@ func (b *Builder) having(filter grimoire.FilterQuery) (string, []interface{}) {
 	return "HAVING " + qs, args
 }
 
-func (b *Builder) orderBy(orders []grimoire.SortQuery) string {
-	length := len(orders)
-	if length == 0 {
-		return ""
-	}
+func (b *Builder) orderBy(buffer *bytes.Buffer, orders []grimoire.SortQuery) {
+	l := len(orders)
 
-	qs := "ORDER BY "
-	for i, o := range orders {
-		if o.Asc() {
-			qs += b.escape(string(o.Field)) + " ASC"
+	buffer.WriteString(" ORDER BY")
+	for i, order := range orders {
+		buffer.WriteByte(' ')
+		buffer.WriteString(b.escape(order.Field))
+
+		if order.Asc() {
+			buffer.WriteString(" ASC")
 		} else {
-			qs += b.escape(string(o.Field)) + " DESC"
+			buffer.WriteString(" DESC")
 		}
 
-		if i < length-1 {
-			qs += ", "
+		if i < l-1 {
+			buffer.WriteByte(',')
 		}
 	}
-
-	return qs
 }
 
-func (b *Builder) limitOffset(limit grimoire.Limit, offset grimoire.Offset) string {
-	str := ""
-
+func (b *Builder) limitOffset(buffer *bytes.Buffer, limit grimoire.Limit, offset grimoire.Offset) {
 	if limit > 0 {
-		str = "LIMIT " + strconv.Itoa(int(limit))
+		buffer.WriteString(" LIMIT ")
+		buffer.WriteString(strconv.Itoa(int(limit)))
 
 		if offset > 0 {
-			str += " OFFSET " + strconv.Itoa(int(offset))
+			buffer.WriteString(" OFFSET ")
+			buffer.WriteString(strconv.Itoa(int(offset)))
 		}
 	}
-
-	return str
 }
 
 func (b *Builder) filter(filter grimoire.FilterQuery) (string, []interface{}) {
@@ -543,12 +524,17 @@ func (b *Builder) ph() string {
 	return b.config.Placeholder
 }
 
+type fieldCacheKey struct {
+	field  string
+	escape string
+}
+
 func (b *Builder) escape(field string) string {
 	if b.config.EscapeChar == "" || field == "*" {
 		return field
 	}
 
-	key := field + b.config.EscapeChar
+	key := fieldCacheKey{field: field, escape: b.config.EscapeChar}
 	escapedField, ok := fieldCache.Load(key)
 	if ok {
 		return escapedField.(string)

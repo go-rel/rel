@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/Fs02/grimoire"
@@ -8,6 +9,28 @@ import (
 	"github.com/Fs02/grimoire/where"
 	"github.com/stretchr/testify/assert"
 )
+
+func BenchmarkBuilder_Find(b *testing.B) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	for n := 0; n < b.N; n++ {
+		query := grimoire.From("users").
+			Select("id", "name").
+			Join("transactions").
+			Where(where.Eq("id", 10)).
+			Group("type").Having(where.Gt("price", 1000)).
+			SortAsc("created_at").SortDesc("id").
+			Offset(10).Limit(10)
+
+		builder.Find(query)
+	}
+}
 
 func TestBuilder_Find(t *testing.T) {
 	var (
@@ -430,18 +453,61 @@ func TestBuilder_Select(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	assert.Equal(t, "SELECT *", builder.fields(false, nil))
-	assert.Equal(t, "SELECT *", builder.fields(false, []string{"*"}))
-	assert.Equal(t, "SELECT `id`,`name`", builder.fields(false, []string{"id", "name"}))
-	assert.Equal(t, "SELECT DISTINCT *", builder.fields(true, []string{"*"}))
-	assert.Equal(t, "SELECT DISTINCT `id`,`name`", builder.fields(true, []string{"id", "name"}))
-	assert.Equal(t, "SELECT COUNT(*) AS count", builder.fields(false, []string{"COUNT(*) AS count"}))
-	assert.Equal(t, "SELECT COUNT(`transactions`.*) AS count", builder.fields(false, []string{"COUNT(transactions.*) AS count"}))
-	assert.Equal(t, "SELECT SUM(`transactions`.`total`) AS total", builder.fields(false, []string{"SUM(transactions.total) AS total"}))
+	tests := []struct {
+		result   string
+		distinct bool
+		fields   []string
+	}{
+		{
+			result: "SELECT *",
+		},
+		{
+			result: "SELECT *",
+			fields: []string{"*"},
+		},
+		{
+			result: "SELECT `id`,`name`",
+			fields: []string{"id", "name"},
+		},
+		{
+			result:   "SELECT DISTINCT *",
+			distinct: true,
+			fields:   []string{"*"},
+		},
+		{
+			result:   "SELECT DISTINCT `id`,`name`",
+			distinct: true,
+			fields:   []string{"id", "name"},
+		},
+		{
+			result: "SELECT COUNT(*) AS count",
+			fields: []string{"COUNT(*) AS count"},
+		},
+		{
+			result: "SELECT COUNT(`transactions`.*) AS count",
+			fields: []string{"COUNT(transactions.*) AS count"},
+		},
+		{
+			result: "SELECT SUM(`transactions`.`total`) AS total",
+			fields: []string{"SUM(transactions.total) AS total"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.result, func(t *testing.T) {
+			var (
+				buffer bytes.Buffer
+			)
+
+			builder.fields(&buffer, test.distinct, test.fields)
+			assert.Equal(t, test.result, buffer.String())
+		})
+	}
 }
 
 func TestBuilder_From(t *testing.T) {
 	var (
+		buffer bytes.Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -449,7 +515,8 @@ func TestBuilder_From(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	assert.Equal(t, "FROM `users`", builder.from("users"))
+	builder.from(&buffer, "users")
+	assert.Equal(t, " FROM `users`", buffer.String())
 }
 
 func TestBuilder_Join(t *testing.T) {
@@ -469,15 +536,15 @@ func TestBuilder_Join(t *testing.T) {
 			grimoire.From("trxs"),
 		},
 		{
-			"JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
+			" JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
 			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
 		},
 		{
-			"INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
+			" INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
 			grimoire.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
 		},
 		{
-			"JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
+			" JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
 			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
 				JoinOn("payments", "payments.id", "trxs.payment_id"),
 		},
@@ -486,11 +553,12 @@ func TestBuilder_Join(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				builder  = NewBuilder(config)
-				qs, args = builder.join(grimoire.BuildQuery("", test.Query).JoinQuery...)
+				buffer  bytes.Buffer
+				builder = NewBuilder(config)
+				args    = builder.join(&buffer, grimoire.BuildQuery("", test.Query).JoinQuery...)
 			)
 
-			assert.Equal(t, test.QueryString, qs)
+			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Nil(t, args)
 		})
 	}
@@ -586,6 +654,7 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 
 func TestBuilder_GroupBy(t *testing.T) {
 	var (
+		buffer bytes.Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -593,9 +662,12 @@ func TestBuilder_GroupBy(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	assert.Equal(t, "", builder.groupBy(nil))
-	assert.Equal(t, "GROUP BY `city`", builder.groupBy([]string{"city"}))
-	assert.Equal(t, "GROUP BY `city`,`nation`", builder.groupBy([]string{"city", "nation"}))
+	builder.groupBy(&buffer, []string{"city"})
+	assert.Equal(t, " GROUP BY `city`", buffer.String())
+
+	buffer.Reset()
+	builder.groupBy(&buffer, []string{"city", "nation"})
+	assert.Equal(t, " GROUP BY `city`,`nation`", buffer.String())
 }
 
 func TestBuilder_Having(t *testing.T) {
@@ -688,6 +760,7 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 
 func TestBuilder_OrderBy(t *testing.T) {
 	var (
+		buffer bytes.Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -695,13 +768,17 @@ func TestBuilder_OrderBy(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	assert.Equal(t, "", builder.orderBy(nil))
-	assert.Equal(t, "ORDER BY `name` ASC", builder.orderBy([]grimoire.SortQuery{sort.Asc("name")}))
-	assert.Equal(t, "ORDER BY `name` ASC, `created_at` DESC", builder.orderBy([]grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")}))
+	builder.orderBy(&buffer, []grimoire.SortQuery{sort.Asc("name")})
+	assert.Equal(t, " ORDER BY `name` ASC", buffer.String())
+
+	buffer.Reset()
+	builder.orderBy(&buffer, []grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")})
+	assert.Equal(t, " ORDER BY `name` ASC, `created_at` DESC", buffer.String())
 }
 
 func TestBuilder_LimitOffset(t *testing.T) {
 	var (
+		buffer bytes.Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -709,10 +786,12 @@ func TestBuilder_LimitOffset(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	assert.Equal(t, "", builder.limitOffset(0, 0))
-	assert.Equal(t, "", builder.limitOffset(0, 10))
-	assert.Equal(t, "LIMIT 10", builder.limitOffset(10, 0))
-	assert.Equal(t, "LIMIT 10 OFFSET 10", builder.limitOffset(10, 10))
+	builder.limitOffset(&buffer, 10, 0)
+	assert.Equal(t, " LIMIT 10", buffer.String())
+
+	buffer.Reset()
+	builder.limitOffset(&buffer, 10, 10)
+	assert.Equal(t, " LIMIT 10 OFFSET 10", buffer.String())
 }
 
 func TestBuilder_Filter(t *testing.T) {

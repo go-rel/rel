@@ -159,22 +159,28 @@ func (q Query) Sort(fields ...string) Query {
 }
 
 func (q Query) SortAsc(fields ...string) Query {
-	sorts := make([]SortQuery, len(fields))
+	var (
+		offset = len(q.SortQuery)
+	)
+
+	q.SortQuery = append(q.SortQuery, make([]SortQuery, len(fields))...)
 	for i := range fields {
-		sorts[i] = NewSortAsc(fields[i])
+		q.SortQuery[offset+i] = NewSortAsc(fields[i])
 	}
 
-	q.SortQuery = append(q.SortQuery, sorts...)
 	return q
 }
 
 func (q Query) SortDesc(fields ...string) Query {
-	sorts := make([]SortQuery, len(fields))
+	var (
+		offset = len(q.SortQuery)
+	)
+
+	q.SortQuery = append(q.SortQuery, make([]SortQuery, len(fields))...)
 	for i := range fields {
-		sorts[i] = NewSortDesc(fields[i])
+		q.SortQuery[offset+i] = NewSortDesc(fields[i])
 	}
 
-	q.SortQuery = append(q.SortQuery, sorts...)
 	return q
 }
 

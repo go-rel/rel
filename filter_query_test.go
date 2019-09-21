@@ -448,9 +448,9 @@ func TestFilterQuery_AndEq(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterEqOp,
-				Field:  "field",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterEqOp,
+				Field: "field",
+				Value: "value",
 			},
 		},
 	}, grimoire.FilterQuery{}.AndEq("field", "value"))
@@ -460,9 +460,9 @@ func TestFilterQuery_AndNe(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNeOp,
-				Field:  "field",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterNeOp,
+				Field: "field",
+				Value: "value",
 			},
 		},
 	}, grimoire.FilterQuery{}.AndNe("field", "value"))
@@ -472,9 +472,9 @@ func TestFilterQuery_AndLt(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLtOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterLtOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.AndLt("field", 10))
@@ -484,9 +484,9 @@ func TestFilterQuery_AndLte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLteOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterLteOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.AndLte("field", 10))
@@ -496,9 +496,9 @@ func TestFilterQuery_AndGt(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterGtOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterGtOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.AndGt("field", 10))
@@ -508,9 +508,9 @@ func TestFilterQuery_AndGte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterGteOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterGteOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.AndGte("field", 10))
@@ -542,9 +542,9 @@ func TestFilterQuery_AndIn(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterInOp,
-				Field:  "field",
-				Values: []interface{}{"value1", "value2"},
+				Type:  grimoire.FilterInOp,
+				Field: "field",
+				Value: []interface{}{"value1", "value2"},
 			},
 		},
 	}, grimoire.FilterQuery{}.AndIn("field", "value1", "value2"))
@@ -554,9 +554,9 @@ func TestFilterQuery_AndNin(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNinOp,
-				Field:  "field",
-				Values: []interface{}{"value1", "value2"},
+				Type:  grimoire.FilterNinOp,
+				Field: "field",
+				Value: []interface{}{"value1", "value2"},
 			},
 		},
 	}, grimoire.FilterQuery{}.AndNin("field", "value1", "value2"))
@@ -566,9 +566,9 @@ func TestFilterQuery_AndLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLikeOp,
-				Field:  "field",
-				Values: []interface{}{"%expr%"},
+				Type:  grimoire.FilterLikeOp,
+				Field: "field",
+				Value: "%expr%",
 			},
 		},
 	}, grimoire.FilterQuery{}.AndLike("field", "%expr%"))
@@ -578,9 +578,9 @@ func TestFilterQuery_AndNotLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNotLikeOp,
-				Field:  "field",
-				Values: []interface{}{"%expr%"},
+				Type:  grimoire.FilterNotLikeOp,
+				Field: "field",
+				Value: "%expr%",
 			},
 		},
 	}, grimoire.FilterQuery{}.AndNotLike("field", "%expr%"))
@@ -590,9 +590,9 @@ func TestFilterQuery_AndFragment(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterFragmentOp,
-				Field:  "expr",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterFragmentOp,
+				Field: "expr",
+				Value: []interface{}{"value"},
 			},
 		},
 	}, grimoire.FilterQuery{}.AndFragment("expr", "value"))
@@ -603,9 +603,9 @@ func TestFilterQuery_OrEq(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterEqOp,
-				Field:  "field",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterEqOp,
+				Field: "field",
+				Value: "value",
 			},
 		},
 	}, grimoire.FilterQuery{}.OrEq("field", "value"))
@@ -616,9 +616,9 @@ func TestFilterQuery_OrNe(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNeOp,
-				Field:  "field",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterNeOp,
+				Field: "field",
+				Value: "value",
 			},
 		},
 	}, grimoire.FilterQuery{}.OrNe("field", "value"))
@@ -629,9 +629,9 @@ func TestFilterQuery_OrLt(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLtOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterLtOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.OrLt("field", 10))
@@ -642,9 +642,9 @@ func TestFilterQuery_OrLte(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLteOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterLteOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.OrLte("field", 10))
@@ -655,9 +655,9 @@ func TestFilterQuery_OrGt(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterGtOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterGtOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.OrGt("field", 10))
@@ -668,9 +668,9 @@ func TestFilterQuery_OrGte(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterGteOp,
-				Field:  "field",
-				Values: []interface{}{10},
+				Type:  grimoire.FilterGteOp,
+				Field: "field",
+				Value: 10,
 			},
 		},
 	}, grimoire.FilterQuery{}.OrGte("field", 10))
@@ -705,9 +705,9 @@ func TestFilterQuery_OrIn(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterInOp,
-				Field:  "field",
-				Values: []interface{}{"value1", "value2"},
+				Type:  grimoire.FilterInOp,
+				Field: "field",
+				Value: []interface{}{"value1", "value2"},
 			},
 		},
 	}, grimoire.FilterQuery{}.OrIn("field", "value1", "value2"))
@@ -718,9 +718,9 @@ func TestFilterQuery_OrNin(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNinOp,
-				Field:  "field",
-				Values: []interface{}{"value1", "value2"},
+				Type:  grimoire.FilterNinOp,
+				Field: "field",
+				Value: []interface{}{"value1", "value2"},
 			},
 		},
 	}, grimoire.FilterQuery{}.OrNin("field", "value1", "value2"))
@@ -731,9 +731,9 @@ func TestFilterQuery_OrLike(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterLikeOp,
-				Field:  "field",
-				Values: []interface{}{"%expr%"},
+				Type:  grimoire.FilterLikeOp,
+				Field: "field",
+				Value: "%expr%",
 			},
 		},
 	}, grimoire.FilterQuery{}.OrLike("field", "%expr%"))
@@ -744,9 +744,9 @@ func TestFilterQuery_OrNotLike(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterNotLikeOp,
-				Field:  "field",
-				Values: []interface{}{"%expr%"},
+				Type:  grimoire.FilterNotLikeOp,
+				Field: "field",
+				Value: "%expr%",
 			},
 		},
 	}, grimoire.FilterQuery{}.OrNotLike("field", "%expr%"))
@@ -757,9 +757,9 @@ func TestFilterQuery_OrFragment(t *testing.T) {
 		Type: grimoire.FilterOrOp,
 		Inner: []grimoire.FilterQuery{
 			{
-				Type:   grimoire.FilterFragmentOp,
-				Field:  "expr",
-				Values: []interface{}{"value"},
+				Type:  grimoire.FilterFragmentOp,
+				Field: "expr",
+				Value: []interface{}{"value"},
 			},
 		},
 	}, grimoire.FilterQuery{}.OrFragment("expr", "value"))
@@ -767,49 +767,49 @@ func TestFilterQuery_OrFragment(t *testing.T) {
 
 func TestEq(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterEqOp,
-		Field:  "field",
-		Values: []interface{}{"value"},
+		Type:  grimoire.FilterEqOp,
+		Field: "field",
+		Value: "value",
 	}, grimoire.Eq("field", "value"))
 }
 
 func Ne(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterNeOp,
-		Field:  "field",
-		Values: []interface{}{"value"},
+		Type:  grimoire.FilterNeOp,
+		Field: "field",
+		Value: "value",
 	}, grimoire.Ne("field", "value"))
 }
 
 func TestLt(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterLtOp,
-		Field:  "field",
-		Values: []interface{}{10},
+		Type:  grimoire.FilterLtOp,
+		Field: "field",
+		Value: 10,
 	}, grimoire.Lt("field", 10))
 }
 
 func TestLte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterLteOp,
-		Field:  "field",
-		Values: []interface{}{10},
+		Type:  grimoire.FilterLteOp,
+		Field: "field",
+		Value: 10,
 	}, grimoire.Lte("field", 10))
 }
 
 func TestFilterQueryGt(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterGtOp,
-		Field:  "field",
-		Values: []interface{}{10},
+		Type:  grimoire.FilterGtOp,
+		Field: "field",
+		Value: 10,
 	}, grimoire.Gt("field", 10))
 }
 
 func TestGte(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterGteOp,
-		Field:  "field",
-		Values: []interface{}{10},
+		Type:  grimoire.FilterGteOp,
+		Field: "field",
+		Value: 10,
 	}, grimoire.Gte("field", 10))
 }
 
@@ -829,40 +829,40 @@ func TestNotNil(t *testing.T) {
 
 func TestIn(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterInOp,
-		Field:  "field",
-		Values: []interface{}{"value1", "value2"},
+		Type:  grimoire.FilterInOp,
+		Field: "field",
+		Value: []interface{}{"value1", "value2"},
 	}, grimoire.In("field", "value1", "value2"))
 }
 
 func TestNin(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterNinOp,
-		Field:  "field",
-		Values: []interface{}{"value1", "value2"},
+		Type:  grimoire.FilterNinOp,
+		Field: "field",
+		Value: []interface{}{"value1", "value2"},
 	}, grimoire.Nin("field", "value1", "value2"))
 }
 
 func TestLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterLikeOp,
-		Field:  "field",
-		Values: []interface{}{"%expr%"},
+		Type:  grimoire.FilterLikeOp,
+		Field: "field",
+		Value: "%expr%",
 	}, grimoire.Like("field", "%expr%"))
 }
 
 func TestNotLike(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterNotLikeOp,
-		Field:  "field",
-		Values: []interface{}{"%expr%"},
+		Type:  grimoire.FilterNotLikeOp,
+		Field: "field",
+		Value: "%expr%",
 	}, grimoire.NotLike("field", "%expr%"))
 }
 
 func TestFilterFragment(t *testing.T) {
 	assert.Equal(t, grimoire.FilterQuery{
-		Type:   grimoire.FilterFragmentOp,
-		Field:  "expr",
-		Values: []interface{}{"value"},
+		Type:  grimoire.FilterFragmentOp,
+		Field: "expr",
+		Value: []interface{}{"value"},
 	}, grimoire.FilterFragment("expr", "value"))
 }

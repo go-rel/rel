@@ -24,19 +24,19 @@ type Builder struct {
 // Find generates query for select.
 func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 	)
 
 	b.fields(&buffer, query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields)
-	args := b.query(&buffer, query)
+	b.query(&buffer, query)
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
 // Aggregate generates query for aggregation.
 func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (string, []interface{}) {
 	var (
-		buffer      bytes.Buffer
+		buffer      Buffer
 		selectfield = mode + "(" + field + ") AS " + mode
 	)
 
@@ -46,35 +46,21 @@ func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (st
 	return buffer.String(), args
 }
 
-func (b *Builder) query(buffer *bytes.Buffer, query grimoire.Query) []interface{} {
+func (b *Builder) query(buffer *Buffer, query grimoire.Query) []interface{} {
 	var (
 		args []interface{}
 	)
 
 	b.from(buffer, query.Collection)
-
-	if arg := b.join(buffer, query.JoinQuery...); arg != nil {
-		args = append(args, arg...)
-	}
-
-	if !query.WhereQuery.None() {
-		arg := b.where(buffer, query.WhereQuery)
-		args = append(args, arg...)
-	}
+	b.join(buffer, query.JoinQuery)
+	b.where(buffer, query.WhereQuery)
 
 	if len(query.GroupQuery.Fields) > 0 {
 		b.groupBy(buffer, query.GroupQuery.Fields)
-
-		if !query.GroupQuery.Filter.None() {
-			arg := b.having(buffer, query.GroupQuery.Filter)
-			args = append(args, arg...)
-		}
+		b.having(buffer, query.GroupQuery.Filter)
 	}
 
-	if len(query.SortQuery) > 0 {
-		b.orderBy(buffer, query.SortQuery)
-	}
-
+	b.orderBy(buffer, query.SortQuery)
 	b.limitOffset(buffer, query.LimitQuery, query.OffsetQuery)
 
 	if query.LockQuery != "" {
@@ -206,9 +192,8 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 // Update generates query for update.
 func (b *Builder) Update(collection string, changes grimoire.Changes, filter grimoire.FilterQuery) (string, []interface{}) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		length = len(changes.Changes)
-		args   = make([]interface{}, 0, length)
 	)
 
 	buffer.WriteString("UPDATE ")
@@ -223,24 +208,24 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(b.ph())
-			args = append(args, ch.Value)
+			buffer.Append(ch.Value)
 		case grimoire.ChangeIncOp:
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteString("+")
 			buffer.WriteString(b.ph())
-			args = append(args, ch.Value)
+			buffer.Append(ch.Value)
 		case grimoire.ChangeDecOp:
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteString("=")
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteString("-")
 			buffer.WriteString(b.ph())
-			args = append(args, ch.Value)
+			buffer.Append(ch.Value)
 		case grimoire.ChangeFragmentOp:
 			buffer.WriteString(ch.Field)
-			args = append(args, ch.Value.([]interface{})...)
+			buffer.Append(ch.Value.([]interface{})...)
 		}
 
 		if i < length-1 {
@@ -248,21 +233,17 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 		}
 	}
 
-	if !filter.None() {
-		arg := b.where(&buffer, filter)
-		args = append(args, arg...)
-	}
+	b.where(&buffer, filter)
 
 	buffer.WriteString(";")
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
 // Delete generates query for delete.
 func (b *Builder) Delete(collection string, filter grimoire.FilterQuery) (string, []interface{}) {
 	var (
-		buffer bytes.Buffer
-		args   []interface{}
+		buffer Buffer
 	)
 
 	buffer.WriteString("DELETE FROM ")
@@ -270,17 +251,14 @@ func (b *Builder) Delete(collection string, filter grimoire.FilterQuery) (string
 	buffer.WriteString(collection)
 	buffer.WriteString(b.config.EscapeChar)
 
-	if !filter.None() {
-		arg := b.where(&buffer, filter)
-		args = append(args, arg...)
-	}
+	b.where(&buffer, filter)
 
 	buffer.WriteString(";")
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
-func (b *Builder) fields(buffer *bytes.Buffer, distinct bool, fields []string) {
+func (b *Builder) fields(buffer *Buffer, distinct bool, fields []string) {
 	if len(fields) == 0 {
 		if distinct {
 			buffer.WriteString("SELECT DISTINCT *")
@@ -306,21 +284,17 @@ func (b *Builder) fields(buffer *bytes.Buffer, distinct bool, fields []string) {
 	}
 }
 
-func (b *Builder) from(buffer *bytes.Buffer, collection string) {
+func (b *Builder) from(buffer *Buffer, collection string) {
 	buffer.WriteString(" FROM ")
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(collection)
 	buffer.WriteString(b.config.EscapeChar)
 }
 
-func (b *Builder) join(buffer *bytes.Buffer, joins ...grimoire.JoinQuery) []interface{} {
+func (b *Builder) join(buffer *Buffer, joins []grimoire.JoinQuery) {
 	if len(joins) == 0 {
-		return nil
+		return
 	}
-
-	var (
-		args []interface{}
-	)
 
 	for _, join := range joins {
 		buffer.WriteString(" ")
@@ -334,18 +308,20 @@ func (b *Builder) join(buffer *bytes.Buffer, joins ...grimoire.JoinQuery) []inte
 		buffer.WriteString("=")
 		buffer.WriteString(b.escape(join.To))
 
-		args = append(args, join.Arguments...)
+		buffer.Append(join.Arguments...)
+	}
+}
+
+func (b *Builder) where(buffer *Buffer, filter grimoire.FilterQuery) {
+	if filter.None() {
+		return
 	}
 
-	return args
-}
-
-func (b *Builder) where(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
 	buffer.WriteString(" WHERE ")
-	return b.filter(buffer, filter)
+	b.filter(buffer, filter)
 }
 
-func (b *Builder) groupBy(buffer *bytes.Buffer, fields []string) {
+func (b *Builder) groupBy(buffer *Buffer, fields []string) {
 	buffer.WriteString(" GROUP BY ")
 
 	l := len(fields) - 1
@@ -358,13 +334,23 @@ func (b *Builder) groupBy(buffer *bytes.Buffer, fields []string) {
 	}
 }
 
-func (b *Builder) having(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+func (b *Builder) having(buffer *Buffer, filter grimoire.FilterQuery) {
+	if filter.None() {
+		return
+	}
+
 	buffer.WriteString(" HAVING ")
-	return b.filter(buffer, filter)
+	b.filter(buffer, filter)
 }
 
-func (b *Builder) orderBy(buffer *bytes.Buffer, orders []grimoire.SortQuery) {
-	l := len(orders)
+func (b *Builder) orderBy(buffer *Buffer, orders []grimoire.SortQuery) {
+	var (
+		length = len(orders)
+	)
+
+	if length == 0 {
+		return
+	}
 
 	buffer.WriteString(" ORDER BY")
 	for i, order := range orders {
@@ -377,13 +363,13 @@ func (b *Builder) orderBy(buffer *bytes.Buffer, orders []grimoire.SortQuery) {
 			buffer.WriteString(" DESC")
 		}
 
-		if i < l-1 {
+		if i < length-1 {
 			buffer.WriteByte(',')
 		}
 	}
 }
 
-func (b *Builder) limitOffset(buffer *bytes.Buffer, limit grimoire.Limit, offset grimoire.Offset) {
+func (b *Builder) limitOffset(buffer *Buffer, limit grimoire.Limit, offset grimoire.Offset) {
 	if limit > 0 {
 		buffer.WriteString(" LIMIT ")
 		buffer.WriteString(strconv.Itoa(int(limit)))
@@ -395,59 +381,50 @@ func (b *Builder) limitOffset(buffer *bytes.Buffer, limit grimoire.Limit, offset
 	}
 }
 
-func (b *Builder) filter(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
-	var (
-		args []interface{}
-	)
-
+func (b *Builder) filter(buffer *Buffer, filter grimoire.FilterQuery) {
 	switch filter.Type {
 	case grimoire.FilterAndOp:
-		args = b.build(buffer, "AND", filter.Inner)
+		b.build(buffer, "AND", filter.Inner)
 	case grimoire.FilterOrOp:
-		args = b.build(buffer, "OR", filter.Inner)
+		b.build(buffer, "OR", filter.Inner)
 	case grimoire.FilterNotOp:
 		buffer.WriteString("NOT ")
-		args = b.build(buffer, "AND", filter.Inner)
+		b.build(buffer, "AND", filter.Inner)
 	case grimoire.FilterEqOp,
 		grimoire.FilterNeOp,
 		grimoire.FilterLtOp,
 		grimoire.FilterLteOp,
 		grimoire.FilterGtOp,
 		grimoire.FilterGteOp:
-		args = b.buildComparison(buffer, filter)
+		b.buildComparison(buffer, filter)
 	case grimoire.FilterNilOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" IS NULL")
-		args = filter.Values
 	case grimoire.FilterNotNilOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" IS NOT NULL")
-		args = filter.Values
 	case grimoire.FilterInOp,
 		grimoire.FilterNinOp:
-		args = b.buildInclusion(buffer, filter)
+		b.buildInclusion(buffer, filter)
 	case grimoire.FilterLikeOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" LIKE ")
 		buffer.WriteString(b.ph())
-		args = filter.Values
+		buffer.Append(filter.Value)
 	case grimoire.FilterNotLikeOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" NOT LIKE ")
 		buffer.WriteString(b.ph())
-		args = filter.Values
+		buffer.Append(filter.Value)
 	case grimoire.FilterFragmentOp:
 		buffer.WriteString(filter.Field)
-		args = filter.Values
+		buffer.Append(filter.Value.([]interface{})...)
 	}
-
-	return args
 }
 
-func (b *Builder) build(buffer *bytes.Buffer, op string, inner []grimoire.FilterQuery) []interface{} {
+func (b *Builder) build(buffer *Buffer, op string, inner []grimoire.FilterQuery) {
 	var (
 		length = len(inner)
-		args   []interface{}
 	)
 
 	if length > 1 {
@@ -455,8 +432,7 @@ func (b *Builder) build(buffer *bytes.Buffer, op string, inner []grimoire.Filter
 	}
 
 	for i, c := range inner {
-		cArgs := b.filter(buffer, c)
-		args = append(args, cArgs...)
+		b.filter(buffer, c)
 
 		if i < length-1 {
 			buffer.WriteByte(' ')
@@ -468,11 +444,9 @@ func (b *Builder) build(buffer *bytes.Buffer, op string, inner []grimoire.Filter
 	if length > 1 {
 		buffer.WriteByte(')')
 	}
-
-	return args
 }
 
-func (b *Builder) buildComparison(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+func (b *Builder) buildComparison(buffer *Buffer, filter grimoire.FilterQuery) {
 	buffer.WriteString(b.escape(filter.Field))
 
 	switch filter.Type {
@@ -491,11 +465,14 @@ func (b *Builder) buildComparison(buffer *bytes.Buffer, filter grimoire.FilterQu
 	}
 
 	buffer.WriteString(b.ph())
-
-	return filter.Values
+	buffer.Append(filter.Value)
 }
 
-func (b *Builder) buildInclusion(buffer *bytes.Buffer, filter grimoire.FilterQuery) []interface{} {
+func (b *Builder) buildInclusion(buffer *Buffer, filter grimoire.FilterQuery) {
+	var (
+		values = filter.Value.([]interface{})
+	)
+
 	buffer.WriteString(b.escape(filter.Field))
 
 	if filter.Type == grimoire.FilterInOp {
@@ -505,13 +482,12 @@ func (b *Builder) buildInclusion(buffer *bytes.Buffer, filter grimoire.FilterQue
 	}
 
 	buffer.WriteString(b.ph())
-	for i := 1; i <= len(filter.Values)-1; i++ {
+	for i := 1; i <= len(values)-1; i++ {
 		buffer.WriteString(",")
 		buffer.WriteString(b.ph())
 	}
 	buffer.WriteString(")")
-
-	return filter.Values
+	buffer.Append(values...)
 }
 
 func (b *Builder) ph() string {

@@ -1,7 +1,6 @@
 package sql
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/Fs02/grimoire"
@@ -496,7 +495,7 @@ func TestBuilder_Select(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.result, func(t *testing.T) {
 			var (
-				buffer bytes.Buffer
+				buffer Buffer
 			)
 
 			builder.fields(&buffer, test.distinct, test.fields)
@@ -507,7 +506,7 @@ func TestBuilder_Select(t *testing.T) {
 
 func TestBuilder_From(t *testing.T) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -553,13 +552,14 @@ func TestBuilder_Join(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.join(&buffer, grimoire.BuildQuery("", test.Query).JoinQuery...)
 			)
 
+			builder.join(&buffer, grimoire.BuildQuery("", test.Query).JoinQuery)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Nil(t, args)
+			assert.Nil(t, buffer.Arguments)
 		})
 	}
 }
@@ -592,13 +592,14 @@ func TestBuilder_Where(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.where(&buffer, test.Filter)
 			)
 
+			builder.where(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }
@@ -633,20 +634,21 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.where(&buffer, test.Filter)
 			)
 
+			builder.where(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }
 
 func TestBuilder_GroupBy(t *testing.T) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -690,13 +692,14 @@ func TestBuilder_Having(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.having(&buffer, test.Filter)
 			)
 
+			builder.having(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }
@@ -731,20 +734,21 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.having(&buffer, test.Filter)
 			)
 
+			builder.having(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }
 
 func TestBuilder_OrderBy(t *testing.T) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -762,7 +766,7 @@ func TestBuilder_OrderBy(t *testing.T) {
 
 func TestBuilder_LimitOffset(t *testing.T) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		config = &Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
@@ -951,13 +955,14 @@ func TestBuilder_Filter(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.filter(&buffer, test.Filter)
 			)
 
+			builder.filter(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }
@@ -1137,13 +1142,14 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.QueryString, func(t *testing.T) {
 			var (
-				buffer  bytes.Buffer
+				buffer  Buffer
 				builder = NewBuilder(config)
-				args    = builder.filter(&buffer, test.Filter)
 			)
 
+			builder.filter(&buffer, test.Filter)
+
 			assert.Equal(t, test.QueryString, buffer.String())
-			assert.Equal(t, test.Args, args)
+			assert.Equal(t, test.Args, buffer.Arguments)
 		})
 	}
 }

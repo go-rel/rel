@@ -36,11 +36,21 @@ func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
 // Aggregate generates query for aggregation.
 func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (string, []interface{}) {
 	var (
-		buffer      Buffer
-		selectfield = mode + "(" + field + ") AS " + mode
+		buffer Buffer
 	)
 
-	b.fields(&buffer, false, append(query.GroupQuery.Fields, selectfield))
+	buffer.WriteString("SELECT ")
+	buffer.WriteString(mode)
+	buffer.WriteByte('(')
+	buffer.WriteString(b.escape(field))
+	buffer.WriteString(") AS ")
+	buffer.WriteString(mode)
+
+	for _, f := range query.GroupQuery.Fields {
+		buffer.WriteByte(',')
+		buffer.WriteString(b.escape(f))
+	}
+
 	b.query(&buffer, query)
 
 	return buffer.String(), buffer.Arguments
@@ -60,7 +70,7 @@ func (b *Builder) query(buffer *Buffer, query grimoire.Query) {
 	b.limitOffset(buffer, query.LimitQuery, query.OffsetQuery)
 
 	if query.LockQuery != "" {
-		buffer.WriteString(" ")
+		buffer.WriteByte(' ')
 		buffer.WriteString(string(query.LockQuery))
 	}
 
@@ -98,7 +108,7 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 			}
 
 			if i < length-1 {
-				buffer.WriteString(",")
+				buffer.WriteByte(',')
 			}
 		}
 
@@ -109,7 +119,7 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 			buffer.WriteString(b.ph())
 
 			if i < len(args)-1 {
-				buffer.WriteString(",")
+				buffer.WriteByte(',')
 			}
 		}
 		buffer.WriteString(")")
@@ -160,7 +170,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 			}
 
 			if j < len(fields)-1 {
-				buffer.WriteString(",")
+				buffer.WriteByte(',')
 			}
 		}
 
@@ -223,7 +233,7 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 		}
 
 		if i < length-1 {
-			buffer.WriteString(",")
+			buffer.WriteByte(',')
 		}
 	}
 
@@ -273,7 +283,7 @@ func (b *Builder) fields(buffer *Buffer, distinct bool, fields []string) {
 		buffer.WriteString(b.escape(f))
 
 		if i < l {
-			buffer.WriteString(",")
+			buffer.WriteByte(',')
 		}
 	}
 }
@@ -291,9 +301,9 @@ func (b *Builder) join(buffer *Buffer, joins []grimoire.JoinQuery) {
 	}
 
 	for _, join := range joins {
-		buffer.WriteString(" ")
+		buffer.WriteByte(' ')
 		buffer.WriteString(join.Mode)
-		buffer.WriteString(" ")
+		buffer.WriteByte(' ')
 		buffer.WriteString(b.config.EscapeChar)
 		buffer.WriteString(join.Collection)
 		buffer.WriteString(b.config.EscapeChar)
@@ -323,7 +333,7 @@ func (b *Builder) groupBy(buffer *Buffer, fields []string) {
 		buffer.WriteString(b.escape(f))
 
 		if i < l {
-			buffer.WriteString(",")
+			buffer.WriteByte(',')
 		}
 	}
 }
@@ -477,7 +487,7 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter grimoire.FilterQuery) {
 
 	buffer.WriteString(b.ph())
 	for i := 1; i <= len(values)-1; i++ {
-		buffer.WriteString(",")
+		buffer.WriteByte(',')
 		buffer.WriteString(b.ph())
 	}
 	buffer.WriteString(")")

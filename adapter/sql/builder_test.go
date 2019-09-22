@@ -196,6 +196,20 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 	}
 }
 
+func BenchmarkBuilder_Aggregate(b *testing.B) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	for n := 0; n < b.N; n++ {
+		builder.Aggregate(grimoire.From("users").Group("gender"), "sum", "transactions.total")
+	}
+}
+
 func TestBuilder_Aggregate(t *testing.T) {
 	var (
 		config = &Config{
@@ -216,7 +230,7 @@ func TestBuilder_Aggregate(t *testing.T) {
 
 	qs, args = builder.Aggregate(query.Group("gender"), "sum", "transactions.total")
 	assert.Nil(t, args)
-	assert.Equal(t, "SELECT `gender`,sum(`transactions`.`total`) AS sum FROM `users` GROUP BY `gender`;", qs)
+	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum,`gender` FROM `users` GROUP BY `gender`;", qs)
 }
 
 func TestBuilder_Insert(t *testing.T) {

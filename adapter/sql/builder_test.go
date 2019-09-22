@@ -324,6 +324,32 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 	assert.Nil(t, args)
 }
 
+func BenchmarkBuilder_InsertAll(b *testing.B) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	for n := 0; n < b.N; n++ {
+		allchanges := []grimoire.Changes{
+			grimoire.BuildChanges(
+				grimoire.Set("name", "foo"),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("age", 10),
+			),
+			grimoire.BuildChanges(
+				grimoire.Set("name", "boo"),
+				grimoire.Set("age", 20),
+			),
+		}
+		builder.InsertAll("users", []string{"name"}, allchanges)
+	}
+}
+
 func TestBuilder_InsertAll(t *testing.T) {
 	var (
 		config = &Config{

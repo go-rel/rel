@@ -1,7 +1,6 @@
 package sql
 
 import (
-	"bytes"
 	"strconv"
 	"strings"
 	"sync"
@@ -26,6 +25,8 @@ func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
 	var (
 		buffer Buffer
 	)
+
+	// TODO: calculate arguments size and if possible buffer size
 
 	b.fields(&buffer, query.SelectQuery.OnlyDistinct, query.SelectQuery.Fields)
 	b.query(&buffer, query)
@@ -134,22 +135,30 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 // InsertAll generates query for multiple insert.
 func (b *Builder) InsertAll(collection string, fields []string, allchanges []grimoire.Changes) (string, []interface{}) {
 	var (
-		buffer bytes.Buffer
-		args   = make([]interface{}, 0, len(fields)*len(allchanges))
+		buffer       Buffer
+		fieldsCount  = len(fields)
+		changesCount = len(allchanges)
 	)
+
+	buffer.Arguments = make([]interface{}, 0, fieldsCount*changesCount)
 
 	buffer.WriteString("INSERT INTO ")
 
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(collection)
 	buffer.WriteString(b.config.EscapeChar)
-
-	sep := b.config.EscapeChar + "," + b.config.EscapeChar
-
 	buffer.WriteString(" (")
-	buffer.WriteString(b.config.EscapeChar)
-	buffer.WriteString(strings.Join(fields, sep))
-	buffer.WriteString(b.config.EscapeChar)
+
+	for i := range fields {
+		buffer.WriteString(b.config.EscapeChar)
+		buffer.WriteString(fields[i])
+		buffer.WriteString(b.config.EscapeChar)
+
+		if i < fieldsCount-1 {
+			buffer.WriteByte(',')
+		}
+	}
+
 	buffer.WriteString(") VALUES ")
 
 	for i, changes := range allchanges {
@@ -158,17 +167,17 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 		for j, field := range fields {
 			if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
 				buffer.WriteString(b.ph())
-				args = append(args, ch.Value)
+				buffer.Append(ch.Value)
 			} else {
 				buffer.WriteString("DEFAULT")
 			}
 
-			if j < len(fields)-1 {
+			if j < fieldsCount-1 {
 				buffer.WriteByte(',')
 			}
 		}
 
-		if i < len(allchanges)-1 {
+		if i < changesCount-1 {
 			buffer.WriteString("),")
 		} else {
 			buffer.WriteByte(')')
@@ -184,7 +193,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 
 	buffer.WriteString(";")
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
 // Update generates query for update.
@@ -204,21 +213,21 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 		switch ch.Type {
 		case grimoire.ChangeSetOp:
 			buffer.WriteString(b.escape(ch.Field))
-			buffer.WriteString("=")
+			buffer.WriteByte('=')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
 		case grimoire.ChangeIncOp:
 			buffer.WriteString(b.escape(ch.Field))
-			buffer.WriteString("=")
+			buffer.WriteByte('=')
 			buffer.WriteString(b.escape(ch.Field))
-			buffer.WriteString("+")
+			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
 		case grimoire.ChangeDecOp:
 			buffer.WriteString(b.escape(ch.Field))
-			buffer.WriteString("=")
+			buffer.WriteByte('=')
 			buffer.WriteString(b.escape(ch.Field))
-			buffer.WriteString("-")
+			buffer.WriteByte('-')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
 		case grimoire.ChangeFragmentOp:

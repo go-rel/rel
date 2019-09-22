@@ -233,6 +233,25 @@ func TestBuilder_Aggregate(t *testing.T) {
 	assert.Equal(t, "SELECT sum(`transactions`.`total`) AS sum,`gender` FROM `users` GROUP BY `gender`;", qs)
 }
 
+func BenchmarkBuilder_Insert(b *testing.B) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	for n := 0; n < b.N; n++ {
+		changes := grimoire.BuildChanges(
+			grimoire.Set("name", "foo"),
+			grimoire.Set("age", 10),
+			grimoire.Set("agree", true),
+		)
+		builder.Insert("users", changes)
+	}
+}
+
 func TestBuilder_Insert(t *testing.T) {
 	var (
 		config = &Config{
@@ -302,7 +321,7 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 	)
 
 	assert.Equal(t, "INSERT INTO `users` DEFAULT VALUES RETURNING `id`;", qs)
-	assert.Equal(t, []interface{}{}, args)
+	assert.Nil(t, args)
 }
 
 func TestBuilder_InsertAll(t *testing.T) {

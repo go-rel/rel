@@ -80,9 +80,8 @@ func (b *Builder) query(buffer *Buffer, query grimoire.Query) {
 // Insert generates query for insert.
 func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, []interface{}) {
 	var (
-		buffer bytes.Buffer
+		buffer Buffer
 		length = len(changes.Changes)
-		args   = make([]interface{}, 0, length)
 	)
 
 	buffer.WriteString("INSERT INTO ")
@@ -91,20 +90,15 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 	if length == 0 && b.config.InsertDefaultValues {
 		buffer.WriteString(" DEFAULT VALUES")
 	} else {
+		buffer.Arguments = make([]interface{}, length)
 		buffer.WriteString(" (")
 
 		for i, ch := range changes.Changes {
-			switch ch.Type {
-			case grimoire.ChangeSetOp:
+			if ch.Type == grimoire.ChangeSetOp {
 				buffer.WriteString(b.config.EscapeChar)
 				buffer.WriteString(ch.Field)
 				buffer.WriteString(b.config.EscapeChar)
-				args = append(args, ch.Value)
-			case grimoire.ChangeFragmentOp:
-				buffer.WriteString(ch.Field)
-				args = append(args, ch.Value.([]interface{})...)
-			case grimoire.ChangeIncOp, grimoire.ChangeDecOp:
-				continue
+				buffer.Arguments[i] = ch.Value
 			}
 
 			if i < length-1 {
@@ -114,15 +108,15 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 
 		buffer.WriteString(") VALUES ")
 
-		buffer.WriteString("(")
-		for i := 0; i < len(args); i++ {
+		buffer.WriteByte('(')
+		for i := 0; i < len(buffer.Arguments); i++ {
 			buffer.WriteString(b.ph())
 
-			if i < len(args)-1 {
+			if i < len(buffer.Arguments)-1 {
 				buffer.WriteByte(',')
 			}
 		}
-		buffer.WriteString(")")
+		buffer.WriteByte(')')
 	}
 
 	if b.returnField != "" {
@@ -134,7 +128,7 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 
 	buffer.WriteString(";")
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
 // InsertAll generates query for multiple insert.
@@ -159,7 +153,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 	buffer.WriteString(") VALUES ")
 
 	for i, changes := range allchanges {
-		buffer.WriteString("(")
+		buffer.WriteByte('(')
 
 		for j, field := range fields {
 			if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
@@ -177,7 +171,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 		if i < len(allchanges)-1 {
 			buffer.WriteString("),")
 		} else {
-			buffer.WriteString(")")
+			buffer.WriteByte(')')
 		}
 	}
 
@@ -490,7 +484,7 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter grimoire.FilterQuery) {
 		buffer.WriteByte(',')
 		buffer.WriteString(b.ph())
 	}
-	buffer.WriteString(")")
+	buffer.WriteByte(')')
 	buffer.Append(values...)
 }
 

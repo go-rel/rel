@@ -41,16 +41,12 @@ func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (st
 	)
 
 	b.fields(&buffer, false, append(query.GroupQuery.Fields, selectfield))
-	args := b.query(&buffer, query)
+	b.query(&buffer, query)
 
-	return buffer.String(), args
+	return buffer.String(), buffer.Arguments
 }
 
-func (b *Builder) query(buffer *Buffer, query grimoire.Query) []interface{} {
-	var (
-		args []interface{}
-	)
-
+func (b *Builder) query(buffer *Buffer, query grimoire.Query) {
 	b.from(buffer, query.Collection)
 	b.join(buffer, query.JoinQuery)
 	b.where(buffer, query.WhereQuery)
@@ -69,8 +65,6 @@ func (b *Builder) query(buffer *Buffer, query grimoire.Query) []interface{} {
 	}
 
 	buffer.WriteString(";")
-
-	return args
 }
 
 // Insert generates query for insert.

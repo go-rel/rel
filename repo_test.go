@@ -119,14 +119,11 @@ func TestRepo_MustCount(t *testing.T) {
 func TestRepo_One(t *testing.T) {
 	var (
 		user    User
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
@@ -141,14 +138,11 @@ func TestRepo_One(t *testing.T) {
 func TestRepo_One_queryError(t *testing.T) {
 	var (
 		user    User
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
 
@@ -161,14 +155,11 @@ func TestRepo_One_queryError(t *testing.T) {
 func TestRepo_One_notFound(t *testing.T) {
 	var (
 		user    User
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = createCursor(0)
 		query   = From("users").Limit(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
@@ -182,14 +173,11 @@ func TestRepo_One_notFound(t *testing.T) {
 func TestRepo_MustOne(t *testing.T) {
 	var (
 		user    User
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
@@ -207,14 +195,11 @@ func TestRepo_MustOne(t *testing.T) {
 func TestRepo_All(t *testing.T) {
 	var (
 		users   []User
-		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(2)
 	)
-
-	collec.(*collection).reflect()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
@@ -230,14 +215,11 @@ func TestRepo_All(t *testing.T) {
 func TestRepo_All_error(t *testing.T) {
 	var (
 		users   []User
-		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = From("users").Limit(1)
 		err     = errors.New("error")
 	)
-
-	collec.(*collection).reflect()
 
 	adapter.On("Query", query).Return(&testCursor{}, err).Once()
 
@@ -249,14 +231,11 @@ func TestRepo_All_error(t *testing.T) {
 func TestRepo_MustAll(t *testing.T) {
 	var (
 		users   []User
-		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(2)
 	)
-
-	collec.(*collection).reflect()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
@@ -275,7 +254,6 @@ func TestRepo_MustAll(t *testing.T) {
 func TestRepo_Insert(t *testing.T) {
 	var (
 		user      User
-		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
@@ -284,8 +262,6 @@ func TestRepo_Insert(t *testing.T) {
 		changes = BuildChanges(cbuilders...)
 		cur     = createCursor(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
 	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
@@ -300,7 +276,6 @@ func TestRepo_Insert(t *testing.T) {
 func TestRepo_Insert_oneError(t *testing.T) {
 	var (
 		user      User
-		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
@@ -310,8 +285,6 @@ func TestRepo_Insert_oneError(t *testing.T) {
 		cur     = &testCursor{}
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
 	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, err).Once()
@@ -328,13 +301,10 @@ func TestRepo_Insert_saveBelongsToError(t *testing.T) {
 			Street: "street",
 			User:   &User{Name: "name"},
 		}
-		doc     = newDocument(&address)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(0, err).Once()
@@ -353,14 +323,11 @@ func TestRepo_Insert_saveHasOneError(t *testing.T) {
 				Street: "street",
 			},
 		}
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
@@ -383,14 +350,11 @@ func TestRepo_Insert_saveHasManyError(t *testing.T) {
 				{Item: "soap"},
 			},
 		}
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
@@ -439,7 +403,6 @@ func TestRepo_Insert_nothing(t *testing.T) {
 func TestRepo_InsertAll(t *testing.T) {
 	var (
 		users   []User
-		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []Changes{
@@ -448,8 +411,6 @@ func TestRepo_InsertAll(t *testing.T) {
 		}
 		cur = createCursor(2)
 	)
-
-	collec.(*collection).reflect()
 
 	adapter.On("InsertAll", From("users"), []string{"name"}, changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
@@ -466,7 +427,6 @@ func TestRepo_InsertAll_collection(t *testing.T) {
 			{Name: "name1"},
 			{Name: "name2"},
 		}
-		collec  = newCollection(&users)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []Changes{
@@ -475,8 +435,6 @@ func TestRepo_InsertAll_collection(t *testing.T) {
 		}
 		cur = createCursor(2)
 	)
-
-	collec.(*collection).reflect()
 
 	adapter.On("InsertAll", From("users"), []string{"name"}, changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
@@ -514,7 +472,6 @@ func TestRepo_InsertAll_nothing(t *testing.T) {
 func TestRepo_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}
-		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
@@ -524,8 +481,6 @@ func TestRepo_Update(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 		cur     = createCursor(1)
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Update", queries, changes).Return(nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
@@ -540,7 +495,6 @@ func TestRepo_Update(t *testing.T) {
 func TestRepo_Update_oneError(t *testing.T) {
 	var (
 		user      = User{ID: 1}
-		doc       = newDocument(&user)
 		adapter   = &testAdapter{}
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
@@ -551,8 +505,6 @@ func TestRepo_Update_oneError(t *testing.T) {
 		cur     = &testCursor{}
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Update", queries, changes).Return(nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, err).Once()
@@ -572,14 +524,11 @@ func TestRepo_Update_saveBelongsToError(t *testing.T) {
 				Name: "name",
 			},
 		}
-		doc     = newDocument(&address)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		queries = From("users").Where(Eq("id", address.ID))
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Update", queries, mock.Anything).Return(err).Once()
@@ -599,14 +548,11 @@ func TestRepo_Update_saveHasOneError(t *testing.T) {
 				Street: "street",
 			},
 		}
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		queries = From("addresses").Where(Eq("id", 1).AndEq("user_id", 1))
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Update", queries, mock.Anything).Return(err).Once()
@@ -628,14 +574,11 @@ func TestRepo_Update_saveHasManyError(t *testing.T) {
 				},
 			},
 		}
-		doc     = newDocument(&user)
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		queries = From("transactions").Where(Eq("user_id", 1))
 		err     = errors.New("error")
 	)
-
-	doc.(*document).reflect()
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Delete", queries).Return(err).Once()

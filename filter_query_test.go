@@ -7,70 +7,70 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var result grimoire.FilterQuery
+var result grimoire.Query
 
 func BenchmarkFilterQuery_chain1(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.Eq("id", 1)
+		query = grimoire.BuildQuery("test", grimoire.Eq("id", 1))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_chain2(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.Eq("id", 1).AndNe("name", "foo")
+		query = grimoire.BuildQuery("test", grimoire.Eq("id", 1).AndNe("name", "foo"))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_chain3(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80)
+		query = grimoire.BuildQuery("test", grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_chain4(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10)
+		query = grimoire.BuildQuery("test", grimoire.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_slice1(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.And(grimoire.Eq("id", 1))
+		query = grimoire.BuildQuery("test", grimoire.And(grimoire.Eq("id", 1)))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_slice2(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"))
+		query = grimoire.BuildQuery("test", grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo")))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_slice3(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80))
+		query = grimoire.BuildQuery("test", grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80)))
 	}
-	result = f
+	result = query
 }
 
 func BenchmarkFilterQuery_slice4(b *testing.B) {
-	var f grimoire.FilterQuery
+	var query grimoire.Query
 	for n := 0; n < b.N; n++ {
-		f = grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80), grimoire.Lt("avg", 10))
+		query = grimoire.BuildQuery("test", grimoire.And(grimoire.Eq("id", 1), grimoire.Ne("name", "foo"), grimoire.Gt("score", 80), grimoire.Lt("avg", 10)))
 	}
-	result = f
+	result = query
 }
 
 var filter1 = grimoire.Eq("id", 1)

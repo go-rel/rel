@@ -1,7 +1,7 @@
 package grimoire
 
 type Structset struct {
-	doc Document
+	doc *Document
 }
 
 func (s Structset) Build(changes *Changes) {
@@ -56,8 +56,8 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 
 	if !assoc.IsZero() {
 		var (
-			col, _ = assoc.Target()
-			ch     = BuildChanges(Structset{doc: col.Get(0)})
+			doc, _ = assoc.Document()
+			ch     = BuildChanges(Structset{doc: doc})
 		)
 
 		changes.SetAssoc(field, ch)
@@ -71,7 +71,7 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 
 	if !assoc.IsZero() {
 		var (
-			col, _ = assoc.Target()
+			col, _ = assoc.Collection()
 			chs    = make([]Changes, col.Len())
 		)
 
@@ -83,7 +83,7 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 	}
 }
 
-func newStructset(doc Document) Structset {
+func newStructset(doc *Document) Structset {
 	return Structset{
 		doc: doc,
 	}

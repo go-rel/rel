@@ -62,18 +62,18 @@ type associationsData struct {
 	hasMany   []string
 }
 
-type Document interface {
-	table
-	primary
-	fields
-	types
-	scanners
-	values
-	associations
-	slice
-}
+// type Document interface {
+// 	// table
+// 	primary
+// 	fields
+// 	types
+// 	scanners
+// 	values
+// 	associations
+// 	slice
+// }
 
-type document struct {
+type Document struct {
 	v         interface{}
 	rv        reflect.Value
 	rt        reflect.Type
@@ -82,7 +82,7 @@ type document struct {
 	hasMany   []string
 }
 
-func (d *document) reflect() {
+func (d *Document) reflect() {
 	if d.rv.IsValid() {
 		return
 	}
@@ -100,7 +100,7 @@ func (d *document) reflect() {
 	}
 }
 
-func (d *document) Table() string {
+func (d *Document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()
 	}
@@ -111,7 +111,7 @@ func (d *document) Table() string {
 	return tableName(d.rt)
 }
 
-func (d *document) PrimaryField() string {
+func (d *Document) PrimaryField() string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -129,7 +129,7 @@ func (d *document) PrimaryField() string {
 	return field
 }
 
-func (d *document) PrimaryValue() interface{} {
+func (d *Document) PrimaryValue() interface{} {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -147,7 +147,7 @@ func (d *document) PrimaryValue() interface{} {
 	return d.rv.Field(index).Interface()
 }
 
-func (d *document) Fields() map[string]int {
+func (d *Document) Fields() map[string]int {
 	if s, ok := d.v.(fields); ok {
 		return s.Fields()
 	}
@@ -181,7 +181,7 @@ func (d *document) Fields() map[string]int {
 	return fields
 }
 
-func (d *document) Types() []reflect.Type {
+func (d *Document) Types() []reflect.Type {
 	if v, ok := d.v.(types); ok {
 		return v.Types()
 	}
@@ -219,7 +219,7 @@ func (d *document) Types() []reflect.Type {
 	return types
 }
 
-func (d *document) Scanners(fields []string) []interface{} {
+func (d *Document) Scanners(fields []string) []interface{} {
 	if v, ok := d.v.(scanners); ok {
 		return v.Scanners(fields)
 	}
@@ -255,7 +255,7 @@ func (d *document) Scanners(fields []string) []interface{} {
 	return result
 }
 
-func (d *document) Values() []interface{} {
+func (d *Document) Values() []interface{} {
 	if v, ok := d.v.(values); ok {
 		return v.Values()
 	}
@@ -287,7 +287,7 @@ func (d *document) Values() []interface{} {
 	return values
 }
 
-func (d *document) initAssociations() {
+func (d *Document) initAssociations() {
 	// if one of assocs fields is not a nil array
 	// doesn't neet to check all, because it'll be initialized here.
 	if d.belongsTo != nil {
@@ -347,25 +347,25 @@ func (d *document) initAssociations() {
 	})
 }
 
-func (d *document) BelongsTo() []string {
+func (d *Document) BelongsTo() []string {
 	d.initAssociations()
 
 	return d.belongsTo
 }
 
-func (d *document) HasOne() []string {
+func (d *Document) HasOne() []string {
 	d.initAssociations()
 
 	return d.hasOne
 }
 
-func (d *document) HasMany() []string {
+func (d *Document) HasMany() []string {
 	d.initAssociations()
 
 	return d.hasMany
 }
 
-func (d *document) Association(name string) Association {
+func (d *Document) Association(name string) Association {
 	if s, ok := d.v.(associations); ok {
 		return s.Association(name)
 	}
@@ -380,31 +380,31 @@ func (d *document) Association(name string) Association {
 	return newAssociation(d.rv, index)
 }
 
-func (d *document) Reset() {
+func (d *Document) Reset() {
 }
 
-func (d *document) Add() Document {
+func (d *Document) Add() *Document {
 	return d
 }
 
-func (d *document) Get(index int) Document {
+func (d *Document) Get(index int) *Document {
 	return d
 }
 
-func (d *document) Len() int {
+func (d *Document) Len() int {
 	return 1
 }
 
-func newDocument(record interface{}) Document {
+func newDocument(record interface{}) *Document {
 	switch v := record.(type) {
-	case Document:
+	case *Document:
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
 			panic("grimoire: must be a pointer to a struct")
 		}
 
-		return &document{
+		return &Document{
 			v:  v.Interface(),
 			rv: v.Elem(),
 			rt: v.Elem().Type(),
@@ -414,7 +414,7 @@ func newDocument(record interface{}) Document {
 	case nil:
 		panic("grimoire: cannot be nil")
 	default:
-		return &document{v: v}
+		return &Document{v: v}
 	}
 }
 

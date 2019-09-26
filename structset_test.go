@@ -23,6 +23,29 @@ func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
 	}
 }
 
+func BenchmarkStructset(b *testing.B) {
+	var (
+		user = &User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+			Transactions: []Transaction{
+				{ID: 1, Item: "Sword"},
+				{ID: 2, Item: "Shield"},
+			},
+			Address: Address{
+				ID:     1,
+				Street: "Grove Street",
+			},
+			CreatedAt: time.Now(),
+		}
+	)
+
+	for n := 0; n < b.N; n++ {
+		BuildChanges(NewStructset(user))
+	}
+}
+
 func TestStructset(t *testing.T) {
 	var (
 		user = &User{

@@ -82,7 +82,7 @@ func (r Repo) MustOne(record interface{}, queriers ...Querier) {
 	must(r.One(record, queriers...))
 }
 
-func (r Repo) one(doc Document, query Query) error {
+func (r Repo) one(doc *Document, query Query) error {
 	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (r Repo) MustAll(records interface{}, queriers ...Querier) {
 	must(r.All(records, queriers...))
 }
 
-func (r Repo) all(col Collection, query Query) error {
+func (r Repo) all(col *Collection, query Query) error {
 	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	return transformError(r.insert(doc, changes))
 }
 
-func (r Repo) insert(doc Document, changes Changes) error {
+func (r Repo) insert(doc *Document, changes Changes) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
@@ -212,7 +212,7 @@ func (r Repo) MustInsertAll(records interface{}, changes ...Changes) {
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(col Collection, changes []Changes) error {
+func (r Repo) insertAll(col *Collection, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -276,7 +276,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 	return transformError(r.update(doc, changes, Eq(pField, pValue)))
 }
 
-func (r Repo) update(doc Document, changes Changes, filter FilterQuery) error {
+func (r Repo) update(doc *Document, changes Changes, filter FilterQuery) error {
 	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 }
 
 // TODO: support deletion
-func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
+func (r Repo) saveBelongsTo(doc *Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -322,11 +322,10 @@ func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
 		}
 
 		var (
-			assocChanges   = ac.Changes[0]
-			assoc          = doc.Association(field)
-			fValue         = assoc.ForeignValue()
-			target, loaded = assoc.Target()
-			doc            = target.(Document)
+			assocChanges = ac.Changes[0]
+			assoc        = doc.Association(field)
+			fValue       = assoc.ForeignValue()
+			doc, loaded  = assoc.Document()
 		)
 
 		if loaded {
@@ -359,7 +358,7 @@ func (r Repo) saveBelongsTo(doc Document, changes *Changes) error {
 }
 
 // TODO: suppprt deletion
-func (r Repo) saveHasOne(doc Document, changes *Changes) error {
+func (r Repo) saveHasOne(doc *Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -367,14 +366,13 @@ func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 		}
 
 		var (
-			assocChanges   = ac.Changes[0]
-			assoc          = doc.Association(field)
-			fField         = assoc.ForeignField()
-			rValue         = assoc.ReferenceValue()
-			target, loaded = assoc.Target()
-			doc            = target.(Document)
-			pField         = doc.PrimaryField()
-			pValue         = doc.PrimaryValue()
+			assocChanges = ac.Changes[0]
+			assoc        = doc.Association(field)
+			fField       = assoc.ForeignField()
+			rValue       = assoc.ReferenceValue()
+			doc, loaded  = assoc.Document()
+			pField       = doc.PrimaryField()
+			pValue       = doc.PrimaryValue()
 		)
 
 		if loaded {
@@ -386,13 +384,13 @@ func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(newDocument(target), assocChanges, filter); err != nil {
+			if err := r.update(doc, assocChanges, filter); err != nil {
 				return err
 			}
 		} else {
 			assocChanges.SetValue(fField, rValue)
 
-			if err := r.insert(newDocument(target), assocChanges); err != nil {
+			if err := r.insert(doc, assocChanges); err != nil {
 				return err
 			}
 		}
@@ -401,7 +399,7 @@ func (r Repo) saveHasOne(doc Document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error {
+func (r Repo) saveHasMany(doc *Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -409,15 +407,15 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 		}
 
 		var (
-			assoc          = doc.Association(field)
-			target, loaded = assoc.Target()
-			table          = target.Table()
-			pField         = target.PrimaryField()
-			fField         = assoc.ForeignField()
-			rValue         = assoc.ReferenceValue()
+			assoc       = doc.Association(field)
+			col, loaded = assoc.Collection()
+			table       = col.Table()
+			pField      = col.PrimaryField()
+			fField      = assoc.ForeignField()
+			rValue      = assoc.ReferenceValue()
 		)
 
-		target.Reset()
+		col.Reset()
 
 		if !insertion {
 			if !loaded {
@@ -450,7 +448,7 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 					filter = Eq(pField, pChange.Value).AndEq(fField, rValue)
 				)
 
-				if err := r.update(target.Add(), ch, filter); err != nil {
+				if err := r.update(col.Add(), ch, filter); err != nil {
 					return err
 				}
 			} else {
@@ -461,7 +459,7 @@ func (r Repo) saveHasMany(doc Document, changes *Changes, insertion bool) error 
 		}
 		ac.Changes = ac.Changes[:n]
 
-		if err := r.insertAll(target, ac.Changes); err != nil {
+		if err := r.insertAll(col, ac.Changes); err != nil {
 			return err
 		}
 	}
@@ -485,7 +483,7 @@ func (r Repo) Save(record interface{}, changers ...Changer) error {
 	return transformError(r.save(doc, BuildChanges(changers...)))
 }
 
-func (r Repo) save(doc Document, changes Changes) error {
+func (r Repo) save(doc *Document, changes Changes) error {
 	var (
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -536,7 +534,7 @@ func (r Repo) deleteAll(q Query) error {
 // Preload loads association with given query.
 func (r Repo) Preload(records interface{}, field string, queriers ...Querier) error {
 	var (
-		col  Collection
+		sl   slice
 		path = strings.Split(field, ".")
 		rt   = reflect.TypeOf(records)
 	)
@@ -547,13 +545,13 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 
 	rt = rt.Elem()
 	if rt.Kind() == reflect.Slice {
-		col = newCollection(records)
+		sl = newCollection(records)
 	} else {
-		col = newDocument(records)
+		sl = newDocument(records)
 	}
 
 	var (
-		targets, table, keyField, keyType = r.mapPreloadTargets(col, path)
+		targets, table, keyField, keyType = r.mapPreloadTargets(sl, path)
 	)
 
 	if len(targets) == 0 {
@@ -582,23 +580,23 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 	return scanMulti(cur, keyField, keyType, targets)
 }
 
-func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}][]Collection, string, string, reflect.Type) {
+func (r Repo) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
 	type frame struct {
 		index int
-		doc   Document
+		doc   *Document
 	}
 
 	var (
 		table     string
 		keyField  string
 		keyType   reflect.Type
-		mapTarget = make(map[interface{}][]Collection)
-		stack     = make([]frame, col.Len())
+		mapTarget = make(map[interface{}][]slice)
+		stack     = make([]frame, sl.Len())
 	)
 
 	// init stack
 	for i := 0; i < len(stack); i++ {
-		stack[i] = frame{index: 0, doc: col.Get(i)}
+		stack[i] = frame{index: 0, doc: sl.Get(i)}
 	}
 
 	for len(stack) > 0 {
@@ -612,16 +610,19 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 
 		if top.index == len(path)-1 {
 			var (
-				ref = assocs.ReferenceValue()
+				target slice
+				ref    = assocs.ReferenceValue()
 			)
 
 			if ref == nil {
 				continue
 			}
 
-			var (
-				target, _ = assocs.Target()
-			)
+			if assocs.Type() == HasMany {
+				target, _ = assocs.Collection()
+			} else {
+				target, _ = assocs.Document()
+			}
 
 			target.Reset()
 			mapTarget[ref] = append(mapTarget[ref], target)
@@ -632,19 +633,28 @@ func (r Repo) mapPreloadTargets(col Collection, path []string) (map[interface{}]
 				keyType = reflect.TypeOf(ref)
 			}
 		} else {
-			var (
-				target, loaded = assocs.Target()
-			)
+			if assocs.Type() == HasMany {
+				var (
+					col, loaded = assocs.Collection()
+				)
 
-			if !loaded {
-				continue
-			}
+				if !loaded {
+					continue
+				}
 
-			stack = append(stack, make([]frame, target.Len())...)
-			for i := 0; i < target.Len(); i++ {
-				stack[n+i] = frame{
-					index: top.index + 1,
-					doc:   target.Get(i),
+				stack = append(stack, make([]frame, col.Len())...)
+				for i := 0; i < col.Len(); i++ {
+					stack[n+i] = frame{
+						index: top.index + 1,
+						doc:   col.Get(i),
+					}
+				}
+			} else {
+				if doc, loaded := assocs.Document(); loaded {
+					stack = append(stack, frame{
+						index: top.index + 1,
+						doc:   doc,
+					})
 				}
 			}
 		}

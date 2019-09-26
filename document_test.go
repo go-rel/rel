@@ -75,7 +75,7 @@ func (i Item) HasMany() []string {
 }
 
 func (i Item) Association(field string) Association {
-	return nil
+	return Association{}
 }
 
 func TestDocument_Table(t *testing.T) {
@@ -454,15 +454,15 @@ func TestDocument_Association(t *testing.T) {
 	}
 }
 
-func TestDocument_Association_interface(t *testing.T) {
-	var (
-		doc = newDocument(&Item{})
-	)
+// func TestDocument_Association_interface(t *testing.T) {
+// 	var (
+// 		doc = newDocument(&Item{})
+// 	)
 
-	assert.NotPanics(t, func() {
-		assert.Nil(t, doc.Association("empty"))
-	})
-}
+// 	assert.NotPanics(t, func() {
+// 		assert.Nil(t, doc.Association("empty"))
+// 	})
+// }
 
 func TestDocument(t *testing.T) {
 	tests := []struct {

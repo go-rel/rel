@@ -5,7 +5,7 @@ import (
 )
 
 type Changeset struct {
-	doc    Document
+	doc    *Document
 	fields map[string]int
 	types  []reflect.Type
 	values []interface{}
@@ -45,7 +45,7 @@ func (c Changeset) Build(changes *Changes) {
 func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[interface{}]Changeset) {
 	var (
 		assoc         = c.doc.Association(field)
-		col, _        = assoc.Target()
+		col, _        = assoc.Collection()
 		lenght        = col.Len()
 		chs           = make([]Changes, lenght)
 		staleIDs      = []interface{}{}
@@ -82,7 +82,7 @@ func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[
 }
 
 // stores old document values
-func newChangeset(doc Document) Changeset {
+func newChangeset(doc *Document) Changeset {
 	var (
 		c = Changeset{
 			doc:    doc,
@@ -98,15 +98,15 @@ func newChangeset(doc Document) Changeset {
 			assoc = doc.Association(f)
 		)
 
-		if col, loaded := assoc.Target(); loaded {
-			c.values[c.fields[f]] = newChangeset(col.Get(0))
+		if doc, loaded := assoc.Document(); loaded {
+			c.values[c.fields[f]] = newChangeset(doc)
 		} else {
 			c.values[c.fields[f]] = emptyChangeset{}
 		}
 	}
 
 	for _, f := range doc.HasMany() {
-		if col, loaded := doc.Association(f).Target(); loaded {
+		if col, loaded := doc.Association(f).Collection(); loaded {
 			var (
 				docCount  = col.Len()
 				changemap = make(map[interface{}]Changeset, docCount)

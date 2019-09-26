@@ -33,8 +33,7 @@ func TestBuildChanges(t *testing.T) {
 				DecBy("field5", 2),
 				ChangeFragment("field6=?", true),
 			},
-			Assoc:        map[string]int{},
-			AssocChanges: []AssocChanges{},
+			Assoc: map[string]int{},
 		}
 	)
 

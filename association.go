@@ -13,15 +13,16 @@ const (
 	HasMany
 )
 
-type Association interface {
-	Type() AssociationType
-	Target() (Collection, bool)
-	IsZero() bool
-	ReferenceField() string
-	ReferenceValue() interface{}
-	ForeignField() string
-	ForeignValue() interface{}
-}
+// type Association interface {
+// 	Type() AssociationType
+// 	Document() (Document, bool)
+// 	Collection() (Collection, bool)
+// 	IsZero() bool
+// 	ReferenceField() string
+// 	ReferenceValue() interface{}
+// 	ForeignField() string
+// 	ForeignValue() interface{}
+// }
 
 type associationKey struct {
 	rt    reflect.Type
@@ -39,44 +40,73 @@ type associationData struct {
 
 var associationCache sync.Map
 
-type association struct {
+type Association struct {
 	data associationData
 	rv   reflect.Value
 }
 
-func (a association) Type() AssociationType {
+func (a Association) Type() AssociationType {
 	return a.data.typ
 }
 
-func (a association) Target() (Collection, bool) {
+// // Replace Target with Document and Collection
+// func (a Association) Target() (*Collection, bool) {
+// 	var (
+// 		rv = a.rv.FieldByIndex(a.data.targetIndex)
+// 	)
+
+// 	switch rv.Kind() {
+// 	case reflect.Slice:
+// 		var (
+// 			loaded = !rv.IsNil()
+// 		)
+
+// 		if !loaded {
+// 			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
+// 		}
+
+// 		return newCollection(rv.Addr()), loaded
+// 	case reflect.Ptr:
+// 		var (
+// 			loaded = !rv.IsNil()
+// 		)
+
+// 		if !loaded {
+// 			rv.Set(reflect.New(rv.Type().Elem()))
+// 		}
+
+// 		if rv.Elem().Kind() == reflect.Slice {
+// 			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
+
+// 			return newCollection(rv), loaded
+// 		}
+
+// 		var (
+// 			doc = newDocument(rv)
+// 			id  = doc.PrimaryValue()
+// 		)
+
+// 		return doc, loaded && !isZero(id)
+// 	default:
+// 		var (
+// 			doc = newDocument(rv.Addr())
+// 			id  = doc.PrimaryValue()
+// 		)
+
+// 		return doc, !isZero(id)
+// 	}
+// }
+
+func (a Association) Document() (*Document, bool) {
 	var (
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
 
 	switch rv.Kind() {
-	case reflect.Slice:
-		var (
-			loaded = !rv.IsNil()
-		)
-
-		if !loaded {
-			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
-		}
-
-		return newCollection(rv.Addr()), loaded
 	case reflect.Ptr:
-		var (
-			loaded = !rv.IsNil()
-		)
-
-		if !loaded {
+		if rv.IsNil() {
 			rv.Set(reflect.New(rv.Type().Elem()))
-		}
-
-		if rv.Elem().Kind() == reflect.Slice {
-			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
-
-			return newCollection(rv), loaded
+			return newDocument(rv), false
 		}
 
 		var (
@@ -84,7 +114,7 @@ func (a association) Target() (Collection, bool) {
 			id  = doc.PrimaryValue()
 		)
 
-		return doc, loaded && !isZero(id)
+		return doc, !isZero(id)
 	default:
 		var (
 			doc = newDocument(rv.Addr())
@@ -95,28 +125,49 @@ func (a association) Target() (Collection, bool) {
 	}
 }
 
-func (a association) IsZero() bool {
+func (a Association) Collection() (*Collection, bool) {
 	var (
-		rv  = a.rv.FieldByIndex(a.data.targetIndex)
-		val = rv.Interface()
+		rv     = a.rv.FieldByIndex(a.data.targetIndex)
+		loaded = !rv.IsNil()
 	)
 
-	return isZero(val)
+	if rv.Kind() == reflect.Ptr && rv.Elem().Kind() == reflect.Slice {
+		if !loaded {
+			rv.Set(reflect.New(rv.Type().Elem()))
+			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
+		}
+
+		return newCollection(rv), loaded
+	}
+
+	if !loaded {
+		rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
+	}
+
+	return newCollection(rv.Addr()), loaded
 }
 
-func (a association) ReferenceField() string {
+func (a Association) IsZero() bool {
+	var (
+		rv = a.rv.FieldByIndex(a.data.targetIndex)
+	)
+
+	return isDeepZero(rv)
+}
+
+func (a Association) ReferenceField() string {
 	return a.data.referenceColumn
 }
 
-func (a association) ReferenceValue() interface{} {
+func (a Association) ReferenceValue() interface{} {
 	return indirect(a.rv.FieldByIndex(a.data.referenceIndex))
 }
 
-func (a association) ForeignField() string {
+func (a Association) ForeignField() string {
 	return a.data.foreignField
 }
 
-func (a association) ForeignValue() interface{} {
+func (a Association) ForeignValue() interface{} {
 	if a.Type() == HasMany {
 		panic("cannot infer foreign value for has many association")
 	}
@@ -150,7 +201,7 @@ func newAssociation(rv reflect.Value, index int) Association {
 	)
 
 	if val, cached := associationCache.Load(key); cached {
-		return association{
+		return Association{
 			data: val.(associationData),
 			rv:   rv,
 		}
@@ -210,7 +261,7 @@ func newAssociation(rv reflect.Value, index int) Association {
 
 	associationCache.Store(key, data)
 
-	return association{
+	return Association{
 		data: data,
 		rv:   rv,
 	}

@@ -6,10 +6,8 @@ type Changer interface {
 
 func BuildChanges(changers ...Changer) Changes {
 	changes := Changes{
-		Fields:       make(map[string]int),
-		Changes:      make([]Change, 0, len(changers)),
-		Assoc:        make(map[string]int),
-		AssocChanges: make([]AssocChanges, 0),
+		Fields: make(map[string]int),
+		Assoc:  make(map[string]int),
 	}
 
 	for i := range changers {

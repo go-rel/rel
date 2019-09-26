@@ -653,7 +653,7 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 		cur      = createCursor(1)
 	)
 
-	buyerDoc.(*document).reflect()
+	buyerDoc.reflect()
 
 	adapter.On("Update", q, buyer.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
@@ -736,8 +736,8 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 		cur      = createCursor(1)
 	)
 
-	buyerDoc.(*document).reflect()
-	buyerDoc.(*document).initAssociations()
+	buyerDoc.reflect()
+	buyerDoc.initAssociations()
 
 	adapter.On("Insert", q, buyer.Changes[0]).Return(1, nil).Once()
 	adapter.On("Query", q.Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
@@ -816,7 +816,7 @@ func TestRepo_saveHasOne_update(t *testing.T) {
 		cur          = createCursor(1)
 	)
 
-	addressDoc.(*document).reflect()
+	addressDoc.reflect()
 
 	adapter.On("Update", q, addresses.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
@@ -896,8 +896,8 @@ func TestRepo_saveHasOne_insertNew(t *testing.T) {
 		cur     = createCursor(1)
 	)
 
-	addressDoc.(*document).reflect()
-	addressDoc.(*document).initAssociations()
+	addressDoc.reflect()
+	addressDoc.initAssociations()
 
 	// foreign value set after associations infered
 	user.ID = 1
@@ -967,7 +967,7 @@ func TestRepo_saveHasMany_insert(t *testing.T) {
 		cur             = createCursor(2)
 	)
 
-	transactionCollec.(*collection).reflect()
+	transactionCollec.reflect()
 
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{2, 3}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 2, 3))).Return(cur, nil).Once()
@@ -1061,7 +1061,7 @@ func TestRepo_saveHasMany_update(t *testing.T) {
 		cur2            = createCursor(1)
 	)
 
-	transactionCollec.(*collection).reflect()
+	transactionCollec.reflect()
 	changes.AssocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
@@ -1123,7 +1123,7 @@ func TestRepo_saveHasMany_updateWithInsert(t *testing.T) {
 		insertAllCur    = createCursor(1)
 	)
 
-	transactionCollec.(*collection).reflect()
+	transactionCollec.reflect()
 	changes.AssocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
@@ -1257,7 +1257,7 @@ func TestRepo_saveHasMany_replace(t *testing.T) {
 		cur             = createCursor(3)
 	)
 
-	transactionCollec.(*collection).reflect()
+	transactionCollec.reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
@@ -1308,7 +1308,7 @@ func TestRepo_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 		cur             = createCursor(3)
 	)
 
-	transactionCollec.(*collection).reflect()
+	transactionCollec.reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()

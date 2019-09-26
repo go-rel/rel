@@ -138,7 +138,7 @@ func TestScanMulti(t *testing.T) {
 		cur      = &testCursor{}
 		keyField = "id"
 		keyType  = reflect.TypeOf(0)
-		cols     = map[interface{}][]Collection{
+		cols     = map[interface{}][]slice{
 			10: {newCollection(&users1), newCollection(&users2)},
 			11: {newCollection(&users3)},
 		}

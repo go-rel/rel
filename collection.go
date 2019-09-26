@@ -5,30 +5,30 @@ import (
 )
 
 type slice interface {
+	table
 	Reset()
-	Add() Document
-	Get(index int) Document
+	Add() *Document
+	Get(index int) *Document
 	Len() int
 }
 
-type Collection interface {
-	table
-	primary
-	slice
-}
+// type Collection interface {
+// 	primary
+// 	slice
+// }
 
 var (
 	tableRt   = reflect.TypeOf((*table)(nil)).Elem()
 	primaryRt = reflect.TypeOf((*primary)(nil)).Elem()
 )
 
-type collection struct {
+type Collection struct {
 	v  interface{}
 	rv reflect.Value
 	rt reflect.Type
 }
 
-func (c *collection) reflect() {
+func (c *Collection) reflect() {
 	if c.rv.IsValid() {
 		return
 	}
@@ -46,7 +46,7 @@ func (c *collection) reflect() {
 	}
 }
 
-func (c *collection) Table() string {
+func (c *Collection) Table() string {
 	if tn, ok := c.v.(table); ok {
 		return tn.Table()
 	}
@@ -54,7 +54,7 @@ func (c *collection) Table() string {
 	return c.tableName()
 }
 
-func (c *collection) tableName() string {
+func (c *Collection) tableName() string {
 	c.reflect()
 
 	var (
@@ -78,7 +78,7 @@ func (c *collection) tableName() string {
 	return tableName(rt)
 }
 
-func (c *collection) PrimaryField() string {
+func (c *Collection) PrimaryField() string {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -90,7 +90,7 @@ func (c *collection) PrimaryField() string {
 	return field
 }
 
-func (c *collection) PrimaryValue() interface{} {
+func (c *Collection) PrimaryValue() interface{} {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -116,7 +116,7 @@ func (c *collection) PrimaryValue() interface{} {
 	return ids
 }
 
-func (c *collection) searchPrimary() (string, int) {
+func (c *Collection) searchPrimary() (string, int) {
 	c.reflect()
 
 	var (
@@ -146,25 +146,25 @@ func (c *collection) searchPrimary() (string, int) {
 	return searchPrimary(rt)
 }
 
-func (c *collection) Get(index int) Document {
+func (c *Collection) Get(index int) *Document {
 	c.reflect()
 
 	return newDocument(c.rv.Index(index).Addr().Interface())
 }
 
-func (c *collection) Len() int {
+func (c *Collection) Len() int {
 	c.reflect()
 
 	return c.rv.Len()
 }
 
-func (c *collection) Reset() {
+func (c *Collection) Reset() {
 	c.reflect()
 
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
-func (c *collection) Add() Document {
+func (c *Collection) Add() *Document {
 	c.reflect()
 
 	var (
@@ -178,16 +178,16 @@ func (c *collection) Add() Document {
 	return newDocument(c.rv.Index(index).Addr().Interface())
 }
 
-func newCollection(records interface{}) Collection {
+func newCollection(records interface{}) *Collection {
 	switch v := records.(type) {
-	case Collection:
+	case *Collection:
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Slice {
 			panic("grimoire: must be a pointer to a slice")
 		}
 
-		return &collection{
+		return &Collection{
 			v:  v.Interface(),
 			rv: v.Elem(),
 			rt: v.Elem().Type(),
@@ -197,6 +197,6 @@ func newCollection(records interface{}) Collection {
 	case nil:
 		panic("grimoire: cannot be nil")
 	default:
-		return &collection{v: v}
+		return &Collection{v: v}
 	}
 }

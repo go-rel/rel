@@ -74,14 +74,18 @@ func isZero(value interface{}) bool {
 	case isZeroer:
 		zero = v.IsZero()
 	default:
-		zero = isDeepZero(reflect.ValueOf(value))
+		zero = isDeepZero(reflect.ValueOf(value), 0)
 	}
 
 	return zero
 }
 
 // modified from https://golang.org/src/reflect/value.go?s=33807:33835#L1077
-func isDeepZero(rv reflect.Value) bool {
+func isDeepZero(rv reflect.Value, depth int) bool {
+	if depth < 0 {
+		return true
+	}
+
 	switch rv.Kind() {
 	case reflect.Bool:
 		return !rv.Bool()
@@ -96,7 +100,7 @@ func isDeepZero(rv reflect.Value) bool {
 		return math.Float64bits(real(c)) == 0 && math.Float64bits(imag(c)) == 0
 	case reflect.Array:
 		for i := 0; i < rv.Len(); i++ {
-			if !isDeepZero(rv.Index(i)) {
+			if !isDeepZero(rv.Index(i), depth-1) {
 				return false
 			}
 		}
@@ -107,7 +111,7 @@ func isDeepZero(rv reflect.Value) bool {
 		return rv.Len() == 0
 	case reflect.Struct:
 		for i := 0; i < rv.NumField(); i++ {
-			if !isDeepZero(rv.Field(i)) {
+			if !isDeepZero(rv.Field(i), depth-1) {
 				return false
 			}
 		}

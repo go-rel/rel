@@ -215,37 +215,11 @@ func TestDocument_Fields(t *testing.T) {
 			D bool       `db:"D"`
 			E []*float64 `db:"-"`
 		}{}
-		rt     = reflect.TypeOf(record)
 		doc    = newDocument(&record)
-		fields = map[string]int{
-			"a": 0,
-			"b": 1,
-			"c": 2,
-			"D": 3,
-		}
+		fields = []string{"a", "b", "c", "D"}
 	)
 
 	assert.Equal(t, fields, doc.Fields())
-
-	_, cached := fieldsCache.Load(rt)
-	assert.True(t, cached)
-
-	assert.Equal(t, fields, doc.Fields())
-
-	fieldsCache.Delete(rt)
-}
-
-func TestDocument_Fields_usingInterface(t *testing.T) {
-	var (
-		record = Item{}
-		rt     = reflect.TypeOf(record)
-		doc    = newDocument(&record)
-	)
-
-	assert.Equal(t, record.Fields(), doc.Fields())
-
-	_, cached := fieldsCache.Load(rt)
-	assert.False(t, cached)
 }
 
 func TestDocument_Types(t *testing.T) {
@@ -259,44 +233,57 @@ func TestDocument_Types(t *testing.T) {
 			F userDefined
 			G time.Time
 		}{}
-		rt    = reflect.TypeOf(record)
 		doc   = newDocument(&record)
-		types = []reflect.Type{
-			String,
-			Int,
-			Bytes,
-			Bool,
-			reflect.TypeOf([]float64{}),
-			reflect.TypeOf(userDefined(0)),
-			Time,
+		types = map[string]reflect.Type{
+			"a": String,
+			"b": Int,
+			"c": Bytes,
+			"d": Bool,
+			"e": reflect.TypeOf([]float64{}),
+			"f": reflect.TypeOf(userDefined(0)),
+			"g": Time,
 		}
 	)
-	assert.Equal(t, types, doc.Types())
 
-	_, cached := typesCache.Load(rt)
-	assert.True(t, cached)
-
-	assert.Equal(t, types, doc.Types())
-
-	typesCache.Delete(rt)
+	for field, etyp := range types {
+		typ, ok := doc.Type(field)
+		assert.True(t, ok)
+		assert.Equal(t, etyp, typ)
+	}
 }
 
-func TestDocument_Types_usingInterface(t *testing.T) {
+func TestDocument_Value(t *testing.T) {
 	var (
-		record = Item{}
-		rt     = reflect.TypeOf(record)
+		address = "address"
+		record  = struct {
+			ID      int
+			Name    string
+			Skip    bool `db:"-"`
+			Number  float64
+			Address *string
+			Data    []byte
+		}{
+			ID:      1,
+			Name:    "name",
+			Number:  10.5,
+			Address: &address,
+			Data:    []byte("data"),
+		}
 		doc    = newDocument(&record)
+		values = map[string]interface{}{
+			"id":     1,
+			"name":   "name",
+			"number": 10.5,
+			"data":   []byte("data"),
+		}
 	)
 
-	_, cached := typesCache.Load(rt)
-	assert.False(t, cached)
-
-	assert.Equal(t, record.Types(), doc.Types())
-
-	_, cached = typesCache.Load(rt)
-	assert.False(t, cached)
+	for field, evalue := range values {
+		value, ok := doc.Value(field)
+		assert.True(t, ok)
+		assert.Equal(t, evalue, value)
+	}
 }
-
 func TestDocument_Scanners(t *testing.T) {
 	var (
 		address = "address"
@@ -328,68 +315,6 @@ func TestDocument_Scanners(t *testing.T) {
 	)
 
 	assert.Equal(t, scanners, doc.Scanners(fields))
-}
-
-func TestDocument_Scanners_usingInterface(t *testing.T) {
-	var (
-		record = Item{
-			UUID:  "abc123",
-			Price: 100,
-		}
-		doc      = newDocument(&record)
-		fields   = []string{"_uuid", "_price"}
-		scanners = []interface{}{Nullable(&record.UUID), Nullable(&record.Price)}
-	)
-
-	assert.Equal(t, scanners, doc.Scanners(fields))
-}
-
-func TestDocument_Scanners_sqlScanner(t *testing.T) {
-	var (
-		record   = sql.NullBool{}
-		doc      = newDocument(&record)
-		fields   = []string{}
-		scanners = []interface{}{&sql.NullBool{}}
-	)
-
-	assert.Equal(t, scanners, doc.Scanners(fields))
-}
-
-func TestDocument_Values(t *testing.T) {
-	var (
-		address = "address"
-		record  = struct {
-			ID      int
-			Name    string
-			Skip    bool `db:"-"`
-			Number  float64
-			Address *string
-			Data    []byte
-		}{
-			ID:      1,
-			Name:    "name",
-			Number:  10.5,
-			Address: &address,
-			Data:    []byte("data"),
-		}
-		doc    = newDocument(&record)
-		values = []interface{}{1, "name", 10.5, address, []byte("data")}
-	)
-
-	assert.Equal(t, values, doc.Values())
-}
-
-func TestDocument_Values_usingInterface(t *testing.T) {
-	var (
-		record = Item{
-			UUID:  "abc123",
-			Price: 100,
-		}
-		doc    = newDocument(&record)
-		values = []interface{}{"abc123", 100}
-	)
-
-	assert.Equal(t, values, doc.Values())
 }
 
 func TestDocument_Slice(t *testing.T) {

@@ -6,38 +6,53 @@ import (
 
 type Changeset struct {
 	doc    *Document
-	fields map[string]int
+	fields []string
 	types  []reflect.Type
 	values []interface{}
+
+	// assocs array is ordered based on the following entry.
+	belongsTo []string
+	hasOne    []string
+	hasMany   []string
+	assocs    []interface{}
 }
 
 type emptyChangeset struct{}
 
 func (c Changeset) Build(changes *Changes) {
-	var (
-		values = c.doc.Values()
-	)
-
-	for f, i := range c.fields {
+	for i, field := range c.fields {
 		var (
-			cur = values[i]
+			prev   = c.values[i]
+			cur, _ = c.doc.Value(field)
 		)
 
-		switch v := c.values[i].(type) {
-		case Changeset:
-			changes.SetAssoc(f, BuildChanges(v))
-		case map[interface{}]Changeset:
-			c.buildAssocMany(f, changes, v)
-		case emptyChangeset:
-			// do nothing
-		default:
-			if c.types[i].Comparable() && v == cur {
-				continue
-			} else if reflect.DeepEqual(v, cur) {
-				continue
-			} else {
-				changes.SetValue(f, cur)
-			}
+		if c.types[i].Comparable() && prev == cur {
+			continue
+		} else if reflect.DeepEqual(prev, cur) {
+			continue
+		} else {
+			changes.SetValue(field, cur)
+		}
+	}
+
+	offset := 0
+	for i, f := range c.belongsTo {
+		if ac, ok := c.assocs[offset+i].(Changeset); ok {
+			changes.SetAssoc(f, BuildChanges(ac))
+		}
+	}
+
+	offset = len(c.belongsTo)
+	for i, f := range c.hasOne {
+		if ac, ok := c.assocs[offset+i].(Changeset); ok {
+			changes.SetAssoc(f, BuildChanges(ac))
+		}
+	}
+
+	offset = len(c.hasOne)
+	for i, f := range c.hasMany {
+		if acm, ok := c.assocs[offset+i].(map[interface{}]Changeset); ok {
+			c.buildAssocMany(f, changes, acm)
 		}
 	}
 }
@@ -46,13 +61,13 @@ func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[
 	var (
 		assoc         = c.doc.Association(field)
 		col, _        = assoc.Collection()
-		lenght        = col.Len()
-		chs           = make([]Changes, lenght)
+		colCount      = col.Len()
+		chs           = []Changes{}
+		unstaleIDsMap = make(map[interface{}]struct{})
 		staleIDs      = []interface{}{}
-		unstaleIDsMap = make(map[interface{}]struct{}, lenght)
 	)
 
-	for i := range chs {
+	for i := 0; i < colCount; i++ {
 		var (
 			doc    = col.Get(i)
 			pField = doc.PrimaryField()
@@ -60,16 +75,21 @@ func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[
 		)
 
 		if isZero(pValue) {
-			chs[i] = BuildChanges(newStructset(doc))
+			chs = append(chs, BuildChanges(newStructset(doc)))
 		} else if cs, ok := changemap[pValue]; ok {
-			chs[i] = BuildChanges(cs)
-			chs[i].SetValue(pField, pValue)
+			if ch := BuildChanges(cs); !ch.Empty() {
+				ch.SetValue(pField, pValue)
+				chs = append(chs, ch)
+			}
 			unstaleIDsMap[pValue] = struct{}{}
 		} else {
 			panic("grimoire: cannot update unloaded association")
 		}
 	}
-	changes.SetAssoc(field, chs...)
+
+	if len(chs) > 0 {
+		changes.SetAssoc(field, chs...)
+	}
 
 	// add stale ids
 	for id := range changemap {
@@ -78,43 +98,60 @@ func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[
 		}
 	}
 
-	changes.SetStaleAssoc(field, staleIDs)
+	if len(staleIDs) > 0 {
+		changes.SetStaleAssoc(field, staleIDs)
+	}
 }
 
 // stores old document values
 func newChangeset(doc *Document) Changeset {
 	var (
-		c = Changeset{
-			doc:    doc,
-			fields: doc.Fields(),
-			types:  doc.Types(),
-			values: doc.Values(),
+		fields    = doc.Fields()
+		belongsTo = doc.BelongsTo()
+		hasOne    = doc.HasOne()
+		hasMany   = doc.HasMany()
+		changeset = Changeset{
+			doc:       doc,
+			fields:    fields,
+			types:     make([]reflect.Type, len(fields)),
+			values:    make([]interface{}, len(fields)),
+			belongsTo: belongsTo,
+			hasOne:    hasOne,
+			hasMany:   hasMany,
+			assocs:    make([]interface{}, len(belongsTo)+len(hasOne)+len(hasMany)),
 		}
 	)
 
-	// replace assoc values
-	for _, f := range append(doc.BelongsTo(), doc.HasOne()...) {
-		var (
-			assoc = doc.Association(f)
-		)
+	for i, field := range fields {
+		changeset.values[i], _ = doc.Value(field)
+		changeset.types[i], _ = doc.Type(field)
+	}
 
-		if doc, loaded := assoc.Document(); loaded {
-			c.values[c.fields[f]] = newChangeset(doc)
-		} else {
-			c.values[c.fields[f]] = emptyChangeset{}
+	offset := 0
+	for i, f := range belongsTo {
+		if doc, loaded := doc.Association(f).Document(); loaded {
+			changeset.assocs[offset+i] = newChangeset(doc)
 		}
 	}
 
-	for _, f := range doc.HasMany() {
+	offset = len(belongsTo)
+	for i, f := range hasOne {
+		if doc, loaded := doc.Association(f).Document(); loaded {
+			changeset.assocs[offset+i] = newChangeset(doc)
+		}
+	}
+
+	offset = len(hasOne)
+	for i, f := range hasMany {
 		if col, loaded := doc.Association(f).Collection(); loaded {
 			var (
 				docCount  = col.Len()
 				changemap = make(map[interface{}]Changeset, docCount)
 			)
 
-			for i := 0; i < docCount; i++ {
+			for j := 0; j < docCount; j++ {
 				var (
-					doc    = col.Get(i)
+					doc    = col.Get(j)
 					pValue = doc.PrimaryValue()
 				)
 
@@ -123,13 +160,11 @@ func newChangeset(doc *Document) Changeset {
 				}
 			}
 
-			c.values[c.fields[f]] = changemap
-		} else {
-			c.values[c.fields[f]] = emptyChangeset{}
+			changeset.assocs[offset+i] = changemap
 		}
 	}
 
-	return c
+	return changeset
 }
 
 func NewChangeset(record interface{}) Changeset {

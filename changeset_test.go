@@ -1,6 +1,7 @@
 package grimoire
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -58,42 +59,42 @@ func TestChangeset(t *testing.T) {
 	), BuildChanges(changeset))
 }
 
-// func TestChangeset_withAssoc(t *testing.T) {
-// 	var (
-// 		user = User{
-// 			ID:   1,
-// 			Name: "Luffy",
-// 			Age:  20,
-// 			Transactions: []Transaction{
-// 				{ID: 1, Item: "Sword"},
-// 				{ID: 2, Item: "Shield"},
-// 			},
-// 			Address: Address{
-// 				ID:     1,
-// 				Street: "Grove Street",
-// 			},
-// 			CreatedAt: time.Now(),
-// 		}
-// 		changeset = NewChangeset(&user)
-// 	)
+func TestChangeset_withAssoc(t *testing.T) {
+	var (
+		user = User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+			Transactions: []Transaction{
+				{ID: 1, Item: "Sword"},
+				{ID: 2, Item: "Shield"},
+			},
+			Address: Address{
+				ID:     1,
+				Street: "Grove Street",
+			},
+			CreatedAt: time.Now(),
+		}
+		changeset = NewChangeset(&user)
+	)
 
-// 	// update without assoc
-// 	user.Age = 21
+	// update
+	user.Age = 21
+	user.Address.Street = "Jl. Lingkar"
+	user.Transactions[1].Item = "Bow"
 
-// 	assertChanges(t, BuildChanges(Map{
-// 		"age": 21,
-// 	}), BuildChanges(changeset))
+	fmt.Printf("%#v", BuildChanges(changeset))
 
-// 	assertChanges(t, BuildChanges(Map{
-// 		"name":       "Luffy",
-// 		"age":        20,
-// 		"created_at": user.CreatedAt,
-// 		"transactions": []Map{
-// 			{"item": "Sword"},
-// 			{"item": "Shield"},
-// 		},
-// 		"address": Map{
-// 			"street": "Grove Street",
-// 		},
-// 	}), BuildChanges(NewStructset(user)))
-// }
+	assertChanges(t, BuildChanges(Map{
+		"age": 21,
+		"address": Map{
+			"street": "Jl. Lingkar",
+		},
+		"transactions": []Map{
+			{
+				"id":   2,
+				"item": "Bow",
+			},
+		},
+	}), BuildChanges(changeset))
+}

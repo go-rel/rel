@@ -639,7 +639,6 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
-		buyerDoc    = newDocument(&transaction.Buyer)
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
@@ -652,8 +651,6 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 		cur      = createCursor(1)
 	)
-
-	buyerDoc.reflect()
 
 	adapter.On("Update", q, buyer.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
@@ -722,7 +719,6 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 		repo        = Repo{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
-		buyerDoc    = newDocument(&transaction.Buyer)
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
@@ -735,9 +731,6 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 		buyer, _ = changes.GetAssoc("buyer")
 		cur      = createCursor(1)
 	)
-
-	buyerDoc.reflect()
-	buyerDoc.initAssociations()
 
 	adapter.On("Insert", q, buyer.Changes[0]).Return(1, nil).Once()
 	adapter.On("Query", q.Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
@@ -799,12 +792,11 @@ func TestRepo_saveBelongsTo_notChanged(t *testing.T) {
 
 func TestRepo_saveHasOne_update(t *testing.T) {
 	var (
-		adapter    = &testAdapter{}
-		repo       = Repo{adapter: adapter}
-		user       = &User{ID: 1, Address: Address{ID: 2}}
-		doc        = newDocument(user)
-		addressDoc = newDocument(&user.Address)
-		changes    = BuildChanges(
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = &User{ID: 1, Address: Address{ID: 2}}
+		doc     = newDocument(user)
+		changes = BuildChanges(
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -815,8 +807,6 @@ func TestRepo_saveHasOne_update(t *testing.T) {
 		addresses, _ = changes.GetAssoc("address")
 		cur          = createCursor(1)
 	)
-
-	addressDoc.reflect()
 
 	adapter.On("Update", q, addresses.Changes[0]).Return(nil).Once()
 	adapter.On("Query", q.Limit(1)).Return(cur, nil).Once()
@@ -879,12 +869,11 @@ func TestRepo_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepo_saveHasOne_insertNew(t *testing.T) {
 	var (
-		adapter    = &testAdapter{}
-		repo       = Repo{adapter: adapter}
-		user       = &User{}
-		doc        = newDocument(user)
-		addressDoc = newDocument(&user.Address)
-		changes    = BuildChanges(
+		adapter = &testAdapter{}
+		repo    = Repo{adapter: adapter}
+		user    = &User{}
+		doc     = newDocument(user)
+		changes = BuildChanges(
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -895,9 +884,6 @@ func TestRepo_saveHasOne_insertNew(t *testing.T) {
 		address = BuildChanges(Set("street", "street1"))
 		cur     = createCursor(1)
 	)
-
-	addressDoc.reflect()
-	addressDoc.initAssociations()
 
 	// foreign value set after associations infered
 	user.ID = 1

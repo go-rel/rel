@@ -6,46 +6,29 @@ type Structset struct {
 
 func (s Structset) Build(changes *Changes) {
 	var (
-		fields      = s.doc.Fields()
-		values      = s.doc.Values()
-		pField      = s.doc.PrimaryField()
-		belongsTo   = s.doc.BelongsTo()
-		hasOne      = s.doc.HasOne()
-		hasMany     = s.doc.HasMany()
-		assocFields = make(map[string]struct{}, len(belongsTo)+len(hasOne)+len(hasMany))
+		pField = s.doc.PrimaryField()
 	)
 
-	for _, field := range belongsTo {
-		assocFields[field] = struct{}{}
-		s.buildAssoc(field, changes)
-	}
-
-	for _, field := range hasOne {
-		assocFields[field] = struct{}{}
-		s.buildAssoc(field, changes)
-	}
-
-	for _, field := range hasMany {
-		assocFields[field] = struct{}{}
-		s.buildAssocMany(field, changes)
-	}
-
-	for field, i := range fields {
+	for _, field := range s.doc.Fields() {
 		if field == pField {
 			continue
 		}
 
-		if _, isAssoc := assocFields[field]; isAssoc {
-			continue
-		}
-
-		var (
-			value = values[i]
-		)
-
-		if !isZero(value) {
+		if value, ok := s.doc.Value(field); ok && !isZero(value) {
 			changes.SetValue(field, value)
 		}
+	}
+
+	for _, field := range s.doc.BelongsTo() {
+		s.buildAssoc(field, changes)
+	}
+
+	for _, field := range s.doc.HasOne() {
+		s.buildAssoc(field, changes)
+	}
+
+	for _, field := range s.doc.HasMany() {
+		s.buildAssocMany(field, changes)
 	}
 }
 

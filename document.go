@@ -14,9 +14,8 @@ var (
 	tablesCache       sync.Map
 	primariesCache    sync.Map
 	fieldsCache       sync.Map
-	fieldMappingCache sync.Map
 	typesCache        sync.Map
-	associationsCache sync.Map
+	documentDataCache sync.Map
 )
 
 type table interface {
@@ -33,79 +32,25 @@ type primaryData struct {
 	index int
 }
 
-type fields interface {
-	Fields() map[string]int
-}
-
-type types interface {
-	Types() []reflect.Type
-}
-
-type scanners interface {
-	Scanners([]string) []interface{}
-}
-
-type values interface {
-	Values() []interface{}
-}
-
-type associations interface {
-	BelongsTo() []string
-	HasOne() []string
-	HasMany() []string
-	Association(field string) Association
-}
-
-type associationsData struct {
+type documentData struct {
+	index     map[string]int
+	fields    []string
 	belongsTo []string
 	hasOne    []string
 	hasMany   []string
 }
-
-// type Document interface {
-// 	// table
-// 	primary
-// 	fields
-// 	types
-// 	scanners
-// 	values
-// 	associations
-// 	slice
-// }
 
 type Document struct {
-	v         interface{}
-	rv        reflect.Value
-	rt        reflect.Type
-	belongsTo []string
-	hasOne    []string
-	hasMany   []string
-}
-
-func (d *Document) reflect() {
-	if d.rv.IsValid() {
-		return
-	}
-
-	d.rv = reflect.ValueOf(d.v)
-	if d.rv.Kind() != reflect.Ptr {
-		panic("grimoire: must be a pointer")
-	}
-
-	d.rv = d.rv.Elem()
-	d.rt = d.rv.Type()
-
-	if d.rt.Kind() != reflect.Struct {
-		panic("grimoire: must be a pointer to a struct")
-	}
+	v    interface{}
+	rv   reflect.Value
+	rt   reflect.Type
+	data documentData
 }
 
 func (d *Document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()
 	}
-
-	d.reflect()
 
 	// TODO: handle anonymous struct
 	return tableName(d.rt)
@@ -115,8 +60,6 @@ func (d *Document) PrimaryField() string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
-
-	d.reflect()
 
 	var (
 		field, _ = searchPrimary(d.rt)
@@ -134,8 +77,6 @@ func (d *Document) PrimaryValue() interface{} {
 		return p.PrimaryValue()
 	}
 
-	d.reflect()
-
 	var (
 		_, index = searchPrimary(d.rt)
 	)
@@ -147,62 +88,18 @@ func (d *Document) PrimaryValue() interface{} {
 	return d.rv.Field(index).Interface()
 }
 
-func (d *Document) Fields() map[string]int {
-	if s, ok := d.v.(fields); ok {
-		return s.Fields()
-	}
-
-	d.reflect()
-
-	// check for cache
-	if v, cached := fieldsCache.Load((d.rt)); cached {
-		return v.(map[string]int)
-	}
-
-	var (
-		index  = 0
-		fields = make(map[string]int, d.rt.NumField())
-	)
-
-	for i := 0; i < d.rt.NumField(); i++ {
-		var (
-			sf   = d.rt.Field(i)
-			name = fieldName(sf)
-		)
-
-		if name != "" {
-			fields[name] = index
-			index++
-		}
-	}
-
-	fieldsCache.Store(d.rt, fields)
-
-	return fields
+func (d *Document) Index() map[string]int {
+	return d.data.index
 }
 
-func (d *Document) Types() []reflect.Type {
-	if v, ok := d.v.(types); ok {
-		return v.Types()
-	}
+func (d *Document) Fields() []string {
+	return d.data.fields
+}
 
-	d.reflect()
-
-	// check for cache
-	if v, cached := typesCache.Load(d.rt); cached {
-		return v.([]reflect.Type)
-	}
-
-	var (
-		fields  = d.Fields()
-		mapping = fieldMapping(d.rt)
-		types   = make([]reflect.Type, len(fields))
-	)
-
-	for name, index := range fields {
+func (d *Document) Type(field string) (reflect.Type, bool) {
+	if i, ok := d.data.index[field]; ok {
 		var (
-			structIndex = mapping[name]
-			ft          = d.rt.Field(structIndex).Type
+			ft = d.rt.Field(i).Type
 		)
 
 		if ft.Kind() == reflect.Ptr {
@@ -211,32 +108,41 @@ func (d *Document) Types() []reflect.Type {
 			ft = reflect.SliceOf(ft.Elem().Elem())
 		}
 
-		types[index] = ft
+		return ft, true
 	}
 
-	typesCache.Store(d.rt, types)
+	return nil, false
+}
 
-	return types
+func (d *Document) Value(field string) (interface{}, bool) {
+	if i, ok := d.data.index[field]; ok {
+		var (
+			value interface{}
+			fv    = d.rv.Field(i)
+			ft    = fv.Type()
+		)
+
+		if ft.Kind() == reflect.Ptr {
+			if !fv.IsNil() {
+				value = fv.Elem().Interface()
+			}
+		} else {
+			value = fv.Interface()
+		}
+
+		return value, true
+	}
+
+	return nil, false
 }
 
 func (d *Document) Scanners(fields []string) []interface{} {
-	if v, ok := d.v.(scanners); ok {
-		return v.Scanners(fields)
-	}
-
-	if s, ok := d.v.(sql.Scanner); ok {
-		return []interface{}{s}
-	}
-
-	d.reflect()
-
 	var (
-		mapping = fieldMapping(d.rt)
-		result  = make([]interface{}, len(fields))
+		result = make([]interface{}, len(fields))
 	)
 
 	for index, field := range fields {
-		if structIndex, ok := mapping[field]; ok {
+		if structIndex, ok := d.data.index[field]; ok {
 			var (
 				fv = d.rv.Field(structIndex)
 				ft = fv.Type()
@@ -255,124 +161,20 @@ func (d *Document) Scanners(fields []string) []interface{} {
 	return result
 }
 
-func (d *Document) Values() []interface{} {
-	if v, ok := d.v.(values); ok {
-		return v.Values()
-	}
-
-	d.reflect()
-
-	var (
-		fields  = d.Fields()
-		mapping = fieldMapping(d.rt)
-		values  = make([]interface{}, len(fields))
-	)
-
-	for name, index := range fields {
-		var (
-			structIndex = mapping[name]
-			fv          = d.rv.Field(structIndex)
-			ft          = fv.Type()
-		)
-
-		if ft.Kind() == reflect.Ptr {
-			if !fv.IsNil() {
-				values[index] = fv.Elem().Interface()
-			}
-		} else {
-			values[index] = fv.Interface()
-		}
-	}
-
-	return values
-}
-
-func (d *Document) initAssociations() {
-	// if one of assocs fields is not a nil array
-	// doesn't neet to check all, because it'll be initialized here.
-	if d.belongsTo != nil {
-		return
-	}
-
-	if s, ok := d.v.(associations); ok {
-		d.belongsTo = s.BelongsTo()
-		d.hasOne = s.HasOne()
-		d.hasMany = s.HasMany()
-		return
-	}
-
-	d.reflect()
-
-	if result, cached := associationsCache.Load(d.rt); cached {
-		fields := result.(associationsData)
-		d.belongsTo = fields.belongsTo
-		d.hasOne = fields.hasOne
-		d.hasMany = fields.hasMany
-		return
-	}
-
-	for name, index := range d.Fields() {
-		var (
-			sf  = d.rt.Field(index)
-			typ = sf.Type
-		)
-
-		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Interface || typ.Kind() == reflect.Slice {
-			typ = typ.Elem()
-		}
-
-		if typ.Kind() != reflect.Struct {
-			continue
-		}
-
-		// must have a primary key
-		if pk, _ := searchPrimary(typ); pk == "" {
-			continue
-		}
-
-		switch newAssociation(d.rv, index).Type() {
-		case BelongsTo:
-			d.belongsTo = append(d.belongsTo, name)
-		case HasOne:
-			d.hasOne = append(d.hasOne, name)
-		case HasMany:
-			d.hasMany = append(d.hasMany, name)
-		}
-	}
-
-	associationsCache.Store(d.rt, associationsData{
-		belongsTo: d.belongsTo,
-		hasOne:    d.hasOne,
-		hasMany:   d.hasMany,
-	})
-}
-
 func (d *Document) BelongsTo() []string {
-	d.initAssociations()
-
-	return d.belongsTo
+	return d.data.belongsTo
 }
 
 func (d *Document) HasOne() []string {
-	d.initAssociations()
-
-	return d.hasOne
+	return d.data.hasOne
 }
 
 func (d *Document) HasMany() []string {
-	d.initAssociations()
-
-	return d.hasMany
+	return d.data.hasMany
 }
 
 func (d *Document) Association(name string) Association {
-	if s, ok := d.v.(associations); ok {
-		return s.Association(name)
-	}
-
-	d.reflect()
-
-	index, ok := d.Fields()[name]
+	index, ok := d.data.index[name]
 	if !ok {
 		panic("grimoire: no field named (" + name + ") in type " + d.rt.String() + " found ")
 	}
@@ -404,18 +206,96 @@ func newDocument(record interface{}) *Document {
 			panic("grimoire: must be a pointer to a struct")
 		}
 
+		var (
+			rv = v.Elem()
+			rt = rv.Type()
+		)
+
 		return &Document{
-			v:  v.Interface(),
-			rv: v.Elem(),
-			rt: v.Elem().Type(),
+			v:    v.Interface(),
+			rv:   rv,
+			rt:   rt,
+			data: extractDocumentData(rv, rt),
 		}
 	case reflect.Type:
 		panic("grimoire: cannot use reflect.Type")
 	case nil:
 		panic("grimoire: cannot be nil")
 	default:
-		return &Document{v: v}
+		var (
+			rv = reflect.ValueOf(v)
+			rt = rv.Type()
+		)
+
+		if rt.Kind() != reflect.Ptr && rt.Elem().Kind() != reflect.Struct {
+			panic("grimoire: must be a pointer to struct")
+		}
+
+		rv = rv.Elem()
+		rt = rt.Elem()
+
+		return &Document{
+			v:    v,
+			rv:   rv,
+			rt:   rt,
+			data: extractDocumentData(rv, rt),
+		}
 	}
+}
+
+func extractDocumentData(rv reflect.Value, rt reflect.Type) documentData {
+	if data, cached := documentDataCache.Load(rv.Type()); cached {
+		return data.(documentData)
+	}
+
+	var (
+		data = documentData{
+			index: make(map[string]int, rt.NumField()),
+		}
+	)
+
+	for i := 0; i < rt.NumField(); i++ {
+		var (
+			sf   = rt.Field(i)
+			typ  = sf.Type
+			name = fieldName(sf)
+		)
+
+		if name == "" {
+			continue
+		}
+
+		data.index[name] = i
+
+		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Interface || typ.Kind() == reflect.Slice {
+			typ = typ.Elem()
+		}
+
+		if typ.Kind() != reflect.Struct || typ == Time {
+			data.fields = append(data.fields, name)
+			continue
+		}
+
+		// struct without primary key is a field
+		// TODO: test by scanner/valuer instead?
+		if pk, _ := searchPrimary(typ); pk == "" {
+			data.fields = append(data.fields, name)
+			continue
+		}
+
+		switch newAssociation(rv, i).Type() {
+		case BelongsTo:
+			data.belongsTo = append(data.belongsTo, name)
+		case HasOne:
+			data.hasOne = append(data.hasOne, name)
+		case HasMany:
+			data.hasMany = append(data.hasMany, name)
+		}
+	}
+
+	documentDataCache.Store(rt, data)
+
+	return data
 }
 
 func fieldName(sf reflect.StructField) string {
@@ -432,30 +312,6 @@ func fieldName(sf reflect.StructField) string {
 	}
 
 	return snakecase.SnakeCase(sf.Name)
-}
-
-func fieldMapping(rt reflect.Type) map[string]int {
-	// check for cache
-	if v, cached := fieldMappingCache.Load((rt)); cached {
-		return v.(map[string]int)
-	}
-
-	mapping := make(map[string]int, rt.NumField())
-
-	for i := 0; i < rt.NumField(); i++ {
-		var (
-			sf   = rt.Field(i)
-			name = fieldName(sf)
-		)
-
-		if name != "" {
-			mapping[name] = i
-		}
-	}
-
-	fieldMappingCache.Store(rt, mapping)
-
-	return mapping
 }
 
 func searchPrimary(rt reflect.Type) (string, int) {

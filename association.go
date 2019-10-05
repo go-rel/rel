@@ -97,7 +97,7 @@ func (a Association) Type() AssociationType {
 // 	}
 // }
 
-func (a Association) Document() (*Document, bool) {
+func (a Association) Document() (*document, bool) {
 	var (
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
@@ -125,7 +125,7 @@ func (a Association) Document() (*Document, bool) {
 	}
 }
 
-func (a Association) Collection() (*Collection, bool) {
+func (a Association) Collection() (*collection, bool) {
 	var (
 		rv     = a.rv.FieldByIndex(a.data.targetIndex)
 		loaded = !rv.IsNil()

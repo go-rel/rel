@@ -1,7 +1,7 @@
 package rel
 
 type Structset struct {
-	doc *Document
+	doc *document
 }
 
 func (s Structset) Build(changes *Changes) {
@@ -66,7 +66,7 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 	}
 }
 
-func newStructset(doc *Document) Structset {
+func newStructset(doc *document) Structset {
 	return Structset{
 		doc: doc,
 	}

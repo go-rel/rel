@@ -82,7 +82,7 @@ func (r Repo) MustOne(record interface{}, queriers ...Querier) {
 	must(r.One(record, queriers...))
 }
 
-func (r Repo) one(doc *Document, query Query) error {
+func (r Repo) one(doc *document, query Query) error {
 	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (r Repo) MustAll(records interface{}, queriers ...Querier) {
 	must(r.All(records, queriers...))
 }
 
-func (r Repo) all(col *Collection, query Query) error {
+func (r Repo) all(col *collection, query Query) error {
 	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	return transformError(r.insert(doc, changes))
 }
 
-func (r Repo) insert(doc *Document, changes Changes) error {
+func (r Repo) insert(doc *document, changes Changes) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
@@ -212,7 +212,7 @@ func (r Repo) MustInsertAll(records interface{}, changes ...Changes) {
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(col *Collection, changes []Changes) error {
+func (r Repo) insertAll(col *collection, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -276,7 +276,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 	return transformError(r.update(doc, changes, Eq(pField, pValue)))
 }
 
-func (r Repo) update(doc *Document, changes Changes, filter FilterQuery) error {
+func (r Repo) update(doc *document, changes Changes, filter FilterQuery) error {
 	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
 }
 
 // TODO: support deletion
-func (r Repo) saveBelongsTo(doc *Document, changes *Changes) error {
+func (r Repo) saveBelongsTo(doc *document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -358,7 +358,7 @@ func (r Repo) saveBelongsTo(doc *Document, changes *Changes) error {
 }
 
 // TODO: suppprt deletion
-func (r Repo) saveHasOne(doc *Document, changes *Changes) error {
+func (r Repo) saveHasOne(doc *document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -399,7 +399,7 @@ func (r Repo) saveHasOne(doc *Document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) saveHasMany(doc *Document, changes *Changes, insertion bool) error {
+func (r Repo) saveHasMany(doc *document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -483,7 +483,7 @@ func (r Repo) Save(record interface{}, changers ...Changer) error {
 	return transformError(r.save(doc, BuildChanges(changers...)))
 }
 
-func (r Repo) save(doc *Document, changes Changes) error {
+func (r Repo) save(doc *document, changes Changes) error {
 	var (
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -583,7 +583,7 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 func (r Repo) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
 	type frame struct {
 		index int
-		doc   *Document
+		doc   *document
 	}
 
 	var (

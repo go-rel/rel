@@ -40,14 +40,14 @@ type documentData struct {
 	hasMany   []string
 }
 
-type Document struct {
+type document struct {
 	v    interface{}
 	rv   reflect.Value
 	rt   reflect.Type
 	data documentData
 }
 
-func (d *Document) Table() string {
+func (d *document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()
 	}
@@ -56,7 +56,7 @@ func (d *Document) Table() string {
 	return tableName(d.rt)
 }
 
-func (d *Document) PrimaryField() string {
+func (d *document) PrimaryField() string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -72,7 +72,7 @@ func (d *Document) PrimaryField() string {
 	return field
 }
 
-func (d *Document) PrimaryValue() interface{} {
+func (d *document) PrimaryValue() interface{} {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -88,15 +88,15 @@ func (d *Document) PrimaryValue() interface{} {
 	return d.rv.Field(index).Interface()
 }
 
-func (d *Document) Index() map[string]int {
+func (d *document) Index() map[string]int {
 	return d.data.index
 }
 
-func (d *Document) Fields() []string {
+func (d *document) Fields() []string {
 	return d.data.fields
 }
 
-func (d *Document) Type(field string) (reflect.Type, bool) {
+func (d *document) Type(field string) (reflect.Type, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			ft = d.rt.Field(i).Type
@@ -114,7 +114,7 @@ func (d *Document) Type(field string) (reflect.Type, bool) {
 	return nil, false
 }
 
-func (d *Document) Value(field string) (interface{}, bool) {
+func (d *document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			value interface{}
@@ -136,7 +136,7 @@ func (d *Document) Value(field string) (interface{}, bool) {
 	return nil, false
 }
 
-func (d *Document) Scanners(fields []string) []interface{} {
+func (d *document) Scanners(fields []string) []interface{} {
 	var (
 		result = make([]interface{}, len(fields))
 	)
@@ -161,19 +161,19 @@ func (d *Document) Scanners(fields []string) []interface{} {
 	return result
 }
 
-func (d *Document) BelongsTo() []string {
+func (d *document) BelongsTo() []string {
 	return d.data.belongsTo
 }
 
-func (d *Document) HasOne() []string {
+func (d *document) HasOne() []string {
 	return d.data.hasOne
 }
 
-func (d *Document) HasMany() []string {
+func (d *document) HasMany() []string {
 	return d.data.hasMany
 }
 
-func (d *Document) Association(name string) Association {
+func (d *document) Association(name string) Association {
 	index, ok := d.data.index[name]
 	if !ok {
 		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
@@ -182,24 +182,24 @@ func (d *Document) Association(name string) Association {
 	return newAssociation(d.rv, index)
 }
 
-func (d *Document) Reset() {
+func (d *document) Reset() {
 }
 
-func (d *Document) Add() *Document {
+func (d *document) Add() *document {
 	return d
 }
 
-func (d *Document) Get(index int) *Document {
+func (d *document) Get(index int) *document {
 	return d
 }
 
-func (d *Document) Len() int {
+func (d *document) Len() int {
 	return 1
 }
 
-func newDocument(record interface{}) *Document {
+func newDocument(record interface{}) *document {
 	switch v := record.(type) {
-	case *Document:
+	case *document:
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
@@ -211,11 +211,11 @@ func newDocument(record interface{}) *Document {
 			rt = rv.Type()
 		)
 
-		return &Document{
+		return &document{
 			v:    v.Interface(),
 			rv:   rv,
 			rt:   rt,
-			data: extractDocumentData(rv, rt),
+			data: extractdocumentData(rv, rt),
 		}
 	case reflect.Type:
 		panic("rel: cannot use reflect.Type")
@@ -234,16 +234,16 @@ func newDocument(record interface{}) *Document {
 		rv = rv.Elem()
 		rt = rt.Elem()
 
-		return &Document{
+		return &document{
 			v:    v,
 			rv:   rv,
 			rt:   rt,
-			data: extractDocumentData(rv, rt),
+			data: extractdocumentData(rv, rt),
 		}
 	}
 }
 
-func extractDocumentData(rv reflect.Value, rt reflect.Type) documentData {
+func extractdocumentData(rv reflect.Value, rt reflect.Type) documentData {
 	if data, cached := documentDataCache.Load(rv.Type()); cached {
 		return data.(documentData)
 	}

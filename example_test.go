@@ -1,12 +1,12 @@
-package grimoire_test
+package rel_test
 
 // import (
 // 	"time"
 
-// 	"github.com/Fs02/grimoire"
-// 	"github.com/Fs02/grimoire/adapter/mysql"
-// 	"github.com/Fs02/grimoire/changeset"
-// 	"github.com/Fs02/grimoire/params"
+// 	"github.com/Fs02/rel"
+// 	"github.com/Fs02/rel/adapter/mysql"
+// 	"github.com/Fs02/rel/changeset"
+// 	"github.com/Fs02/rel/params"
 // )
 
 // type Product struct {
@@ -34,8 +34,8 @@ package grimoire_test
 // 	}
 // 	defer adapter.Close()
 
-// 	// initialize grimoire's repo.
-// 	repo := grimoire.New(adapter)
+// 	// initialize rel's repo.
+// 	repo := rel.New(adapter)
 
 // 	var product Product
 

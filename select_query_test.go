@@ -1,22 +1,22 @@
-package grimoire_test
+package rel_test
 
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
+	"github.com/Fs02/rel"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSelect(t *testing.T) {
-	assert.Equal(t, grimoire.SelectQuery{
+	assert.Equal(t, rel.SelectQuery{
 		OnlyDistinct: false,
 		Fields:       []string{"id", "name"},
-	}, grimoire.NewSelect("id", "name"))
+	}, rel.NewSelect("id", "name"))
 }
 
 func TestSelect_Distinct(t *testing.T) {
-	assert.Equal(t, grimoire.SelectQuery{
+	assert.Equal(t, rel.SelectQuery{
 		OnlyDistinct: true,
 		Fields:       []string{"id", "name"},
-	}, grimoire.NewSelect("id", "name").Distinct())
+	}, rel.NewSelect("id", "name").Distinct())
 }

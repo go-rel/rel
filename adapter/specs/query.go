@@ -3,14 +3,14 @@ package specs
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/sort"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/sort"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
 // Query tests query specifications without join.
-func Query(t *testing.T, repo grimoire.Repo) {
+func Query(t *testing.T, repo rel.Repo) {
 	// preparte tests data
 	var (
 		user = User{Name: "name1", Gender: "male", Age: 10}
@@ -27,61 +27,61 @@ func Query(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&Address{Name: "address2", UserID: &user.ID})
 	repo.MustInsert(&Address{Name: "address3", UserID: &user.ID})
 
-	tests := []grimoire.Querier{
+	tests := []rel.Querier{
 		where.Eq("id", user.ID),
-		grimoire.Where(where.Eq("id", user.ID)),
-		grimoire.Where(where.Eq("name", "name1")),
-		grimoire.Where(where.Eq("age", 10)),
-		grimoire.Where(where.Eq("id", user.ID), where.Eq("name", "name1")),
-		grimoire.Where(where.Eq("id", user.ID), where.Eq("name", "name1"), where.Eq("age", 10)),
-		grimoire.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")),
-		grimoire.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1"), where.Eq("age", 10)),
-		grimoire.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")).OrWhere(where.Eq("age", 10)),
-		grimoire.Where(where.Ne("gender", "male")),
-		grimoire.Where(where.Gt("age", 59)),
-		grimoire.Where(where.Gte("age", 60)),
-		grimoire.Where(where.Lt("age", 11)),
-		grimoire.Where(where.Lte("age", 10)),
-		grimoire.Where(where.Nil("note")),
-		grimoire.Where(where.NotNil("name")),
-		grimoire.Where(where.In("id", 1, 2, 3)),
-		grimoire.Where(where.Nin("id", 1, 2, 3)),
-		grimoire.Where(where.Like("name", "name%")),
-		grimoire.Where(where.NotLike("name", "noname%")),
-		grimoire.Where(where.Fragment("id > 0")),
-		grimoire.Where(where.Not(where.Eq("id", 1), where.Eq("name", "name1"), where.Eq("age", 10))),
+		rel.Where(where.Eq("id", user.ID)),
+		rel.Where(where.Eq("name", "name1")),
+		rel.Where(where.Eq("age", 10)),
+		rel.Where(where.Eq("id", user.ID), where.Eq("name", "name1")),
+		rel.Where(where.Eq("id", user.ID), where.Eq("name", "name1"), where.Eq("age", 10)),
+		rel.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")),
+		rel.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1"), where.Eq("age", 10)),
+		rel.Where(where.Eq("id", user.ID)).OrWhere(where.Eq("name", "name1")).OrWhere(where.Eq("age", 10)),
+		rel.Where(where.Ne("gender", "male")),
+		rel.Where(where.Gt("age", 59)),
+		rel.Where(where.Gte("age", 60)),
+		rel.Where(where.Lt("age", 11)),
+		rel.Where(where.Lte("age", 10)),
+		rel.Where(where.Nil("note")),
+		rel.Where(where.NotNil("name")),
+		rel.Where(where.In("id", 1, 2, 3)),
+		rel.Where(where.Nin("id", 1, 2, 3)),
+		rel.Where(where.Like("name", "name%")),
+		rel.Where(where.NotLike("name", "noname%")),
+		rel.Where(where.Fragment("id > 0")),
+		rel.Where(where.Not(where.Eq("id", 1), where.Eq("name", "name1"), where.Eq("age", 10))),
 		sort.Asc("name"),
 		sort.Desc("name"),
-		grimoire.Select().SortAsc("name").SortDesc("age"),
-		grimoire.Group("gender").Select("COUNT(id)"),
-		grimoire.Group("age").Having(where.Gt("age", 10)).Select("COUNT(id)"),
-		grimoire.Limit(5),
-		grimoire.Select().Limit(5),
-		grimoire.Select().Limit(5).Offset(5),
-		grimoire.Select("name").Where(where.Eq("id", 1)),
-		grimoire.Select("name", "age").Where(where.Eq("id", 1)),
-		grimoire.Select().Distinct().Where(where.Eq("id", 1)),
+		rel.Select().SortAsc("name").SortDesc("age"),
+		rel.Group("gender").Select("COUNT(id)"),
+		rel.Group("age").Having(where.Gt("age", 10)).Select("COUNT(id)"),
+		rel.Limit(5),
+		rel.Select().Limit(5),
+		rel.Select().Limit(5).Offset(5),
+		rel.Select("name").Where(where.Eq("id", 1)),
+		rel.Select("name", "age").Where(where.Eq("id", 1)),
+		rel.Select().Distinct().Where(where.Eq("id", 1)),
 	}
 
 	run(t, repo, tests)
 }
 
 // QueryJoin tests query specifications with join.
-func QueryJoin(t *testing.T, repo grimoire.Repo) {
-	tests := []grimoire.Querier{
-		grimoire.From("addresses").Join("users"),
-		grimoire.From("addresses").JoinOn("users", "addresses.user_id", "users.id"),
-		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.id", 1)),
-		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")),
-		grimoire.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")).SortAsc("addresses.name"),
-		grimoire.From("addresses").JoinWith("LEFT JOIN", "users", "addresses.user_id", "users.id"),
+func QueryJoin(t *testing.T, repo rel.Repo) {
+	tests := []rel.Querier{
+		rel.From("addresses").Join("users"),
+		rel.From("addresses").JoinOn("users", "addresses.user_id", "users.id"),
+		rel.From("addresses").Join("users").Where(where.Eq("addresses.id", 1)),
+		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")),
+		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")).SortAsc("addresses.name"),
+		rel.From("addresses").JoinWith("LEFT JOIN", "users", "addresses.user_id", "users.id"),
 	}
 
 	run(t, repo, tests)
 }
 
 // QueryNotFound tests query specifications when no result found.
-func QueryNotFound(t *testing.T, repo grimoire.Repo) {
+func QueryNotFound(t *testing.T, repo rel.Repo) {
 	t.Run("NotFound", func(t *testing.T) {
 		var (
 			user User
@@ -89,11 +89,11 @@ func QueryNotFound(t *testing.T, repo grimoire.Repo) {
 		)
 
 		// find user error not found
-		assert.Equal(t, grimoire.NoResultError{}, err)
+		assert.Equal(t, rel.NoResultError{}, err)
 	})
 }
 
-func run(t *testing.T, repo grimoire.Repo, queriers []grimoire.Querier) {
+func run(t *testing.T, repo rel.Repo, queriers []rel.Querier) {
 	for _, query := range queriers {
 		t.Run("All", func(t *testing.T) {
 			var (

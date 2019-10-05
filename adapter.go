@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 // Adapter interface
 type Adapter interface {

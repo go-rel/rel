@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"fmt"
@@ -25,7 +25,8 @@ func BenchmarkChangeset(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		BuildChanges(NewChangeset(user))
+		// BuildChanges(NewChangeset(user))
+		NewChangeset(user)
 	}
 }
 

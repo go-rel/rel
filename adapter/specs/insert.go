@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
-func Insert(t *testing.T, repo grimoire.Repo) {
+func Insert(t *testing.T, repo rel.Repo) {
 	var (
 		note = "swordsman"
 		user = User{
@@ -38,7 +38,7 @@ func Insert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, user, queried)
 }
 
-func InsertHasMany(t *testing.T, repo grimoire.Repo) {
+func InsertHasMany(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name:   "insert has many",
@@ -67,7 +67,7 @@ func InsertHasMany(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, "work", user.Addresses[1].Name)
 }
 
-func InsertHasOne(t *testing.T, repo grimoire.Repo) {
+func InsertHasOne(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name:           "insert has one",
@@ -89,7 +89,7 @@ func InsertHasOne(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 }
 
-func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
+func InsertBelongsTo(t *testing.T, repo rel.Repo) {
 	var (
 		address = Address{
 			Name: "insert belongs to",
@@ -115,7 +115,7 @@ func InsertBelongsTo(t *testing.T, repo grimoire.Repo) {
 }
 
 // Inserts tests insert specifications.
-func Inserts(t *testing.T, repo grimoire.Repo) {
+func Inserts(t *testing.T, repo rel.Repo) {
 	var (
 		user User
 		note = "note"
@@ -136,7 +136,7 @@ func Inserts(t *testing.T, repo grimoire.Repo) {
 
 	for _, record := range tests {
 		var (
-			changes      = grimoire.BuildChanges(grimoire.NewStructset(record))
+			changes      = rel.BuildChanges(rel.NewStructset(record))
 			statement, _ = builder.Insert("collection", changes)
 		)
 
@@ -147,7 +147,7 @@ func Inserts(t *testing.T, repo grimoire.Repo) {
 }
 
 // InsertAll tests insert multiple specifications.
-func InsertAll(t *testing.T, repo grimoire.Repo) {
+func InsertAll(t *testing.T, repo rel.Repo) {
 	var (
 		user User
 		note = "note"
@@ -168,7 +168,7 @@ func InsertAll(t *testing.T, repo grimoire.Repo) {
 
 	for _, record := range tests {
 		// var (
-		// 	changes      = grimoire.BuildChanges(grimoire.Struct(record))
+		// 	changes      = rel.BuildChanges(rel.Struct(record))
 		// 	statement, _ = builder.Insert("collection", changes)
 		// )
 

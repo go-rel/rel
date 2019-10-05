@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 type Querier interface {
 	Build(*Query)

@@ -1,23 +1,23 @@
-// Package postgres wraps postgres (pq) driver as an adapter for grimoire.
+// Package postgres wraps postgres (pq) driver as an adapter for rel.
 //
 // Usage:
 //	// open postgres connection.
-//	adapter, err := postgres.Open("postgres://postgres@localhost/grimoire_test?sslmode=disable")
+//	adapter, err := postgres.Open("postgres://postgres@localhost/rel_test?sslmode=disable")
 //	if err != nil {
 //		panic(err)
 //	}
 //	defer adapter.Close()
 //
-//	// initialize grimoire's repo.
-//	repo := grimoire.New(adapter)
+//	// initialize rel's repo.
+//	repo := rel.New(adapter)
 package postgres
 
 import (
 	db "database/sql"
 	"time"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/sql"
 )
 
 // Adapter definition for postgrees database.
@@ -25,7 +25,7 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ grimoire.Adapter = (*Adapter)(nil)
+var _ rel.Adapter = (*Adapter)(nil)
 
 // Open postgrees connection using dsn.
 func Open(dsn string) (*Adapter, error) {
@@ -48,7 +48,7 @@ func Open(dsn string) (*Adapter, error) {
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		id              int64
 		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Collection, changes)
@@ -64,7 +64,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, l
 }
 
 // InsertAll inserts multiple records to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []grimoire.Changes, loggers ...grimoire.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
 	var (
 		ids             []interface{}
 		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Collection, fields, allchanges)
@@ -83,7 +83,7 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 	return ids, err
 }
 
-func (adapter *Adapter) query(statement string, args []interface{}, loggers []grimoire.Logger) (*db.Rows, error) {
+func (adapter *Adapter) query(statement string, args []interface{}, loggers []rel.Logger) (*db.Rows, error) {
 	var (
 		err   error
 		rows  *db.Rows
@@ -96,13 +96,13 @@ func (adapter *Adapter) query(statement string, args []interface{}, loggers []gr
 		rows, err = adapter.DB.Query(statement, args...)
 	}
 
-	go grimoire.Log(loggers, statement, time.Since(start), err)
+	go rel.Log(loggers, statement, time.Since(start), err)
 
 	return rows, errorFunc(err)
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
+func (adapter *Adapter) Begin() (rel.Adapter, error) {
 	newAdapter, err := adapter.Adapter.Begin()
 
 	return &Adapter{
@@ -122,21 +122,21 @@ func errorFunc(err error) error {
 
 	switch constraintType {
 	case "unique":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-			Type: grimoire.UniqueConstraint,
+			Type: rel.UniqueConstraint,
 			Err:  err,
 		}
 	case "foreign key":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-			Type: grimoire.ForeignKeyConstraint,
+			Type: rel.ForeignKeyConstraint,
 			Err:  err,
 		}
 	case "check":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  sql.ExtractString(err.Error(), "constraint \"", "\""),
-			Type: grimoire.CheckConstraint,
+			Type: rel.CheckConstraint,
 			Err:  err,
 		}
 	default:

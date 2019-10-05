@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"database/sql"
@@ -66,7 +66,7 @@ func (d *Document) PrimaryField() string {
 	)
 
 	if field == "" {
-		panic("grimoire: failed to infer primary key for type " + d.rt.String())
+		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
 	return field
@@ -82,7 +82,7 @@ func (d *Document) PrimaryValue() interface{} {
 	)
 
 	if index < 0 {
-		panic("grimoire: failed to infer primary key for type " + d.rt.String())
+		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
 	return d.rv.Field(index).Interface()
@@ -176,7 +176,7 @@ func (d *Document) HasMany() []string {
 func (d *Document) Association(name string) Association {
 	index, ok := d.data.index[name]
 	if !ok {
-		panic("grimoire: no field named (" + name + ") in type " + d.rt.String() + " found ")
+		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
 	}
 
 	return newAssociation(d.rv, index)
@@ -203,7 +203,7 @@ func newDocument(record interface{}) *Document {
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
-			panic("grimoire: must be a pointer to a struct")
+			panic("rel: must be a pointer to a struct")
 		}
 
 		var (
@@ -218,9 +218,9 @@ func newDocument(record interface{}) *Document {
 			data: extractDocumentData(rv, rt),
 		}
 	case reflect.Type:
-		panic("grimoire: cannot use reflect.Type")
+		panic("rel: cannot use reflect.Type")
 	case nil:
-		panic("grimoire: cannot be nil")
+		panic("rel: cannot be nil")
 	default:
 		var (
 			rv = reflect.ValueOf(v)
@@ -228,7 +228,7 @@ func newDocument(record interface{}) *Document {
 		)
 
 		if rt.Kind() != reflect.Ptr && rt.Elem().Kind() != reflect.Struct {
-			panic("grimoire: must be a pointer to struct")
+			panic("rel: must be a pointer to struct")
 		}
 
 		rv = rv.Elem()

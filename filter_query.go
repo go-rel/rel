@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 // FilterOp defines enumeration of all supported filter types.
 type FilterOp int

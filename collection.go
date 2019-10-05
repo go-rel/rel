@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"reflect"
@@ -35,14 +35,14 @@ func (c *Collection) reflect() {
 
 	c.rv = reflect.ValueOf(c.v)
 	if c.rv.Kind() != reflect.Ptr {
-		panic("grimoire: must be a pointer")
+		panic("rel: must be a pointer")
 	}
 
 	c.rv = c.rv.Elem()
 	c.rt = c.rv.Type()
 
 	if c.rt.Kind() != reflect.Slice {
-		panic("grimoire: must be a pointer to a slice")
+		panic("rel: must be a pointer to a slice")
 	}
 }
 
@@ -184,7 +184,7 @@ func newCollection(records interface{}) *Collection {
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Slice {
-			panic("grimoire: must be a pointer to a slice")
+			panic("rel: must be a pointer to a slice")
 		}
 
 		return &Collection{
@@ -193,9 +193,9 @@ func newCollection(records interface{}) *Collection {
 			rt: v.Elem().Type(),
 		}
 	case reflect.Type:
-		panic("grimoire: cannot use reflect.Type")
+		panic("rel: cannot use reflect.Type")
 	case nil:
-		panic("grimoire: cannot be nil")
+		panic("rel: cannot be nil")
 	default:
 		return &Collection{v: v}
 	}

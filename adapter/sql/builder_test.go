@@ -3,9 +3,9 @@ package sql
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/sort"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/sort"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func BenchmarkBuilder_Find(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		query := grimoire.From("users").
+		query := rel.From("users").
 			Select("id", "name").
 			Join("transactions").
 			Where(where.Eq("id", 10), where.In("status", 1, 2, 3)).
@@ -37,13 +37,13 @@ func TestBuilder_Find(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		query = grimoire.From("users")
+		query = rel.From("users")
 	)
 
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       grimoire.Query
+		Query       rel.Query
 	}{
 		{
 			"SELECT * FROM `users`;",
@@ -123,13 +123,13 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		query = grimoire.From("users")
+		query = rel.From("users")
 	)
 
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Query       grimoire.Query
+		Query       rel.Query
 	}{
 		{
 			"SELECT * FROM \"users\";",
@@ -206,7 +206,7 @@ func BenchmarkBuilder_Aggregate(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		builder.Aggregate(grimoire.From("users").Group("gender"), "sum", "transactions.total")
+		builder.Aggregate(rel.From("users").Group("gender"), "sum", "transactions.total")
 	}
 }
 
@@ -217,7 +217,7 @@ func TestBuilder_Aggregate(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder = NewBuilder(config)
-		query   = grimoire.From("users")
+		query   = rel.From("users")
 	)
 
 	qs, args := builder.Aggregate(query, "count", "*")
@@ -243,10 +243,10 @@ func BenchmarkBuilder_Insert(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		changes := grimoire.BuildChanges(
-			grimoire.Set("name", "foo"),
-			grimoire.Set("age", 10),
-			grimoire.Set("agree", true),
+		changes := rel.BuildChanges(
+			rel.Set("name", "foo"),
+			rel.Set("age", 10),
+			rel.Set("agree", true),
 		)
 		builder.Insert("users", changes)
 	}
@@ -259,10 +259,10 @@ func TestBuilder_Insert(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder = NewBuilder(config)
-		changes = grimoire.BuildChanges(
-			grimoire.Set("name", "foo"),
-			grimoire.Set("age", 10),
-			grimoire.Set("agree", true),
+		changes = rel.BuildChanges(
+			rel.Set("name", "foo"),
+			rel.Set("age", 10),
+			rel.Set("agree", true),
 		)
 		qs, args = builder.Insert("users", changes)
 	)
@@ -280,10 +280,10 @@ func TestBuilder_Insert_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder = NewBuilder(config)
-		changes = grimoire.BuildChanges(
-			grimoire.Set("name", "foo"),
-			grimoire.Set("age", 10),
-			grimoire.Set("agree", true),
+		changes = rel.BuildChanges(
+			rel.Set("name", "foo"),
+			rel.Set("age", 10),
+			rel.Set("agree", true),
 		)
 		qs, args = builder.Returning("id").Insert("users", changes)
 	)
@@ -300,7 +300,7 @@ func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 			InsertDefaultValues: false,
 		}
 		builder  = NewBuilder(config)
-		changes  = grimoire.Changes{}
+		changes  = rel.Changes{}
 		qs, args = builder.Insert("users", changes)
 	)
 
@@ -316,7 +316,7 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 			EscapeChar:          "`",
 		}
 		builder  = NewBuilder(config)
-		changes  = grimoire.Changes{}
+		changes  = rel.Changes{}
 		qs, args = builder.Returning("id").Insert("users", changes)
 	)
 
@@ -334,16 +334,16 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		allchanges := []grimoire.Changes{
-			grimoire.BuildChanges(
-				grimoire.Set("name", "foo"),
+		allchanges := []rel.Changes{
+			rel.BuildChanges(
+				rel.Set("name", "foo"),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("age", 10),
+			rel.BuildChanges(
+				rel.Set("age", 10),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("name", "boo"),
-				grimoire.Set("age", 20),
+			rel.BuildChanges(
+				rel.Set("name", "boo"),
+				rel.Set("age", 20),
 			),
 		}
 		builder.InsertAll("users", []string{"name"}, allchanges)
@@ -357,16 +357,16 @@ func TestBuilder_InsertAll(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder    = NewBuilder(config)
-		allchanges = []grimoire.Changes{
-			grimoire.BuildChanges(
-				grimoire.Set("name", "foo"),
+		allchanges = []rel.Changes{
+			rel.BuildChanges(
+				rel.Set("name", "foo"),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("age", 10),
+			rel.BuildChanges(
+				rel.Set("age", 10),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("name", "boo"),
-				grimoire.Set("age", 20),
+			rel.BuildChanges(
+				rel.Set("name", "boo"),
+				rel.Set("age", 20),
 			),
 		}
 	)
@@ -390,16 +390,16 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder    = NewBuilder(config)
-		allchanges = []grimoire.Changes{
-			grimoire.BuildChanges(
-				grimoire.Set("name", "foo"),
+		allchanges = []rel.Changes{
+			rel.BuildChanges(
+				rel.Set("name", "foo"),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("age", 10),
+			rel.BuildChanges(
+				rel.Set("age", 10),
 			),
-			grimoire.BuildChanges(
-				grimoire.Set("name", "boo"),
-				grimoire.Set("age", 20),
+			rel.BuildChanges(
+				rel.Set("name", "boo"),
+				rel.Set("age", 20),
 			),
 		}
 	)
@@ -422,10 +422,10 @@ func TestBuilder_Update(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder = NewBuilder(config)
-		changes = grimoire.BuildChanges(
-			grimoire.Set("name", "foo"),
-			grimoire.Set("age", 10),
-			grimoire.Set("agree", true),
+		changes = rel.BuildChanges(
+			rel.Set("name", "foo"),
+			rel.Set("age", 10),
+			rel.Set("agree", true),
 		)
 	)
 
@@ -447,10 +447,10 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder = NewBuilder(config)
-		changes = grimoire.BuildChanges(
-			grimoire.Set("name", "foo"),
-			grimoire.Set("age", 10),
-			grimoire.Set("agree", true),
+		changes = rel.BuildChanges(
+			rel.Set("name", "foo"),
+			rel.Set("age", 10),
+			rel.Set("agree", true),
 		)
 	)
 
@@ -587,23 +587,23 @@ func TestBuilder_Join(t *testing.T) {
 
 	tests := []struct {
 		QueryString string
-		Query       grimoire.Query
+		Query       rel.Query
 	}{
 		{
 			"",
-			grimoire.From("trxs"),
+			rel.From("trxs"),
 		},
 		{
 			" JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
+			rel.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
 		},
 		{
 			" INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			grimoire.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
+			rel.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
 		},
 		{
 			" JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
-			grimoire.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
+			rel.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
 				JoinOn("payments", "payments.id", "trxs.payment_id"),
 		},
 	}
@@ -615,7 +615,7 @@ func TestBuilder_Join(t *testing.T) {
 				builder = NewBuilder(config)
 			)
 
-			builder.join(&buffer, grimoire.BuildQuery("", test.Query).JoinQuery)
+			builder.join(&buffer, rel.BuildQuery("", test.Query).JoinQuery)
 
 			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Nil(t, buffer.Arguments)
@@ -634,7 +634,7 @@ func TestBuilder_Where(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			" WHERE `field`=?",
@@ -676,7 +676,7 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			" WHERE \"field\"=$1",
@@ -734,7 +734,7 @@ func TestBuilder_Having(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			" HAVING `field`=?",
@@ -776,7 +776,7 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			" HAVING \"field\"=$1",
@@ -815,11 +815,11 @@ func TestBuilder_OrderBy(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	builder.orderBy(&buffer, []grimoire.SortQuery{sort.Asc("name")})
+	builder.orderBy(&buffer, []rel.SortQuery{sort.Asc("name")})
 	assert.Equal(t, " ORDER BY `name` ASC", buffer.String())
 
 	buffer.Reset()
-	builder.orderBy(&buffer, []grimoire.SortQuery{sort.Asc("name"), sort.Desc("created_at")})
+	builder.orderBy(&buffer, []rel.SortQuery{sort.Asc("name"), sort.Desc("created_at")})
 	assert.Equal(t, " ORDER BY `name` ASC, `created_at` DESC", buffer.String())
 }
 
@@ -852,7 +852,7 @@ func TestBuilder_Filter(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			"",
@@ -1007,7 +1007,7 @@ func TestBuilder_Filter(t *testing.T) {
 		{
 			"",
 			nil,
-			grimoire.FilterQuery{Type: grimoire.FilterOp(9999)},
+			rel.FilterQuery{Type: rel.FilterOp(9999)},
 		},
 	}
 
@@ -1039,7 +1039,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 	tests := []struct {
 		QueryString string
 		Args        []interface{}
-		Filter      grimoire.FilterQuery
+		Filter      rel.FilterQuery
 	}{
 		{
 			"",
@@ -1194,7 +1194,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 		{
 			"",
 			nil,
-			grimoire.FilterQuery{Type: grimoire.FilterOp(9999)},
+			rel.FilterQuery{Type: rel.FilterOp(9999)},
 		},
 	}
 
@@ -1220,7 +1220,7 @@ func TestBuilder_Lock(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder  = NewBuilder(config)
-		query    = grimoire.From("users").Lock(grimoire.ForUpdate())
+		query    = rel.From("users").Lock(rel.ForUpdate())
 		qs, args = builder.Find(query)
 	)
 

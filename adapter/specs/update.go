@@ -3,12 +3,12 @@ package specs
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
-func Update(t *testing.T, repo grimoire.Repo) {
+func Update(t *testing.T, repo rel.Repo) {
 	var (
 		note = "swordsman"
 		user = User{
@@ -41,7 +41,7 @@ func Update(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, user, queried)
 }
 
-func UpdateHasManyInsert(t *testing.T, repo grimoire.Repo) {
+func UpdateHasManyInsert(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name: "update init",
@@ -72,7 +72,7 @@ func UpdateHasManyInsert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasManyReplace(t *testing.T, repo grimoire.Repo) {
+func UpdateHasManyReplace(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name: "update init",
@@ -106,7 +106,7 @@ func UpdateHasManyReplace(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasManyUpdate(t *testing.T, repo grimoire.Repo) {
+func UpdateHasManyUpdate(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name: "update init",
@@ -122,7 +122,7 @@ func UpdateHasManyUpdate(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&user)
 
 	var (
-		changeset = grimoire.NewChangeset(&user)
+		changeset = rel.NewChangeset(&user)
 		id0       = user.Addresses[0].ID
 		id1       = user.Addresses[1].ID
 		id2       = user.Addresses[2].ID
@@ -168,7 +168,7 @@ func UpdateHasManyUpdate(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 5, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasManyDelete(t *testing.T, repo grimoire.Repo) {
+func UpdateHasManyDelete(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name: "update init",
@@ -181,7 +181,7 @@ func UpdateHasManyDelete(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&user)
 
 	var (
-		changeset = grimoire.NewChangeset(&user)
+		changeset = rel.NewChangeset(&user)
 	)
 
 	user.Addresses = nil
@@ -195,7 +195,7 @@ func UpdateHasManyDelete(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 0, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneInsert(t *testing.T, repo grimoire.Repo) {
+func UpdateHasOneInsert(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name: "update init",
@@ -219,7 +219,7 @@ func UpdateHasOneInsert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneUpdate(t *testing.T, repo grimoire.Repo) {
+func UpdateHasOneUpdate(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name:           "update init",
@@ -244,7 +244,7 @@ func UpdateHasOneUpdate(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneReplace(t *testing.T, repo grimoire.Repo) {
+func UpdateHasOneReplace(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{
 			Name:           "update init",
@@ -269,7 +269,7 @@ func UpdateHasOneReplace(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateBelongsToInsert(t *testing.T, repo grimoire.Repo) {
+func UpdateBelongsToInsert(t *testing.T, repo rel.Repo) {
 	var (
 		address = Address{Name: "address init"}
 	)
@@ -289,7 +289,7 @@ func UpdateBelongsToInsert(t *testing.T, repo grimoire.Repo) {
 	assert.Equal(t, "inserted user", address.User.Name)
 }
 
-func UpdateBelongsToUpdate(t *testing.T, repo grimoire.Repo) {
+func UpdateBelongsToUpdate(t *testing.T, repo rel.Repo) {
 	var (
 		address = Address{
 			Name: "address init",
@@ -316,7 +316,7 @@ func UpdateBelongsToUpdate(t *testing.T, repo grimoire.Repo) {
 // TODO: atomic update
 // TODO: update all
 // TODO: update with assoc
-func Updates(t *testing.T, repo grimoire.Repo) {
+func Updates(t *testing.T, repo rel.Repo) {
 	var (
 		note    = "note"
 		user    = User{Name: "update"}
@@ -337,7 +337,7 @@ func Updates(t *testing.T, repo grimoire.Repo) {
 
 	for _, record := range tests {
 		var (
-			changes      = grimoire.BuildChanges(grimoire.NewStructset(record))
+			changes      = rel.BuildChanges(rel.NewStructset(record))
 			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
 		)
 

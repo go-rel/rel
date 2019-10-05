@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Fs02/go-paranoid"
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/specs"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/specs"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +59,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://grimoire@localhost:9920/grimoire_test?sslmode=disable"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -67,7 +67,7 @@ func TestAdapter_specs(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	repo := grimoire.New(adapter)
+	repo := rel.New(adapter)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -132,7 +132,7 @@ func TestAdapter_specs(t *testing.T) {
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, allchanges)
 
 // 	assert.NotNil(t, err)
 // }

@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 // func TestAssociation(t *testing.T) {
 // 	var (

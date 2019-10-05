@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fs02/grimoire/params"
+	"github.com/Fs02/rel/params"
 	"github.com/stretchr/testify/assert"
 )
 

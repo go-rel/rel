@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"github.com/stretchr/testify/mock"

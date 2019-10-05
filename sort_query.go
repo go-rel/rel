@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 // SortQuery defines sort information of query.
 type SortQuery struct {

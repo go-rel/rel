@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Repo defines grimoire repository.
+// Repo defines rel repository.
 type Repo struct {
 	adapter       Adapter
 	logger        []Logger
@@ -419,7 +419,7 @@ func (r Repo) saveHasMany(doc *Document, changes *Changes, insertion bool) error
 
 		if !insertion {
 			if !loaded {
-				panic("grimoire: association must be loaded to update")
+				panic("rel: association must be loaded to update")
 			}
 
 			var (
@@ -540,7 +540,7 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 	)
 
 	if rt.Kind() != reflect.Ptr {
-		panic("grimoire: record parameter must be a pointer.")
+		panic("rel: record parameter must be a pointer.")
 	}
 
 	rt = rt.Elem()

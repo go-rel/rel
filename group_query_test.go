@@ -1,34 +1,34 @@
-package grimoire_test
+package rel_test
 
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
+	"github.com/Fs02/rel"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGroup(t *testing.T) {
-	assert.Equal(t, grimoire.GroupQuery{
+	assert.Equal(t, rel.GroupQuery{
 		Fields: []string{"status"},
-	}, grimoire.NewGroup("status"))
+	}, rel.NewGroup("status"))
 }
 
 func TestGroup_Having(t *testing.T) {
-	q := grimoire.GroupQuery{
+	q := rel.GroupQuery{
 		Fields: []string{"status"},
-		Filter: grimoire.Ne("status", "expired"),
+		Filter: rel.Ne("status", "expired"),
 	}
 
-	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.Ne("status", "expired")))
-	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.Ne("status", "expired")))
+	assert.Equal(t, q, rel.NewGroup("status").Having(rel.Ne("status", "expired")))
+	assert.Equal(t, q, rel.NewGroup("status").Where(rel.Ne("status", "expired")))
 }
 
 func TestGroup_OrHaving(t *testing.T) {
-	q := grimoire.GroupQuery{
+	q := rel.GroupQuery{
 		Fields: []string{"status"},
-		Filter: grimoire.Ne("status", "expired").OrNotNil("deleted_at"),
+		Filter: rel.Ne("status", "expired").OrNotNil("deleted_at"),
 	}
 
-	assert.Equal(t, q, grimoire.NewGroup("status").Having(grimoire.Ne("status", "expired")).OrHaving(grimoire.NotNil("deleted_at")))
-	assert.Equal(t, q, grimoire.NewGroup("status").Where(grimoire.Ne("status", "expired")).OrWhere(grimoire.NotNil("deleted_at")))
+	assert.Equal(t, q, rel.NewGroup("status").Having(rel.Ne("status", "expired")).OrHaving(rel.NotNil("deleted_at")))
+	assert.Equal(t, q, rel.NewGroup("status").Where(rel.Ne("status", "expired")).OrWhere(rel.NotNil("deleted_at")))
 }

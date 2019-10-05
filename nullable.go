@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"database/sql"
@@ -24,7 +24,7 @@ func Nullable(dest interface{}) interface{} {
 
 	rt := reflect.TypeOf(dest)
 	if rt.Kind() != reflect.Ptr {
-		panic("grimoire: destination must be a pointer")
+		panic("rel: destination must be a pointer")
 	}
 
 	if rt.Elem().Kind() == reflect.Ptr {

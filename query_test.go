@@ -1,25 +1,25 @@
-package grimoire_test
+package rel_test
 
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/group"
-	"github.com/Fs02/grimoire/join"
-	"github.com/Fs02/grimoire/sort"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/group"
+	"github.com/Fs02/rel/join"
+	"github.com/Fs02/rel/sort"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestQuerier(t *testing.T) {
 	tests := []struct {
 		name     string
-		queriers [][]grimoire.Querier
-		query    grimoire.Query
+		queriers [][]rel.Querier
+		query    rel.Query
 	}{
 		{
 			name: "where id=1",
-			queriers: [][]grimoire.Querier{
+			queriers: [][]rel.Querier{
 				{
 					where.Eq("id", 1),
 				},
@@ -27,13 +27,13 @@ func TestQuerier(t *testing.T) {
 					where.Eq("id", 1),
 				},
 			},
-			query: grimoire.Query{
+			query: rel.Query{
 				WhereQuery: where.Eq("id", 1),
 			},
 		},
 		{
 			name: "where id=1 and age<10",
-			queriers: [][]grimoire.Querier{
+			queriers: [][]rel.Querier{
 				{
 					where.Eq("id", 1).AndLt("age", 10),
 				},
@@ -47,55 +47,55 @@ func TestQuerier(t *testing.T) {
 					where.Eq("id", 1), where.Lt("age", 10),
 				},
 			},
-			query: grimoire.Query{
+			query: rel.Query{
 				WhereQuery: where.Eq("id", 1).AndLt("age", 10),
 			},
 		},
 		{
 			name: "where age>10 limit 10 offset 10 order by name asc, age desc",
-			queriers: [][]grimoire.Querier{
+			queriers: [][]rel.Querier{
 				{
-					grimoire.Where(where.Gt("age", 10)).Limit(10).Offset(10).Sort("name").SortDesc("age"),
+					rel.Where(where.Gt("age", 10)).Limit(10).Offset(10).Sort("name").SortDesc("age"),
 				},
 				{
-					where.Gt("age", 10), grimoire.Limit(10), grimoire.Offset(10), grimoire.NewSortAsc("name"), grimoire.NewSortDesc("age"),
+					where.Gt("age", 10), rel.Limit(10), rel.Offset(10), rel.NewSortAsc("name"), rel.NewSortDesc("age"),
 				},
 				{
-					where.Gt("age", 10), grimoire.Limit(10), grimoire.Offset(10), sort.Asc("name"), sort.Desc("age"),
+					where.Gt("age", 10), rel.Limit(10), rel.Offset(10), sort.Asc("name"), sort.Desc("age"),
 				},
 			},
-			query: grimoire.Query{
+			query: rel.Query{
 				WhereQuery:  where.Gt("age", 10),
 				LimitQuery:  10,
 				OffsetQuery: 10,
-				SortQuery: []grimoire.SortQuery{
-					grimoire.NewSortAsc("name"),
-					grimoire.NewSortDesc("age"),
+				SortQuery: []rel.SortQuery{
+					rel.NewSortAsc("name"),
+					rel.NewSortDesc("age"),
 				},
 			},
 		},
 		{
 			name: "select sum(amount), name from transactions join users group by name offset 10 limit 5",
-			queriers: [][]grimoire.Querier{
+			queriers: [][]rel.Querier{
 				{
-					grimoire.From("transactions").Select("sum(amount)", "name").Join("users").Group("name").Having(where.Gt("amount", 10)).Offset(10).Limit(5),
+					rel.From("transactions").Select("sum(amount)", "name").Join("users").Group("name").Having(where.Gt("amount", 10)).Offset(10).Limit(5),
 				},
 				{
-					grimoire.From("transactions").Select("sum(amount)", "name"), grimoire.Join("users"), grimoire.Group("name").Having(where.Gt("amount", 10)), grimoire.Offset(10), grimoire.Limit(5),
+					rel.From("transactions").Select("sum(amount)", "name"), rel.Join("users"), rel.Group("name").Having(where.Gt("amount", 10)), rel.Offset(10), rel.Limit(5),
 				},
 				{
-					grimoire.From("transactions").Select("sum(amount)", "name"), join.Join("users"), group.By("name").Having(where.Gt("amount", 10)), grimoire.Offset(10), grimoire.Limit(5),
+					rel.From("transactions").Select("sum(amount)", "name"), join.Join("users"), group.By("name").Having(where.Gt("amount", 10)), rel.Offset(10), rel.Limit(5),
 				},
 				{
-					join.Join("users"), group.By("name").Having(where.Gt("amount", 10)), grimoire.From("transactions").Select("sum(amount)", "name").Offset(10).Limit(5),
+					join.Join("users"), group.By("name").Having(where.Gt("amount", 10)), rel.From("transactions").Select("sum(amount)", "name").Offset(10).Limit(5),
 				},
 			},
-			query: grimoire.Query{
-				SelectQuery: grimoire.SelectQuery{
+			query: rel.Query{
+				SelectQuery: rel.SelectQuery{
 					Fields: []string{"sum(amount)", "name"},
 				},
 				Collection: "transactions",
-				JoinQuery: []grimoire.JoinQuery{
+				JoinQuery: []rel.JoinQuery{
 					{
 						Mode:       "JOIN",
 						Collection: "users",
@@ -103,7 +103,7 @@ func TestQuerier(t *testing.T) {
 						To:         "users.id",
 					},
 				},
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"name"},
 					Filter: where.Gt("amount", 10),
 				},
@@ -113,12 +113,12 @@ func TestQuerier(t *testing.T) {
 		},
 		{
 			name: "where id=1 for update",
-			queriers: [][]grimoire.Querier{
+			queriers: [][]rel.Querier{
 				{
-					where.Eq("id", 1), grimoire.ForUpdate(),
+					where.Eq("id", 1), rel.ForUpdate(),
 				},
 			},
-			query: grimoire.Query{
+			query: rel.Query{
 				WhereQuery: where.Eq("id", 1),
 				LockQuery:  "FOR UPDATE",
 			},
@@ -128,47 +128,47 @@ func TestQuerier(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, b := range test.queriers {
-				assert.Equal(t, test.query, grimoire.BuildQuery("", b...))
+				assert.Equal(t, test.query, rel.BuildQuery("", b...))
 			}
 		})
 	}
 }
 
 func TestQuery_Build(t *testing.T) {
-	q := grimoire.From("users").Select("*")
-	assert.Equal(t, q, grimoire.BuildQuery("", q))
+	q := rel.From("users").Select("*")
+	assert.Equal(t, q, rel.BuildQuery("", q))
 }
 
 func TestQuery_Select(t *testing.T) {
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection: "users",
-		SelectQuery: grimoire.SelectQuery{
+		SelectQuery: rel.SelectQuery{
 			Fields: []string{"*"},
 		},
-	}, grimoire.From("users").Select("*"))
+	}, rel.From("users").Select("*"))
 
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection: "users",
-		SelectQuery: grimoire.SelectQuery{
+		SelectQuery: rel.SelectQuery{
 			Fields: []string{"id", "name", "email"},
 		},
-	}, grimoire.From("users").Select("id", "name", "email"))
+	}, rel.From("users").Select("id", "name", "email"))
 }
 
 func TestQuery_Distinct(t *testing.T) {
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection: "users",
-		SelectQuery: grimoire.SelectQuery{
+		SelectQuery: rel.SelectQuery{
 			Fields:       []string{"*"},
 			OnlyDistinct: true,
 		},
-	}, grimoire.From("users").Select("*").Distinct())
+	}, rel.From("users").Select("*").Distinct())
 }
 
 func TestQuery_Join(t *testing.T) {
-	result := grimoire.Query{
+	result := rel.Query{
 		Collection: "users",
-		JoinQuery: []grimoire.JoinQuery{
+		JoinQuery: []rel.JoinQuery{
 			{
 				Mode:       "JOIN",
 				Collection: "transactions",
@@ -178,15 +178,15 @@ func TestQuery_Join(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, grimoire.BuildQuery("", grimoire.From("users").Join("transactions")))
-	assert.Equal(t, result, grimoire.BuildQuery("", grimoire.Join("transactions").From("users")))
-	assert.Equal(t, result, grimoire.BuildQuery("users", grimoire.Join("transactions")))
+	assert.Equal(t, result, rel.BuildQuery("", rel.From("users").Join("transactions")))
+	assert.Equal(t, result, rel.BuildQuery("", rel.Join("transactions").From("users")))
+	assert.Equal(t, result, rel.BuildQuery("users", rel.Join("transactions")))
 }
 
 func TestQuery_JoinOn(t *testing.T) {
-	result := grimoire.Query{
+	result := rel.Query{
 		Collection: "users",
-		JoinQuery: []grimoire.JoinQuery{
+		JoinQuery: []rel.JoinQuery{
 			{
 				Mode:       "JOIN",
 				Collection: "transactions",
@@ -196,14 +196,14 @@ func TestQuery_JoinOn(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, grimoire.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
-	assert.Equal(t, result, grimoire.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
+	assert.Equal(t, result, rel.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
+	assert.Equal(t, result, rel.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
 }
 
 func TestQuery_JoinFragment(t *testing.T) {
-	result := grimoire.Query{
+	result := rel.Query{
 		Collection: "users",
-		JoinQuery: []grimoire.JoinQuery{
+		JoinQuery: []rel.JoinQuery{
 			{
 				Mode:      "JOIN transactions ON transacations.id=?",
 				Arguments: []interface{}{1},
@@ -211,51 +211,51 @@ func TestQuery_JoinFragment(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, grimoire.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
-	assert.Equal(t, result, grimoire.JoinFragment("JOIN transactions ON transacations.id=?", 1).From("users"))
+	assert.Equal(t, result, rel.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
+	assert.Equal(t, result, rel.JoinFragment("JOIN transactions ON transacations.id=?", 1).From("users"))
 }
 
 func TestQuery_Where(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Build    grimoire.Query
-		Expected grimoire.Query
+		Build    rel.Query
+		Expected rel.Query
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`where id=1 AND deleted_at IS NIL`,
-			grimoire.Where(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.Where(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).Where(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).Where(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL (where package)`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL (chained where package)`,
-			grimoire.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
@@ -272,68 +272,68 @@ func TestQuery_Where(t *testing.T) {
 func TestQuery_OrWhere(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Build    grimoire.Query
-		Expected grimoire.Query
+		Build    rel.Query
+		Expected rel.Query
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			grimoire.From("users").OrWhere(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").OrWhere(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
-			grimoire.From("users").Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
-			grimoire.Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
+			rel.Query{
 				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 			},
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
 			},
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
 			},
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (where package)`,
-			grimoire.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (chained where package)`,
-			grimoire.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
-			grimoire.Query{
+			rel.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
+			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 			},
@@ -348,29 +348,29 @@ func TestQuery_OrWhere(t *testing.T) {
 }
 
 func TestQuery_Group(t *testing.T) {
-	result := grimoire.Query{
+	result := rel.Query{
 		Collection: "users",
-		GroupQuery: grimoire.GroupQuery{
+		GroupQuery: rel.GroupQuery{
 			Fields: []string{"active", "plan"},
 		},
 	}
 
-	assert.Equal(t, result, grimoire.From("users").Group("active", "plan"))
-	assert.Equal(t, result, grimoire.Group("active", "plan").From("users"))
+	assert.Equal(t, result, rel.From("users").Group("active", "plan"))
+	assert.Equal(t, result, rel.Group("active", "plan").From("users"))
 }
 
 func TestQuery_Having(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Build    grimoire.Query
-		Expected grimoire.Query
+		Build    rel.Query
+		Expected rel.Query
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -378,10 +378,10 @@ func TestQuery_Having(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -389,10 +389,10 @@ func TestQuery_Having(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -400,10 +400,10 @@ func TestQuery_Having(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false (where package)`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -411,10 +411,10 @@ func TestQuery_Having(t *testing.T) {
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false (chained where package)`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1).AndNil("deleted_at")).Having(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1).AndNil("deleted_at")).Having(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
@@ -431,15 +431,15 @@ func TestQuery_Having(t *testing.T) {
 func TestQuery_OrHaving(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Build    grimoire.Query
-		Expected grimoire.Query
+		Build    rel.Query
+		Expected rel.Query
 	}{
 		{
 			`id=1 AND deleted_at IS NIL`,
-			grimoire.From("users").Group("active", "plan").OrHaving(where.Eq("id", 1), where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").OrHaving(where.Eq("id", 1), where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -447,10 +447,10 @@ func TestQuery_OrHaving(t *testing.T) {
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1)).OrHaving(where.Nil("deleted_at")),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1)).OrHaving(where.Nil("deleted_at")),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
@@ -458,10 +458,10 @@ func TestQuery_OrHaving(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
 				},
@@ -469,10 +469,10 @@ func TestQuery_OrHaving(t *testing.T) {
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
 				},
@@ -480,10 +480,10 @@ func TestQuery_OrHaving(t *testing.T) {
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
-			grimoire.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)).Having(where.Lt("price", 10000)),
-			grimoire.Query{
+			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).OrHaving(where.Ne("active", false), where.Gte("score", 80)).Having(where.Lt("price", 10000)),
+			rel.Query{
 				Collection: "users",
-				GroupQuery: grimoire.GroupQuery{
+				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 				},
@@ -501,15 +501,15 @@ func TestQuery_OrHaving(t *testing.T) {
 func TestQuery_Sort(t *testing.T) {
 	tests := []struct {
 		Case     string
-		Build    grimoire.Query
-		Expected grimoire.Query
+		Build    rel.Query
+		Expected rel.Query
 	}{
 		{
 			"Sort",
-			grimoire.From("users").Sort("id"),
-			grimoire.Query{
+			rel.From("users").Sort("id"),
+			rel.Query{
 				Collection: "users",
-				SortQuery: []grimoire.SortQuery{
+				SortQuery: []rel.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,
@@ -519,10 +519,10 @@ func TestQuery_Sort(t *testing.T) {
 		},
 		{
 			"SortAsc",
-			grimoire.From("users").SortAsc("id", "name"),
-			grimoire.Query{
+			rel.From("users").SortAsc("id", "name"),
+			rel.Query{
 				Collection: "users",
-				SortQuery: []grimoire.SortQuery{
+				SortQuery: []rel.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,
@@ -536,10 +536,10 @@ func TestQuery_Sort(t *testing.T) {
 		},
 		{
 			"SortAsc",
-			grimoire.From("users").SortAsc("id", "name").SortDesc("age", "created_at"),
-			grimoire.Query{
+			rel.From("users").SortAsc("id", "name").SortDesc("age", "created_at"),
+			rel.Query{
 				Collection: "users",
-				SortQuery: []grimoire.SortQuery{
+				SortQuery: []rel.SortQuery{
 					{
 						Field: "id",
 						Sort:  1,
@@ -569,22 +569,22 @@ func TestQuery_Sort(t *testing.T) {
 }
 
 func TestQuery_Offset(t *testing.T) {
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection:  "users",
 		OffsetQuery: 10,
-	}, grimoire.From("users").Offset(10))
+	}, rel.From("users").Offset(10))
 }
 
 func TestQuery_Limit(t *testing.T) {
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection: "users",
 		LimitQuery: 10,
-	}, grimoire.From("users").Limit(10))
+	}, rel.From("users").Limit(10))
 }
 
 func TestQuery_Lock_outsideTransaction(t *testing.T) {
-	assert.Equal(t, grimoire.Query{
+	assert.Equal(t, rel.Query{
 		Collection: "users",
 		LockQuery:  "FOR UPDATE",
-	}, grimoire.From("users").Lock(grimoire.ForUpdate()))
+	}, rel.From("users").Lock(rel.ForUpdate()))
 }

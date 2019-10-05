@@ -1,4 +1,4 @@
-// Package sqlite3 wraps go-sqlite3 driver as an adapter for grimoire.
+// Package sqlite3 wraps go-sqlite3 driver as an adapter for rel.
 //
 // Usage:
 //	// open sqlite3 connection.
@@ -8,16 +8,16 @@
 //	}
 //	defer adapter.Close()
 //
-//	// initialize grimoire's repo.
-//	repo := grimoire.New(adapter)
+//	// initialize rel's repo.
+//	repo := rel.New(adapter)
 package sqlite3
 
 import (
 	db "database/sql"
 	"strings"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/sql"
 )
 
 // Adapter definition for mysql database.
@@ -25,7 +25,7 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ grimoire.Adapter = (*Adapter)(nil)
+var _ rel.Adapter = (*Adapter)(nil)
 
 // Open mysql connection using dsn.
 func Open(dsn string) (*Adapter, error) {
@@ -70,15 +70,15 @@ func errorFunc(err error) error {
 
 	switch msg[:failedIndex] {
 	case "UNIQUE constraint":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  msg[failedIndex+failedLen:],
-			Type: grimoire.UniqueConstraint,
+			Type: rel.UniqueConstraint,
 			Err:  err,
 		}
 	case "CHECK constraint":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  msg[failedIndex+failedLen:],
-			Type: grimoire.CheckConstraint,
+			Type: rel.CheckConstraint,
 			Err:  err,
 		}
 	default:

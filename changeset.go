@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"reflect"
@@ -38,14 +38,18 @@ func (c Changeset) Build(changes *Changes) {
 	offset := 0
 	for i, f := range c.belongsTo {
 		if ac, ok := c.assocs[offset+i].(Changeset); ok {
-			changes.SetAssoc(f, BuildChanges(ac))
+			if ch := BuildChanges(ac); !ch.Empty() {
+				changes.SetAssoc(f, ch)
+			}
 		}
 	}
 
 	offset = len(c.belongsTo)
 	for i, f := range c.hasOne {
 		if ac, ok := c.assocs[offset+i].(Changeset); ok {
-			changes.SetAssoc(f, BuildChanges(ac))
+			if ch := BuildChanges(ac); !ch.Empty() {
+				changes.SetAssoc(f, ch)
+			}
 		}
 	}
 
@@ -83,7 +87,7 @@ func (c Changeset) buildAssocMany(field string, changes *Changes, changemap map[
 			}
 			unstaleIDsMap[pValue] = struct{}{}
 		} else {
-			panic("grimoire: cannot update unloaded association")
+			panic("rel: cannot update unloaded association")
 		}
 	}
 

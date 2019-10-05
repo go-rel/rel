@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Fs02/grimoire"
+	"github.com/Fs02/rel"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,12 +48,12 @@ func TestNew(t *testing.T) {
 func TestAdapter_Aggregate(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 	)
 
 	defer adapter.Close()
 
-	count, err := repo.Aggregate(grimoire.From("names"), "count", "id")
+	count, err := repo.Aggregate(rel.From("names"), "count", "id")
 	assert.Equal(t, 0, count)
 	assert.Nil(t, err)
 }
@@ -61,13 +61,13 @@ func TestAdapter_Aggregate(t *testing.T) {
 func TestAdapter_Aggregate_transaction(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 	)
 
 	defer adapter.Close()
 
-	repo.Transaction(func(repo grimoire.Repo) error {
-		count, err := repo.Aggregate(grimoire.From("names"), "count", "id")
+	repo.Transaction(func(repo rel.Repo) error {
+		count, err := repo.Aggregate(rel.From("names"), "count", "id")
 		assert.Equal(t, 0, count)
 		assert.Nil(t, err)
 
@@ -78,7 +78,7 @@ func TestAdapter_Aggregate_transaction(t *testing.T) {
 func TestAdapter_Insert(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		name    = Name{
 			Name: "Luffy",
 		}
@@ -92,7 +92,7 @@ func TestAdapter_Insert(t *testing.T) {
 func TestAdapter_InsertAll(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		names   = []Name{
 			{Name: "Luffy"},
 			{Name: "Zoro"},
@@ -111,7 +111,7 @@ func TestAdapter_InsertAll(t *testing.T) {
 func TestAdapter_Update(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		name    = Name{
 			Name: "Luffy",
 		}
@@ -132,7 +132,7 @@ func TestAdapter_Update(t *testing.T) {
 func TestAdapter_Delete(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		name    = Name{}
 	)
 
@@ -144,13 +144,13 @@ func TestAdapter_Delete(t *testing.T) {
 func TestAdapter_Transaction_commit(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		name    = Name{
 			Name: "Luffy",
 		}
 	)
 
-	err := repo.Transaction(func(repo grimoire.Repo) error {
+	err := repo.Transaction(func(repo rel.Repo) error {
 		repo.MustInsert(&name)
 		return nil
 	})
@@ -161,10 +161,10 @@ func TestAdapter_Transaction_commit(t *testing.T) {
 func TestAdapter_Transaction_rollback(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 	)
 
-	err := repo.Transaction(func(repo grimoire.Repo) error {
+	err := repo.Transaction(func(repo rel.Repo) error {
 		return errors.New("error")
 	})
 
@@ -174,7 +174,7 @@ func TestAdapter_Transaction_rollback(t *testing.T) {
 func TestAdapter_Transaction_nestedCommit(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 		name    = Name{
 			Name: "Luffy",
 		}
@@ -182,8 +182,8 @@ func TestAdapter_Transaction_nestedCommit(t *testing.T) {
 
 	defer adapter.Close()
 
-	err := repo.Transaction(func(repo grimoire.Repo) error {
-		return repo.Transaction(func(repo grimoire.Repo) error {
+	err := repo.Transaction(func(repo rel.Repo) error {
+		return repo.Transaction(func(repo rel.Repo) error {
 			repo.MustInsert(&name)
 			return nil
 		})
@@ -195,13 +195,13 @@ func TestAdapter_Transaction_nestedCommit(t *testing.T) {
 func TestAdapter_Transaction_nestedRollback(t *testing.T) {
 	var (
 		adapter = open(t)
-		repo    = grimoire.New(adapter)
+		repo    = rel.New(adapter)
 	)
 
 	defer adapter.Close()
 
-	err := repo.Transaction(func(repo grimoire.Repo) error {
-		return repo.Transaction(func(repo grimoire.Repo) error {
+	err := repo.Transaction(func(repo rel.Repo) error {
+		return repo.Transaction(func(repo rel.Repo) error {
 			return errors.New("error")
 		})
 	})

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Fs02/go-paranoid"
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/specs"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/specs"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +62,7 @@ func dsn() string {
 		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1"
 	}
 
-	return "./grimoire_test.db?_foreign_keys=1"
+	return "./rel_test.db?_foreign_keys=1"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -70,7 +70,7 @@ func TestAdapter_specs(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	repo := grimoire.New(adapter)
+	repo := rel.New(adapter)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -132,7 +132,7 @@ func TestAdapter_specs(t *testing.T) {
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(grimoire.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, allchanges)
 
 // 	assert.NotNil(t, err)
 // }

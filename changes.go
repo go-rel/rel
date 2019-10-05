@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 type Changer interface {
 	Build(changes *Changes)

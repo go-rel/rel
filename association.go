@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"reflect"
@@ -152,7 +152,7 @@ func (a Association) IsZero() bool {
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
 
-	return isDeepZero(rv, 0)
+	return isDeepZero(rv, 1)
 }
 
 func (a Association) ReferenceField() string {
@@ -235,14 +235,14 @@ func newAssociation(rv reflect.Value, index int) Association {
 	}
 
 	if reft, exist := rt.FieldByName(ref); !exist {
-		panic("grimoire: references (" + ref + ") field not found ")
+		panic("rel: references (" + ref + ") field not found ")
 	} else {
 		data.referenceIndex = reft.Index
 		data.referenceColumn = fieldName(reft)
 	}
 
 	if fkt, exist := ft.FieldByName(fk); !exist {
-		panic("grimoire: foreign_key (" + fk + ") field not found " + fk)
+		panic("rel: foreign_key (" + fk + ") field not found " + fk)
 	} else {
 		data.foreignIndex = fkt.Index
 		data.foreignField = fieldName(fkt)

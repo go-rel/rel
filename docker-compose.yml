@@ -7,13 +7,13 @@ services:
     ports:
       - 9910:3306
     environment:
-      - MYSQL_USER=grimoire
-      - MYSQL_DATABASE=grimoire_test
+      - MYSQL_USER=rel
+      - MYSQL_DATABASE=rel_test
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
   postgres:
     image: 'postgres:alpine'
     ports:
       - 9920:5432
     environment:
-      - POSTGRES_USER=grimoire
-      - POSTGRES_DB=grimoire_test
+      - POSTGRES_USER=rel
+      - POSTGRES_DB=rel_test

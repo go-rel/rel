@@ -1,15 +1,15 @@
-// Package mysql wraps mysql driver as an adapter for grimoire.
+// Package mysql wraps mysql driver as an adapter for rel.
 //
 // Usage:
 //	// open mysql connection.
-//	adapter, err := mysql.Open("root@(127.0.0.1:3306)/grimoire_test?charset=utf8&parseTime=True&loc=Local")
+//	adapter, err := mysql.Open("root@(127.0.0.1:3306)/rel_test?charset=utf8&parseTime=True&loc=Local")
 //	if err != nil {
 //		panic(err)
 //	}
 //	defer adapter.Close()
 //
-//	// initialize grimoire's repo.
-//	repo := grimoire.New(adapter)
+//	// initialize rel's repo.
+//	repo := rel.New(adapter)
 package mysql
 
 import (
@@ -17,8 +17,8 @@ import (
 	"strings"
 
 	"github.com/Fs02/go-paranoid"
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/sql"
 )
 
 // Adapter definition for mysql database.
@@ -26,7 +26,7 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ grimoire.Adapter = (*Adapter)(nil)
+var _ rel.Adapter = (*Adapter)(nil)
 
 // Open mysql connection using dsn.
 func Open(dsn string) (*Adapter, error) {
@@ -56,7 +56,7 @@ func incrementFunc(adapter sql.Adapter) int {
 	} else {
 		err = adapter.DB.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	}
-	paranoid.Panic(err, "grimoire: MySQL failed to get auto_increment_increment variable")
+	paranoid.Panic(err, "rel: MySQL failed to get auto_increment_increment variable")
 
 	return increment
 }
@@ -78,15 +78,15 @@ func errorFunc(err error) error {
 
 	switch msg[:errCodeIndex] {
 	case "Error 1062":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  sql.ExtractString(msg, "key '", "'"),
-			Type: grimoire.UniqueConstraint,
+			Type: rel.UniqueConstraint,
 			Err:  err,
 		}
 	case "Error 1452":
-		return grimoire.ConstraintError{
+		return rel.ConstraintError{
 			Key:  sql.ExtractString(msg, "CONSTRAINT `", "`"),
-			Type: grimoire.ForeignKeyConstraint,
+			Type: rel.ForeignKeyConstraint,
 			Err:  err,
 		}
 	default:

@@ -3,13 +3,13 @@ package specs
 import (
 	"testing"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/where"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
 // Delete tests delete specifications.
-func Delete(t *testing.T, repo grimoire.Repo) {
+func Delete(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{Name: "delete", Age: 100}
 	)
@@ -18,12 +18,12 @@ func Delete(t *testing.T, repo grimoire.Repo) {
 	assert.NotEqual(t, 0, user.ID)
 
 	assert.Nil(t, repo.Delete(&user))
-	assert.Equal(t, grimoire.NoResultError{}, repo.One(&user, where.Eq("id", user.ID)))
+	assert.Equal(t, rel.NoResultError{}, repo.One(&user, where.Eq("id", user.ID)))
 
 }
 
 // DeleteAll tests delete specifications.
-func DeleteAll(t *testing.T, repo grimoire.Repo) {
+func DeleteAll(t *testing.T, repo rel.Repo) {
 	var (
 		user = User{Name: "delete", Age: 100}
 	)
@@ -38,9 +38,9 @@ func DeleteAll(t *testing.T, repo grimoire.Repo) {
 	repo.MustInsert(&User{Name: "delete", Age: 100})
 	repo.MustInsert(&User{Name: "other delete", Age: 110})
 
-	tests := []grimoire.Query{
-		grimoire.From("users").Where(where.Eq("name", "delete")),
-		grimoire.From("users").Where(where.Eq("name", "other delete"), where.Gt("age", 100)),
+	tests := []rel.Query{
+		rel.From("users").Where(where.Eq("name", "delete")),
+		rel.From("users").Where(where.Eq("name", "other delete"), where.Gt("age", 100)),
 	}
 
 	for _, query := range tests {

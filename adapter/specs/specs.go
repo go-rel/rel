@@ -1,4 +1,4 @@
-// Package specs defines test specifications for grimoire's adapter.
+// Package specs defines test specifications for rel's adapter.
 package specs
 
 import (
@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fs02/grimoire"
-	"github.com/Fs02/grimoire/adapter/sql"
+	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/adapter/sql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,9 +50,9 @@ var (
 	builder = sql.NewBuilder(config)
 )
 
-func assertConstraint(t *testing.T, err error, ctype grimoire.ConstraintType, key string) {
+func assertConstraint(t *testing.T, err error, ctype rel.ConstraintType, key string) {
 	assert.NotNil(t, err)
-	cerr, ok := err.(grimoire.ConstraintError)
+	cerr, ok := err.(rel.ConstraintError)
 	assert.True(t, ok)
 	assert.True(t, strings.Contains(cerr.Key, key))
 	assert.Equal(t, ctype, cerr.Type)

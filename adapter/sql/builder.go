@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Fs02/grimoire"
+	"github.com/Fs02/rel"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -21,7 +21,7 @@ type Builder struct {
 }
 
 // Find generates query for select.
-func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
+func (b *Builder) Find(query rel.Query) (string, []interface{}) {
 	var (
 		buffer Buffer
 	)
@@ -35,7 +35,7 @@ func (b *Builder) Find(query grimoire.Query) (string, []interface{}) {
 }
 
 // Aggregate generates query for aggregation.
-func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (string, []interface{}) {
+func (b *Builder) Aggregate(query rel.Query, mode string, field string) (string, []interface{}) {
 	var (
 		buffer Buffer
 	)
@@ -57,7 +57,7 @@ func (b *Builder) Aggregate(query grimoire.Query, mode string, field string) (st
 	return buffer.String(), buffer.Arguments
 }
 
-func (b *Builder) query(buffer *Buffer, query grimoire.Query) {
+func (b *Builder) query(buffer *Buffer, query rel.Query) {
 	b.from(buffer, query.Collection)
 	b.join(buffer, query.JoinQuery)
 	b.where(buffer, query.WhereQuery)
@@ -79,7 +79,7 @@ func (b *Builder) query(buffer *Buffer, query grimoire.Query) {
 }
 
 // Insert generates query for insert.
-func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, []interface{}) {
+func (b *Builder) Insert(collection string, changes rel.Changes) (string, []interface{}) {
 	var (
 		buffer Buffer
 		length = len(changes.Changes)
@@ -95,7 +95,7 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 		buffer.WriteString(" (")
 
 		for i, ch := range changes.Changes {
-			if ch.Type == grimoire.ChangeSetOp {
+			if ch.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.config.EscapeChar)
 				buffer.WriteString(ch.Field)
 				buffer.WriteString(b.config.EscapeChar)
@@ -133,7 +133,7 @@ func (b *Builder) Insert(collection string, changes grimoire.Changes) (string, [
 }
 
 // InsertAll generates query for multiple insert.
-func (b *Builder) InsertAll(collection string, fields []string, allchanges []grimoire.Changes) (string, []interface{}) {
+func (b *Builder) InsertAll(collection string, fields []string, allchanges []rel.Changes) (string, []interface{}) {
 	var (
 		buffer       Buffer
 		fieldsCount  = len(fields)
@@ -165,7 +165,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 		buffer.WriteByte('(')
 
 		for j, field := range fields {
-			if ch, ok := changes.Get(field); ok && ch.Type == grimoire.ChangeSetOp {
+			if ch, ok := changes.Get(field); ok && ch.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.ph())
 				buffer.Append(ch.Value)
 			} else {
@@ -197,7 +197,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []gri
 }
 
 // Update generates query for update.
-func (b *Builder) Update(collection string, changes grimoire.Changes, filter grimoire.FilterQuery) (string, []interface{}) {
+func (b *Builder) Update(collection string, changes rel.Changes, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
 		length = len(changes.Changes)
@@ -211,26 +211,26 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 
 	for i, ch := range changes.Changes {
 		switch ch.Type {
-		case grimoire.ChangeSetOp:
+		case rel.ChangeSetOp:
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
-		case grimoire.ChangeIncOp:
+		case rel.ChangeIncOp:
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
-		case grimoire.ChangeDecOp:
+		case rel.ChangeDecOp:
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.escape(ch.Field))
 			buffer.WriteByte('-')
 			buffer.WriteString(b.ph())
 			buffer.Append(ch.Value)
-		case grimoire.ChangeFragmentOp:
+		case rel.ChangeFragmentOp:
 			buffer.WriteString(ch.Field)
 			buffer.Append(ch.Value.([]interface{})...)
 		}
@@ -248,7 +248,7 @@ func (b *Builder) Update(collection string, changes grimoire.Changes, filter gri
 }
 
 // Delete generates query for delete.
-func (b *Builder) Delete(collection string, filter grimoire.FilterQuery) (string, []interface{}) {
+func (b *Builder) Delete(collection string, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
 	)
@@ -298,7 +298,7 @@ func (b *Builder) from(buffer *Buffer, collection string) {
 	buffer.WriteString(b.config.EscapeChar)
 }
 
-func (b *Builder) join(buffer *Buffer, joins []grimoire.JoinQuery) {
+func (b *Builder) join(buffer *Buffer, joins []rel.JoinQuery) {
 	if len(joins) == 0 {
 		return
 	}
@@ -319,7 +319,7 @@ func (b *Builder) join(buffer *Buffer, joins []grimoire.JoinQuery) {
 	}
 }
 
-func (b *Builder) where(buffer *Buffer, filter grimoire.FilterQuery) {
+func (b *Builder) where(buffer *Buffer, filter rel.FilterQuery) {
 	if filter.None() {
 		return
 	}
@@ -341,7 +341,7 @@ func (b *Builder) groupBy(buffer *Buffer, fields []string) {
 	}
 }
 
-func (b *Builder) having(buffer *Buffer, filter grimoire.FilterQuery) {
+func (b *Builder) having(buffer *Buffer, filter rel.FilterQuery) {
 	if filter.None() {
 		return
 	}
@@ -350,7 +350,7 @@ func (b *Builder) having(buffer *Buffer, filter grimoire.FilterQuery) {
 	b.filter(buffer, filter)
 }
 
-func (b *Builder) orderBy(buffer *Buffer, orders []grimoire.SortQuery) {
+func (b *Builder) orderBy(buffer *Buffer, orders []rel.SortQuery) {
 	var (
 		length = len(orders)
 	)
@@ -376,7 +376,7 @@ func (b *Builder) orderBy(buffer *Buffer, orders []grimoire.SortQuery) {
 	}
 }
 
-func (b *Builder) limitOffset(buffer *Buffer, limit grimoire.Limit, offset grimoire.Offset) {
+func (b *Builder) limitOffset(buffer *Buffer, limit rel.Limit, offset rel.Offset) {
 	if limit > 0 {
 		buffer.WriteString(" LIMIT ")
 		buffer.WriteString(strconv.Itoa(int(limit)))
@@ -388,48 +388,48 @@ func (b *Builder) limitOffset(buffer *Buffer, limit grimoire.Limit, offset grimo
 	}
 }
 
-func (b *Builder) filter(buffer *Buffer, filter grimoire.FilterQuery) {
+func (b *Builder) filter(buffer *Buffer, filter rel.FilterQuery) {
 	switch filter.Type {
-	case grimoire.FilterAndOp:
+	case rel.FilterAndOp:
 		b.build(buffer, "AND", filter.Inner)
-	case grimoire.FilterOrOp:
+	case rel.FilterOrOp:
 		b.build(buffer, "OR", filter.Inner)
-	case grimoire.FilterNotOp:
+	case rel.FilterNotOp:
 		buffer.WriteString("NOT ")
 		b.build(buffer, "AND", filter.Inner)
-	case grimoire.FilterEqOp,
-		grimoire.FilterNeOp,
-		grimoire.FilterLtOp,
-		grimoire.FilterLteOp,
-		grimoire.FilterGtOp,
-		grimoire.FilterGteOp:
+	case rel.FilterEqOp,
+		rel.FilterNeOp,
+		rel.FilterLtOp,
+		rel.FilterLteOp,
+		rel.FilterGtOp,
+		rel.FilterGteOp:
 		b.buildComparison(buffer, filter)
-	case grimoire.FilterNilOp:
+	case rel.FilterNilOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" IS NULL")
-	case grimoire.FilterNotNilOp:
+	case rel.FilterNotNilOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" IS NOT NULL")
-	case grimoire.FilterInOp,
-		grimoire.FilterNinOp:
+	case rel.FilterInOp,
+		rel.FilterNinOp:
 		b.buildInclusion(buffer, filter)
-	case grimoire.FilterLikeOp:
+	case rel.FilterLikeOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" LIKE ")
 		buffer.WriteString(b.ph())
 		buffer.Append(filter.Value)
-	case grimoire.FilterNotLikeOp:
+	case rel.FilterNotLikeOp:
 		buffer.WriteString(b.escape(filter.Field))
 		buffer.WriteString(" NOT LIKE ")
 		buffer.WriteString(b.ph())
 		buffer.Append(filter.Value)
-	case grimoire.FilterFragmentOp:
+	case rel.FilterFragmentOp:
 		buffer.WriteString(filter.Field)
 		buffer.Append(filter.Value.([]interface{})...)
 	}
 }
 
-func (b *Builder) build(buffer *Buffer, op string, inner []grimoire.FilterQuery) {
+func (b *Builder) build(buffer *Buffer, op string, inner []rel.FilterQuery) {
 	var (
 		length = len(inner)
 	)
@@ -453,21 +453,21 @@ func (b *Builder) build(buffer *Buffer, op string, inner []grimoire.FilterQuery)
 	}
 }
 
-func (b *Builder) buildComparison(buffer *Buffer, filter grimoire.FilterQuery) {
+func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 	buffer.WriteString(b.escape(filter.Field))
 
 	switch filter.Type {
-	case grimoire.FilterEqOp:
+	case rel.FilterEqOp:
 		buffer.WriteByte('=')
-	case grimoire.FilterNeOp:
+	case rel.FilterNeOp:
 		buffer.WriteString("<>")
-	case grimoire.FilterLtOp:
+	case rel.FilterLtOp:
 		buffer.WriteByte('<')
-	case grimoire.FilterLteOp:
+	case rel.FilterLteOp:
 		buffer.WriteString("<=")
-	case grimoire.FilterGtOp:
+	case rel.FilterGtOp:
 		buffer.WriteByte('>')
-	case grimoire.FilterGteOp:
+	case rel.FilterGteOp:
 		buffer.WriteString(">=")
 	}
 
@@ -475,14 +475,14 @@ func (b *Builder) buildComparison(buffer *Buffer, filter grimoire.FilterQuery) {
 	buffer.Append(filter.Value)
 }
 
-func (b *Builder) buildInclusion(buffer *Buffer, filter grimoire.FilterQuery) {
+func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 	var (
 		values = filter.Value.([]interface{})
 	)
 
 	buffer.WriteString(b.escape(filter.Field))
 
-	if filter.Type == grimoire.FilterInOp {
+	if filter.Type == rel.FilterInOp {
 		buffer.WriteString(" IN (")
 	} else {
 		buffer.WriteString(" NOT IN (")
@@ -538,7 +538,7 @@ func (b *Builder) escape(field string) string {
 	return escapedField.(string)
 }
 
-// Returning append returning to insert grimoire.
+// Returning append returning to insert rel.
 func (b *Builder) Returning(field string) *Builder {
 	b.returnField = field
 	return b

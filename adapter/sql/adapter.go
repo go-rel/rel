@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Fs02/grimoire"
+	"github.com/Fs02/rel"
 )
 
 // Config holds configuration for adapter.
@@ -28,7 +28,7 @@ type Adapter struct {
 	savepoint int
 }
 
-var _ grimoire.Adapter = (*Adapter)(nil)
+var _ rel.Adapter = (*Adapter)(nil)
 
 // Close mysql connection.
 func (adapter *Adapter) Close() error {
@@ -36,7 +36,7 @@ func (adapter *Adapter) Close() error {
 }
 
 // Aggregate record using given query.
-func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field string, loggers ...grimoire.Logger) (int, error) {
+func (adapter *Adapter) Aggregate(query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
 	var (
 		err             error
 		out             sql.NullInt64
@@ -50,13 +50,13 @@ func (adapter *Adapter) Aggregate(query grimoire.Query, mode string, field strin
 		err = adapter.DB.QueryRow(statement, args...).Scan(&out)
 	}
 
-	go grimoire.Log(loggers, statement, time.Since(start), err)
+	go rel.Log(loggers, statement, time.Since(start), err)
 
 	return int(out.Int64), err
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(query grimoire.Query, loggers ...grimoire.Logger) (grimoire.Cursor, error) {
+func (adapter *Adapter) Query(query rel.Query, loggers ...rel.Logger) (rel.Cursor, error) {
 	var (
 		rows            *sql.Rows
 		err             error
@@ -70,13 +70,13 @@ func (adapter *Adapter) Query(query grimoire.Query, loggers ...grimoire.Logger) 
 		rows, err = adapter.DB.Query(statement, args...)
 	}
 
-	go grimoire.Log(loggers, statement, time.Since(start), err)
+	go rel.Log(loggers, statement, time.Since(start), err)
 
 	return &Cursor{rows}, adapter.Config.ErrorFunc(err)
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...grimoire.Logger) (int64, int64, error) {
+func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...rel.Logger) (int64, int64, error) {
 	var (
 		res sql.Result
 		err error
@@ -89,7 +89,7 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...gr
 		res, err = adapter.DB.Exec(statement, args...)
 	}
 
-	go grimoire.Log(loggers, statement, time.Since(start), err)
+	go rel.Log(loggers, statement, time.Since(start), err)
 
 	if err != nil {
 		return 0, 0, adapter.Config.ErrorFunc(err)
@@ -102,7 +102,7 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...gr
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		statement, args = NewBuilder(adapter.Config).Insert(query.Collection, changes)
 		id, _, err      = adapter.Exec(statement, args, loggers...)
@@ -112,7 +112,7 @@ func (adapter *Adapter) Insert(query grimoire.Query, changes grimoire.Changes, l
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchanges []grimoire.Changes, loggers ...grimoire.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
 	statement, args := NewBuilder(adapter.Config).InsertAll(query.Collection, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
@@ -136,7 +136,7 @@ func (adapter *Adapter) InsertAll(query grimoire.Query, fields []string, allchan
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query grimoire.Query, changes grimoire.Changes, loggers ...grimoire.Logger) error {
+func (adapter *Adapter) Update(query rel.Query, changes rel.Changes, loggers ...rel.Logger) error {
 	var (
 		statement, args = NewBuilder(adapter.Config).Update(query.Collection, changes, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
@@ -146,7 +146,7 @@ func (adapter *Adapter) Update(query grimoire.Query, changes grimoire.Changes, l
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger) error {
+func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) error {
 	var (
 		statement, args = NewBuilder(adapter.Config).Delete(query.Collection, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
@@ -156,7 +156,7 @@ func (adapter *Adapter) Delete(query grimoire.Query, loggers ...grimoire.Logger)
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin() (grimoire.Adapter, error) {
+func (adapter *Adapter) Begin() (rel.Adapter, error) {
 	var (
 		tx        *sql.Tx
 		savepoint int

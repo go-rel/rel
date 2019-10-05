@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 import (
 	"database/sql"
@@ -80,7 +80,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 	}
 
 	if !found {
-		panic("grimoire: TODO")
+		panic("rel: TODO")
 	}
 
 	// scan the result

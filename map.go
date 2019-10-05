@@ -1,4 +1,4 @@
-package grimoire
+package rel
 
 type Map map[string]interface{}
 

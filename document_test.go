@@ -27,57 +27,6 @@ func (i Item) PrimaryValue() interface{} {
 	return i.UUID
 }
 
-func (i Item) Fields() map[string]int {
-	return map[string]int{
-		"_uuid":  0,
-		"_price": 1,
-	}
-}
-
-func (i Item) Types() []reflect.Type {
-	return []reflect.Type{String, Int}
-}
-
-func (i Item) Values() []interface{} {
-	return []interface{}{i.UUID, i.Price}
-}
-
-func (i *Item) Scanners(fields []string) []interface{} {
-	var (
-		scanners  = make([]interface{}, len(fields))
-		tempValue = sql.RawBytes{}
-	)
-
-	for index, field := range fields {
-		switch field {
-		case "_uuid":
-			scanners[index] = Nullable(&i.UUID)
-		case "_price":
-			scanners[index] = Nullable(&i.Price)
-		default:
-			scanners[index] = &tempValue
-		}
-	}
-
-	return scanners
-}
-
-func (i Item) BelongsTo() []string {
-	return nil
-}
-
-func (i Item) HasOne() []string {
-	return nil
-}
-
-func (i Item) HasMany() []string {
-	return nil
-}
-
-func (i Item) Association(field string) Association {
-	return Association{}
-}
-
 func TestDocument_Table(t *testing.T) {
 	var (
 		record = User{}
@@ -235,13 +184,13 @@ func TestDocument_Types(t *testing.T) {
 		}{}
 		doc   = newDocument(&record)
 		types = map[string]reflect.Type{
-			"a": String,
-			"b": Int,
-			"c": Bytes,
-			"d": Bool,
+			"a": reflect.TypeOf(""),
+			"b": reflect.TypeOf(0),
+			"c": reflect.TypeOf([]byte{}),
+			"d": reflect.TypeOf(false),
 			"e": reflect.TypeOf([]float64{}),
 			"f": reflect.TypeOf(userDefined(0)),
-			"g": Time,
+			"g": reflect.TypeOf(time.Time{}),
 		}
 	)
 

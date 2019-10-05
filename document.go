@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/azer/snakecase"
 	"github.com/jinzhu/inflection"
@@ -16,6 +17,7 @@ var (
 	fieldsCache       sync.Map
 	typesCache        sync.Map
 	documentDataCache sync.Map
+	rtTime            = reflect.TypeOf(time.Time{})
 )
 
 type table interface {
@@ -271,7 +273,7 @@ func extractdocumentData(rv reflect.Value, rt reflect.Type) documentData {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() != reflect.Struct || typ == Time {
+		if typ.Kind() != reflect.Struct || typ == rtTime {
 			data.fields = append(data.fields, name)
 			continue
 		}

@@ -12,7 +12,6 @@ func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
 	assert.Equal(t, len(ch1.Changes), len(ch2.Changes))
 	assert.Equal(t, len(ch1.Assoc), len(ch2.Assoc))
 	assert.Equal(t, len(ch1.AssocChanges), len(ch2.AssocChanges))
-	assert.Equal(t, ch1.constraints, ch2.constraints)
 
 	for field := range ch1.Fields {
 		assert.Equal(t, ch1.Changes[ch1.Fields[field]], ch2.Changes[ch2.Fields[field]])

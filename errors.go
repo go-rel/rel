@@ -6,13 +6,31 @@ func (nre NoResultError) Error() string {
 	return "No result found"
 }
 
-type ValidationError struct {
-	Field   string
-	Message string
-}
+type ConstraintType int8
 
-func (ve ValidationError) Error() string {
-	return "ValidationError: " + ve.Message
+const (
+	CheckConstraint = iota
+	NotNullConstraint
+	UniqueConstraint
+	PrimaryKeyConstraint
+	ForeignKeyConstraint
+)
+
+func (ct ConstraintType) String() string {
+	switch ct {
+	case CheckConstraint:
+		return "CheckConstraint"
+	case NotNullConstraint:
+		return "NotNullConstraint"
+	case UniqueConstraint:
+		return "UniqueConstraint"
+	case PrimaryKeyConstraint:
+		return "PrimaryKeyConstraint"
+	case ForeignKeyConstraint:
+		return "ForeignKeyConstraint"
+	default:
+		return ""
+	}
 }
 
 type ConstraintError struct {

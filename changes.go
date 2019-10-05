@@ -29,7 +29,6 @@ type Changes struct {
 	Changes      []Change
 	Assoc        map[string]int
 	AssocChanges []AssocChanges
-	constraints  constraints
 }
 
 type AssocChanges struct {

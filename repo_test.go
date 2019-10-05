@@ -3,10 +3,17 @@ package rel
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+func init() {
+	now = func() time.Time {
+		return time.Time{}
+	}
+}
 
 var repo = Repo{}
 
@@ -258,6 +265,8 @@ func TestRepo_Insert(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 		cur     = createCursor(1)
@@ -280,6 +289,8 @@ func TestRepo_Insert_oneError(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 		cur     = &testCursor{}
@@ -376,6 +387,8 @@ func TestRepo_Insert_error(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 	)
@@ -476,6 +489,7 @@ func TestRepo_Update(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 		queries = From("users").Where(Eq("id", user.ID))
@@ -499,6 +513,7 @@ func TestRepo_Update_oneError(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 		queries = From("users").Where(Eq("id", user.ID))
@@ -621,6 +636,7 @@ func TestRepo_Update_error(t *testing.T) {
 		repo      = Repo{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
+			Set("updated_at", now()),
 		}
 		changes = BuildChanges(cbuilders...)
 		queries = From("users").Where(Eq("id", user.ID))
@@ -642,8 +658,9 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
-					"name": "buyer1",
-					"age":  20,
+					"name":       "buyer1",
+					"age":        20,
+					"updated_at": now(),
 				},
 			},
 		)
@@ -672,8 +689,9 @@ func TestRepo_saveBelongsTo_updateError(t *testing.T) {
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
-					"name": "buyer1",
-					"age":  20,
+					"name":       "buyer1",
+					"age":        20,
+					"updated_at": now(),
 				},
 			},
 		)
@@ -722,8 +740,10 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
-					"name": "buyer1",
-					"age":  20,
+					"name":       "buyer1",
+					"age":        20,
+					"created_at": now(),
+					"updated_at": now(),
 				},
 			},
 		)
@@ -756,8 +776,10 @@ func TestRepo_saveBelongsTo_insertNewError(t *testing.T) {
 		changes     = BuildChanges(
 			Map{
 				"buyer": Map{
-					"name": "buyer1",
-					"age":  20,
+					"name":       "buyer1",
+					"age":        20,
+					"created_at": now(),
+					"updated_at": now(),
 				},
 			},
 		)
@@ -1383,13 +1405,10 @@ func TestRepo_Save_insert(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = User{Name: "name"}
-		changes = BuildChanges(Map{
-			"name": "name",
-		})
-		cur = createCursor(1)
+		cur     = createCursor(1)
 	)
 
-	adapter.On("Insert", From("users"), changes).Return(1, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
 	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Save(&user))
@@ -1404,14 +1423,11 @@ func TestRepo_Save_update(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		user    = User{ID: 1, Name: "name"}
-		changes = BuildChanges(Map{
-			"name": "name",
-		})
 		queries = From("users").Where(Eq("id", 1))
 		cur     = createCursor(1)
 	)
 
-	adapter.On("Update", queries, changes).Return(nil).Once()
+	adapter.On("Update", queries, mock.Anything).Return(nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Save(&user))

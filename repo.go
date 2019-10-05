@@ -4,6 +4,11 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
+)
+
+var (
+	now = time.Now
 )
 
 // Repo defines rel repository.
@@ -150,6 +155,7 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 
 func (r Repo) insert(doc *document, changes Changes) error {
 	var (
+		t        = now()
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
 	)
@@ -158,7 +164,9 @@ func (r Repo) insert(doc *document, changes Changes) error {
 		return err
 	}
 
-	// TODO: put timestamp (updated_at, created_at) if those fields exist.
+	r.putTimestamp(doc, &changes, "created_at", t)
+	r.putTimestamp(doc, &changes, "updated_at", t)
+
 	id, err := r.Adapter().Insert(queriers, changes, r.logger...)
 	if err != nil {
 		return err
@@ -281,11 +289,12 @@ func (r Repo) update(doc *document, changes Changes, filter FilterQuery) error {
 		return err
 	}
 
-	// TODO: update timestamp (updated_at) from form
 	if !changes.Empty() {
 		var (
 			queriers = BuildQuery(doc.Table(), filter)
 		)
+
+		r.putTimestamp(doc, &changes, "updated_at", now())
 
 		if err := r.adapter.Update(queriers, changes, r.logger...); err != nil {
 			return err
@@ -704,4 +713,10 @@ func (r Repo) Transaction(fn func(Repo) error) error {
 	}()
 
 	return err
+}
+
+func (r Repo) putTimestamp(doc *document, changes *Changes, field string, t time.Time) {
+	if typ, ok := doc.Type(field); ok && typ == rtTime {
+		changes.SetValue(field, t)
+	}
 }

@@ -143,7 +143,7 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 		changes = BuildChanges(changers...)
 	}
 
-	if len(changes.Assoc) > 0 {
+	if changes.AssocCount() > 0 {
 		return r.Transaction(func(r Repo) error {
 			return r.insert(doc, changes)
 		})
@@ -227,12 +227,12 @@ func (r Repo) insertAll(col *collection, changes []Changes) error {
 	var (
 		pField   = col.PrimaryField()
 		queriers = BuildQuery(col.Table())
-		fields   = make([]string, 0, len(changes[0].Fields))
-		fieldMap = make(map[string]struct{}, len(changes[0].Fields))
+		fields   = make([]string, 0, changes[0].Count())
+		fieldMap = make(map[string]struct{}, changes[0].Count())
 	)
 
 	for i := range changes {
-		for _, ch := range changes[i].Changes {
+		for _, ch := range changes[i].All() {
 			if _, exist := fieldMap[ch.Field]; !exist {
 				fieldMap[ch.Field] = struct{}{}
 				fields = append(fields, ch.Field)
@@ -274,7 +274,7 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 		changes = BuildChanges(changers...)
 	}
 
-	if len(changes.Assoc) > 0 {
+	if len(changes.assoc) > 0 {
 		return r.Transaction(func(r Repo) error {
 			return r.update(doc, changes, Eq(pField, pValue))
 		})

@@ -82,19 +82,19 @@ func (b *Builder) query(buffer *Buffer, query rel.Query) {
 func (b *Builder) Insert(collection string, changes rel.Changes) (string, []interface{}) {
 	var (
 		buffer Buffer
-		length = len(changes.Changes)
+		count  = changes.Count()
 	)
 
 	buffer.WriteString("INSERT INTO ")
 	buffer.WriteString(b.escape(collection))
 
-	if length == 0 && b.config.InsertDefaultValues {
+	if count == 0 && b.config.InsertDefaultValues {
 		buffer.WriteString(" DEFAULT VALUES")
 	} else {
-		buffer.Arguments = make([]interface{}, length)
+		buffer.Arguments = make([]interface{}, count)
 		buffer.WriteString(" (")
 
-		for i, ch := range changes.Changes {
+		for i, ch := range changes.All() {
 			if ch.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.config.EscapeChar)
 				buffer.WriteString(ch.Field)
@@ -102,7 +102,7 @@ func (b *Builder) Insert(collection string, changes rel.Changes) (string, []inte
 				buffer.Arguments[i] = ch.Value
 			}
 
-			if i < length-1 {
+			if i < count-1 {
 				buffer.WriteByte(',')
 			}
 		}
@@ -200,7 +200,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []rel
 func (b *Builder) Update(collection string, changes rel.Changes, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
-		length = len(changes.Changes)
+		count  = changes.Count()
 	)
 
 	buffer.WriteString("UPDATE ")
@@ -209,7 +209,7 @@ func (b *Builder) Update(collection string, changes rel.Changes, filter rel.Filt
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(" SET ")
 
-	for i, ch := range changes.Changes {
+	for i, ch := range changes.All() {
 		switch ch.Type {
 		case rel.ChangeSetOp:
 			buffer.WriteString(b.escape(ch.Field))
@@ -235,7 +235,7 @@ func (b *Builder) Update(collection string, changes rel.Changes, filter rel.Filt
 			buffer.Append(ch.Value.([]interface{})...)
 		}
 
-		if i < length-1 {
+		if i < count-1 {
 			buffer.WriteByte(',')
 		}
 	}

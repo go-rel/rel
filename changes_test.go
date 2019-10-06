@@ -17,7 +17,7 @@ func TestBuildChanges(t *testing.T) {
 			ChangeFragment("field6=?", true),
 		}
 		changes = Changes{
-			Fields: map[string]int{
+			fields: map[string]int{
 				"field1":   0,
 				"field2":   1,
 				"field3":   2,
@@ -25,7 +25,7 @@ func TestBuildChanges(t *testing.T) {
 				"field5":   4,
 				"field6=?": 5,
 			},
-			Changes: []Change{
+			changes: []Change{
 				Set("field1", 10),
 				Inc("field2"),
 				IncBy("field3", 2),
@@ -33,7 +33,7 @@ func TestBuildChanges(t *testing.T) {
 				DecBy("field5", 2),
 				ChangeFragment("field6=?", true),
 			},
-			Assoc: map[string]int{},
+			assoc: map[string]int{},
 		}
 	)
 

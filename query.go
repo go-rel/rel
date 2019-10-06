@@ -143,7 +143,7 @@ func (q Query) JoinWith(mode string, collection string, from string, to string) 
 	return q
 }
 
-func (q Query) JoinFragment(expr string, args ...interface{}) Query {
+func (q Query) Joinf(expr string, args ...interface{}) Query {
 	NewJoinFragment(expr, args...).Build(&q) // TODO: ensure this always called last
 
 	return q
@@ -154,8 +154,18 @@ func (q Query) Where(filters ...FilterQuery) Query {
 	return q
 }
 
+func (q Query) Wheref(expr string, args ...interface{}) Query {
+	q.WhereQuery = q.WhereQuery.And(FilterFragment(expr, args...))
+	return q
+}
+
 func (q Query) OrWhere(filters ...FilterQuery) Query {
 	q.WhereQuery = q.WhereQuery.Or(And(filters...))
+	return q
+}
+
+func (q Query) OrWheref(expr string, args ...interface{}) Query {
+	q.WhereQuery = q.WhereQuery.Or(FilterFragment(expr, args...))
 	return q
 }
 
@@ -169,8 +179,18 @@ func (q Query) Having(filters ...FilterQuery) Query {
 	return q
 }
 
+func (q Query) Havingf(expr string, args ...interface{}) Query {
+	q.GroupQuery.Filter = q.GroupQuery.Filter.And(FilterFragment(expr, args...))
+	return q
+}
+
 func (q Query) OrHaving(filters ...FilterQuery) Query {
 	q.GroupQuery.Filter = q.GroupQuery.Filter.Or(And(filters...))
+	return q
+}
+
+func (q Query) OrHavingf(expr string, args ...interface{}) Query {
+	q.GroupQuery.Filter = q.GroupQuery.Filter.Or(FilterFragment(expr, args...))
 	return q
 }
 

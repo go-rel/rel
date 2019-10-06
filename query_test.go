@@ -200,7 +200,7 @@ func TestQuery_JoinOn(t *testing.T) {
 	assert.Equal(t, result, rel.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
 }
 
-func TestQuery_JoinFragment(t *testing.T) {
+func TestQuery_Joinf(t *testing.T) {
 	result := rel.Query{
 		Collection: "users",
 		JoinQuery: []rel.JoinQuery{
@@ -211,7 +211,7 @@ func TestQuery_JoinFragment(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, rel.From("users").JoinFragment("JOIN transactions ON transacations.id=?", 1))
+	assert.Equal(t, result, rel.From("users").Joinf("JOIN transactions ON transacations.id=?", 1))
 	assert.Equal(t, result, rel.JoinFragment("JOIN transactions ON transacations.id=?", 1).From("users"))
 }
 
@@ -258,6 +258,14 @@ func TestQuery_Where(t *testing.T) {
 			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+			},
+		},
+		{
+			`id=1`,
+			rel.From("users").Wheref("id=?", 1),
+			rel.Query{
+				Collection: "users",
+				WhereQuery: where.And(where.Fragment("id=?", 1)),
 			},
 		},
 	}
@@ -336,6 +344,14 @@ func TestQuery_OrWhere(t *testing.T) {
 			rel.Query{
 				Collection: "users",
 				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+			},
+		},
+		{
+			`id=1`,
+			rel.From("users").Where(where.Nil("deleted_at")).OrWheref("id=?", 1),
+			rel.Query{
+				Collection: "users",
+				WhereQuery: where.Or(where.Nil("deleted_at"), where.Fragment("id=?", 1)),
 			},
 		},
 	}
@@ -419,7 +435,19 @@ func TestQuery_Having(t *testing.T) {
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
 			},
-		}}
+		},
+		{
+			`id=1`,
+			rel.From("users").Group("active", "plan").Havingf("id=?", 1),
+			rel.Query{
+				Collection: "users",
+				GroupQuery: rel.GroupQuery{
+					Fields: []string{"active", "plan"},
+					Filter: where.And(where.Fragment("id=?", 1)),
+				},
+			},
+		},
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.Case, func(t *testing.T) {
@@ -486,6 +514,17 @@ func TestQuery_OrHaving(t *testing.T) {
 				GroupQuery: rel.GroupQuery{
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				},
+			},
+		},
+		{
+			`id=1 AND`,
+			rel.From("users").Group("active", "plan").OrHavingf("id=?", 1),
+			rel.Query{
+				Collection: "users",
+				GroupQuery: rel.GroupQuery{
+					Fields: []string{"active", "plan"},
+					Filter: where.And(where.Fragment("id=?", 1)),
 				},
 			},
 		},

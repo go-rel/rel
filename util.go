@@ -5,11 +5,6 @@ import (
 	"reflect"
 )
 
-func transformError(err error) error {
-	// TODO
-	return err
-}
-
 func indirect(rv reflect.Value) interface{} {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {

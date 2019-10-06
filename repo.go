@@ -145,12 +145,11 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 
 	if len(changes.Assoc) > 0 {
 		return r.Transaction(func(r Repo) error {
-			return transformError(r.insert(doc, changes))
+			return r.insert(doc, changes)
 		})
 	}
 
-	// TODO: transform changeset error
-	return transformError(r.insert(doc, changes))
+	return r.insert(doc, changes)
 }
 
 func (r Repo) insert(doc *document, changes Changes) error {
@@ -212,7 +211,7 @@ func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
 
 	col.Reset()
 
-	return transformError(r.insertAll(col, changes))
+	return r.insertAll(col, changes)
 }
 
 func (r Repo) MustInsertAll(records interface{}, changes ...Changes) {
@@ -277,11 +276,11 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 
 	if len(changes.Assoc) > 0 {
 		return r.Transaction(func(r Repo) error {
-			return transformError(r.update(doc, changes, Eq(pField, pValue)))
+			return r.update(doc, changes, Eq(pField, pValue))
 		})
 	}
 
-	return transformError(r.update(doc, changes, Eq(pField, pValue)))
+	return r.update(doc, changes, Eq(pField, pValue))
 }
 
 func (r Repo) update(doc *document, changes Changes, filter FilterQuery) error {
@@ -489,7 +488,7 @@ func (r Repo) Save(record interface{}, changers ...Changer) error {
 		changers = []Changer{newStructset(doc)}
 	}
 
-	return transformError(r.save(doc, BuildChanges(changers...)))
+	return r.save(doc, BuildChanges(changers...))
 }
 
 func (r Repo) save(doc *document, changes Changes) error {
@@ -515,7 +514,7 @@ func (r Repo) Delete(record interface{}) error {
 		q      = BuildQuery(table, Eq(pField, pValue))
 	)
 
-	return transformError(r.adapter.Delete(q, r.logger...))
+	return r.adapter.Delete(q, r.logger...)
 }
 
 // MustDelete single entry.
@@ -529,7 +528,7 @@ func (r Repo) DeleteAll(queriers ...Querier) error {
 		q = BuildQuery("", queriers...)
 	)
 
-	return transformError(r.deleteAll(q))
+	return r.deleteAll(q)
 }
 
 func (r Repo) MustDeleteAll(queriers ...Querier) {

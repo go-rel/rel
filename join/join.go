@@ -1,3 +1,4 @@
+// Package join is syntatic sugar for building join query.
 package join
 
 import (

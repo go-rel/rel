@@ -1,3 +1,4 @@
+// Package group is syntatic sugar for building group query.
 package group
 
 import (

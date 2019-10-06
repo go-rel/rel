@@ -1,6 +1,6 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=42ba59b516289c90de75bec1e73dcf75e601d150b271e8762cee9efcb8d70282
+    - CC_TEST_REPORTER_ID=045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
     - MYSQL_DATABASE=root@(127.0.0.1:3306)/rel_test
     - POSTGRESQL_DATABASE=postgres://postgres@localhost/rel_test?sslmode=disable
 

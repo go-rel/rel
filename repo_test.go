@@ -1070,7 +1070,7 @@ func TestRepo_saveHasMany_update(t *testing.T) {
 	)
 
 	transactionCollec.reflect()
-	changes.AssocChanges[0].StaleIDs = []interface{}{3}
+	changes.assocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), transactions.Changes[0]).Return(nil).Once()
@@ -1132,7 +1132,7 @@ func TestRepo_saveHasMany_updateWithInsert(t *testing.T) {
 	)
 
 	transactionCollec.reflect()
-	changes.AssocChanges[0].StaleIDs = []interface{}{3}
+	changes.assocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), transactions.Changes[0]).Return(nil).Once()
@@ -1179,7 +1179,7 @@ func TestRepo_saveHasMany_updateDeleteError(t *testing.T) {
 		err = errors.New("error")
 	)
 
-	changes.AssocChanges[0].StaleIDs = []interface{}{1}
+	changes.assocChanges[0].StaleIDs = []interface{}{1}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1))).Return(err).Once()
 
@@ -1217,7 +1217,7 @@ func TestRepo_saveHasMany_updateError(t *testing.T) {
 		err             = errors.New("error")
 	)
 
-	changes.AssocChanges[0].StaleIDs = []interface{}{}
+	changes.assocChanges[0].StaleIDs = []interface{}{}
 
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), transactions.Changes[0]).Return(err).Once()
 

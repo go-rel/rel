@@ -6,8 +6,8 @@ type Changer interface {
 
 func BuildChanges(changers ...Changer) Changes {
 	changes := Changes{
-		Fields: make(map[string]int),
-		Assoc:  make(map[string]int),
+		fields: make(map[string]int),
+		assoc:  make(map[string]int),
 	}
 
 	for i := range changers {
@@ -25,10 +25,10 @@ func BuildChanges(changers ...Changer) Changes {
 // Implement iterator to be used by adapter api?
 // Not safe to be used multiple time. some operation my alter changes data.
 type Changes struct {
-	Fields       map[string]int // TODO: not copy friendly
-	Changes      []Change
-	Assoc        map[string]int
-	AssocChanges []AssocChanges
+	fields       map[string]int // TODO: not copy friendly
+	changes      []Change
+	assoc        map[string]int
+	assocChanges []AssocChanges
 }
 
 type AssocChanges struct {
@@ -38,23 +38,35 @@ type AssocChanges struct {
 }
 
 func (c Changes) Empty() bool {
-	return len(c.Changes) == 0
+	return len(c.changes) == 0
+}
+
+func (c Changes) Count() int {
+	return len(c.changes)
+}
+
+func (c Changes) AssocCount() int {
+	return len(c.assocChanges)
+}
+
+func (c Changes) All() []Change {
+	return c.changes
 }
 
 func (c Changes) Get(field string) (Change, bool) {
-	if index, ok := c.Fields[field]; ok {
-		return c.Changes[index], true
+	if index, ok := c.fields[field]; ok {
+		return c.changes[index], true
 	}
 
 	return Change{}, false
 }
 
 func (c *Changes) Set(ch Change) {
-	if index, exist := c.Fields[ch.Field]; exist {
-		c.Changes[index] = ch
+	if index, exist := c.fields[ch.Field]; exist {
+		c.changes[index] = ch
 	} else {
-		c.Fields[ch.Field] = len(c.Changes)
-		c.Changes = append(c.Changes, ch)
+		c.fields[ch.Field] = len(c.changes)
+		c.changes = append(c.changes, ch)
 	}
 }
 
@@ -71,16 +83,16 @@ func (c *Changes) SetValue(field string, value interface{}) {
 }
 
 func (c Changes) GetAssoc(field string) (AssocChanges, bool) {
-	if index, ok := c.Assoc[field]; ok {
-		return c.AssocChanges[index], true
+	if index, ok := c.assoc[field]; ok {
+		return c.assocChanges[index], true
 	}
 
 	return AssocChanges{}, false
 }
 
 func (c *Changes) SetAssoc(field string, chs ...Changes) {
-	if index, exist := c.Assoc[field]; exist {
-		c.AssocChanges[index].Changes = chs
+	if index, exist := c.assoc[field]; exist {
+		c.assocChanges[index].Changes = chs
 	} else {
 		c.appendAssoc(field, AssocChanges{
 			Changes: chs,
@@ -89,8 +101,8 @@ func (c *Changes) SetAssoc(field string, chs ...Changes) {
 }
 
 func (c *Changes) SetStaleAssoc(field string, ids []interface{}) {
-	if index, exist := c.Assoc[field]; exist {
-		c.AssocChanges[index].StaleIDs = ids
+	if index, exist := c.assoc[field]; exist {
+		c.assocChanges[index].StaleIDs = ids
 	} else {
 		c.appendAssoc(field, AssocChanges{
 			StaleIDs: ids,
@@ -99,8 +111,8 @@ func (c *Changes) SetStaleAssoc(field string, ids []interface{}) {
 }
 
 func (c *Changes) appendAssoc(field string, ac AssocChanges) {
-	c.Assoc[field] = len(c.AssocChanges)
-	c.AssocChanges = append(c.AssocChanges, ac)
+	c.assoc[field] = len(c.assocChanges)
+	c.assocChanges = append(c.assocChanges, ac)
 }
 
 type ChangeOp int

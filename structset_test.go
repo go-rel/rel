@@ -48,15 +48,15 @@ func BenchmarkStructset(b *testing.B) {
 func TestStructset(t *testing.T) {
 	var (
 		user = &User{
-			ID:        1,
-			Name:      "Luffy",
-			Age:       20,
-			CreatedAt: time.Now(),
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
 		}
 		changes = BuildChanges(
 			Set("name", "Luffy"),
 			Set("age", 20),
-			Set("created_at", user.CreatedAt),
+			Set("created_at", now()),
+			Set("updated_at", now()),
 		)
 	)
 
@@ -82,7 +82,7 @@ func TestStructset_withAssoc(t *testing.T) {
 		userChanges = BuildChanges(
 			Set("name", "Luffy"),
 			Set("age", 20),
-			Set("created_at", user.CreatedAt),
+			Set("updated_at", now()),
 		)
 		transaction1Changes = BuildChanges(
 			Set("item", "Sword"),
@@ -99,4 +99,25 @@ func TestStructset_withAssoc(t *testing.T) {
 	userChanges.SetAssoc("address", addressChanges)
 
 	assertChanges(t, userChanges, BuildChanges(NewStructset(user)))
+}
+
+func TestStructset_invalidCreatedAtType(t *testing.T) {
+	type tmp struct {
+		ID        int
+		Name      string
+		CreatedAt int
+	}
+
+	var (
+		user = &tmp{
+			Name:      "Luffy",
+			CreatedAt: 1,
+		}
+		changes = BuildChanges(
+			Set("name", "Luffy"),
+			Set("created_at", 1),
+		)
+	)
+
+	assertChanges(t, changes, BuildChanges(NewStructset(user)))
 }

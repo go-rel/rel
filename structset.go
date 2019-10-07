@@ -1,5 +1,13 @@
 package rel
 
+import (
+	"time"
+)
+
+var (
+	now = time.Now
+)
+
 type Structset struct {
 	doc *document
 }
@@ -7,11 +15,25 @@ type Structset struct {
 func (s Structset) Build(changes *Changes) {
 	var (
 		pField = s.doc.PrimaryField()
+		t      = now()
 	)
 
 	for _, field := range s.doc.Fields() {
-		if field == pField {
+		switch field {
+		case pField:
 			continue
+		case "created_at", "inserted_at":
+			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
+				if value, ok := s.doc.Value(field); ok && value.(time.Time).IsZero() {
+					changes.SetValue(field, t)
+				}
+				continue
+			}
+		case "updated_at":
+			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
+				changes.SetValue(field, t)
+				continue
+			}
 		}
 
 		if value, ok := s.doc.Value(field); ok && !isZero(value) {

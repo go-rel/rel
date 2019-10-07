@@ -443,13 +443,21 @@ func TestRepo_InsertAll_collection(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
 		changes = []Changes{
-			BuildChanges(Set("name", "name1")),
-			BuildChanges(Set("name", "name2")),
+			BuildChanges(
+				Set("name", "name1"),
+				Set("created_at", now()),
+				Set("updated_at", now()),
+			),
+			BuildChanges(
+				Set("name", "name2"),
+				Set("created_at", now()),
+				Set("updated_at", now()),
+			),
 		}
 		cur = createCursor(2)
 	)
 
-	adapter.On("InsertAll", From("users"), []string{"name"}, changes).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), []string{"name", "created_at", "updated_at"}, changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(&users))
@@ -557,7 +565,7 @@ func TestRepo_Update_saveBelongsToError(t *testing.T) {
 func TestRepo_Update_saveHasOneError(t *testing.T) {
 	var (
 		user = User{
-			ID: 1,
+			ID: 10,
 			Address: Address{
 				ID:     1,
 				Street: "street",
@@ -565,12 +573,14 @@ func TestRepo_Update_saveHasOneError(t *testing.T) {
 		}
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		queries = From("addresses").Where(Eq("id", 1).AndEq("user_id", 1))
+		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", queries, mock.Anything).Return(err).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), mock.Anything).Return(err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(&user))
@@ -581,7 +591,7 @@ func TestRepo_Update_saveHasOneError(t *testing.T) {
 func TestRepo_Update_saveHasManyError(t *testing.T) {
 	var (
 		user = User{
-			ID: 1,
+			ID: 10,
 			Transactions: []Transaction{
 				{
 					ID:   1,
@@ -591,12 +601,14 @@ func TestRepo_Update_saveHasManyError(t *testing.T) {
 		}
 		adapter = &testAdapter{}
 		repo    = Repo{adapter: adapter}
-		queries = From("transactions").Where(Eq("user_id", 1))
+		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Delete", queries).Return(err).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10))).Return(err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(&user))
@@ -612,19 +624,6 @@ func TestRepo_Update_nothing(t *testing.T) {
 
 	assert.Nil(t, repo.Update(nil))
 	assert.NotPanics(t, func() { repo.MustUpdate(nil) })
-
-	adapter.AssertExpectations(t)
-}
-
-func TestRepo_Update_unchanged(t *testing.T) {
-	var (
-		user    = User{ID: 1}
-		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
-	)
-
-	assert.Nil(t, repo.Update(&user))
-	assert.NotPanics(t, func() { repo.MustUpdate(&user) })
 
 	adapter.AssertExpectations(t)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Insert(t *testing.T, repo rel.Repo) {
+func Insert(t *testing.T, repo rel.Repository) {
 	var (
 		note = "swordsman"
 		user = User{
@@ -38,7 +38,7 @@ func Insert(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user, queried)
 }
 
-func InsertHasMany(t *testing.T, repo rel.Repo) {
+func InsertHasMany(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name:   "insert has many",
@@ -67,7 +67,7 @@ func InsertHasMany(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, "work", user.Addresses[1].Name)
 }
 
-func InsertHasOne(t *testing.T, repo rel.Repo) {
+func InsertHasOne(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name:           "insert has one",
@@ -89,7 +89,7 @@ func InsertHasOne(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 }
 
-func InsertBelongsTo(t *testing.T, repo rel.Repo) {
+func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	var (
 		address = Address{
 			Name: "insert belongs to",
@@ -115,7 +115,7 @@ func InsertBelongsTo(t *testing.T, repo rel.Repo) {
 }
 
 // Inserts tests insert specifications.
-func Inserts(t *testing.T, repo rel.Repo) {
+func Inserts(t *testing.T, repo rel.Repository) {
 	var (
 		user User
 		note = "note"
@@ -147,7 +147,7 @@ func Inserts(t *testing.T, repo rel.Repo) {
 }
 
 // InsertAll tests insert multiple specifications.
-func InsertAll(t *testing.T, repo rel.Repo) {
+func InsertAll(t *testing.T, repo rel.Repository) {
 	var (
 		user User
 		note = "note"

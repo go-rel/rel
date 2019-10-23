@@ -7,7 +7,7 @@ import (
 )
 
 // UniqueConstraint tests unique constraint specifications.
-func UniqueConstraint(t *testing.T, repo rel.Repo) {
+func UniqueConstraint(t *testing.T, repo rel.Repository) {
 	var (
 		slug1  = "slug1"
 		slug2  = "slug2"
@@ -30,7 +30,7 @@ func UniqueConstraint(t *testing.T, repo rel.Repo) {
 }
 
 // ForeignKeyConstraint tests foreign key constraint specifications.
-func ForeignKeyConstraint(t *testing.T, repo rel.Repo) {
+func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
 	var (
 		extra Extra
 	)
@@ -50,7 +50,7 @@ func ForeignKeyConstraint(t *testing.T, repo rel.Repo) {
 }
 
 // CheckConstraint tests foreign key constraint specifications.
-func CheckConstraint(t *testing.T, repo rel.Repo) {
+func CheckConstraint(t *testing.T, repo rel.Repository) {
 	var (
 		extra Extra
 	)

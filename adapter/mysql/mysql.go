@@ -57,7 +57,7 @@ func incrementFunc(adapter sql.Adapter) int {
 	}
 
 	if err != nil {
-		panic(err, "rel: MySQL failed to get auto_increment_increment variable")
+		panic(err)
 	}
 
 	return increment

@@ -9,7 +9,7 @@ import (
 )
 
 // Delete tests delete specifications.
-func Delete(t *testing.T, repo rel.Repo) {
+func Delete(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{Name: "delete", Age: 100}
 	)
@@ -23,7 +23,7 @@ func Delete(t *testing.T, repo rel.Repo) {
 }
 
 // DeleteAll tests delete specifications.
-func DeleteAll(t *testing.T, repo rel.Repo) {
+func DeleteAll(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{Name: "delete", Age: 100}
 	)

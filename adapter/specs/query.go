@@ -10,7 +10,7 @@ import (
 )
 
 // Query tests query specifications without join.
-func Query(t *testing.T, repo rel.Repo) {
+func Query(t *testing.T, repo rel.Repository) {
 	// preparte tests data
 	var (
 		user = User{Name: "name1", Gender: "male", Age: 10}
@@ -67,7 +67,7 @@ func Query(t *testing.T, repo rel.Repo) {
 }
 
 // QueryJoin tests query specifications with join.
-func QueryJoin(t *testing.T, repo rel.Repo) {
+func QueryJoin(t *testing.T, repo rel.Repository) {
 	tests := []rel.Querier{
 		rel.From("addresses").Join("users"),
 		rel.From("addresses").JoinOn("users", "addresses.user_id", "users.id"),
@@ -81,7 +81,7 @@ func QueryJoin(t *testing.T, repo rel.Repo) {
 }
 
 // QueryNotFound tests query specifications when no result found.
-func QueryNotFound(t *testing.T, repo rel.Repo) {
+func QueryNotFound(t *testing.T, repo rel.Repository) {
 	t.Run("NotFound", func(t *testing.T) {
 		var (
 			user User
@@ -93,7 +93,7 @@ func QueryNotFound(t *testing.T, repo rel.Repo) {
 	})
 }
 
-func run(t *testing.T, repo rel.Repo, queriers []rel.Querier) {
+func run(t *testing.T, repo rel.Repository, queriers []rel.Querier) {
 	for _, query := range queriers {
 		t.Run("All", func(t *testing.T) {
 			var (

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createPreloadUser(repo rel.Repo) User {
+func createPreloadUser(repo rel.Repository) User {
 	var (
 		user = User{
 			Name:   "preload",
@@ -27,7 +27,7 @@ func createPreloadUser(repo rel.Repo) User {
 	return user
 }
 
-func PreloadHasMany(t *testing.T, repo rel.Repo) {
+func PreloadHasMany(t *testing.T, repo rel.Repository) {
 	var (
 		result User
 		user   = createPreloadUser(repo)
@@ -41,7 +41,7 @@ func PreloadHasMany(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user, result)
 }
 
-func PreloadHasManyWithQuery(t *testing.T, repo rel.Repo) {
+func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result User
 		user   = createPreloadUser(repo)
@@ -56,7 +56,7 @@ func PreloadHasManyWithQuery(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user.Addresses[0], result.Addresses[0])
 }
 
-func PreloadHasManySlice(t *testing.T, repo rel.Repo) {
+func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 	var (
 		result []User
 		users  = []User{
@@ -73,7 +73,7 @@ func PreloadHasManySlice(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, users, result)
 }
 
-func PreloadHasOne(t *testing.T, repo rel.Repo) {
+func PreloadHasOne(t *testing.T, repo rel.Repository) {
 	var (
 		result User
 		user   = createPreloadUser(repo)
@@ -87,7 +87,7 @@ func PreloadHasOne(t *testing.T, repo rel.Repo) {
 	assert.NotNil(t, result.PrimaryAddress)
 }
 
-func PreloadHasOneWithQuery(t *testing.T, repo rel.Repo) {
+func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result User
 		user   = createPreloadUser(repo)
@@ -101,7 +101,7 @@ func PreloadHasOneWithQuery(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user.Addresses[0], *result.PrimaryAddress)
 }
 
-func PreloadHasOneSlice(t *testing.T, repo rel.Repo) {
+func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 	var (
 		result []User
 		users  = []User{
@@ -119,7 +119,7 @@ func PreloadHasOneSlice(t *testing.T, repo rel.Repo) {
 	assert.NotNil(t, result[1].PrimaryAddress)
 }
 
-func PreloadBelongsTo(t *testing.T, repo rel.Repo) {
+func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 	var (
 		result Address
 		user   = createPreloadUser(repo)
@@ -135,7 +135,7 @@ func PreloadBelongsTo(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user, result.User)
 }
 
-func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repo) {
+func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result Address
 		user   = createPreloadUser(repo)
@@ -151,7 +151,7 @@ func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repo) {
 	assert.Zero(t, result.User)
 }
 
-func PreloadBelongsToSlice(t *testing.T, repo rel.Repo) {
+func PreloadBelongsToSlice(t *testing.T, repo rel.Repository) {
 	var (
 		user      = createPreloadUser(repo)
 		result    = user.Addresses

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Update(t *testing.T, repo rel.Repo) {
+func Update(t *testing.T, repo rel.Repository) {
 	var (
 		note = "swordsman"
 		user = User{
@@ -41,7 +41,7 @@ func Update(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, user, queried)
 }
 
-func UpdateHasManyInsert(t *testing.T, repo rel.Repo) {
+func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name: "update init",
@@ -72,7 +72,7 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasManyReplace(t *testing.T, repo rel.Repo) {
+func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name: "update init",
@@ -106,7 +106,7 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneInsert(t *testing.T, repo rel.Repo) {
+func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name: "update init",
@@ -130,7 +130,7 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneUpdate(t *testing.T, repo rel.Repo) {
+func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name:           "update init",
@@ -155,7 +155,7 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateHasOneReplace(t *testing.T, repo rel.Repo) {
+func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
 			Name:           "update init",
@@ -180,7 +180,7 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
 }
 
-func UpdateBelongsToInsert(t *testing.T, repo rel.Repo) {
+func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	var (
 		address = Address{Name: "address init"}
 	)
@@ -200,7 +200,7 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repo) {
 	assert.Equal(t, "inserted user", address.User.Name)
 }
 
-func UpdateBelongsToUpdate(t *testing.T, repo rel.Repo) {
+func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	var (
 		address = Address{
 			Name: "address init",
@@ -227,7 +227,7 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repo) {
 // TODO: atomic update
 // TODO: update all
 // TODO: update with assoc
-func Updates(t *testing.T, repo rel.Repo) {
+func Updates(t *testing.T, repo rel.Repository) {
 	var (
 		note    = "note"
 		user    = User{Name: "update"}

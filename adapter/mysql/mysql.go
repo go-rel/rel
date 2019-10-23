@@ -16,7 +16,6 @@ import (
 	db "database/sql"
 	"strings"
 
-	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/adapter/sql"
 )
@@ -56,7 +55,10 @@ func incrementFunc(adapter sql.Adapter) int {
 	} else {
 		err = adapter.DB.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	}
-	paranoid.Panic(err, "rel: MySQL failed to get auto_increment_increment variable")
+
+	if err != nil {
+		panic(err)
+	}
 
 	return increment
 }

@@ -66,7 +66,7 @@ func TestAdapter_Aggregate_transaction(t *testing.T) {
 
 	defer adapter.Close()
 
-	repo.Transaction(func(repo rel.Repo) error {
+	repo.Transaction(func(repo rel.Repository) error {
 		count, err := repo.Aggregate(rel.From("names"), "count", "id")
 		assert.Equal(t, 0, count)
 		assert.Nil(t, err)
@@ -150,7 +150,7 @@ func TestAdapter_Transaction_commit(t *testing.T) {
 		}
 	)
 
-	err := repo.Transaction(func(repo rel.Repo) error {
+	err := repo.Transaction(func(repo rel.Repository) error {
 		repo.MustInsert(&name)
 		return nil
 	})
@@ -164,7 +164,7 @@ func TestAdapter_Transaction_rollback(t *testing.T) {
 		repo    = rel.New(adapter)
 	)
 
-	err := repo.Transaction(func(repo rel.Repo) error {
+	err := repo.Transaction(func(repo rel.Repository) error {
 		return errors.New("error")
 	})
 
@@ -182,8 +182,8 @@ func TestAdapter_Transaction_nestedCommit(t *testing.T) {
 
 	defer adapter.Close()
 
-	err := repo.Transaction(func(repo rel.Repo) error {
-		return repo.Transaction(func(repo rel.Repo) error {
+	err := repo.Transaction(func(repo rel.Repository) error {
+		return repo.Transaction(func(repo rel.Repository) error {
 			repo.MustInsert(&name)
 			return nil
 		})
@@ -200,8 +200,8 @@ func TestAdapter_Transaction_nestedRollback(t *testing.T) {
 
 	defer adapter.Close()
 
-	err := repo.Transaction(func(repo rel.Repo) error {
-		return repo.Transaction(func(repo rel.Repo) error {
+	err := repo.Transaction(func(repo rel.Repository) error {
+		return repo.Transaction(func(repo rel.Repository) error {
 			return errors.New("error")
 		})
 	})

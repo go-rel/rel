@@ -6,28 +6,46 @@ import (
 	"strings"
 )
 
-// Repo defines rel repository.
-type Repo struct {
+// Repository defines sets of available database operations.
+type Repository interface {
+	Adapter() Adapter
+	SetLogger(logger ...Logger)
+	Aggregate(query Query, aggregate string, field string) (int, error)
+	MustAggregate(query Query, aggregate string, field string) int
+	Count(collection string, queriers ...Querier) (int, error)
+	MustCount(collection string, queriers ...Querier) int
+	One(record interface{}, queriers ...Querier) error
+	MustOne(record interface{}, queriers ...Querier)
+	All(records interface{}, queriers ...Querier) error
+	MustAll(records interface{}, queriers ...Querier)
+	Insert(record interface{}, changers ...Changer) error
+	MustInsert(record interface{}, changers ...Changer)
+	InsertAll(records interface{}, changes ...Changes) error
+	MustInsertAll(records interface{}, changes ...Changes)
+	Update(record interface{}, changers ...Changer) error
+	MustUpdate(record interface{}, changers ...Changer)
+	Save(record interface{}, changers ...Changer) error
+	MustSave(record interface{}, changers ...Changer)
+	Delete(record interface{}) error
+	MustDelete(record interface{})
+	DeleteAll(queriers ...Querier) error
+	MustDeleteAll(queriers ...Querier)
+	Preload(records interface{}, field string, queriers ...Querier) error
+	MustPreload(records interface{}, field string, queriers ...Querier)
+	Transaction(fn func(Repository) error) error
+}
+
+type repository struct {
 	adapter       Adapter
 	logger        []Logger
 	inTransaction bool
 }
 
-// New create new repo using adapter.
-func New(adapter Adapter) Repo {
-	return Repo{
-		adapter: adapter,
-		logger:  []Logger{DefaultLogger},
-	}
-}
-
-// Adapter returns adapter of repo.
-func (r *Repo) Adapter() Adapter {
+func (r repository) Adapter() Adapter {
 	return r.adapter
 }
 
-// SetLogger replace default logger with custom logger.
-func (r *Repo) SetLogger(logger ...Logger) {
+func (r *repository) SetLogger(logger ...Logger) {
 	r.logger = logger
 }
 
@@ -35,7 +53,7 @@ func (r *Repo) SetLogger(logger ...Logger) {
 // Supported aggregate: count, sum, avg, max, min.
 // Any select, group, offset, limit and sort query will be ignored automatically.
 // If complex aggregation is needed, consider using All instead,
-func (r Repo) Aggregate(query Query, aggregate string, field string) (int, error) {
+func (r repository) Aggregate(query Query, aggregate string, field string) (int, error) {
 	query.GroupQuery = GroupQuery{}
 	query.LimitQuery = 0
 	query.OffsetQuery = 0
@@ -46,20 +64,20 @@ func (r Repo) Aggregate(query Query, aggregate string, field string) (int, error
 
 // MustAggregate calculate aggregate over the given field.
 // It'll panic if any error eccured.
-func (r Repo) MustAggregate(query Query, aggregate string, field string) int {
+func (r repository) MustAggregate(query Query, aggregate string, field string) int {
 	result, err := r.Aggregate(query, aggregate, field)
 	must(err)
 	return result
 }
 
 // Count retrieves count of results that match the query.
-func (r Repo) Count(collection string, queriers ...Querier) (int, error) {
+func (r repository) Count(collection string, queriers ...Querier) (int, error) {
 	return r.Aggregate(BuildQuery(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustCount(collection string, queriers ...Querier) int {
+func (r repository) MustCount(collection string, queriers ...Querier) int {
 	count, err := r.Count(collection, queriers...)
 	must(err)
 	return count
@@ -67,7 +85,7 @@ func (r Repo) MustCount(collection string, queriers ...Querier) int {
 
 // One retrieves one result that match the query.
 // If no result found, it'll return not found error.
-func (r Repo) One(record interface{}, queriers ...Querier) error {
+func (r repository) One(record interface{}, queriers ...Querier) error {
 	var (
 		doc   = newDocument(record)
 		query = BuildQuery(doc.Table(), queriers...)
@@ -78,11 +96,11 @@ func (r Repo) One(record interface{}, queriers ...Querier) error {
 
 // MustOne retrieves one result that match the query.
 // If no result found, it'll panic.
-func (r Repo) MustOne(record interface{}, queriers ...Querier) {
+func (r repository) MustOne(record interface{}, queriers ...Querier) {
 	must(r.One(record, queriers...))
 }
 
-func (r Repo) one(doc *document, query Query) error {
+func (r repository) one(doc *document, query Query) error {
 	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -92,7 +110,7 @@ func (r Repo) one(doc *document, query Query) error {
 }
 
 // All retrieves all results that match the query.
-func (r Repo) All(records interface{}, queriers ...Querier) error {
+func (r repository) All(records interface{}, queriers ...Querier) error {
 	var (
 		col   = newCollection(records)
 		query = BuildQuery(col.Table(), queriers...)
@@ -105,11 +123,11 @@ func (r Repo) All(records interface{}, queriers ...Querier) error {
 
 // MustAll retrieves all results that match the query.
 // It'll panic if any error eccured.
-func (r Repo) MustAll(records interface{}, queriers ...Querier) {
+func (r repository) MustAll(records interface{}, queriers ...Querier) {
 	must(r.All(records, queriers...))
 }
 
-func (r Repo) all(col *collection, query Query) error {
+func (r repository) all(col *collection, query Query) error {
 	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
@@ -120,7 +138,7 @@ func (r Repo) all(col *collection, query Query) error {
 
 // Insert an record to database.
 // TODO: insert all (multiple changes as multiple records)
-func (r Repo) Insert(record interface{}, changers ...Changer) error {
+func (r repository) Insert(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
 	if record == nil {
@@ -139,15 +157,15 @@ func (r Repo) Insert(record interface{}, changers ...Changer) error {
 	}
 
 	if changes.AssocCount() > 0 {
-		return r.Transaction(func(r Repo) error {
-			return r.insert(doc, changes)
+		return r.Transaction(func(r Repository) error {
+			return r.(*repository).insert(doc, changes)
 		})
 	}
 
 	return r.insert(doc, changes)
 }
 
-func (r Repo) insert(doc *document, changes Changes) error {
+func (r repository) insert(doc *document, changes Changes) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
@@ -180,11 +198,11 @@ func (r Repo) insert(doc *document, changes Changes) error {
 
 // MustInsert an record to database.
 // It'll panic if any error occurred.
-func (r Repo) MustInsert(record interface{}, changers ...Changer) {
+func (r repository) MustInsert(record interface{}, changers ...Changer) {
 	must(r.Insert(record, changers...))
 }
 
-func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
+func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 	if records == nil {
 		return nil
 	}
@@ -205,12 +223,12 @@ func (r Repo) InsertAll(records interface{}, changes ...Changes) error {
 	return r.insertAll(col, changes)
 }
 
-func (r Repo) MustInsertAll(records interface{}, changes ...Changes) {
+func (r repository) MustInsertAll(records interface{}, changes ...Changes) {
 	must(r.InsertAll(records, changes...))
 }
 
 // TODO: support assocs
-func (r Repo) insertAll(col *collection, changes []Changes) error {
+func (r repository) insertAll(col *collection, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -244,7 +262,7 @@ func (r Repo) insertAll(col *collection, changes []Changes) error {
 // not supported:
 // - update has many (will be replaced by default)
 // - replace has one or has many - may cause duplicate record, update instead
-func (r Repo) Update(record interface{}, changers ...Changer) error {
+func (r repository) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: support not returning via changeset table inference
 	// TODO: make sure primary id not changed
@@ -266,15 +284,15 @@ func (r Repo) Update(record interface{}, changers ...Changer) error {
 	}
 
 	if len(changes.assoc) > 0 {
-		return r.Transaction(func(r Repo) error {
-			return r.update(doc, changes, Eq(pField, pValue))
+		return r.Transaction(func(r Repository) error {
+			return r.(*repository).update(doc, changes, Eq(pField, pValue))
 		})
 	}
 
 	return r.update(doc, changes, Eq(pField, pValue))
 }
 
-func (r Repo) update(doc *document, changes Changes, filter FilterQuery) error {
+func (r repository) update(doc *document, changes Changes, filter FilterQuery) error {
 	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
@@ -306,12 +324,12 @@ func (r Repo) update(doc *document, changes Changes, filter FilterQuery) error {
 
 // MustUpdate an record in database.
 // It'll panic if any error occurred.
-func (r Repo) MustUpdate(record interface{}, changers ...Changer) {
+func (r repository) MustUpdate(record interface{}, changers ...Changer) {
 	must(r.Update(record, changers...))
 }
 
 // TODO: support deletion
-func (r Repo) saveBelongsTo(doc *document, changes *Changes) error {
+func (r repository) saveBelongsTo(doc *document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -355,7 +373,7 @@ func (r Repo) saveBelongsTo(doc *document, changes *Changes) error {
 }
 
 // TODO: suppprt deletion
-func (r Repo) saveHasOne(doc *document, changes *Changes) error {
+func (r repository) saveHasOne(doc *document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -396,7 +414,7 @@ func (r Repo) saveHasOne(doc *document, changes *Changes) error {
 	return nil
 }
 
-func (r Repo) saveHasMany(doc *document, changes *Changes, insertion bool) error {
+func (r repository) saveHasMany(doc *document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -464,7 +482,7 @@ func (r Repo) saveHasMany(doc *document, changes *Changes, insertion bool) error
 	return nil
 }
 
-func (r Repo) Save(record interface{}, changers ...Changer) error {
+func (r repository) Save(record interface{}, changers ...Changer) error {
 	if record == nil {
 		return nil
 	}
@@ -480,7 +498,11 @@ func (r Repo) Save(record interface{}, changers ...Changer) error {
 	return r.save(doc, BuildChanges(changers...))
 }
 
-func (r Repo) save(doc *document, changes Changes) error {
+func (r repository) MustSave(record interface{}, changers ...Changer) {
+	must(r.Save(record, changers...))
+}
+
+func (r repository) save(doc *document, changes Changes) error {
 	var (
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -494,7 +516,7 @@ func (r Repo) save(doc *document, changes Changes) error {
 }
 
 // Delete single entry.
-func (r Repo) Delete(record interface{}) error {
+func (r repository) Delete(record interface{}) error {
 	var (
 		doc    = newDocument(record)
 		table  = doc.Table()
@@ -508,11 +530,11 @@ func (r Repo) Delete(record interface{}) error {
 
 // MustDelete single entry.
 // It'll panic if any error eccured.
-func (r Repo) MustDelete(record interface{}) {
+func (r repository) MustDelete(record interface{}) {
 	must(r.Delete(record))
 }
 
-func (r Repo) DeleteAll(queriers ...Querier) error {
+func (r repository) DeleteAll(queriers ...Querier) error {
 	var (
 		q = BuildQuery("", queriers...)
 	)
@@ -520,16 +542,16 @@ func (r Repo) DeleteAll(queriers ...Querier) error {
 	return r.deleteAll(q)
 }
 
-func (r Repo) MustDeleteAll(queriers ...Querier) {
+func (r repository) MustDeleteAll(queriers ...Querier) {
 	must(r.DeleteAll(queriers...))
 }
 
-func (r Repo) deleteAll(q Query) error {
+func (r repository) deleteAll(q Query) error {
 	return r.adapter.Delete(q, r.logger...)
 }
 
 // Preload loads association with given query.
-func (r Repo) Preload(records interface{}, field string, queriers ...Querier) error {
+func (r repository) Preload(records interface{}, field string, queriers ...Querier) error {
 	var (
 		sl   slice
 		path = strings.Split(field, ".")
@@ -577,7 +599,7 @@ func (r Repo) Preload(records interface{}, field string, queriers ...Querier) er
 	return scanMulti(cur, keyField, keyType, targets)
 }
 
-func (r Repo) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
 	type frame struct {
 		index int
 		doc   *document
@@ -663,19 +685,22 @@ func (r Repo) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slic
 
 // MustPreload loads association with given query.
 // It'll panic if any error occurred.
-func (r Repo) MustPreload(record interface{}, field string, queriers ...Querier) {
+func (r repository) MustPreload(record interface{}, field string, queriers ...Querier) {
 	must(r.Preload(record, field, queriers...))
 }
 
 // Transaction performs transaction with given function argument.
-func (r Repo) Transaction(fn func(Repo) error) error {
+func (r repository) Transaction(fn func(Repository) error) error {
 	adp, err := r.adapter.Begin()
 	if err != nil {
 		return err
 	}
 
-	txRepo := New(adp)
-	txRepo.inTransaction = true
+	txRepo := &repository{
+		adapter:       adp,
+		logger:        []Logger{DefaultLogger},
+		inTransaction: true,
+	}
 
 	func() {
 		defer func() {
@@ -701,4 +726,12 @@ func (r Repo) Transaction(fn func(Repo) error) error {
 	}()
 
 	return err
+}
+
+// New create new repo using adapter.
+func New(adapter Adapter) Repository {
+	return &repository{
+		adapter: adapter,
+		logger:  []Logger{DefaultLogger},
+	}
 }

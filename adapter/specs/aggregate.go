@@ -9,7 +9,7 @@ import (
 )
 
 // Aggregate tests count specifications.
-func Aggregate(t *testing.T, repo rel.Repo) {
+func Aggregate(t *testing.T, repo rel.Repository) {
 	// preparte tests data
 	var (
 		user = User{Name: "name1", Gender: "male", Age: 10}

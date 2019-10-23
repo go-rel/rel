@@ -15,7 +15,7 @@ func init() {
 	}
 }
 
-var repo = Repo{}
+var repo = repository{}
 
 func createCursor(row int) *testCursor {
 	cur := &testCursor{}
@@ -43,9 +43,9 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, adapter, repo.Adapter())
 }
 
-func TestRepo_SetLogger(t *testing.T) {
+func TestRepository_SetLogger(t *testing.T) {
 	var (
-		repo = Repo{}
+		repo = repository{}
 	)
 
 	assert.Nil(t, repo.logger)
@@ -53,10 +53,10 @@ func TestRepo_SetLogger(t *testing.T) {
 	assert.NotNil(t, repo.logger)
 }
 
-func TestRepo_Aggregate(t *testing.T) {
+func TestRepository_Aggregate(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		query     = From("users")
 		aggregate = "count"
 		field     = "*"
@@ -71,10 +71,10 @@ func TestRepo_Aggregate(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_MustAggregate(t *testing.T) {
+func TestRepository_MustAggregate(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		query     = From("users")
 		aggregate = "count"
 		field     = "*"
@@ -90,10 +90,10 @@ func TestRepo_MustAggregate(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Count(t *testing.T) {
+func TestRepository_Count(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users")
 	)
 
@@ -106,10 +106,10 @@ func TestRepo_Count(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_MustCount(t *testing.T) {
+func TestRepository_MustCount(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users")
 	)
 
@@ -123,11 +123,11 @@ func TestRepo_MustCount(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_One(t *testing.T) {
+func TestRepository_One(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(1)
 	)
@@ -142,11 +142,11 @@ func TestRepo_One(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_One_queryError(t *testing.T) {
+func TestRepository_One_queryError(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
 	)
@@ -159,11 +159,11 @@ func TestRepo_One_queryError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_One_notFound(t *testing.T) {
+func TestRepository_One_notFound(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = createCursor(0)
 		query   = From("users").Limit(1)
 	)
@@ -177,11 +177,11 @@ func TestRepo_One_notFound(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_MustOne(t *testing.T) {
+func TestRepository_MustOne(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(1)
 	)
@@ -199,11 +199,11 @@ func TestRepo_MustOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_All(t *testing.T) {
+func TestRepository_All(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(2)
 	)
@@ -219,11 +219,11 @@ func TestRepo_All(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_All_error(t *testing.T) {
+func TestRepository_All_error(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users").Limit(1)
 		err     = errors.New("error")
 	)
@@ -235,11 +235,11 @@ func TestRepo_All_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_MustAll(t *testing.T) {
+func TestRepository_MustAll(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		query   = From("users").Limit(1)
 		cur     = createCursor(2)
 	)
@@ -258,11 +258,11 @@ func TestRepo_MustAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Insert(t *testing.T) {
+func TestRepository_Insert(t *testing.T) {
 	var (
 		user      User
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("created_at", now()),
@@ -282,11 +282,11 @@ func TestRepo_Insert(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Insert_oneError(t *testing.T) {
+func TestRepository_Insert_oneError(t *testing.T) {
 	var (
 		user      User
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("created_at", now()),
@@ -306,14 +306,14 @@ func TestRepo_Insert_oneError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Insert_saveBelongsToError(t *testing.T) {
+func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 	var (
 		address = Address{
 			Street: "street",
 			User:   &User{Name: "name"},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		err     = errors.New("error")
 	)
 
@@ -326,7 +326,7 @@ func TestRepo_Insert_saveBelongsToError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Insert_saveHasOneError(t *testing.T) {
+func TestRepository_Insert_saveHasOneError(t *testing.T) {
 	var (
 		user = User{
 			Name: "name",
@@ -335,7 +335,7 @@ func TestRepo_Insert_saveHasOneError(t *testing.T) {
 			},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
@@ -353,7 +353,7 @@ func TestRepo_Insert_saveHasOneError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Insert_saveHasManyError(t *testing.T) {
+func TestRepository_Insert_saveHasManyError(t *testing.T) {
 	var (
 		user = User{
 			Name: "name",
@@ -362,7 +362,7 @@ func TestRepo_Insert_saveHasManyError(t *testing.T) {
 			},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
@@ -380,11 +380,11 @@ func TestRepo_Insert_saveHasManyError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Insert_error(t *testing.T) {
+func TestRepository_Insert_error(t *testing.T) {
 	var (
 		user      User
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("created_at", now()),
@@ -401,10 +401,10 @@ func TestRepo_Insert_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Insert_nothing(t *testing.T) {
+func TestRepository_Insert_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 	)
 
 	assert.Nil(t, repo.Insert(nil))
@@ -413,11 +413,11 @@ func TestRepo_Insert_nothing(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_InsertAll(t *testing.T) {
+func TestRepository_InsertAll(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		changes = []Changes{
 			BuildChanges(Set("name", "name1")),
 			BuildChanges(Set("name", "name2")),
@@ -434,14 +434,14 @@ func TestRepo_InsertAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_InsertAll_collection(t *testing.T) {
+func TestRepository_InsertAll_collection(t *testing.T) {
 	var (
 		users = []User{
 			{Name: "name1"},
 			{Name: "name2"},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		changes = []Changes{
 			BuildChanges(
 				Set("name", "name1"),
@@ -466,11 +466,11 @@ func TestRepo_InsertAll_collection(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_InsertAll_unchanged(t *testing.T) {
+func TestRepository_InsertAll_unchanged(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 	)
 
 	assert.Nil(t, repo.InsertAll(&users))
@@ -478,10 +478,10 @@ func TestRepo_InsertAll_unchanged(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_InsertAll_nothing(t *testing.T) {
+func TestRepository_InsertAll_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 	)
 
 	assert.Nil(t, repo.InsertAll(nil))
@@ -490,11 +490,11 @@ func TestRepo_InsertAll_nothing(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Update(t *testing.T) {
+func TestRepository_Update(t *testing.T) {
 	var (
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -514,11 +514,11 @@ func TestRepo_Update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Update_oneError(t *testing.T) {
+func TestRepository_Update_oneError(t *testing.T) {
 	var (
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -538,7 +538,7 @@ func TestRepo_Update_oneError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Update_saveBelongsToError(t *testing.T) {
+func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	var (
 		address = Address{
 			ID: 1,
@@ -548,7 +548,7 @@ func TestRepo_Update_saveBelongsToError(t *testing.T) {
 			},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		queries = From("users").Where(Eq("id", address.ID))
 		err     = errors.New("error")
 	)
@@ -562,7 +562,7 @@ func TestRepo_Update_saveBelongsToError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Update_saveHasOneError(t *testing.T) {
+func TestRepository_Update_saveHasOneError(t *testing.T) {
 	var (
 		user = User{
 			ID: 10,
@@ -572,7 +572,7 @@ func TestRepo_Update_saveHasOneError(t *testing.T) {
 			},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
@@ -588,7 +588,7 @@ func TestRepo_Update_saveHasOneError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Update_saveHasManyError(t *testing.T) {
+func TestRepository_Update_saveHasManyError(t *testing.T) {
 	var (
 		user = User{
 			ID: 10,
@@ -600,7 +600,7 @@ func TestRepo_Update_saveHasManyError(t *testing.T) {
 			},
 		}
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
@@ -616,10 +616,10 @@ func TestRepo_Update_saveHasManyError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Update_nothing(t *testing.T) {
+func TestRepository_Update_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 	)
 
 	assert.Nil(t, repo.Update(nil))
@@ -628,11 +628,11 @@ func TestRepo_Update_nothing(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Update_error(t *testing.T) {
+func TestRepository_Update_error(t *testing.T) {
 	var (
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		cbuilders = []Changer{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -648,10 +648,10 @@ func TestRepo_Update_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_update(t *testing.T) {
+func TestRepository_saveBelongsTo_update(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges(
@@ -679,10 +679,10 @@ func TestRepo_saveBelongsTo_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_updateError(t *testing.T) {
+func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges(
@@ -706,10 +706,10 @@ func TestRepo_saveBelongsTo_updateError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
+func TestRepository_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges(
@@ -730,10 +730,10 @@ func TestRepo_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
+func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges(
@@ -766,10 +766,10 @@ func TestRepo_saveBelongsTo_insertNew(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_insertNewError(t *testing.T) {
+func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges(
@@ -797,10 +797,10 @@ func TestRepo_saveBelongsTo_insertNewError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveBelongsTo_notChanged(t *testing.T) {
+func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = newDocument(transaction)
 		changes     = BuildChanges()
@@ -811,10 +811,10 @@ func TestRepo_saveBelongsTo_notChanged(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasOne_update(t *testing.T) {
+func TestRepository_saveHasOne_update(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -840,10 +840,10 @@ func TestRepo_saveHasOne_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasOne_updateError(t *testing.T) {
+func TestRepository_saveHasOne_updateError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -865,10 +865,10 @@ func TestRepo_saveHasOne_updateError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
+func TestRepository_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{ID: 1, Address: Address{ID: 2}}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -888,10 +888,10 @@ func TestRepo_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasOne_insertNew(t *testing.T) {
+func TestRepository_saveHasOne_insertNew(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -921,10 +921,10 @@ func TestRepo_saveHasOne_insertNew(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasOne_insertNewError(t *testing.T) {
+func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -950,10 +950,10 @@ func TestRepo_saveHasOne_insertNewError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_insert(t *testing.T) {
+func TestRepository_saveHasMany_insert(t *testing.T) {
 	var (
 		adapter           = &testAdapter{}
-		repo              = Repo{adapter: adapter}
+		repo              = repository{adapter: adapter}
 		user              = &User{ID: 1}
 		doc               = newDocument(user)
 		transactionCollec = newCollection(&user.Transactions)
@@ -994,10 +994,10 @@ func TestRepo_saveHasMany_insert(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_insertError(t *testing.T) {
+func TestRepository_saveHasMany_insertError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -1025,10 +1025,10 @@ func TestRepo_saveHasMany_insertError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_update(t *testing.T) {
+func TestRepository_saveHasMany_update(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1095,10 +1095,10 @@ func TestRepo_saveHasMany_update(t *testing.T) {
 	cur2.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_updateWithInsert(t *testing.T) {
+func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1151,10 +1151,10 @@ func TestRepo_saveHasMany_updateWithInsert(t *testing.T) {
 	insertAllCur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_updateDeleteError(t *testing.T) {
+func TestRepository_saveHasMany_updateDeleteError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1187,10 +1187,10 @@ func TestRepo_saveHasMany_updateDeleteError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_updateError(t *testing.T) {
+func TestRepository_saveHasMany_updateError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1225,10 +1225,10 @@ func TestRepo_saveHasMany_updateError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_replace(t *testing.T) {
+func TestRepository_saveHasMany_replace(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1285,10 +1285,10 @@ func TestRepo_saveHasMany_replace(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_replaceEmptyAssoc(t *testing.T) {
+func TestRepository_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID:           1,
 			Transactions: []Transaction{},
@@ -1336,10 +1336,10 @@ func TestRepo_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_replaceDeleteAllError(t *testing.T) {
+func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{
 			ID: 1,
 			Transactions: []Transaction{
@@ -1375,10 +1375,10 @@ func TestRepo_saveHasMany_replaceDeleteAllError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_saveHasMany_replaceAssocNotLoaded(t *testing.T) {
+func TestRepository_saveHasMany_replaceAssocNotLoaded(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = &User{ID: 1}
 		doc     = newDocument(user)
 		changes = BuildChanges(
@@ -1399,10 +1399,10 @@ func TestRepo_saveHasMany_replaceAssocNotLoaded(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Save_insert(t *testing.T) {
+func TestRepository_Save_insert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{Name: "name"}
 		cur     = createCursor(1)
 	)
@@ -1417,10 +1417,10 @@ func TestRepo_Save_insert(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Save_update(t *testing.T) {
+func TestRepository_Save_update(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{ID: 1, Name: "name"}
 		queries = From("users").Where(Eq("id", 1))
 		cur     = createCursor(1)
@@ -1436,10 +1436,10 @@ func TestRepo_Save_update(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Save_nothing(t *testing.T) {
+func TestRepository_Save_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 	)
 
 	assert.Nil(t, repo.Save(nil))
@@ -1447,10 +1447,10 @@ func TestRepo_Save_nothing(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Delete(t *testing.T) {
+func TestRepository_Delete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{ID: 1}
 	)
 
@@ -1461,10 +1461,10 @@ func TestRepo_Delete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_MustDelete(t *testing.T) {
+func TestRepository_MustDelete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{ID: 1}
 	)
 
@@ -1477,10 +1477,10 @@ func TestRepo_MustDelete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_DeleteAll(t *testing.T) {
+func TestRepository_DeleteAll(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		queries = From("logs").Where(Eq("user_id", 1))
 	)
 
@@ -1491,10 +1491,10 @@ func TestRepo_DeleteAll(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_MustDeleteAll(t *testing.T) {
+func TestRepository_MustDeleteAll(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		queries = From("logs").Where(Eq("user_id", 1))
 	)
 
@@ -1507,10 +1507,10 @@ func TestRepo_MustDeleteAll(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Preload_hasOne(t *testing.T) {
+func TestRepository_Preload_hasOne(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{ID: 10}
 		address = Address{ID: 100, UserID: &user.ID}
 		cur     = &testCursor{}
@@ -1531,10 +1531,10 @@ func TestRepo_Preload_hasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_sliceHasOne(t *testing.T) {
+func TestRepository_Preload_sliceHasOne(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		users     = []User{{ID: 10}, {ID: 20}}
 		addresses = []Address{
 			{ID: 100, UserID: &users[0].ID},
@@ -1562,10 +1562,10 @@ func TestRepo_Preload_sliceHasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nestedHasOne(t *testing.T) {
+func TestRepository_Preload_nestedHasOne(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = Transaction{
 			Buyer: User{ID: 10},
 		}
@@ -1588,10 +1588,10 @@ func TestRepo_Preload_nestedHasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_sliceNestedHasOne(t *testing.T) {
+func TestRepository_Preload_sliceNestedHasOne(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
-		repo         = Repo{adapter: adapter}
+		repo         = repository{adapter: adapter}
 		transactions = []Transaction{
 			{Buyer: User{ID: 10}},
 			{Buyer: User{ID: 20}},
@@ -1622,10 +1622,10 @@ func TestRepo_Preload_sliceNestedHasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_hasMany(t *testing.T) {
+func TestRepository_Preload_hasMany(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
-		repo         = Repo{adapter: adapter}
+		repo         = repository{adapter: adapter}
 		user         = User{ID: 10}
 		transactions = []Transaction{
 			{ID: 5, BuyerID: 10},
@@ -1650,10 +1650,10 @@ func TestRepo_Preload_hasMany(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_sliceHasMany(t *testing.T) {
+func TestRepository_Preload_sliceHasMany(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
-		repo         = Repo{adapter: adapter}
+		repo         = repository{adapter: adapter}
 		users        = []User{{ID: 10}, {ID: 20}}
 		transactions = []Transaction{
 			{ID: 5, BuyerID: 10},
@@ -1684,10 +1684,10 @@ func TestRepo_Preload_sliceHasMany(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nestedHasMany(t *testing.T) {
+func TestRepository_Preload_nestedHasMany(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
-		repo         = Repo{adapter: adapter}
+		repo         = repository{adapter: adapter}
 		address      = Address{User: &User{ID: 10}}
 		transactions = []Transaction{
 			{ID: 5, BuyerID: 10},
@@ -1713,10 +1713,10 @@ func TestRepo_Preload_nestedHasMany(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nestedNullHasMany(t *testing.T) {
+func TestRepository_Preload_nestedNullHasMany(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		address = Address{User: nil}
 	)
 
@@ -1725,10 +1725,10 @@ func TestRepo_Preload_nestedNullHasMany(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nestedSliceHasMany(t *testing.T) {
+func TestRepository_Preload_nestedSliceHasMany(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		addresses = []Address{
 			{User: &User{ID: 10}},
 			{User: &User{ID: 20}},
@@ -1762,10 +1762,10 @@ func TestRepo_Preload_nestedSliceHasMany(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nestedNullSliceHasMany(t *testing.T) {
+func TestRepository_Preload_nestedNullSliceHasMany(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
-		repo      = Repo{adapter: adapter}
+		repo      = repository{adapter: adapter}
 		addresses = []Address{
 			{User: &User{ID: 10}},
 			{User: nil},
@@ -1799,10 +1799,10 @@ func TestRepo_Preload_nestedNullSliceHasMany(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_belongsTo(t *testing.T) {
+func TestRepository_Preload_belongsTo(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		user        = User{ID: 10, Name: "Del Piero"}
 		transaction = Transaction{BuyerID: 10}
 		cur         = &testCursor{}
@@ -1823,10 +1823,10 @@ func TestRepo_Preload_belongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
+func TestRepository_Preload_ptrBelongsTo(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		user    = User{ID: 10, Name: "Del Piero"}
 		address = Address{UserID: &user.ID}
 		cur     = &testCursor{}
@@ -1847,10 +1847,10 @@ func TestRepo_Preload_ptrBelongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_nullBelongsTo(t *testing.T) {
+func TestRepository_Preload_nullBelongsTo(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		address = Address{}
 	)
 
@@ -1860,10 +1860,10 @@ func TestRepo_Preload_nullBelongsTo(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
+func TestRepository_Preload_sliceBelongsTo(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
-		repo         = Repo{adapter: adapter}
+		repo         = repository{adapter: adapter}
 		transactions = []Transaction{
 			{BuyerID: 10},
 			{BuyerID: 20},
@@ -1893,10 +1893,10 @@ func TestRepo_Preload_sliceBelongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
+func TestRepository_Preload_ptrSliceBelongsTo(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
-		repo    = Repo{adapter: adapter}
+		repo    = repository{adapter: adapter}
 		users   = []User{
 			{ID: 10, Name: "Del Piero"},
 			{ID: 20, Name: "Nedved"},
@@ -1926,9 +1926,9 @@ func TestRepo_Preload_ptrSliceBelongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Preload_emptySlice(t *testing.T) {
+func TestRepository_Preload_emptySlice(t *testing.T) {
 	var (
-		repo      = Repo{}
+		repo      = repository{}
 		addresses = []Address{}
 	)
 
@@ -1937,17 +1937,17 @@ func TestRepo_Preload_emptySlice(t *testing.T) {
 
 func TestQuery_Preload_notPointerPanic(t *testing.T) {
 	var (
-		repo        = Repo{}
+		repo        = repository{}
 		transaction = Transaction{}
 	)
 
 	assert.Panics(t, func() { repo.Preload(transaction, "User") })
 }
 
-func TestRepo_Preload_queryError(t *testing.T) {
+func TestRepository_Preload_queryError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = Transaction{BuyerID: 10}
 		cur         = &testCursor{}
 		err         = errors.New("error")
@@ -1961,10 +1961,10 @@ func TestRepo_Preload_queryError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_MustPreload(t *testing.T) {
+func TestRepository_MustPreload(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
-		repo        = Repo{adapter: adapter}
+		repo        = repository{adapter: adapter}
 		transaction = Transaction{BuyerID: 10}
 		cur         = createCursor(0)
 	)
@@ -1979,14 +1979,14 @@ func TestRepo_MustPreload(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepo_Transaction(t *testing.T) {
+func TestRepository_Transaction(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).On("Commit").Return(nil).Once()
 
-	repo := Repo{adapter: adapter}
+	repo := repository{adapter: adapter}
 
-	err := repo.Transaction(func(repo Repo) error {
-		assert.True(t, repo.inTransaction)
+	err := repo.Transaction(func(repo Repository) error {
+		assert.True(t, repo.(*repository).inTransaction)
 		return nil
 	})
 
@@ -1996,11 +1996,11 @@ func TestRepo_Transaction(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_beginError(t *testing.T) {
+func TestRepository_Transaction_beginError(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(errors.New("error")).Once()
 
-	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
+	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
 		// doing good things
 		return nil
 	})
@@ -2009,12 +2009,12 @@ func TestRepo_Transaction_beginError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_commitError(t *testing.T) {
+func TestRepository_Transaction_commitError(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Commit").Return(errors.New("error")).Once()
 
-	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
+	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
 		// doing good things
 		return nil
 	})
@@ -2023,12 +2023,12 @@ func TestRepo_Transaction_commitError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
+func TestRepository_Transaction_returnErrorAndRollback(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
+	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
 		// doing good things
 		return errors.New("error")
 	})
@@ -2037,12 +2037,12 @@ func TestRepo_Transaction_returnErrorAndRollback(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_panicWithErrorAndRollback(t *testing.T) {
+func TestRepository_Transaction_panicWithErrorAndRollback(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := Repo{adapter: adapter}.Transaction(func(r Repo) error {
+	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
 		// doing good things
 		panic(errors.New("error"))
 	})
@@ -2051,13 +2051,13 @@ func TestRepo_Transaction_panicWithErrorAndRollback(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepo_Transaction_panicWithStringAndRollback(t *testing.T) {
+func TestRepository_Transaction_panicWithStringAndRollback(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Panics(t, func() {
-		Repo{adapter: adapter}.Transaction(func(r Repo) error {
+		repository{adapter: adapter}.Transaction(func(r Repository) error {
 			// doing good things
 			panic("error")
 		})

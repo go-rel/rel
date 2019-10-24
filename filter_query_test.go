@@ -835,6 +835,30 @@ func TestIn(t *testing.T) {
 	}, rel.In("field", "value1", "value2"))
 }
 
+func TestInInt(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterInOp,
+		Field: "field",
+		Value: []interface{}{1, 2},
+	}, rel.InInt("field", []int{1, 2}))
+}
+
+func TestInUint(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterInOp,
+		Field: "field",
+		Value: []interface{}{uint(1), uint(2)},
+	}, rel.InUint("field", []uint{1, 2}))
+}
+
+func TestInString(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterInOp,
+		Field: "field",
+		Value: []interface{}{"1", "2"},
+	}, rel.InString("field", []string{"1", "2"}))
+}
+
 func TestNin(t *testing.T) {
 	assert.Equal(t, rel.FilterQuery{
 		Type:  rel.FilterNinOp,
@@ -843,6 +867,29 @@ func TestNin(t *testing.T) {
 	}, rel.Nin("field", "value1", "value2"))
 }
 
+func TestNinInt(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterNinOp,
+		Field: "field",
+		Value: []interface{}{1, 2},
+	}, rel.NinInt("field", []int{1, 2}))
+}
+
+func TestNinUint(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterNinOp,
+		Field: "field",
+		Value: []interface{}{uint(1), uint(2)},
+	}, rel.NinUint("field", []uint{1, 2}))
+}
+
+func TestNinString(t *testing.T) {
+	assert.Equal(t, rel.FilterQuery{
+		Type:  rel.FilterNinOp,
+		Field: "field",
+		Value: []interface{}{"1", "2"},
+	}, rel.NinString("field", []string{"1", "2"}))
+}
 func TestLike(t *testing.T) {
 	assert.Equal(t, rel.FilterQuery{
 		Type:  rel.FilterLikeOp,

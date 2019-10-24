@@ -383,6 +383,45 @@ func In(field string, values ...interface{}) FilterQuery {
 	}
 }
 
+// InInt check whethers integer values of the field is included.
+func InInt(field string, values []int) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return In(field, ivalues...)
+}
+
+// InUint check whethers unsigned integer values of the field is included.
+func InUint(field string, values []uint) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return In(field, ivalues...)
+}
+
+// InString check whethers string values of the field is included.
+func InString(field string, values []string) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return In(field, ivalues...)
+}
+
 // Nin check whethers value of the field is not included in values.
 func Nin(field string, values ...interface{}) FilterQuery {
 	return FilterQuery{
@@ -390,6 +429,45 @@ func Nin(field string, values ...interface{}) FilterQuery {
 		Field: field,
 		Value: values,
 	}
+}
+
+// NinInt check whethers integer values of the is not included.
+func NinInt(field string, values []int) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return Nin(field, ivalues...)
+}
+
+// NinUint check whethers unsigned integer values of the is not included.
+func NinUint(field string, values []uint) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return Nin(field, ivalues...)
+}
+
+// NinString check whethers string values of the is not included.
+func NinString(field string, values []string) FilterQuery {
+	var (
+		ivalues = make([]interface{}, len(values))
+	)
+
+	for i := range values {
+		ivalues[i] = values[i]
+	}
+
+	return Nin(field, ivalues...)
 }
 
 // Like compares value of field to match string pattern.

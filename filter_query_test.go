@@ -890,6 +890,7 @@ func TestNinString(t *testing.T) {
 		Value: []interface{}{"1", "2"},
 	}, rel.NinString("field", []string{"1", "2"}))
 }
+
 func TestLike(t *testing.T) {
 	assert.Equal(t, rel.FilterQuery{
 		Type:  rel.FilterLikeOp,

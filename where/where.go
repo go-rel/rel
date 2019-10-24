@@ -66,9 +66,39 @@ func In(field string, values ...interface{}) rel.FilterQuery {
 	return rel.In(field, values...)
 }
 
+// InInt check whethers integer value of the field is included in values.
+func InInt(field string, values []int) rel.FilterQuery {
+	return rel.InInt(field, values)
+}
+
+// InUint check whethers unsigned integer value of the field is included in values.
+func InUint(field string, values []uint) rel.FilterQuery {
+	return rel.InUint(field, values)
+}
+
+// InString check whethers string value of the field is included in values.
+func InString(field string, values []string) rel.FilterQuery {
+	return rel.InString(field, values)
+}
+
 // Nin check whethers value of the field is not included in values.
 func Nin(field string, values ...interface{}) rel.FilterQuery {
 	return rel.Nin(field, values...)
+}
+
+// NinInt check whethers integer value of the field is not included in values.
+func NinInt(field string, values []int) rel.FilterQuery {
+	return rel.NinInt(field, values)
+}
+
+// NinUint check whethers unsigned integer value of the field is not included in values.
+func NinUint(field string, values []uint) rel.FilterQuery {
+	return rel.NinUint(field, values)
+}
+
+// NinString check whethers string value of the field is not included in values.
+func NinString(field string, values []string) rel.FilterQuery {
+	return rel.NinString(field, values)
 }
 
 // Like compares value of field to match string pattern.

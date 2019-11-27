@@ -33,7 +33,7 @@ func PreloadHasMany(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.ID))
+	err := repo.Find(&result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "addresses")
@@ -47,7 +47,7 @@ func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.ID))
+	err := repo.Find(&result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "addresses", where.Eq("name", "primary"))
@@ -65,7 +65,7 @@ func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.All(&result, where.In("id", users[0].ID, users[1].ID))
+	err := repo.FindAll(&result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "addresses")
@@ -79,7 +79,7 @@ func PreloadHasOne(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.ID))
+	err := repo.Find(&result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "primary_address")
@@ -93,7 +93,7 @@ func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.ID))
+	err := repo.Find(&result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "primary_address", where.Eq("name", "primary"))
@@ -110,7 +110,7 @@ func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.All(&result, where.In("id", users[0].ID, users[1].ID))
+	err := repo.FindAll(&result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
 
 	err = repo.Preload(&result, "primary_address")
@@ -125,7 +125,7 @@ func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.Addresses[0].ID))
+	err := repo.Find(&result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
 
 	user.Addresses = nil
@@ -141,7 +141,7 @@ func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.One(&result, where.Eq("id", user.Addresses[0].ID))
+	err := repo.Find(&result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
 
 	user.Addresses = nil

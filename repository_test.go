@@ -123,7 +123,7 @@ func TestRepository_MustCount(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_One(t *testing.T) {
+func TestRepository_Find(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
@@ -134,7 +134,7 @@ func TestRepository_One(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.One(&user, query))
+	assert.Nil(t, repo.Find(&user, query))
 	assert.Equal(t, 10, user.ID)
 	assert.False(t, cur.Next())
 
@@ -142,7 +142,7 @@ func TestRepository_One(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_One_queryError(t *testing.T) {
+func TestRepository_Find_queryError(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
@@ -153,13 +153,13 @@ func TestRepository_One_queryError(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
 
-	assert.NotNil(t, repo.One(&user, query))
+	assert.NotNil(t, repo.Find(&user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_One_notFound(t *testing.T) {
+func TestRepository_Find_notFound(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
@@ -170,14 +170,14 @@ func TestRepository_One_notFound(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	err := repo.One(&user, query)
+	err := repo.Find(&user, query)
 	assert.Equal(t, NoResultError{}, err)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_MustOne(t *testing.T) {
+func TestRepository_MustFind(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
@@ -189,7 +189,7 @@ func TestRepository_MustOne(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustOne(&user, query)
+		repo.MustFind(&user, query)
 	})
 
 	assert.Equal(t, 10, user.ID)
@@ -199,7 +199,7 @@ func TestRepository_MustOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_All(t *testing.T) {
+func TestRepository_FindAll(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -210,7 +210,7 @@ func TestRepository_All(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.All(&users, query))
+	assert.Nil(t, repo.FindAll(&users, query))
 	assert.Len(t, users, 2)
 	assert.Equal(t, 10, users[0].ID)
 	assert.Equal(t, 10, users[1].ID)
@@ -219,7 +219,7 @@ func TestRepository_All(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_All_error(t *testing.T) {
+func TestRepository_FindAll_error(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -230,12 +230,12 @@ func TestRepository_All_error(t *testing.T) {
 
 	adapter.On("Query", query).Return(&testCursor{}, err).Once()
 
-	assert.Equal(t, err, repo.All(&users, query))
+	assert.Equal(t, err, repo.FindAll(&users, query))
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_MustAll(t *testing.T) {
+func TestRepository_MustFindAll(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -247,7 +247,7 @@ func TestRepository_MustAll(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustAll(&users, query)
+		repo.MustFindAll(&users, query)
 	})
 
 	assert.Len(t, users, 2)

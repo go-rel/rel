@@ -10,6 +10,8 @@ type Repository struct {
 	mock.Mock
 }
 
+var _ rel.Repository = (*Repository)(nil)
+
 // Adapter provides a mock function with given fields:
 func (_m *Repository) Adapter() rel.Adapter {
 	ret := _m.Called()
@@ -47,8 +49,8 @@ func (_m *Repository) Aggregate(query rel.Query, aggregate string, field string)
 	return r0, r1
 }
 
-// All provides a mock function with given fields: records, queriers
-func (_m *Repository) All(records interface{}, queriers ...rel.Querier) error {
+// FindAll provides a mock function with given fields: records, queriers
+func (_m *Repository) FindAll(records interface{}, queriers ...rel.Querier) error {
 	_va := make([]interface{}, len(queriers))
 	for _i := range queriers {
 		_va[_i] = queriers[_i]
@@ -186,8 +188,8 @@ func (_m *Repository) MustAggregate(query rel.Query, aggregate string, field str
 	return r0
 }
 
-// MustAll provides a mock function with given fields: records, queriers
-func (_m *Repository) MustAll(records interface{}, queriers ...rel.Querier) {
+// MustFindAll provides a mock function with given fields: records, queriers
+func (_m *Repository) MustFindAll(records interface{}, queriers ...rel.Querier) {
 	_va := make([]interface{}, len(queriers))
 	for _i := range queriers {
 		_va[_i] = queriers[_i]
@@ -259,8 +261,8 @@ func (_m *Repository) MustInsertAll(records interface{}, changes ...rel.Changes)
 	_m.Called(_ca...)
 }
 
-// MustOne provides a mock function with given fields: record, queriers
-func (_m *Repository) MustOne(record interface{}, queriers ...rel.Querier) {
+// MustFind provides a mock function with given fields: record, queriers
+func (_m *Repository) MustFind(record interface{}, queriers ...rel.Querier) {
 	_va := make([]interface{}, len(queriers))
 	for _i := range queriers {
 		_va[_i] = queriers[_i]
@@ -307,8 +309,8 @@ func (_m *Repository) MustUpdate(record interface{}, changers ...rel.Changer) {
 	_m.Called(_ca...)
 }
 
-// One provides a mock function with given fields: record, queriers
-func (_m *Repository) One(record interface{}, queriers ...rel.Querier) error {
+// Find provides a mock function with given fields: record, queriers
+func (_m *Repository) Find(record interface{}, queriers ...rel.Querier) error {
 	_va := make([]interface{}, len(queriers))
 	for _i := range queriers {
 		_va[_i] = queriers[_i]

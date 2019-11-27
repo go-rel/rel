@@ -18,7 +18,7 @@ func Delete(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, user.ID)
 
 	assert.Nil(t, repo.Delete(&user))
-	assert.Equal(t, rel.NoResultError{}, repo.One(&user, where.Eq("id", user.ID)))
+	assert.Equal(t, rel.NoResultError{}, repo.Find(&user, where.Eq("id", user.ID)))
 
 }
 
@@ -32,7 +32,7 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, user.ID)
 
 	assert.Nil(t, repo.Delete(&user))
-	assert.NotNil(t, repo.One(&user, where.Eq("id", user.ID)))
+	assert.NotNil(t, repo.Find(&user, where.Eq("id", user.ID)))
 
 	repo.MustInsert(&User{Name: "delete", Age: 100})
 	repo.MustInsert(&User{Name: "delete", Age: 100})
@@ -47,12 +47,12 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 		statement, _ := builder.Delete(query.Collection, query.WhereQuery)
 		t.Run("Delete|"+statement, func(t *testing.T) {
 			var result []User
-			assert.Nil(t, repo.All(&result, query))
+			assert.Nil(t, repo.FindAll(&result, query))
 			assert.NotEqual(t, 0, len(result))
 
 			assert.Nil(t, repo.DeleteAll(query))
 
-			assert.Nil(t, repo.All(&result, query))
+			assert.Nil(t, repo.FindAll(&result, query))
 			assert.Equal(t, 0, len(result))
 		})
 	}

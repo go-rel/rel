@@ -85,7 +85,7 @@ func QueryNotFound(t *testing.T, repo rel.Repository) {
 	t.Run("NotFound", func(t *testing.T) {
 		var (
 			user User
-			err  = repo.One(&user, where.Eq("id", 0))
+			err  = repo.Find(&user, where.Eq("id", 0))
 		)
 
 		// find user error not found
@@ -95,10 +95,10 @@ func QueryNotFound(t *testing.T, repo rel.Repository) {
 
 func run(t *testing.T, repo rel.Repository, queriers []rel.Querier) {
 	for _, query := range queriers {
-		t.Run("All", func(t *testing.T) {
+		t.Run("FindAll", func(t *testing.T) {
 			var (
 				users []User
-				err   = repo.All(&users, query)
+				err   = repo.FindAll(&users, query)
 			)
 
 			assert.Nil(t, err)
@@ -107,10 +107,10 @@ func run(t *testing.T, repo rel.Repository, queriers []rel.Querier) {
 	}
 
 	for _, query := range queriers {
-		t.Run("One", func(t *testing.T) {
+		t.Run("Find", func(t *testing.T) {
 			var (
 				user User
-				err  = repo.One(&user, query)
+				err  = repo.Find(&user, query)
 			)
 
 			assert.Nil(t, err)

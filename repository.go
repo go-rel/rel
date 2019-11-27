@@ -14,10 +14,10 @@ type Repository interface {
 	MustAggregate(query Query, aggregate string, field string) int
 	Count(collection string, queriers ...Querier) (int, error)
 	MustCount(collection string, queriers ...Querier) int
-	One(record interface{}, queriers ...Querier) error
-	MustOne(record interface{}, queriers ...Querier)
-	All(records interface{}, queriers ...Querier) error
-	MustAll(records interface{}, queriers ...Querier)
+	Find(record interface{}, queriers ...Querier) error
+	MustFind(record interface{}, queriers ...Querier)
+	FindAll(records interface{}, queriers ...Querier) error
+	MustFindAll(records interface{}, queriers ...Querier)
 	Insert(record interface{}, changers ...Changer) error
 	MustInsert(record interface{}, changers ...Changer)
 	InsertAll(records interface{}, changes ...Changes) error
@@ -83,24 +83,24 @@ func (r repository) MustCount(collection string, queriers ...Querier) int {
 	return count
 }
 
-// One retrieves one result that match the query.
+// Find a record that match the query.
 // If no result found, it'll return not found error.
-func (r repository) One(record interface{}, queriers ...Querier) error {
+func (r repository) Find(record interface{}, queriers ...Querier) error {
 	var (
 		doc   = newDocument(record)
 		query = BuildQuery(doc.Table(), queriers...)
 	)
 
-	return r.one(doc, query)
+	return r.find(doc, query)
 }
 
-// MustOne retrieves one result that match the query.
+// MustFind a record that match the query.
 // If no result found, it'll panic.
-func (r repository) MustOne(record interface{}, queriers ...Querier) {
-	must(r.One(record, queriers...))
+func (r repository) MustFind(record interface{}, queriers ...Querier) {
+	must(r.Find(record, queriers...))
 }
 
-func (r repository) one(doc *document, query Query) error {
+func (r repository) find(doc *document, query Query) error {
 	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -109,8 +109,8 @@ func (r repository) one(doc *document, query Query) error {
 	return scanOne(cur, doc)
 }
 
-// All retrieves all results that match the query.
-func (r repository) All(records interface{}, queriers ...Querier) error {
+// FindAll records that match the query.
+func (r repository) FindAll(records interface{}, queriers ...Querier) error {
 	var (
 		col   = newCollection(records)
 		query = BuildQuery(col.Table(), queriers...)
@@ -118,16 +118,16 @@ func (r repository) All(records interface{}, queriers ...Querier) error {
 
 	col.Reset()
 
-	return r.all(col, query)
+	return r.findAll(col, query)
 }
 
-// MustAll retrieves all results that match the query.
+// MustFindAll records that match the query.
 // It'll panic if any error eccured.
-func (r repository) MustAll(records interface{}, queriers ...Querier) {
-	must(r.All(records, queriers...))
+func (r repository) MustFindAll(records interface{}, queriers ...Querier) {
+	must(r.FindAll(records, queriers...))
 }
 
-func (r repository) all(col *collection, query Query) error {
+func (r repository) findAll(col *collection, query Query) error {
 	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func (r repository) insert(doc *document, changes Changes) error {
 	}
 
 	// fetch record
-	if err := r.one(doc, queriers.Where(Eq(pField, id))); err != nil {
+	if err := r.find(doc, queriers.Where(Eq(pField, id))); err != nil {
 		return err
 	}
 
@@ -254,7 +254,7 @@ func (r repository) insertAll(col *collection, changes []Changes) error {
 		return err
 	}
 
-	return r.all(col, queriers.Where(In(pField, ids...)))
+	return r.findAll(col, queriers.Where(In(pField, ids...)))
 }
 
 // Update an record in database.
@@ -306,7 +306,7 @@ func (r repository) update(doc *document, changes Changes, filter FilterQuery) e
 			return err
 		}
 
-		if err := r.one(doc, queriers); err != nil {
+		if err := r.find(doc, queriers); err != nil {
 			return err
 		}
 	}

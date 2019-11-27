@@ -33,7 +33,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 	)
 
 	user.Addresses = nil
-	err = repo.One(&queried, where.Eq("id", user.ID))
+	err = repo.Find(&queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 	assert.Equal(t, user, queried)
 }

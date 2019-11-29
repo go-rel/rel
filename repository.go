@@ -599,6 +599,12 @@ func (r repository) Preload(records interface{}, field string, queriers ...Queri
 	return scanMulti(cur, keyField, keyType, targets)
 }
 
+// MustPreload loads association with given query.
+// It'll panic if any error occurred.
+func (r repository) MustPreload(records interface{}, field string, queriers ...Querier) {
+	must(r.Preload(records, field, queriers...))
+}
+
 func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
 	type frame struct {
 		index int
@@ -681,12 +687,6 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 	}
 
 	return mapTarget, table, keyField, keyType
-}
-
-// MustPreload loads association with given query.
-// It'll panic if any error occurred.
-func (r repository) MustPreload(record interface{}, field string, queriers ...Querier) {
-	must(r.Preload(record, field, queriers...))
 }
 
 // Transaction performs transaction with given function argument.

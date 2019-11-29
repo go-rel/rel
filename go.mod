@@ -2,7 +2,6 @@ module github.com/Fs02/rel
 
 require (
 	github.com/Fs02/go-paranoid v0.0.0-20190122110906-018c1ac5124a
-	github.com/Fs02/grimoire v1.4.0 // indirect
 	github.com/azer/snakecase v0.0.0-20161028114325-c818dddafb5c
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.3.0
@@ -11,5 +10,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.6.0
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0
-	github.com/tidwall/gjson v1.1.3
 )
+
+go 1.13

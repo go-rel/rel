@@ -98,3 +98,19 @@ func NewExpectFind(r *Repository, queriers []rel.Querier) *ExpectFind {
 		ExpectFindAll: newExpectFindAll(r, "Find", queriers),
 	}
 }
+
+type ExpectDelete struct {
+	*Expect
+}
+
+func (ed *ExpectDelete) Record(record interface{}) {
+	// adjust arguments
+	ed.Arguments[0] = record
+	ed.Once()
+}
+
+func NewExpectDelete(r *Repository) *ExpectDelete {
+	return &ExpectDelete{
+		Expect: newExpect(r, "Delete", []interface{}{mock.Anything}, []interface{}{nil}),
+	}
+}

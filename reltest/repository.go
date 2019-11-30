@@ -196,21 +196,17 @@ func (r *Repository) modifyCalled(method string, record interface{}, changers []
 
 // Delete provides a mock function with given fields: record
 func (r *Repository) Delete(record interface{}) error {
-	ret := r.Called(record)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}) error); ok {
-		r0 = rf(record)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+	return r.Called(record).Error(0)
 }
 
 // MustDelete provides a mock function with given fields: record
 func (r *Repository) MustDelete(record interface{}) {
 	must(r.Delete(record))
+}
+
+// ExpectDelete apply mocks and expectations for Delete
+func (r *Repository) ExpectDelete() *ExpectDelete {
+	return NewExpectDelete(r)
 }
 
 // DeleteAll provides a mock function with given fields: queriers

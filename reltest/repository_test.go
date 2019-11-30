@@ -160,3 +160,31 @@ func TestRepository_FindAll_error(t *testing.T) {
 		assert.NotEqual(t, books, result)
 	})
 }
+
+func TestRepository_Delete(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectDelete().Record(&Book{ID: 1})
+	assert.Nil(t, repo.Delete(&Book{ID: 1}))
+
+	repo.ExpectDelete().Record(&Book{ID: 1})
+	assert.NotPanics(t, func() {
+		repo.MustDelete(&Book{ID: 1})
+	})
+}
+
+func TestRepository_Delete_error(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectDelete().ConnectionClosed()
+	assert.Equal(t, sql.ErrConnDone, repo.Delete(&Book{ID: 1}))
+
+	repo.ExpectDelete().ConnectionClosed()
+	assert.Panics(t, func() {
+		repo.MustDelete(&Book{ID: 1})
+	})
+}

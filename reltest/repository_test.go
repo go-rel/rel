@@ -14,6 +14,74 @@ type Book struct {
 	Title string
 }
 
+func TestRepository_Aggregate(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectAggregate(rel.From("books"), "sum", "id").Result(3)
+	sum, err := repo.Aggregate(rel.From("books"), "sum", "id")
+	assert.Nil(t, err)
+	assert.Equal(t, 3, sum)
+
+	repo.ExpectAggregate(rel.From("books"), "sum", "id").Result(3)
+	assert.NotPanics(t, func() {
+		sum := repo.MustAggregate(rel.From("books"), "sum", "id")
+		assert.Equal(t, 3, sum)
+	})
+}
+
+func TestRepository_Aggregate_error(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectAggregate(rel.From("books"), "sum", "id").ConnectionClosed()
+	sum, err := repo.Aggregate(rel.From("books"), "sum", "id")
+	assert.Equal(t, sql.ErrConnDone, err)
+	assert.Equal(t, 0, sum)
+
+	repo.ExpectAggregate(rel.From("books"), "sum", "id").ConnectionClosed()
+	assert.Panics(t, func() {
+		sum := repo.MustAggregate(rel.From("books"), "sum", "id")
+		assert.Equal(t, 0, sum)
+	})
+}
+
+func TestRepository_Count(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectCount("books").Result(2)
+	count, err := repo.Count("books")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, count)
+
+	repo.ExpectCount("books").Result(2)
+	assert.NotPanics(t, func() {
+		count := repo.MustCount("books")
+		assert.Equal(t, 2, count)
+	})
+}
+
+func TestRepository_Count_error(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectCount("books").ConnectionClosed()
+	count, err := repo.Count("books")
+	assert.Equal(t, sql.ErrConnDone, err)
+	assert.Equal(t, 0, count)
+
+	repo.ExpectCount("books").ConnectionClosed()
+	assert.Panics(t, func() {
+		count := repo.MustCount("books")
+		assert.Equal(t, 0, count)
+	})
+}
+
 func TestRepository_Find(t *testing.T) {
 	var (
 		repo   Repository

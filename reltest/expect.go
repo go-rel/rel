@@ -8,33 +8,78 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type Expect struct {
+	*mock.Call
+}
+
+// Error sets error to be returned by Find Query.
+func (e *Expect) Error(err error) {
+	e.Return(err).Once()
+}
+
+func (e *Expect) ConnectionClosed() {
+	e.Error(sql.ErrConnDone)
+}
+
+func newExpect(r *Repository, methodName string, args []interface{}, rets []interface{}) *Expect {
+	return &Expect{
+		Call: r.On(methodName, args...).Return(rets...),
+	}
+}
+
+type ExpectAggregate struct {
+	*Expect
+}
+
+func (ea *ExpectAggregate) Result(count int) {
+	ea.Return(func(query rel.Query, aggregate string, field string) int {
+		return count
+	}, nil).Once()
+}
+
+// Error sets error to be returned by Find Query.
+func (ea *ExpectAggregate) Error(err error) {
+	ea.Return(0, err).Once()
+}
+
+func (ea *ExpectAggregate) ConnectionClosed() {
+	ea.Error(sql.ErrConnDone)
+}
+
+func NewExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *ExpectAggregate {
+	return &ExpectAggregate{
+		Expect: newExpect(r, "Aggregate", []interface{}{query, aggregate, field}, []interface{}{0, nil}),
+	}
+}
+
 type ExpectFindAll struct {
-	call *mock.Call
+	*Expect
 }
 
 // Result sets the result of Find query.
 func (efa *ExpectFindAll) Result(record interface{}) {
 	// TODO: mock anything of type
-	efa.call.Return(func(out interface{}, queriers ...rel.Querier) error {
+	efa.Return(func(out interface{}, queriers ...rel.Querier) error {
 		// TODO: check type
 		reflect.ValueOf(out).Elem().Set(reflect.ValueOf(record))
 		return nil
 	}).Once()
 }
 
-// Error sets error to be returned by Find Query.
-func (efa *ExpectFindAll) Error(err error) {
-	efa.call.Return(err).Once()
-}
+func newExpectFindAll(r *Repository, methodName string, queriers []rel.Querier) *ExpectFindAll {
+	args := make([]interface{}, len(queriers)+1)
+	args[0] = mock.Anything // first records argument
+	for i := range queriers {
+		args[i+1] = queriers[i]
+	}
 
-func (efa *ExpectFindAll) ConnectionClosed() {
-	efa.Error(sql.ErrConnDone)
+	return &ExpectFindAll{
+		Expect: newExpect(r, methodName, args, []interface{}{nil}),
+	}
 }
 
 func NewExpectFindAll(r *Repository, queriers []rel.Querier) *ExpectFindAll {
-	return &ExpectFindAll{
-		call: r.On("FindAll", querierArgs(queriers)...).Return(nil),
-	}
+	return newExpectFindAll(r, "FindAll", queriers)
 }
 
 type ExpectFind struct {
@@ -42,24 +87,12 @@ type ExpectFind struct {
 }
 
 // NoResult sets NoResultError to be returned by Find Query.
-func (ef ExpectFind) NoResult() {
+func (ef *ExpectFind) NoResult() {
 	ef.Error(rel.NoResultError{})
 }
 
-func NewExpectFind(r *Repository, queriers []rel.Querier) ExpectFind {
-	return ExpectFind{
-		ExpectFindAll: &ExpectFindAll{
-			call: r.On("Find", querierArgs(queriers)...).Return(nil),
-		},
+func NewExpectFind(r *Repository, queriers []rel.Querier) *ExpectFind {
+	return &ExpectFind{
+		ExpectFindAll: newExpectFindAll(r, "Find", queriers),
 	}
-}
-
-func querierArgs(queriers []rel.Querier) []interface{} {
-	args := make([]interface{}, len(queriers)+1)
-	args[0] = mock.Anything // first records argument
-	for i := range queriers {
-		args[i+1] = queriers[i]
-	}
-
-	return args
 }

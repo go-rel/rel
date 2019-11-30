@@ -9,9 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type Author struct {
+	ID   int
+	Name string
+}
+
 type Book struct {
-	ID    int
-	Title string
+	ID     int
+	Title  string
+	Author Author
 }
 
 func TestRepository_Aggregate(t *testing.T) {
@@ -240,5 +246,41 @@ func TestRepository_DeleteAll_unsafe(t *testing.T) {
 	assert.NotPanics(t, func() {
 		repo.ExpectDeleteAll(rel.From("books")).Unsafe()
 		repo.MustDeleteAll(rel.From("books"))
+	})
+}
+
+func TestRepository_Preload(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Rel for dummies"}
+		book   = Book{ID: 2, Title: "Rel for dummies", Author: Author{ID: 1, Name: "Kia"}}
+	)
+
+	repo.ExpectPreload("author").Result(book)
+	assert.Nil(t, repo.Preload(&result, "author"))
+	assert.Equal(t, book, result)
+
+	repo.ExpectPreload("author").Result(book)
+	assert.NotPanics(t, func() {
+		repo.MustPreload(&result, "author")
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Preload_error(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Rel for dummies"}
+		book   = Book{ID: 2, Title: "Rel for dummies", Author: Author{ID: 1, Name: "Kia"}}
+	)
+
+	repo.ExpectPreload("author").ConnectionClosed()
+	assert.Equal(t, sql.ErrConnDone, repo.Preload(&result, "author"))
+	assert.NotEqual(t, book, result)
+
+	repo.ExpectPreload("author").ConnectionClosed()
+	assert.Panics(t, func() {
+		repo.MustPreload(&result, "author")
+		assert.NotEqual(t, book, result)
 	})
 }

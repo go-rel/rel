@@ -226,29 +226,17 @@ func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *ExpectDeleteAll {
 
 // Preload provides a mock function with given fields: records, field, queriers
 func (r *Repository) Preload(records interface{}, field string, queriers ...rel.Querier) error {
-	args := make([]interface{}, len(queriers)+2)
-	args[0] = records
-	args[1] = field
-
-	for i := range queriers {
-		args[i+2] = queriers[i]
-	}
-
-	ret := r.Called(args...)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}, string, ...rel.Querier) error); ok {
-		r0 = rf(records, field, queriers...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+	return r.Called(records, field, rel.BuildQuery("", queriers...)).Error(0)
 }
 
 // MustPreload provides a mock function with given fields: records, field, queriers
 func (r *Repository) MustPreload(records interface{}, field string, queriers ...rel.Querier) {
 	must(r.Preload(records, field, queriers...))
+}
+
+// ExpectPreload apply mocks and expectations for Preload
+func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *ExpectPreload {
+	return NewExpectPreload(r, field, queriers)
 }
 
 // Transaction provides a mock function with given fields: fn

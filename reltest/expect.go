@@ -147,3 +147,26 @@ func NewExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll 
 
 	return eda
 }
+
+type ExpectPreload struct {
+	*Expect
+}
+
+// Result sets the result of Find query.
+func (ep *ExpectPreload) Result(records interface{}) {
+	// adjust arguments
+	ep.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
+
+	ep.Run(func(args mock.Arguments) {
+		reflect.ValueOf(args[0]).Elem().Set(reflect.ValueOf(records))
+	})
+}
+
+func NewExpectPreload(r *Repository, field string, queriers []rel.Querier) *ExpectPreload {
+	return &ExpectPreload{
+		Expect: newExpect(r, "Preload",
+			[]interface{}{mock.Anything, field, rel.BuildQuery("", queriers...)},
+			[]interface{}{nil},
+		),
+	}
+}

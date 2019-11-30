@@ -14,10 +14,25 @@ type Author struct {
 	Name string
 }
 
-type Book struct {
+type Rating struct {
 	ID     int
-	Title  string
-	Author Author
+	Score  int
+	BookID int
+}
+
+type Poster struct {
+	ID     int
+	Image  string
+	BookID int
+}
+
+type Book struct {
+	ID       int
+	Title    string
+	Author   Author
+	AuthorID int
+	Ratings  []Rating
+	Poster   Poster
 }
 
 func TestRepository_Aggregate(t *testing.T) {
@@ -164,6 +179,107 @@ func TestRepository_FindAll_error(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.MustFindAll(&result, where.Like("title", "%dummies%"))
 		assert.NotEqual(t, books, result)
+	})
+}
+
+func TestRepository_Update(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate()
+	assert.Nil(t, repo.Update(&result))
+
+	repo.ExpectUpdate()
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result)
+	})
+}
+
+func TestRepository_Update_record(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate().Record(&result)
+	assert.Nil(t, repo.Update(&result))
+
+	repo.ExpectUpdate().Record(&result)
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result)
+	})
+}
+
+func TestRepository_Update_set(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+		book   = Book{ID: 2, Title: "Rel for dummies"}
+	)
+
+	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
+	assert.Nil(t, repo.Update(&result, rel.Set("title", "Rel for dummies")))
+	assert.Equal(t, book, result)
+
+	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result, rel.Set("title", "Rel for dummies"))
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Update_setNested(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+		book   = Book{
+			ID:     2,
+			Title:  "Rel for dummies",
+			Author: Author{ID: 2, Name: "Kia"},
+			Ratings: []Rating{
+				{ID: 1, Score: 9},
+				{ID: 1, Score: 10},
+			},
+			Poster: Poster{ID: 1, Image: "http://image.url"},
+		}
+		ch = rel.Map{
+			"title": "Rel for dummies",
+			"author": rel.Map{
+				"id":   2,
+				"name": "Kia",
+			},
+			"ratings": []rel.Map{
+				{"score": 9},
+				{"score": 10},
+			},
+			"poster": rel.Map{
+				"image": "http://image.url",
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Nil(t, repo.Update(&result, ch))
+	assert.Equal(t, book, result)
+
+	repo.ExpectUpdate(ch)
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result, ch)
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Update_unknownField(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate(rel.Set("titles", "Rel for dummies"))
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, rel.Set("titles", "Rel for dummies"))
 	})
 }
 

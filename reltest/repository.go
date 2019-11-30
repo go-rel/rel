@@ -95,12 +95,17 @@ func (r *Repository) MustFindAll(records interface{}, queriers ...rel.Querier) {
 
 // Insert provides a mock function with given fields: record, changers
 func (r *Repository) Insert(record interface{}, changers ...rel.Changer) error {
-	return r.modifyCalled("Insert", record, changers)
+	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
 }
 
 // MustInsert provides a mock function with given fields: record, changers
 func (r *Repository) MustInsert(record interface{}, changers ...rel.Changer) {
 	must(r.Insert(record, changers...))
+}
+
+// ExpectInsert apply mocks and expectations for Insert
+func (r *Repository) ExpectInsert(changers ...rel.Changer) *ExpectModify {
+	return NewExpectModify(r, "Insert", changers)
 }
 
 // InsertAll provides a mock function with given fields: records, changes
@@ -131,7 +136,7 @@ func (r *Repository) MustInsertAll(records interface{}, changes ...rel.Changes) 
 
 // Update provides a mock function with given fields: record, changers
 func (r *Repository) Update(record interface{}, changers ...rel.Changer) error {
-	return r.modifyCalled("Update", record, changers)
+	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
 }
 
 // MustUpdate provides a mock function with given fields: record, changers
@@ -139,9 +144,14 @@ func (r *Repository) MustUpdate(record interface{}, changers ...rel.Changer) {
 	must(r.Update(record, changers...))
 }
 
+// ExpectUpdate apply mocks and expectations for Update
+func (r *Repository) ExpectUpdate(changers ...rel.Changer) *ExpectModify {
+	return NewExpectModify(r, "Update", changers)
+}
+
 // Save provides a mock function with given fields: record, changers
 func (r *Repository) Save(record interface{}, changers ...rel.Changer) error {
-	return r.modifyCalled("Save", record, changers)
+	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
 }
 
 // MustSave provides a mock function with given fields: record, changers
@@ -149,24 +159,9 @@ func (r *Repository) MustSave(record interface{}, changers ...rel.Changer) {
 	must(r.Save(record, changers...))
 }
 
-func (r *Repository) modifyCalled(method string, record interface{}, changers []rel.Changer) error {
-	args := make([]interface{}, len(changers)+1)
-	args[0] = record
-
-	for i := range changers {
-		args[i+1] = changers[i]
-	}
-
-	ret := r.MethodCalled(method, args...)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}, ...rel.Changer) error); ok {
-		r0 = rf(record, changers...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+// ExpectSave apply mocks and expectations for Save
+func (r *Repository) ExpectSave(changers ...rel.Changer) *ExpectModify {
+	return NewExpectModify(r, "Save", changers)
 }
 
 // Delete provides a mock function with given fields: record

@@ -94,15 +94,8 @@ func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error
 }
 
 func (r *Repository) findCalled(method string, record interface{}, queriers []rel.Querier) error {
-	args := make([]interface{}, len(queriers)+1)
-	args[0] = record
-
-	for i := range queriers {
-		args[i+1] = queriers[i]
-	}
-
 	var (
-		ret = r.MethodCalled(method, args...)
+		ret = r.MethodCalled(method, record, rel.BuildQuery("", queriers...))
 		r0  error
 	)
 

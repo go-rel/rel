@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"github.com/Fs02/rel"
@@ -48,7 +49,10 @@ func (ea *ExpectAggregate) ConnectionClosed() {
 
 func NewExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *ExpectAggregate {
 	return &ExpectAggregate{
-		Expect: newExpect(r, "Aggregate", []interface{}{query, aggregate, field}, []interface{}{0, nil}),
+		Expect: newExpect(r, "Aggregate",
+			[]interface{}{query, aggregate, field},
+			[]interface{}{0, nil},
+		),
 	}
 }
 
@@ -57,24 +61,22 @@ type ExpectFindAll struct {
 }
 
 // Result sets the result of Find query.
-func (efa *ExpectFindAll) Result(record interface{}) {
-	// TODO: mock anything of type
+func (efa *ExpectFindAll) Result(records interface{}) {
+	// adjust arguments
+	efa.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
+
 	efa.Return(func(out interface{}, queriers ...rel.Querier) error {
-		// TODO: check type
-		reflect.ValueOf(out).Elem().Set(reflect.ValueOf(record))
+		reflect.ValueOf(out).Elem().Set(reflect.ValueOf(records))
 		return nil
 	}).Once()
 }
 
 func newExpectFindAll(r *Repository, methodName string, queriers []rel.Querier) *ExpectFindAll {
-	args := make([]interface{}, len(queriers)+1)
-	args[0] = mock.Anything // first records argument
-	for i := range queriers {
-		args[i+1] = queriers[i]
-	}
-
 	return &ExpectFindAll{
-		Expect: newExpect(r, methodName, args, []interface{}{nil}),
+		Expect: newExpect(r, methodName,
+			[]interface{}{mock.Anything, rel.BuildQuery("", queriers...)},
+			[]interface{}{nil},
+		),
 	}
 }
 

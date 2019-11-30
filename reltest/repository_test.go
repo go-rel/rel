@@ -35,6 +35,10 @@ type Book struct {
 	Poster   Poster
 }
 
+func TestRepository_Adapter(t *testing.T) {
+	assert.Nil(t, (&Repository{}).Adapter())
+}
+
 func TestRepository_Aggregate(t *testing.T) {
 	var (
 		repo Repository
@@ -182,6 +186,113 @@ func TestRepository_FindAll_error(t *testing.T) {
 	})
 }
 
+func TestRepository_Insert(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{Title: "Golang for dummies"}
+		book   = Book{ID: 1, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate()
+	assert.Nil(t, repo.Update(&result))
+	assert.Equal(t, book, result)
+
+	repo.ExpectUpdate()
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result)
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Insert_record(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{Title: "Golang for dummies"}
+		book   = Book{ID: 1, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectInsert().Record(&result)
+	assert.Nil(t, repo.Insert(&result))
+	assert.Equal(t, book, result)
+
+	repo.ExpectInsert().Record(&result)
+	assert.NotPanics(t, func() {
+		repo.MustInsert(&result)
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Insert_set(t *testing.T) {
+	var (
+		repo   Repository
+		result Book
+		book   = Book{ID: 1, Title: "Rel for dummies"}
+	)
+
+	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
+	assert.Nil(t, repo.Insert(&result, rel.Set("title", "Rel for dummies")))
+	assert.Equal(t, book, result)
+
+	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
+	assert.NotPanics(t, func() {
+		repo.MustInsert(&result, rel.Set("title", "Rel for dummies"))
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Insert_setNested(t *testing.T) {
+	var (
+		repo   Repository
+		result Book
+		book   = Book{
+			ID:     1,
+			Title:  "Rel for dummies",
+			Author: Author{ID: 2, Name: "Kia"},
+			Ratings: []Rating{
+				{ID: 1, Score: 9},
+				{ID: 1, Score: 10},
+			},
+			Poster: Poster{ID: 1, Image: "http://image.url"},
+		}
+		ch = rel.Map{
+			"title": "Rel for dummies",
+			"author": rel.Map{
+				"id":   2,
+				"name": "Kia",
+			},
+			"ratings": []rel.Map{
+				{"score": 9},
+				{"score": 10},
+			},
+			"poster": rel.Map{
+				"image": "http://image.url",
+			},
+		}
+	)
+
+	repo.ExpectInsert(ch)
+	assert.Nil(t, repo.Insert(&result, ch))
+	assert.Equal(t, book, result)
+
+	repo.ExpectInsert(ch)
+	assert.NotPanics(t, func() {
+		repo.MustInsert(&result, ch)
+		assert.Equal(t, book, result)
+	})
+}
+
+func TestRepository_Insert_unknownField(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectInsert(rel.Set("titles", "Rel for dummies"))
+	assert.Panics(t, func() {
+		_ = repo.Insert(&result, rel.Set("titles", "Rel for dummies"))
+	})
+}
+
 func TestRepository_Update(t *testing.T) {
 	var (
 		repo   Repository
@@ -280,6 +391,21 @@ func TestRepository_Update_unknownField(t *testing.T) {
 	repo.ExpectUpdate(rel.Set("titles", "Rel for dummies"))
 	assert.Panics(t, func() {
 		_ = repo.Update(&result, rel.Set("titles", "Rel for dummies"))
+	})
+}
+
+func TestRepository_Save(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectSave()
+	assert.Nil(t, repo.Save(&result))
+
+	repo.ExpectSave()
+	assert.NotPanics(t, func() {
+		repo.MustSave(&result)
 	})
 }
 

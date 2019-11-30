@@ -124,7 +124,7 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 
 	rv = rv.Elem()
 
-	// for insertion, always set id to 1.
+	// TODO: for insertion, always set id to 1.
 	pv := rv.Field(index[doc.PrimaryField()])
 	if pv.Kind() == reflect.Int && pv.Int() == 0 {
 		pv.SetInt(1)
@@ -136,6 +136,7 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 
 	for _, ch := range changes.All() {
 		if i, ok := index[ch.Field]; ok {
+			// TODO: other types
 			switch ch.Type {
 			case rel.ChangeSetOp:
 				rv.Field(i).Set(reflect.ValueOf(ch.Value))

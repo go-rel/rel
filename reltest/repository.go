@@ -42,7 +42,7 @@ func (r *Repository) MustAggregate(query rel.Query, aggregate string, field stri
 
 // ExpectAggregate apply mocks and expectations for Aggregate
 func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field string) *ExpectAggregate {
-	return NewExpectAggregate(r, query, aggregate, field)
+	return newExpectAggregate(r, query, aggregate, field)
 }
 
 // Count provides a mock function with given fields: collection, queriers
@@ -60,7 +60,7 @@ func (r *Repository) MustCount(collection string, queriers ...rel.Querier) int {
 
 // ExpectAggregate apply mocks and expectations for Aggregate
 func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *ExpectAggregate {
-	return NewExpectAggregateCount(r, collection, queriers)
+	return newExpectAggregateCount(r, collection, queriers)
 }
 
 // Find provides a mock function with given fields: record, queriers
@@ -75,7 +75,7 @@ func (r *Repository) MustFind(record interface{}, queriers ...rel.Querier) {
 
 // ExpectFind apply mocks and expectations for Find
 func (r *Repository) ExpectFind(queriers ...rel.Querier) *ExpectFind {
-	return NewExpectFind(r, queriers)
+	return newExpectFind(r, queriers)
 }
 
 // FindAll provides a mock function with given fields: records, queriers
@@ -85,7 +85,7 @@ func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error
 
 // ExpectFindAll apply mocks and expectations for FindAll
 func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *ExpectFindAll {
-	return NewExpectFindAll(r, queriers)
+	return newExpectFindAll(r, queriers)
 }
 
 // MustFindAll provides a mock function with given fields: records, queriers
@@ -105,7 +105,7 @@ func (r *Repository) MustInsert(record interface{}, changers ...rel.Changer) {
 
 // ExpectInsert apply mocks and expectations for Insert
 func (r *Repository) ExpectInsert(changers ...rel.Changer) *ExpectModify {
-	return NewExpectModify(r, "Insert", changers)
+	return newExpectModify(r, "Insert", changers)
 }
 
 // InsertAll provides a mock function with given fields: records, changes
@@ -146,7 +146,7 @@ func (r *Repository) MustUpdate(record interface{}, changers ...rel.Changer) {
 
 // ExpectUpdate apply mocks and expectations for Update
 func (r *Repository) ExpectUpdate(changers ...rel.Changer) *ExpectModify {
-	return NewExpectModify(r, "Update", changers)
+	return newExpectModify(r, "Update", changers)
 }
 
 // Save provides a mock function with given fields: record, changers
@@ -161,7 +161,7 @@ func (r *Repository) MustSave(record interface{}, changers ...rel.Changer) {
 
 // ExpectSave apply mocks and expectations for Save
 func (r *Repository) ExpectSave(changers ...rel.Changer) *ExpectModify {
-	return NewExpectModify(r, "Save", changers)
+	return newExpectModify(r, "Save", changers)
 }
 
 // Delete provides a mock function with given fields: record
@@ -176,7 +176,7 @@ func (r *Repository) MustDelete(record interface{}) {
 
 // ExpectDelete apply mocks and expectations for Delete
 func (r *Repository) ExpectDelete() *ExpectDelete {
-	return NewExpectDelete(r)
+	return newExpectDelete(r)
 }
 
 // DeleteAll provides a mock function with given fields: queriers
@@ -191,7 +191,7 @@ func (r *Repository) MustDeleteAll(queriers ...rel.Querier) {
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
 func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *ExpectDeleteAll {
-	return NewExpectDeleteAll(r, queriers)
+	return newExpectDeleteAll(r, queriers)
 }
 
 // Preload provides a mock function with given fields: records, field, queriers
@@ -205,8 +205,8 @@ func (r *Repository) MustPreload(records interface{}, field string, queriers ...
 }
 
 // ExpectPreload apply mocks and expectations for Preload
-func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *ExpectPreload {
-	return NewExpectPreload(r, field, queriers)
+func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *ExpectFindAll {
+	return newExpectPreload(r, field, queriers)
 }
 
 // Transaction provides a mock function with given fields: fn

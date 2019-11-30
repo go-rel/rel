@@ -45,7 +45,7 @@ func (ea *ExpectAggregate) ConnectionClosed() {
 	ea.Error(sql.ErrConnDone)
 }
 
-func NewExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *ExpectAggregate {
+func newExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *ExpectAggregate {
 	return &ExpectAggregate{
 		Expect: newExpect(r, "Aggregate",
 			[]interface{}{query, aggregate, field},
@@ -54,7 +54,7 @@ func NewExpectAggregate(r *Repository, query rel.Query, aggregate string, field 
 	}
 }
 
-func NewExpectAggregateCount(r *Repository, collection string, queriers []rel.Querier) *ExpectAggregate {
+func newExpectAggregateCount(r *Repository, collection string, queriers []rel.Querier) *ExpectAggregate {
 	return &ExpectAggregate{
 		Expect: newExpect(r, "Count",
 			[]interface{}{collection, queriers},
@@ -77,17 +77,22 @@ func (efa *ExpectFindAll) Result(records interface{}) {
 	})
 }
 
-func newExpectFindAll(r *Repository, methodName string, queriers []rel.Querier) *ExpectFindAll {
+func newExpectFindAll(r *Repository, queriers []rel.Querier) *ExpectFindAll {
 	return &ExpectFindAll{
-		Expect: newExpect(r, methodName,
+		Expect: newExpect(r, "FindAll",
 			[]interface{}{mock.Anything, queriers},
 			[]interface{}{nil},
 		),
 	}
 }
 
-func NewExpectFindAll(r *Repository, queriers []rel.Querier) *ExpectFindAll {
-	return newExpectFindAll(r, "FindAll", queriers)
+func newExpectPreload(r *Repository, field string, queriers []rel.Querier) *ExpectFindAll {
+	return &ExpectFindAll{
+		Expect: newExpect(r, "Preload",
+			[]interface{}{mock.Anything, field, queriers},
+			[]interface{}{nil},
+		),
+	}
 }
 
 type ExpectFind struct {
@@ -99,9 +104,14 @@ func (ef *ExpectFind) NoResult() {
 	ef.Error(rel.NoResultError{})
 }
 
-func NewExpectFind(r *Repository, queriers []rel.Querier) *ExpectFind {
+func newExpectFind(r *Repository, queriers []rel.Querier) *ExpectFind {
 	return &ExpectFind{
-		ExpectFindAll: newExpectFindAll(r, "Find", queriers),
+		ExpectFindAll: &ExpectFindAll{
+			Expect: newExpect(r, "Find",
+				[]interface{}{mock.Anything, queriers},
+				[]interface{}{nil},
+			),
+		},
 	}
 }
 
@@ -181,7 +191,7 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 	}
 }
 
-func NewExpectModify(r *Repository, methodName string, changers []rel.Changer) *ExpectModify {
+func newExpectModify(r *Repository, methodName string, changers []rel.Changer) *ExpectModify {
 	em := &ExpectModify{
 		Expect: newExpect(r, methodName,
 			[]interface{}{mock.Anything, changers},
@@ -206,7 +216,7 @@ func (ed *ExpectDelete) Record(record interface{}) {
 	ed.Arguments[0] = record
 }
 
-func NewExpectDelete(r *Repository) *ExpectDelete {
+func newExpectDelete(r *Repository) *ExpectDelete {
 	return &ExpectDelete{
 		Expect: newExpect(r, "Delete", []interface{}{mock.Anything}, []interface{}{nil}),
 	}
@@ -221,7 +231,7 @@ func (eda *ExpectDeleteAll) Unsafe() {
 	eda.RunFn = nil // clear validation
 }
 
-func NewExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll {
+func newExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll {
 	eda := &ExpectDeleteAll{
 		Expect: newExpect(r, "DeleteAll",
 			[]interface{}{queriers},
@@ -243,27 +253,4 @@ func NewExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll 
 	})
 
 	return eda
-}
-
-type ExpectPreload struct {
-	*Expect
-}
-
-// Result sets the result of Find query.
-func (ep *ExpectPreload) Result(records interface{}) {
-	// adjust arguments
-	ep.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
-
-	ep.Run(func(args mock.Arguments) {
-		reflect.ValueOf(args[0]).Elem().Set(reflect.ValueOf(records))
-	})
-}
-
-func NewExpectPreload(r *Repository, field string, queriers []rel.Querier) *ExpectPreload {
-	return &ExpectPreload{
-		Expect: newExpect(r, "Preload",
-			[]interface{}{mock.Anything, field, queriers},
-			[]interface{}{nil},
-		),
-	}
 }

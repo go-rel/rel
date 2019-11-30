@@ -33,9 +33,7 @@ type ExpectAggregate struct {
 }
 
 func (ea *ExpectAggregate) Result(count int) {
-	ea.Return(func(query rel.Query, aggregate string, field string) int {
-		return count
-	}, nil)
+	ea.Return(count, nil)
 }
 
 // Error sets error to be returned by Find Query.
@@ -65,9 +63,8 @@ func (efa *ExpectFindAll) Result(records interface{}) {
 	// adjust arguments
 	efa.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
 
-	efa.Return(func(out interface{}, queriers ...rel.Querier) error {
-		reflect.ValueOf(out).Elem().Set(reflect.ValueOf(records))
-		return nil
+	efa.Run(func(args mock.Arguments) {
+		reflect.ValueOf(args[0]).Elem().Set(reflect.ValueOf(records))
 	})
 }
 

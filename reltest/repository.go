@@ -29,19 +29,9 @@ func (r *Repository) SetLogger(logger ...rel.Logger) {
 
 // Aggregate provides a mock function with given fields: query, aggregate, field
 func (r *Repository) Aggregate(query rel.Query, aggregate string, field string) (int, error) {
-	var (
-		ret = r.Called(query, aggregate, field)
-		r0  int
-		r1  = ret.Error(1)
-	)
+	ret := r.Called(query, aggregate, field)
 
-	if rf, ok := ret.Get(0).(func(rel.Query, string, string) int); ok {
-		r0 = rf(query, aggregate, field)
-	} else {
-		r0 = ret.Get(0).(int)
-	}
-
-	return r0, r1
+	return ret.Int(0), ret.Error(1)
 }
 
 // MustAggregate provides a mock function with given fields: query, aggregate, field
@@ -75,7 +65,7 @@ func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *Ex
 
 // Find provides a mock function with given fields: record, queriers
 func (r *Repository) Find(record interface{}, queriers ...rel.Querier) error {
-	return r.findCalled("Find", record, queriers)
+	return r.Called(record, rel.BuildQuery("", queriers...)).Error(0)
 }
 
 // MustFind provides a mock function with given fields: record, queriers
@@ -90,22 +80,7 @@ func (r *Repository) ExpectFind(queriers ...rel.Querier) *ExpectFind {
 
 // FindAll provides a mock function with given fields: records, queriers
 func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error {
-	return r.findCalled("FindAll", records, queriers)
-}
-
-func (r *Repository) findCalled(method string, record interface{}, queriers []rel.Querier) error {
-	var (
-		ret = r.MethodCalled(method, record, rel.BuildQuery("", queriers...))
-		r0  error
-	)
-
-	if rf, ok := ret.Get(0).(func(interface{}, ...rel.Querier) error); ok {
-		r0 = rf(record, queriers...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+	return r.Called(records, rel.BuildQuery("", queriers...)).Error(0)
 }
 
 // ExpectFindAll apply mocks and expectations for FindAll

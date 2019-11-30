@@ -101,7 +101,7 @@ func (r *Repository) MustFind(record interface{}, queriers ...rel.Querier) {
 }
 
 // ExpectFind apply mocks and expectations for Find
-func (r *Repository) ExpectFind(record interface{}, queriers ...rel.Querier) *ExpectFind {
+func (r *Repository) ExpectFind(queriers ...rel.Querier) ExpectFind {
 	return NewExpectFind(r, queriers)
 }
 
@@ -131,7 +131,7 @@ func (r *Repository) findCalled(method string, record interface{}, queriers []re
 }
 
 // ExpectFindAll apply mocks and expectations for FindAll
-func (r *Repository) ExpectFindAll(record interface{}, queriers ...rel.Querier) *ExpectFindAll {
+func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *ExpectFindAll {
 	return NewExpectFindAll(r, queriers)
 }
 

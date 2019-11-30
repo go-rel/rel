@@ -65,7 +65,7 @@ func (a Association) Type() AssociationType {
 // 			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
 // 		}
 
-// 		return newCollection(rv.Addr()), loaded
+// 		return NewCollection(rv.Addr()), loaded
 // 	case reflect.Ptr:
 // 		var (
 // 			loaded = !rv.IsNil()
@@ -78,18 +78,18 @@ func (a Association) Type() AssociationType {
 // 		if rv.Elem().Kind() == reflect.Slice {
 // 			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
 
-// 			return newCollection(rv), loaded
+// 			return NewCollection(rv), loaded
 // 		}
 
 // 		var (
-// 			doc = newDocument(rv)
+// 			doc = NewDocument(rv)
 // 			id  = doc.PrimaryValue()
 // 		)
 
 // 		return doc, loaded && !isZero(id)
 // 	default:
 // 		var (
-// 			doc = newDocument(rv.Addr())
+// 			doc = NewDocument(rv.Addr())
 // 			id  = doc.PrimaryValue()
 // 		)
 
@@ -97,7 +97,7 @@ func (a Association) Type() AssociationType {
 // 	}
 // }
 
-func (a Association) Document() (*document, bool) {
+func (a Association) Document() (*Document, bool) {
 	var (
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
@@ -106,18 +106,18 @@ func (a Association) Document() (*document, bool) {
 	case reflect.Ptr:
 		if rv.IsNil() {
 			rv.Set(reflect.New(rv.Type().Elem()))
-			return newDocument(rv), false
+			return NewDocument(rv), false
 		}
 
 		var (
-			doc = newDocument(rv)
+			doc = NewDocument(rv)
 			id  = doc.PrimaryValue()
 		)
 
 		return doc, !isZero(id)
 	default:
 		var (
-			doc = newDocument(rv.Addr())
+			doc = NewDocument(rv.Addr())
 			id  = doc.PrimaryValue()
 		)
 
@@ -125,7 +125,7 @@ func (a Association) Document() (*document, bool) {
 	}
 }
 
-func (a Association) Collection() (*collection, bool) {
+func (a Association) Collection() (*Collection, bool) {
 	var (
 		rv     = a.rv.FieldByIndex(a.data.targetIndex)
 		loaded = !rv.IsNil()
@@ -137,14 +137,14 @@ func (a Association) Collection() (*collection, bool) {
 			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
 		}
 
-		return newCollection(rv), loaded
+		return NewCollection(rv), loaded
 	}
 
 	if !loaded {
 		rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
 	}
 
-	return newCollection(rv.Addr()), loaded
+	return NewCollection(rv.Addr()), loaded
 }
 
 func (a Association) IsZero() bool {

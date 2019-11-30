@@ -22,7 +22,7 @@ func TestAssociation_Document(t *testing.T) {
 		field          string
 		data           interface{}
 		typ            AssociationType
-		doc            *document
+		doc            *Document
 		loaded         bool
 		referenceField string
 		referenceValue interface{}
@@ -34,7 +34,7 @@ func TestAssociation_Document(t *testing.T) {
 			field:          "Buyer",
 			data:           transaction,
 			typ:            BelongsTo,
-			doc:            newDocument(&transaction.Buyer),
+			doc:            NewDocument(&transaction.Buyer),
 			loaded:         false,
 			referenceField: "user_id",
 			referenceValue: transaction.BuyerID,
@@ -46,7 +46,7 @@ func TestAssociation_Document(t *testing.T) {
 			field:          "Buyer",
 			data:           transactionLoaded,
 			typ:            BelongsTo,
-			doc:            newDocument(&transactionLoaded.Buyer),
+			doc:            NewDocument(&transactionLoaded.Buyer),
 			loaded:         true,
 			referenceField: "user_id",
 			referenceValue: transactionLoaded.BuyerID,
@@ -58,7 +58,7 @@ func TestAssociation_Document(t *testing.T) {
 			field:          "Address",
 			data:           user,
 			typ:            HasOne,
-			doc:            newDocument(&user.Address),
+			doc:            NewDocument(&user.Address),
 			loaded:         false,
 			referenceField: "id",
 			referenceValue: user.ID,
@@ -70,7 +70,7 @@ func TestAssociation_Document(t *testing.T) {
 			field:          "Address",
 			data:           userLoaded,
 			typ:            HasOne,
-			doc:            newDocument(&userLoaded.Address),
+			doc:            NewDocument(&userLoaded.Address),
 			loaded:         true,
 			referenceField: "id",
 			referenceValue: userLoaded.ID,
@@ -82,7 +82,7 @@ func TestAssociation_Document(t *testing.T) {
 		// 	field:          "User",
 		// 	data:           address,
 		// 	typ:            BelongsTo,
-		// 	doc:         newDocument(&User{}), // should be initialized to zero struct
+		// 	doc:         NewDocument(&User{}), // should be initialized to zero struct
 		// 	loaded:         false,
 		// 	referenceField: "user_id",
 		// 	referenceValue: address.UserID,
@@ -94,7 +94,7 @@ func TestAssociation_Document(t *testing.T) {
 			field:          "User",
 			data:           addressLoaded,
 			typ:            BelongsTo,
-			doc:            newDocument(addressLoaded.User),
+			doc:            NewDocument(addressLoaded.User),
 			loaded:         true,
 			referenceField: "user_id",
 			referenceValue: *addressLoaded.UserID,
@@ -145,7 +145,7 @@ func TestAssociation_Collection(t *testing.T) {
 		field          string
 		data           interface{}
 		typ            AssociationType
-		col            *collection
+		col            *Collection
 		loaded         bool
 		referenceField string
 		referenceValue interface{}
@@ -157,7 +157,7 @@ func TestAssociation_Collection(t *testing.T) {
 			field:          "Transactions",
 			data:           user,
 			typ:            HasMany,
-			col:            newCollection(&user.Transactions),
+			col:            NewCollection(&user.Transactions),
 			loaded:         false,
 			referenceField: "id",
 			referenceValue: user.ID,
@@ -169,7 +169,7 @@ func TestAssociation_Collection(t *testing.T) {
 			field:          "Transactions",
 			data:           userLoaded,
 			typ:            HasMany,
-			col:            newCollection(&userLoaded.Transactions),
+			col:            NewCollection(&userLoaded.Transactions),
 			loaded:         true,
 			referenceField: "id",
 			referenceValue: userLoaded.ID,

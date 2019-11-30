@@ -9,7 +9,7 @@ var (
 )
 
 type Structset struct {
-	doc *document
+	doc *Document
 }
 
 func (s Structset) Build(changes *Changes) {
@@ -88,12 +88,12 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 	}
 }
 
-func newStructset(doc *document) Structset {
+func newStructset(doc *Document) Structset {
 	return Structset{
 		doc: doc,
 	}
 }
 
 func NewStructset(record interface{}) Structset {
-	return newStructset(newDocument(record))
+	return newStructset(NewDocument(record))
 }

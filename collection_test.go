@@ -34,7 +34,7 @@ func TestCollection_Table(t *testing.T) {
 	var (
 		records = []User{}
 		rt      = reflect.TypeOf(records).Elem()
-		col     = newCollection(&records)
+		col     = NewCollection(&records)
 	)
 
 	// infer table name
@@ -51,7 +51,7 @@ func TestCollection_Table_usingInterface(t *testing.T) {
 	var (
 		records = Items{}
 		rt      = reflect.TypeOf(records).Elem()
-		col     = newCollection(&records)
+		col     = NewCollection(&records)
 	)
 
 	// infer table name
@@ -66,7 +66,7 @@ func TestCollection_Table_usingElemInterface(t *testing.T) {
 	var (
 		records = []Item{}
 		rt      = reflect.TypeOf(records).Elem()
-		col     = newCollection(&records)
+		col     = NewCollection(&records)
 	)
 
 	// infer table name
@@ -86,7 +86,7 @@ func TestCollection_Primary(t *testing.T) {
 			{ID: 2},
 		}
 		rt  = reflect.TypeOf(records).Elem()
-		col = newCollection(&records)
+		col = NewCollection(&records)
 	)
 
 	// infer primary key
@@ -113,7 +113,7 @@ func TestCollection_Primary_usingInterface(t *testing.T) {
 			{UUID: "def456"},
 		}
 		rt  = reflect.TypeOf(records).Elem()
-		col = newCollection(&records)
+		col = NewCollection(&records)
 	)
 
 	// should not be cached yet
@@ -136,7 +136,7 @@ func TestCollection_Primary_usingElemInterface(t *testing.T) {
 			{UUID: "def456"},
 		}
 		rt  = reflect.TypeOf(records).Elem()
-		col = newCollection(&records)
+		col = NewCollection(&records)
 	)
 
 	// should not be cached yet
@@ -164,7 +164,7 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 			{ExternalID: 1},
 			{ExternalID: 2},
 		}
-		doc = newCollection(&records)
+		doc = NewCollection(&records)
 	)
 
 	// infer primary key
@@ -176,7 +176,7 @@ func TestCollection_Slice(t *testing.T) {
 	assert.NotPanics(t, func() {
 		var (
 			users = []User{}
-			col   = newCollection(&users)
+			col   = NewCollection(&users)
 		)
 
 		assert.Equal(t, 0, col.Len())
@@ -184,8 +184,8 @@ func TestCollection_Slice(t *testing.T) {
 		doc := col.Add()
 		assert.Len(t, users, 1)
 		assert.Equal(t, 1, col.Len())
-		assert.Equal(t, newDocument(&users[0]), doc)
-		assert.Equal(t, newDocument(&users[0]), col.Get(0))
+		assert.Equal(t, NewDocument(&users[0]), doc)
+		assert.Equal(t, NewDocument(&users[0]), col.Get(0))
 
 		col.Reset()
 		assert.Len(t, users, 0)
@@ -202,7 +202,7 @@ func TestCollection(t *testing.T) {
 			record: &[]User{},
 		},
 		{
-			record: newCollection(&[]User{}),
+			record: NewCollection(&[]User{}),
 		},
 		{
 			record: reflect.ValueOf(&[]User{}),
@@ -229,11 +229,11 @@ func TestCollection(t *testing.T) {
 		t.Run(fmt.Sprintf("%T", test.record), func(t *testing.T) {
 			if test.panics {
 				assert.Panics(t, func() {
-					newCollection(test.record)
+					NewCollection(test.record)
 				})
 			} else {
 				assert.NotPanics(t, func() {
-					newCollection(test.record)
+					NewCollection(test.record)
 				})
 			}
 		})
@@ -242,12 +242,12 @@ func TestCollection(t *testing.T) {
 
 func TestCollection_notPtr(t *testing.T) {
 	assert.Panics(t, func() {
-		newCollection([]User{}).Table()
+		NewCollection([]User{}).Table()
 	})
 }
 
 func TestCollection_notPtrOfSlice(t *testing.T) {
 	assert.Panics(t, func() {
-		newCollection(&User{}).Table()
+		NewCollection(&User{}).Table()
 	})
 }

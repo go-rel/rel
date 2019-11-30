@@ -13,7 +13,7 @@ type Cursor interface {
 	NopScanner() interface{} // TODO: conflict with manual scanners interface
 }
 
-func scanOne(cur Cursor, doc *document) error {
+func scanOne(cur Cursor, doc *Document) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -32,7 +32,7 @@ func scanOne(cur Cursor, doc *document) error {
 	return cur.Scan(scanners...)
 }
 
-func scanMany(cur Cursor, col *collection) error {
+func scanMany(cur Cursor, col *Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()

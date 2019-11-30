@@ -87,7 +87,7 @@ func (r repository) MustCount(collection string, queriers ...Querier) int {
 // If no result found, it'll return not found error.
 func (r repository) Find(record interface{}, queriers ...Querier) error {
 	var (
-		doc   = newDocument(record)
+		doc   = NewDocument(record)
 		query = BuildQuery(doc.Table(), queriers...)
 	)
 
@@ -100,7 +100,7 @@ func (r repository) MustFind(record interface{}, queriers ...Querier) {
 	must(r.Find(record, queriers...))
 }
 
-func (r repository) find(doc *document, query Query) error {
+func (r repository) find(doc *Document, query Query) error {
 	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (r repository) find(doc *document, query Query) error {
 // FindAll records that match the query.
 func (r repository) FindAll(records interface{}, queriers ...Querier) error {
 	var (
-		col   = newCollection(records)
+		col   = NewCollection(records)
 		query = BuildQuery(col.Table(), queriers...)
 	)
 
@@ -127,7 +127,7 @@ func (r repository) MustFindAll(records interface{}, queriers ...Querier) {
 	must(r.FindAll(records, queriers...))
 }
 
-func (r repository) findAll(col *collection, query Query) error {
+func (r repository) findAll(col *Collection, query Query) error {
 	cur, err := r.adapter.Query(query, r.logger...)
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func (r repository) Insert(record interface{}, changers ...Changer) error {
 
 	var (
 		changes Changes
-		doc     = newDocument(record)
+		doc     = NewDocument(record)
 	)
 
 	if len(changers) == 0 {
@@ -165,7 +165,7 @@ func (r repository) Insert(record interface{}, changers ...Changer) error {
 	return r.insert(doc, changes)
 }
 
-func (r repository) insert(doc *document, changes Changes) error {
+func (r repository) insert(doc *Document, changes Changes) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = BuildQuery(doc.Table())
@@ -208,7 +208,7 @@ func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 	}
 
 	var (
-		col = newCollection(records)
+		col = NewCollection(records)
 	)
 
 	if len(changes) == 0 {
@@ -228,7 +228,7 @@ func (r repository) MustInsertAll(records interface{}, changes ...Changes) {
 }
 
 // TODO: support assocs
-func (r repository) insertAll(col *collection, changes []Changes) error {
+func (r repository) insertAll(col *Collection, changes []Changes) error {
 	if len(changes) == 0 {
 		return nil
 	}
@@ -272,7 +272,7 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 
 	var (
 		changes Changes
-		doc     = newDocument(record)
+		doc     = NewDocument(record)
 		pField  = doc.PrimaryField()
 		pValue  = doc.PrimaryValue()
 	)
@@ -292,7 +292,7 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	return r.update(doc, changes, Eq(pField, pValue))
 }
 
-func (r repository) update(doc *document, changes Changes, filter FilterQuery) error {
+func (r repository) update(doc *Document, changes Changes, filter FilterQuery) error {
 	if err := r.saveBelongsTo(doc, &changes); err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func (r repository) MustUpdate(record interface{}, changers ...Changer) {
 }
 
 // TODO: support deletion
-func (r repository) saveBelongsTo(doc *document, changes *Changes) error {
+func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -373,7 +373,7 @@ func (r repository) saveBelongsTo(doc *document, changes *Changes) error {
 }
 
 // TODO: suppprt deletion
-func (r repository) saveHasOne(doc *document, changes *Changes) error {
+func (r repository) saveHasOne(doc *Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -414,7 +414,7 @@ func (r repository) saveHasOne(doc *document, changes *Changes) error {
 	return nil
 }
 
-func (r repository) saveHasMany(doc *document, changes *Changes, insertion bool) error {
+func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -488,7 +488,7 @@ func (r repository) Save(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		doc = newDocument(record)
+		doc = NewDocument(record)
 	)
 
 	if len(changers) == 0 {
@@ -502,7 +502,7 @@ func (r repository) MustSave(record interface{}, changers ...Changer) {
 	must(r.Save(record, changers...))
 }
 
-func (r repository) save(doc *document, changes Changes) error {
+func (r repository) save(doc *Document, changes Changes) error {
 	var (
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -518,7 +518,7 @@ func (r repository) save(doc *document, changes Changes) error {
 // Delete single entry.
 func (r repository) Delete(record interface{}) error {
 	var (
-		doc    = newDocument(record)
+		doc    = NewDocument(record)
 		table  = doc.Table()
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -564,9 +564,9 @@ func (r repository) Preload(records interface{}, field string, queriers ...Queri
 
 	rt = rt.Elem()
 	if rt.Kind() == reflect.Slice {
-		sl = newCollection(records)
+		sl = NewCollection(records)
 	} else {
-		sl = newDocument(records)
+		sl = NewDocument(records)
 	}
 
 	var (
@@ -608,7 +608,7 @@ func (r repository) MustPreload(records interface{}, field string, queriers ...Q
 func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
 	type frame struct {
 		index int
-		doc   *document
+		doc   *Document
 	}
 
 	var (

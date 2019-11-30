@@ -42,14 +42,14 @@ type documentData struct {
 	hasMany   []string
 }
 
-type document struct {
+type Document struct {
 	v    interface{}
 	rv   reflect.Value
 	rt   reflect.Type
 	data documentData
 }
 
-func (d *document) Table() string {
+func (d *Document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()
 	}
@@ -58,7 +58,7 @@ func (d *document) Table() string {
 	return tableName(d.rt)
 }
 
-func (d *document) PrimaryField() string {
+func (d *Document) PrimaryField() string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -74,7 +74,7 @@ func (d *document) PrimaryField() string {
 	return field
 }
 
-func (d *document) PrimaryValue() interface{} {
+func (d *Document) PrimaryValue() interface{} {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -90,15 +90,15 @@ func (d *document) PrimaryValue() interface{} {
 	return d.rv.Field(index).Interface()
 }
 
-func (d *document) Index() map[string]int {
+func (d *Document) Index() map[string]int {
 	return d.data.index
 }
 
-func (d *document) Fields() []string {
+func (d *Document) Fields() []string {
 	return d.data.fields
 }
 
-func (d *document) Type(field string) (reflect.Type, bool) {
+func (d *Document) Type(field string) (reflect.Type, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			ft = d.rt.Field(i).Type
@@ -116,7 +116,7 @@ func (d *document) Type(field string) (reflect.Type, bool) {
 	return nil, false
 }
 
-func (d *document) Value(field string) (interface{}, bool) {
+func (d *Document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			value interface{}
@@ -138,7 +138,7 @@ func (d *document) Value(field string) (interface{}, bool) {
 	return nil, false
 }
 
-func (d *document) Scanners(fields []string) []interface{} {
+func (d *Document) Scanners(fields []string) []interface{} {
 	var (
 		result = make([]interface{}, len(fields))
 	)
@@ -163,19 +163,19 @@ func (d *document) Scanners(fields []string) []interface{} {
 	return result
 }
 
-func (d *document) BelongsTo() []string {
+func (d *Document) BelongsTo() []string {
 	return d.data.belongsTo
 }
 
-func (d *document) HasOne() []string {
+func (d *Document) HasOne() []string {
 	return d.data.hasOne
 }
 
-func (d *document) HasMany() []string {
+func (d *Document) HasMany() []string {
 	return d.data.hasMany
 }
 
-func (d *document) Association(name string) Association {
+func (d *Document) Association(name string) Association {
 	index, ok := d.data.index[name]
 	if !ok {
 		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
@@ -184,24 +184,24 @@ func (d *document) Association(name string) Association {
 	return newAssociation(d.rv, index)
 }
 
-func (d *document) Reset() {
+func (d *Document) Reset() {
 }
 
-func (d *document) Add() *document {
+func (d *Document) Add() *Document {
 	return d
 }
 
-func (d *document) Get(index int) *document {
+func (d *Document) Get(index int) *Document {
 	return d
 }
 
-func (d *document) Len() int {
+func (d *Document) Len() int {
 	return 1
 }
 
-func newDocument(record interface{}) *document {
+func NewDocument(record interface{}) *Document {
 	switch v := record.(type) {
-	case *document:
+	case *Document:
 		return v
 	case reflect.Value:
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
@@ -213,7 +213,7 @@ func newDocument(record interface{}) *document {
 			rt = rv.Type()
 		)
 
-		return &document{
+		return &Document{
 			v:    v.Interface(),
 			rv:   rv,
 			rt:   rt,
@@ -236,7 +236,7 @@ func newDocument(record interface{}) *document {
 		rv = rv.Elem()
 		rt = rt.Elem()
 
-		return &document{
+		return &Document{
 			v:    v,
 			rv:   rv,
 			rt:   rt,

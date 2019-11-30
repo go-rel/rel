@@ -346,6 +346,7 @@ func TestRepository_DeleteAll_noTable(t *testing.T) {
 
 	assert.Panics(t, func() {
 		repo.ExpectDeleteAll()
+		repo.MustDeleteAll()
 	})
 }
 

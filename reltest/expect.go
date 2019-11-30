@@ -54,6 +54,15 @@ func NewExpectAggregate(r *Repository, query rel.Query, aggregate string, field 
 	}
 }
 
+func NewExpectAggregateCount(r *Repository, collection string, queriers []rel.Querier) *ExpectAggregate {
+	return &ExpectAggregate{
+		Expect: newExpect(r, "Count",
+			[]interface{}{collection, queriers},
+			[]interface{}{0, nil},
+		),
+	}
+}
+
 type ExpectFindAll struct {
 	*Expect
 }
@@ -71,7 +80,7 @@ func (efa *ExpectFindAll) Result(records interface{}) {
 func newExpectFindAll(r *Repository, methodName string, queriers []rel.Querier) *ExpectFindAll {
 	return &ExpectFindAll{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, rel.BuildQuery("", queriers...)},
+			[]interface{}{mock.Anything, queriers},
 			[]interface{}{nil},
 		),
 	}
@@ -172,16 +181,16 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 }
 
 func NewExpectModify(r *Repository, methodName string, changers []rel.Changer) *ExpectModify {
-	// TODO: changers matcher
 	em := &ExpectModify{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, rel.BuildChanges(changers...)},
+			[]interface{}{mock.Anything, changers},
 			[]interface{}{nil},
 		),
 	}
 
 	em.Run(func(args mock.Arguments) {
-		applyChanges(reflect.ValueOf(args[0]), args[1].(rel.Changes))
+		changes := rel.BuildChanges(args[1].([]rel.Changer)...)
+		applyChanges(reflect.ValueOf(args[0]), changes)
 	})
 
 	return em
@@ -212,21 +221,20 @@ func (eda *ExpectDeleteAll) Unsafe() {
 }
 
 func NewExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll {
-	query := rel.BuildQuery("", queriers...)
-	if query.Collection == "" {
-		panic("reltest: cannot call DeleteAll without specifying table name. use rel.From(tableName)")
-	}
-
 	eda := &ExpectDeleteAll{
 		Expect: newExpect(r, "DeleteAll",
-			[]interface{}{query},
+			[]interface{}{queriers},
 			[]interface{}{nil},
 		),
 	}
 
 	// validation
 	eda.Run(func(args mock.Arguments) {
-		query := args[0].(rel.Query)
+		query := rel.BuildQuery("", args[0].([]rel.Querier)...)
+
+		if query.Collection == "" {
+			panic("reltest: cannot call DeleteAll without specifying table name. use rel.From(tableName)")
+		}
 
 		if query.WhereQuery.None() {
 			panic("reltest: unsafe delete all detected. if you want to delete all records without filter, please use ExpectDeleteAll().Unsafe()")
@@ -253,7 +261,7 @@ func (ep *ExpectPreload) Result(records interface{}) {
 func NewExpectPreload(r *Repository, field string, queriers []rel.Querier) *ExpectPreload {
 	return &ExpectPreload{
 		Expect: newExpect(r, "Preload",
-			[]interface{}{mock.Anything, field, rel.BuildQuery("", queriers...)},
+			[]interface{}{mock.Anything, field, queriers},
 			[]interface{}{nil},
 		),
 	}

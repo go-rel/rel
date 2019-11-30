@@ -30,7 +30,6 @@ func (r *Repository) SetLogger(logger ...rel.Logger) {
 // Aggregate provides a mock function with given fields: query, aggregate, field
 func (r *Repository) Aggregate(query rel.Query, aggregate string, field string) (int, error) {
 	ret := r.Called(query, aggregate, field)
-
 	return ret.Int(0), ret.Error(1)
 }
 
@@ -48,7 +47,8 @@ func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field st
 
 // Count provides a mock function with given fields: collection, queriers
 func (r *Repository) Count(collection string, queriers ...rel.Querier) (int, error) {
-	return r.Aggregate(rel.BuildQuery(collection, queriers...), "count", "*")
+	ret := r.Called(collection, queriers)
+	return ret.Int(0), ret.Error(1)
 }
 
 // MustCount provides a mock function with given fields: collection, queriers
@@ -60,12 +60,12 @@ func (r *Repository) MustCount(collection string, queriers ...rel.Querier) int {
 
 // ExpectAggregate apply mocks and expectations for Aggregate
 func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *ExpectAggregate {
-	return NewExpectAggregate(r, rel.BuildQuery(collection, queriers...), "count", "*")
+	return NewExpectAggregateCount(r, collection, queriers)
 }
 
 // Find provides a mock function with given fields: record, queriers
 func (r *Repository) Find(record interface{}, queriers ...rel.Querier) error {
-	return r.Called(record, rel.BuildQuery("", queriers...)).Error(0)
+	return r.Called(record, queriers).Error(0)
 }
 
 // MustFind provides a mock function with given fields: record, queriers
@@ -80,7 +80,7 @@ func (r *Repository) ExpectFind(queriers ...rel.Querier) *ExpectFind {
 
 // FindAll provides a mock function with given fields: records, queriers
 func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error {
-	return r.Called(records, rel.BuildQuery("", queriers...)).Error(0)
+	return r.Called(records, queriers).Error(0)
 }
 
 // ExpectFindAll apply mocks and expectations for FindAll
@@ -95,7 +95,7 @@ func (r *Repository) MustFindAll(records interface{}, queriers ...rel.Querier) {
 
 // Insert provides a mock function with given fields: record, changers
 func (r *Repository) Insert(record interface{}, changers ...rel.Changer) error {
-	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
+	return r.Called(record, changers).Error(0)
 }
 
 // MustInsert provides a mock function with given fields: record, changers
@@ -136,7 +136,7 @@ func (r *Repository) MustInsertAll(records interface{}, changes ...rel.Changes) 
 
 // Update provides a mock function with given fields: record, changers
 func (r *Repository) Update(record interface{}, changers ...rel.Changer) error {
-	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
+	return r.Called(record, changers).Error(0)
 }
 
 // MustUpdate provides a mock function with given fields: record, changers
@@ -151,7 +151,7 @@ func (r *Repository) ExpectUpdate(changers ...rel.Changer) *ExpectModify {
 
 // Save provides a mock function with given fields: record, changers
 func (r *Repository) Save(record interface{}, changers ...rel.Changer) error {
-	return r.Called(record, rel.BuildChanges(changers...)).Error(0)
+	return r.Called(record, changers).Error(0)
 }
 
 // MustSave provides a mock function with given fields: record, changers
@@ -181,7 +181,7 @@ func (r *Repository) ExpectDelete() *ExpectDelete {
 
 // DeleteAll provides a mock function with given fields: queriers
 func (r *Repository) DeleteAll(queriers ...rel.Querier) error {
-	return r.Called(rel.BuildQuery("", queriers...)).Error(0)
+	return r.Called(queriers).Error(0)
 }
 
 // MustDeleteAll provides a mock function with given fields: queriers
@@ -196,7 +196,7 @@ func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *ExpectDeleteAll {
 
 // Preload provides a mock function with given fields: records, field, queriers
 func (r *Repository) Preload(records interface{}, field string, queriers ...rel.Querier) error {
-	return r.Called(records, field, rel.BuildQuery("", queriers...)).Error(0)
+	return r.Called(records, field, queriers).Error(0)
 }
 
 // MustPreload provides a mock function with given fields: records, field, queriers

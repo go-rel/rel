@@ -15,7 +15,7 @@ type Expect struct {
 
 // Error sets error to be returned by Find Query.
 func (e *Expect) Error(err error) {
-	e.Return(err).Once()
+	e.Return(err)
 }
 
 func (e *Expect) ConnectionClosed() {
@@ -24,7 +24,7 @@ func (e *Expect) ConnectionClosed() {
 
 func newExpect(r *Repository, methodName string, args []interface{}, rets []interface{}) *Expect {
 	return &Expect{
-		Call: r.On(methodName, args...).Return(rets...),
+		Call: r.On(methodName, args...).Return(rets...).Once(),
 	}
 }
 
@@ -35,12 +35,12 @@ type ExpectAggregate struct {
 func (ea *ExpectAggregate) Result(count int) {
 	ea.Return(func(query rel.Query, aggregate string, field string) int {
 		return count
-	}, nil).Once()
+	}, nil)
 }
 
 // Error sets error to be returned by Find Query.
 func (ea *ExpectAggregate) Error(err error) {
-	ea.Return(0, err).Once()
+	ea.Return(0, err)
 }
 
 func (ea *ExpectAggregate) ConnectionClosed() {
@@ -68,7 +68,7 @@ func (efa *ExpectFindAll) Result(records interface{}) {
 	efa.Return(func(out interface{}, queriers ...rel.Querier) error {
 		reflect.ValueOf(out).Elem().Set(reflect.ValueOf(records))
 		return nil
-	}).Once()
+	})
 }
 
 func newExpectFindAll(r *Repository, methodName string, queriers []rel.Querier) *ExpectFindAll {
@@ -106,11 +106,44 @@ type ExpectDelete struct {
 func (ed *ExpectDelete) Record(record interface{}) {
 	// adjust arguments
 	ed.Arguments[0] = record
-	ed.Once()
 }
 
 func NewExpectDelete(r *Repository) *ExpectDelete {
 	return &ExpectDelete{
 		Expect: newExpect(r, "Delete", []interface{}{mock.Anything}, []interface{}{nil}),
 	}
+}
+
+type ExpectDeleteAll struct {
+	*Expect
+}
+
+// Unsafe allows for unsafe delete that doesn't contains where cloause.
+func (eda *ExpectDeleteAll) Unsafe() {
+	eda.RunFn = nil // clear validation
+}
+
+func NewExpectDeleteAll(r *Repository, queriers []rel.Querier) *ExpectDeleteAll {
+	query := rel.BuildQuery("", queriers...)
+	if query.Collection == "" {
+		panic("reltest: cannot call DeleteAll without specifying table name. use rel.From(tableName)")
+	}
+
+	eda := &ExpectDeleteAll{
+		Expect: newExpect(r, "DeleteAll",
+			[]interface{}{query},
+			[]interface{}{nil},
+		),
+	}
+
+	// validation
+	eda.Run(func(args mock.Arguments) {
+		query := args[0].(rel.Query)
+
+		if query.WhereQuery.None() {
+			panic("reltest: unsafe delete all detected. if you want to delete all records without filter, please use ExpectDeleteAll().Unsafe()")
+		}
+	})
+
+	return eda
 }

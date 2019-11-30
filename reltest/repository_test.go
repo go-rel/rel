@@ -188,3 +188,57 @@ func TestRepository_Delete_error(t *testing.T) {
 		repo.MustDelete(&Book{ID: 1})
 	})
 }
+
+func TestRepository_DeleteAll(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	assert.Nil(t, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	assert.NotPanics(t, func() {
+		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	})
+}
+
+func TestRepository_DeleteAll_error(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
+	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
+	assert.Panics(t, func() {
+		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	})
+}
+
+func TestRepository_DeleteAll_noTable(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	assert.Panics(t, func() {
+		repo.ExpectDeleteAll()
+	})
+}
+
+func TestRepository_DeleteAll_unsafe(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	assert.Panics(t, func() {
+		repo.ExpectDeleteAll(rel.From("books"))
+		repo.MustDeleteAll(rel.From("books"))
+	})
+
+	assert.NotPanics(t, func() {
+		repo.ExpectDeleteAll(rel.From("books")).Unsafe()
+		repo.MustDeleteAll(rel.From("books"))
+	})
+}

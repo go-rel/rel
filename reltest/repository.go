@@ -113,28 +113,17 @@ func (r *Repository) ExpectInsert(changers ...rel.Changer) *ExpectModify {
 
 // InsertAll provides a mock function with given fields: records, changes
 func (r *Repository) InsertAll(records interface{}, changes ...rel.Changes) error {
-	args := make([]interface{}, len(changes)+1)
-	args[0] = records
-
-	for i := range changes {
-		args[i+1] = changes[i]
-	}
-
-	ret := r.mock.Called(args...)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}, ...rel.Changes) error); ok {
-		r0 = rf(records, changes...)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+	return r.mock.Called(records, changes).Error(0)
 }
 
 // MustInsertAll provides a mock function with given fields: records, changes
 func (r *Repository) MustInsertAll(records interface{}, changes ...rel.Changes) {
 	must(r.InsertAll(records, changes...))
+}
+
+// ExpectInsertAll apply mocks and expectations for InsertAll
+func (r *Repository) ExpectInsertAll(changes ...rel.Changes) *ExpectModify {
+	return newExpectInsertAll(r, changes)
 }
 
 // Update provides a mock function with given fields: record, changers

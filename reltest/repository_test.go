@@ -319,6 +319,32 @@ func TestRepository_Insert_unknownField(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_InsertAll(t *testing.T) {
+	var (
+		repo    Repository
+		results = []Book{
+			{Title: "Golang for dummies"},
+			{Title: "Rel for dummies"},
+		}
+		books = []Book{
+			{ID: 1, Title: "Golang for dummies"},
+			{ID: 1, Title: "Rel for dummies"},
+		}
+	)
+
+	repo.ExpectInsertAll()
+	assert.Nil(t, repo.InsertAll(&results))
+	assert.Equal(t, books, results)
+	repo.AssertExpectations(t)
+
+	repo.ExpectInsertAll()
+	assert.NotPanics(t, func() {
+		repo.MustInsertAll(&results)
+		assert.Equal(t, books, results)
+	})
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update(t *testing.T) {
 	var (
 		repo   Repository

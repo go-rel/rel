@@ -124,7 +124,7 @@ func (em *ExpectModify) Record(record interface{}) {
 	em.Arguments[0] = record
 }
 
-func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool) {
+func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool, includeAssoc bool) {
 	var (
 		doc   = rel.NewDocument(rv)
 		index = doc.Index()
@@ -141,7 +141,9 @@ func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool) {
 		}
 	}
 
-	applyBelongsToChanges(rv, index, doc, &changes)
+	if includeAssoc {
+		applyBelongsToChanges(rv, index, doc, &changes)
+	}
 
 	for _, ch := range changes.All() {
 		if i, ok := index[ch.Field]; ok {
@@ -155,8 +157,10 @@ func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool) {
 		}
 	}
 
-	applyHasOneChanges(rv, index, doc, &changes)
-	applyHasManyChanges(rv, index, doc, &changes, insertion)
+	if includeAssoc {
+		applyHasOneChanges(rv, index, doc, &changes)
+		applyHasManyChanges(rv, index, doc, &changes, insertion)
+	}
 }
 
 // this logic should be similar to repository.saveBelongsTo
@@ -189,10 +193,10 @@ func applyBelongsToChanges(rv reflect.Value, index map[string]int, doc *rel.Docu
 				panic("reltest: inconsistent referenced foreign key of belongs to assoc")
 			}
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false)
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false, true)
 		} else {
 			// insert
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true)
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true, true)
 
 			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
@@ -227,12 +231,12 @@ func applyHasOneChanges(rv reflect.Value, index map[string]int, doc *rel.Documen
 				panic("reltest: inconsistent referenced foreign key of has one assoc")
 			}
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false)
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false, true)
 		} else {
 			// insert
 			assocChanges.SetValue(fField, rValue)
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true)
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true, true)
 		}
 	}
 }
@@ -283,7 +287,7 @@ func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Docume
 					panic("reltest: inconsistent foreign key when updating has many")
 				}
 
-				applyChanges(rv, ch, false)
+				applyChanges(rv, ch, false, true)
 				result = reflect.Append(result, rv.Elem())
 			} else {
 				// insert
@@ -292,7 +296,7 @@ func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Docume
 				)
 
 				ch.SetValue(fField, rValue)
-				applyChanges(el, ch, true)
+				applyChanges(el, ch, true, true)
 				result = reflect.Append(result, el.Elem())
 			}
 		}
@@ -321,7 +325,46 @@ func newExpectModify(r *Repository, methodName string, changers []rel.Changer, i
 			changes = rel.BuildChanges(changers...)
 		}
 
-		applyChanges(reflect.ValueOf(args[0]), changes, insertion)
+		applyChanges(reflect.ValueOf(args[0]), changes, insertion, true)
+	})
+
+	return em
+}
+
+func newExpectInsertAll(r *Repository, changes []rel.Changes) *ExpectModify {
+	em := &ExpectModify{
+		Expect: newExpect(r, "InsertAll",
+			[]interface{}{mock.Anything, changes},
+			[]interface{}{nil},
+		),
+	}
+
+	em.Run(func(args mock.Arguments) {
+		var (
+			records = args[0]
+			col     = rel.NewCollection(records)
+		)
+
+		if len(changes) == 0 {
+			changes = make([]rel.Changes, col.Len())
+			for i := range changes {
+				changes[i] = rel.BuildChanges(rel.NewStructset(col.Get(i)))
+			}
+		}
+
+		var (
+			rv     = reflect.ValueOf(records)
+			elTyp  = rv.Type().Elem().Elem()
+			result = reflect.MakeSlice(rv.Elem().Type(), 0, len(changes))
+		)
+
+		for i := range changes {
+			el := reflect.New(elTyp)
+			applyChanges(el, changes[i], true, false)
+			result = reflect.Append(result, el.Elem())
+		}
+
+		rv.Elem().Set(result)
 	})
 
 	return em

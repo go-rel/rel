@@ -9,7 +9,7 @@ func (nre NoResultError) Error() string {
 type ConstraintType int8
 
 const (
-	CheckConstraint = iota
+	CheckConstraint ConstraintType = iota
 	NotNullConstraint
 	UniqueConstraint
 	PrimaryKeyConstraint
@@ -48,5 +48,5 @@ func (ce ConstraintError) Error() string {
 		return ce.Type.String() + "Error: " + ce.Err.Error()
 	}
 
-	return ce.Type.String()
+	return ce.Type.String() + "Error"
 }

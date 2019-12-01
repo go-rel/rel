@@ -105,7 +105,7 @@ func (r *Repository) MustInsert(record interface{}, changers ...rel.Changer) {
 
 // ExpectInsert apply mocks and expectations for Insert
 func (r *Repository) ExpectInsert(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Insert", changers)
+	return newExpectModify(r, "Insert", changers, true)
 }
 
 // InsertAll provides a mock function with given fields: records, changes
@@ -146,7 +146,7 @@ func (r *Repository) MustUpdate(record interface{}, changers ...rel.Changer) {
 
 // ExpectUpdate apply mocks and expectations for Update
 func (r *Repository) ExpectUpdate(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Update", changers)
+	return newExpectModify(r, "Update", changers, false)
 }
 
 // Save provides a mock function with given fields: record, changers
@@ -161,7 +161,7 @@ func (r *Repository) MustSave(record interface{}, changers ...rel.Changer) {
 
 // ExpectSave apply mocks and expectations for Save
 func (r *Repository) ExpectSave(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Save", changers)
+	return newExpectModify(r, "Save", changers, false)
 }
 
 // Delete provides a mock function with given fields: record

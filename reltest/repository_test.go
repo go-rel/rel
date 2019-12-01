@@ -193,13 +193,13 @@ func TestRepository_Insert(t *testing.T) {
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
 
-	repo.ExpectUpdate()
-	assert.Nil(t, repo.Update(&result))
+	repo.ExpectInsert()
+	assert.Nil(t, repo.Insert(&result))
 	assert.Equal(t, book, result)
 
-	repo.ExpectUpdate()
+	repo.ExpectInsert()
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result)
+		repo.MustInsert(&result)
 		assert.Equal(t, book, result)
 	})
 }
@@ -250,8 +250,8 @@ func TestRepository_Insert_map(t *testing.T) {
 			Author:   Author{ID: 2, Name: "Kia"},
 			AuthorID: 2,
 			Ratings: []Rating{
-				{ID: 1, Score: 9},
-				{ID: 1, Score: 10},
+				{ID: 1, Score: 9, BookID: 1},
+				{ID: 1, Score: 10, BookID: 1},
 			},
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
@@ -324,6 +324,18 @@ func TestRepository_Update_record(t *testing.T) {
 	})
 }
 
+func TestRepository_Update_withoutPrimaryValue(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate().Record(&result)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result)
+	})
+}
+
 func TestRepository_Update_set(t *testing.T) {
 	var (
 		repo   Repository
@@ -345,15 +357,21 @@ func TestRepository_Update_set(t *testing.T) {
 func TestRepository_Update_map(t *testing.T) {
 	var (
 		repo   Repository
-		result = Book{ID: 2, Title: "Golang for dummies"}
-		book   = Book{
+		result = Book{
+			ID:    2,
+			Title: "Golang for dummies",
+			Ratings: []Rating{
+				{ID: 2, BookID: 2, Score: 5},
+			},
+		}
+		book = Book{
 			ID:       2,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 2, Name: "Kia"},
 			AuthorID: 2,
 			Ratings: []Rating{
-				{ID: 1, Score: 9},
-				{ID: 1, Score: 10},
+				{ID: 2, BookID: 2, Score: 9},
+				{ID: 1, BookID: 2, Score: 10},
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
@@ -364,7 +382,7 @@ func TestRepository_Update_map(t *testing.T) {
 				"name": "Kia",
 			},
 			"ratings": []rel.Map{
-				{"score": 9},
+				{"id": 2, "score": 9},
 				{"score": 10},
 			},
 			"poster": rel.Map{

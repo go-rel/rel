@@ -140,9 +140,7 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 		pv.SetInt(1)
 	}
 
-	if changes.Count() == 0 {
-		return
-	}
+	applyBelongsToChanges(rv, index, doc, &changes)
 
 	for _, ch := range changes.All() {
 		if i, ok := index[ch.Field]; ok {
@@ -156,21 +154,7 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 		}
 	}
 
-	if changes.AssocCount() == 0 {
-		return
-	}
-
-	for _, field := range doc.BelongsTo() {
-		if assoc, ok := changes.GetAssoc(field); ok {
-			applyChanges(rv.Field(index[field]).Addr(), assoc.Changes[0])
-		}
-	}
-
-	for _, field := range doc.HasOne() {
-		if assoc, ok := changes.GetAssoc(field); ok {
-			applyChanges(rv.Field(index[field]).Addr(), assoc.Changes[0])
-		}
-	}
+	applyHasOneChanges(rv, index, doc, &changes)
 
 	for _, field := range doc.HasMany() {
 		if assoc, ok := changes.GetAssoc(field); ok {
@@ -191,6 +175,84 @@ func applyChanges(rv reflect.Value, changes rel.Changes) {
 	}
 }
 
+// this logic should be similar to repository.saveBelongsTo
+func applyBelongsToChanges(rv reflect.Value, index map[string]int, doc *rel.Document, changes *rel.Changes) {
+	for _, field := range doc.BelongsTo() {
+		ac, changed := changes.GetAssoc(field)
+		if !changed || len(ac.Changes) == 0 {
+			continue
+		}
+
+		var (
+			assocChanges = ac.Changes[0]
+			assoc        = doc.Association(field)
+			fValue       = assoc.ForeignValue()
+			doc, loaded  = assoc.Document()
+		)
+
+		if loaded {
+			var (
+				pField = doc.PrimaryField()
+				pValue = doc.PrimaryValue()
+			)
+
+			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+				panic("reltest: inconsistent primary value of belongs to assoc")
+			}
+
+			if assoc.ReferenceValue() != fValue {
+				panic("reltest: inconsistent referenced foreign key of belongs to assoc")
+			}
+
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges)
+		} else {
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges)
+
+			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
+		}
+
+		if assoc, ok := changes.GetAssoc(field); ok {
+			applyChanges(rv.Field(index[field]).Addr(), assoc.Changes[0])
+		}
+	}
+}
+
+// This logic should be similar to repository.saveHasOne
+func applyHasOneChanges(rv reflect.Value, index map[string]int, doc *rel.Document, changes *rel.Changes) {
+	for _, field := range doc.HasOne() {
+		ac, changed := changes.GetAssoc(field)
+		if !changed || len(ac.Changes) == 0 {
+			continue
+		}
+
+		var (
+			assocChanges = ac.Changes[0]
+			assoc        = doc.Association(field)
+			fField       = assoc.ForeignField()
+			rValue       = assoc.ReferenceValue()
+			doc, loaded  = assoc.Document()
+			pField       = doc.PrimaryField()
+			pValue       = doc.PrimaryValue()
+		)
+
+		if loaded {
+			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+				panic("cannot update assoc: inconsistent primary key")
+			}
+
+			if assoc.ForeignValue() != rValue {
+				panic("reltest: inconsistent referenced foreign key of has one assoc")
+			}
+
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges)
+		} else {
+			assocChanges.SetValue(fField, rValue)
+
+			applyChanges(rv.Field(index[field]).Addr(), assocChanges)
+		}
+	}
+}
+
 func newExpectModify(r *Repository, methodName string, changers []rel.Changer) *ExpectModify {
 	em := &ExpectModify{
 		Expect: newExpect(r, methodName,
@@ -200,7 +262,17 @@ func newExpectModify(r *Repository, methodName string, changers []rel.Changer) *
 	}
 
 	em.Run(func(args mock.Arguments) {
-		changes := rel.BuildChanges(args[1].([]rel.Changer)...)
+		var (
+			changes  rel.Changes
+			changers = args[1].([]rel.Changer)
+		)
+
+		if len(changers) == 0 {
+			changes = rel.BuildChanges(rel.NewStructset(args[0]))
+		} else {
+			changes = rel.BuildChanges(changers...)
+		}
+
 		applyChanges(reflect.ValueOf(args[0]), changes)
 	})
 

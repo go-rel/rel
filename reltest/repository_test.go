@@ -240,19 +240,20 @@ func TestRepository_Insert_set(t *testing.T) {
 	})
 }
 
-func TestRepository_Insert_setNested(t *testing.T) {
+func TestRepository_Insert_map(t *testing.T) {
 	var (
 		repo   Repository
 		result Book
 		book   = Book{
-			ID:     1,
-			Title:  "Rel for dummies",
-			Author: Author{ID: 2, Name: "Kia"},
+			ID:       1,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 2, Name: "Kia"},
+			AuthorID: 2,
 			Ratings: []Rating{
 				{ID: 1, Score: 9},
 				{ID: 1, Score: 10},
 			},
-			Poster: Poster{ID: 1, Image: "http://image.url"},
+			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
 		ch = rel.Map{
 			"title": "Rel for dummies",
@@ -341,19 +342,20 @@ func TestRepository_Update_set(t *testing.T) {
 	})
 }
 
-func TestRepository_Update_setNested(t *testing.T) {
+func TestRepository_Update_map(t *testing.T) {
 	var (
 		repo   Repository
 		result = Book{ID: 2, Title: "Golang for dummies"}
 		book   = Book{
-			ID:     2,
-			Title:  "Rel for dummies",
-			Author: Author{ID: 2, Name: "Kia"},
+			ID:       2,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 2, Name: "Kia"},
+			AuthorID: 2,
 			Ratings: []Rating{
 				{ID: 1, Score: 9},
 				{ID: 1, Score: 10},
 			},
-			Poster: Poster{ID: 1, Image: "http://image.url"},
+			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
 		ch = rel.Map{
 			"title": "Rel for dummies",

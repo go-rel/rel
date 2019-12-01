@@ -462,6 +462,169 @@ func TestRepository_Update_map(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_Update_belongsToInconsistentPk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:       2,
+			Title:    "Golang for dummies",
+			AuthorID: 2,
+			Author:   Author{ID: 2, Name: "Kia"},
+		}
+		ch = rel.Map{
+			"author": rel.Map{
+				"id":   1,
+				"name": "Koa",
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_belongsToInconsistentFk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:       2,
+			Title:    "Golang for dummies",
+			AuthorID: 1,
+			Author:   Author{ID: 2, Name: "Kia"},
+		}
+		ch = rel.Map{
+			"author": rel.Map{
+				"id":   2,
+				"name": "Koa",
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_hasOneInconsistentPk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:     2,
+			Title:  "Golang for dummies",
+			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
+		}
+		ch = rel.Map{
+			"poster": rel.Map{
+				"id":    2,
+				"image": "http://image.url/other",
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_hasOneInconsistentFk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:     2,
+			Title:  "Golang for dummies",
+			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
+		}
+		ch = rel.Map{
+			"poster": rel.Map{
+				"id":    1,
+				"image": "http://image.url/other",
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_hasManyNotLoaded(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:    2,
+			Title: "Golang for dummies",
+		}
+		ch = rel.Map{
+			"ratings": []rel.Map{
+				{"id": 2, "score": 9},
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_hasManyInconsistentPk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:    2,
+			Title: "Golang for dummies",
+			Ratings: []Rating{
+				{ID: 2, BookID: 2, Score: 5},
+			},
+		}
+		ch = rel.Map{
+			"ratings": []rel.Map{
+				{"id": 1, "score": 9},
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_hasManyInconsistentFk(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:    2,
+			Title: "Golang for dummies",
+			Ratings: []Rating{
+				{ID: 2, BookID: 1, Score: 5},
+			},
+		}
+		ch = rel.Map{
+			"ratings": []rel.Map{
+				{"id": 2, "score": 9},
+			},
+		}
+	)
+
+	repo.ExpectUpdate(ch)
+	assert.Panics(t, func() {
+		_ = repo.Update(&result, ch)
+	})
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update_unknownField(t *testing.T) {
 	var (
 		repo   Repository

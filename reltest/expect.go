@@ -24,7 +24,7 @@ func (e *Expect) ConnectionClosed() {
 
 func newExpect(r *Repository, methodName string, args []interface{}, rets []interface{}) *Expect {
 	return &Expect{
-		Call: r.On(methodName, args...).Return(rets...).Once(),
+		Call: r.mock.On(methodName, args...).Return(rets...).Once(),
 	}
 }
 
@@ -287,7 +287,9 @@ func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Docume
 				result = reflect.Append(result, rv.Elem())
 			} else {
 				// insert
-				el := reflect.New(elTyp)
+				var (
+					el = reflect.New(elTyp)
+				)
 
 				ch.SetValue(fField, rValue)
 				applyChanges(el, ch, true)

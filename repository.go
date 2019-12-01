@@ -365,7 +365,7 @@ func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 				return err
 			}
 
-			changes.SetValue(assoc.ReferenceField(), fValue)
+			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
 	}
 

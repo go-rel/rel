@@ -124,6 +124,13 @@ func (em *ExpectModify) Record(record interface{}) {
 	em.Arguments[0] = record
 }
 
+func (em *ExpectModify) NotUnique(key string) {
+	em.Error(rel.ConstraintError{
+		Key:  key,
+		Type: rel.UniqueConstraint,
+	})
+}
+
 func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool, includeAssoc bool) {
 	var (
 		doc   = rel.NewDocument(rv)

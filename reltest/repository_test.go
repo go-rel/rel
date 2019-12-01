@@ -319,6 +319,20 @@ func TestRepository_Insert_unknownField(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_Insert_notUnique(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectInsert(rel.Set("title", "Rel for dummies")).NotUnique("title")
+	assert.Equal(t,
+		rel.ConstraintError{Key: "title", Type: rel.UniqueConstraint},
+		repo.Insert(&result, rel.Set("title", "Rel for dummies")),
+	)
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_InsertAll(t *testing.T) {
 	var (
 		repo    Repository
@@ -635,6 +649,20 @@ func TestRepository_Update_unknownField(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = repo.Update(&result, rel.Set("titles", "Rel for dummies"))
 	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_notUnique(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectUpdate(rel.Set("title", "Rel for dummies")).NotUnique("title")
+	assert.Equal(t,
+		rel.ConstraintError{Key: "title", Type: rel.UniqueConstraint},
+		repo.Update(&result, rel.Set("title", "Rel for dummies")),
+	)
 	repo.AssertExpectations(t)
 }
 

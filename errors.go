@@ -39,6 +39,14 @@ type ConstraintError struct {
 	Err  error
 }
 
+func (ce ConstraintError) Unwrap() error {
+	return ce.Err
+}
+
 func (ce ConstraintError) Error() string {
-	return ce.Type.String() + "Error: " + ce.Err.Error()
+	if ce.Err != nil {
+		return ce.Type.String() + "Error: " + ce.Err.Error()
+	}
+
+	return ce.Type.String()
 }

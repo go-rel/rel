@@ -31,7 +31,7 @@ func TestDocument_Table(t *testing.T) {
 	var (
 		record = User{}
 		rt     = reflect.TypeOf(record)
-		doc    = newDocument(&record)
+		doc    = NewDocument(&record)
 	)
 
 	// infer table name
@@ -46,7 +46,7 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 	var (
 		record = Item{}
 		rt     = reflect.TypeOf(record)
-		doc    = newDocument(&record)
+		doc    = NewDocument(&record)
 	)
 
 	// infer table name
@@ -61,7 +61,7 @@ func TestDocument_Primary(t *testing.T) {
 	var (
 		record = User{ID: 1}
 		rt     = reflect.TypeOf(record)
-		doc    = newDocument(&record)
+		doc    = NewDocument(&record)
 	)
 
 	// infer primary key
@@ -87,7 +87,7 @@ func TestDocument_Primary_usingInterface(t *testing.T) {
 			UUID: "abc123",
 		}
 		rt  = reflect.TypeOf(record)
-		doc = newDocument(&record)
+		doc = NewDocument(&record)
 	)
 
 	// should not be cached yet
@@ -112,7 +112,7 @@ func TestDocument_Primary_usingTag(t *testing.T) {
 		}{
 			ExternalID: 12345,
 		}
-		doc = newDocument(&record)
+		doc = NewDocument(&record)
 	)
 
 	// infer primary key
@@ -129,7 +129,7 @@ func TestDocument_Primary_usingTagAmdCustomName(t *testing.T) {
 		}{
 			ExternalID: 1111,
 		}
-		doc = newDocument(&record)
+		doc = NewDocument(&record)
 	)
 
 	// infer primary key
@@ -143,7 +143,7 @@ func TestDocument_Primary_notFound(t *testing.T) {
 			ExternalID int
 			Name       string
 		}{}
-		doc = newDocument(&record)
+		doc = NewDocument(&record)
 	)
 
 	assert.Panics(t, func() {
@@ -164,7 +164,7 @@ func TestDocument_Fields(t *testing.T) {
 			D bool       `db:"D"`
 			E []*float64 `db:"-"`
 		}{}
-		doc    = newDocument(&record)
+		doc    = NewDocument(&record)
 		fields = []string{"a", "b", "c", "D"}
 	)
 
@@ -182,7 +182,7 @@ func TestDocument_Types(t *testing.T) {
 			F userDefined
 			G time.Time
 		}{}
-		doc   = newDocument(&record)
+		doc   = NewDocument(&record)
 		types = map[string]reflect.Type{
 			"a": reflect.TypeOf(""),
 			"b": reflect.TypeOf(0),
@@ -218,7 +218,7 @@ func TestDocument_Value(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc    = newDocument(&record)
+		doc    = NewDocument(&record)
 		values = map[string]interface{}{
 			"id":     1,
 			"name":   "name",
@@ -250,7 +250,7 @@ func TestDocument_Scanners(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc      = newDocument(&record)
+		doc      = NewDocument(&record)
 		fields   = []string{"name", "id", "skip", "data", "number", "address", "not_exist"}
 		scanners = []interface{}{
 			Nullable(&record.Name),
@@ -269,7 +269,7 @@ func TestDocument_Scanners(t *testing.T) {
 func TestDocument_Slice(t *testing.T) {
 	assert.NotPanics(t, func() {
 		var (
-			doc = newDocument(&Item{})
+			doc = NewDocument(&Item{})
 		)
 
 		doc.Reset()
@@ -318,7 +318,7 @@ func TestDocument_Association(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var (
-				doc = newDocument(test.record)
+				doc = NewDocument(test.record)
 			)
 
 			assert.Equal(t, test.belongsTo, doc.BelongsTo())
@@ -330,7 +330,7 @@ func TestDocument_Association(t *testing.T) {
 
 // func TestDocument_Association_interface(t *testing.T) {
 // 	var (
-// 		doc = newDocument(&Item{})
+// 		doc = NewDocument(&Item{})
 // 	)
 
 // 	assert.NotPanics(t, func() {
@@ -347,7 +347,7 @@ func TestDocument(t *testing.T) {
 			record: &User{},
 		},
 		{
-			record: newDocument(&User{}),
+			record: NewDocument(&User{}),
 		},
 		{
 			record: reflect.ValueOf(&User{}),
@@ -374,11 +374,11 @@ func TestDocument(t *testing.T) {
 		t.Run(fmt.Sprintf("%T", test.record), func(t *testing.T) {
 			if test.panics {
 				assert.Panics(t, func() {
-					newDocument(test.record)
+					NewDocument(test.record)
 				})
 			} else {
 				assert.NotPanics(t, func() {
-					newDocument(test.record)
+					NewDocument(test.record)
 				})
 			}
 		})
@@ -387,13 +387,13 @@ func TestDocument(t *testing.T) {
 
 func TestDocument_notPtr(t *testing.T) {
 	assert.Panics(t, func() {
-		newDocument(User{}).Table()
+		NewDocument(User{}).Table()
 	})
 }
 
 func TestDocument_notPtrOfStruct(t *testing.T) {
 	assert.Panics(t, func() {
 		i := 1
-		newDocument(&i).Table()
+		NewDocument(&i).Table()
 	})
 }

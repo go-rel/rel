@@ -72,7 +72,7 @@ func TestScanOne(t *testing.T) {
 	var (
 		user User
 		cur  = &testCursor{}
-		doc  = newDocument(&user)
+		doc  = NewDocument(&user)
 		now  = time.Now()
 	)
 
@@ -97,7 +97,7 @@ func TestScanMany(t *testing.T) {
 	var (
 		users []User
 		cur   = &testCursor{}
-		col   = newCollection(&users)
+		col   = NewCollection(&users)
 		now   = time.Now()
 	)
 
@@ -139,8 +139,8 @@ func TestScanMulti(t *testing.T) {
 		keyField = "id"
 		keyType  = reflect.TypeOf(0)
 		cols     = map[interface{}][]slice{
-			10: {newCollection(&users1), newCollection(&users2)},
-			11: {newCollection(&users3)},
+			10: {NewCollection(&users1), NewCollection(&users2)},
+			11: {NewCollection(&users3)},
 		}
 		now = time.Now()
 	)

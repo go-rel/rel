@@ -48,12 +48,14 @@ func TestRepository_Aggregate(t *testing.T) {
 	sum, err := repo.Aggregate(rel.From("books"), "sum", "id")
 	assert.Nil(t, err)
 	assert.Equal(t, 3, sum)
+	repo.AssertExpectations(t)
 
 	repo.ExpectAggregate(rel.From("books"), "sum", "id").Result(3)
 	assert.NotPanics(t, func() {
 		sum := repo.MustAggregate(rel.From("books"), "sum", "id")
 		assert.Equal(t, 3, sum)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Aggregate_error(t *testing.T) {
@@ -65,12 +67,14 @@ func TestRepository_Aggregate_error(t *testing.T) {
 	sum, err := repo.Aggregate(rel.From("books"), "sum", "id")
 	assert.Equal(t, sql.ErrConnDone, err)
 	assert.Equal(t, 0, sum)
+	repo.AssertExpectations(t)
 
 	repo.ExpectAggregate(rel.From("books"), "sum", "id").ConnectionClosed()
 	assert.Panics(t, func() {
 		sum := repo.MustAggregate(rel.From("books"), "sum", "id")
 		assert.Equal(t, 0, sum)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Count(t *testing.T) {
@@ -82,12 +86,14 @@ func TestRepository_Count(t *testing.T) {
 	count, err := repo.Count("books")
 	assert.Nil(t, err)
 	assert.Equal(t, 2, count)
+	repo.AssertExpectations(t)
 
 	repo.ExpectCount("books").Result(2)
 	assert.NotPanics(t, func() {
 		count := repo.MustCount("books")
 		assert.Equal(t, 2, count)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Count_error(t *testing.T) {
@@ -99,12 +105,14 @@ func TestRepository_Count_error(t *testing.T) {
 	count, err := repo.Count("books")
 	assert.Equal(t, sql.ErrConnDone, err)
 	assert.Equal(t, 0, count)
+	repo.AssertExpectations(t)
 
 	repo.ExpectCount("books").ConnectionClosed()
 	assert.Panics(t, func() {
 		count := repo.MustCount("books")
 		assert.Equal(t, 0, count)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Find(t *testing.T) {
@@ -117,12 +125,14 @@ func TestRepository_Find(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 2)).Result(book)
 	assert.Nil(t, repo.Find(&result, where.Eq("id", 2)))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectFind(where.Eq("id", 2)).Result(book)
 	assert.NotPanics(t, func() {
 		repo.MustFind(&result, where.Eq("id", 2))
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Find_noResult(t *testing.T) {
@@ -136,12 +146,14 @@ func TestRepository_Find_noResult(t *testing.T) {
 
 	assert.Equal(t, rel.NoResultError{}, repo.Find(&result, where.Eq("id", 2)))
 	assert.NotEqual(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectFind(where.Eq("id", 2)).NoResult()
 	assert.Panics(t, func() {
 		repo.MustFind(&result, where.Eq("id", 2))
 		assert.NotEqual(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_FindAll(t *testing.T) {
@@ -157,12 +169,14 @@ func TestRepository_FindAll(t *testing.T) {
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).Result(books)
 	assert.Nil(t, repo.FindAll(&result, where.Like("title", "%dummies%")))
 	assert.Equal(t, books, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).Result(books)
 	assert.NotPanics(t, func() {
 		repo.MustFindAll(&result, where.Like("title", "%dummies%"))
 		assert.Equal(t, books, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_FindAll_error(t *testing.T) {
@@ -178,12 +192,14 @@ func TestRepository_FindAll_error(t *testing.T) {
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).ConnectionClosed()
 	assert.Equal(t, sql.ErrConnDone, repo.FindAll(&result, where.Like("title", "%dummies%")))
 	assert.NotEqual(t, books, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).ConnectionClosed()
 	assert.Panics(t, func() {
 		repo.MustFindAll(&result, where.Like("title", "%dummies%"))
 		assert.NotEqual(t, books, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert(t *testing.T) {
@@ -196,12 +212,14 @@ func TestRepository_Insert(t *testing.T) {
 	repo.ExpectInsert()
 	assert.Nil(t, repo.Insert(&result))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectInsert()
 	assert.NotPanics(t, func() {
 		repo.MustInsert(&result)
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert_record(t *testing.T) {
@@ -214,12 +232,14 @@ func TestRepository_Insert_record(t *testing.T) {
 	repo.ExpectInsert().Record(&result)
 	assert.Nil(t, repo.Insert(&result))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectInsert().Record(&result)
 	assert.NotPanics(t, func() {
 		repo.MustInsert(&result)
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert_set(t *testing.T) {
@@ -232,12 +252,14 @@ func TestRepository_Insert_set(t *testing.T) {
 	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
 	assert.Nil(t, repo.Insert(&result, rel.Set("title", "Rel for dummies")))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
 	assert.NotPanics(t, func() {
 		repo.MustInsert(&result, rel.Set("title", "Rel for dummies"))
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert_map(t *testing.T) {
@@ -274,12 +296,14 @@ func TestRepository_Insert_map(t *testing.T) {
 	repo.ExpectInsert(ch)
 	assert.Nil(t, repo.Insert(&result, ch))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectInsert(ch)
 	assert.NotPanics(t, func() {
 		repo.MustInsert(&result, ch)
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert_unknownField(t *testing.T) {
@@ -292,6 +316,7 @@ func TestRepository_Insert_unknownField(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = repo.Insert(&result, rel.Set("titles", "Rel for dummies"))
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update(t *testing.T) {
@@ -302,11 +327,13 @@ func TestRepository_Update(t *testing.T) {
 
 	repo.ExpectUpdate()
 	assert.Nil(t, repo.Update(&result))
+	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate()
 	assert.NotPanics(t, func() {
 		repo.MustUpdate(&result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update_record(t *testing.T) {
@@ -317,11 +344,13 @@ func TestRepository_Update_record(t *testing.T) {
 
 	repo.ExpectUpdate().Record(&result)
 	assert.Nil(t, repo.Update(&result))
+	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate().Record(&result)
 	assert.NotPanics(t, func() {
 		repo.MustUpdate(&result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update_withoutPrimaryValue(t *testing.T) {
@@ -334,6 +363,7 @@ func TestRepository_Update_withoutPrimaryValue(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = repo.Update(&result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update_set(t *testing.T) {
@@ -346,12 +376,14 @@ func TestRepository_Update_set(t *testing.T) {
 	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
 	assert.Nil(t, repo.Update(&result, rel.Set("title", "Rel for dummies")))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
 	assert.NotPanics(t, func() {
 		repo.MustUpdate(&result, rel.Set("title", "Rel for dummies"))
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update_map(t *testing.T) {
@@ -394,12 +426,14 @@ func TestRepository_Update_map(t *testing.T) {
 	repo.ExpectUpdate(ch)
 	assert.Nil(t, repo.Update(&result, ch))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate(ch)
 	assert.NotPanics(t, func() {
 		repo.MustUpdate(&result, ch)
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Update_unknownField(t *testing.T) {
@@ -412,6 +446,7 @@ func TestRepository_Update_unknownField(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = repo.Update(&result, rel.Set("titles", "Rel for dummies"))
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Save(t *testing.T) {
@@ -422,11 +457,13 @@ func TestRepository_Save(t *testing.T) {
 
 	repo.ExpectSave()
 	assert.Nil(t, repo.Save(&result))
+	repo.AssertExpectations(t)
 
 	repo.ExpectSave()
 	assert.NotPanics(t, func() {
 		repo.MustSave(&result)
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Delete(t *testing.T) {
@@ -436,11 +473,13 @@ func TestRepository_Delete(t *testing.T) {
 
 	repo.ExpectDelete().Record(&Book{ID: 1})
 	assert.Nil(t, repo.Delete(&Book{ID: 1}))
+	repo.AssertExpectations(t)
 
 	repo.ExpectDelete().Record(&Book{ID: 1})
 	assert.NotPanics(t, func() {
 		repo.MustDelete(&Book{ID: 1})
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Delete_error(t *testing.T) {
@@ -450,11 +489,13 @@ func TestRepository_Delete_error(t *testing.T) {
 
 	repo.ExpectDelete().ConnectionClosed()
 	assert.Equal(t, sql.ErrConnDone, repo.Delete(&Book{ID: 1}))
+	repo.AssertExpectations(t)
 
 	repo.ExpectDelete().ConnectionClosed()
 	assert.Panics(t, func() {
 		repo.MustDelete(&Book{ID: 1})
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_DeleteAll(t *testing.T) {
@@ -464,11 +505,13 @@ func TestRepository_DeleteAll(t *testing.T) {
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 	assert.Nil(t, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 	assert.NotPanics(t, func() {
 		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_DeleteAll_error(t *testing.T) {
@@ -478,11 +521,13 @@ func TestRepository_DeleteAll_error(t *testing.T) {
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
 	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
 	assert.Panics(t, func() {
 		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_DeleteAll_noTable(t *testing.T) {
@@ -490,10 +535,11 @@ func TestRepository_DeleteAll_noTable(t *testing.T) {
 		repo Repository
 	)
 
+	repo.ExpectDeleteAll()
 	assert.Panics(t, func() {
-		repo.ExpectDeleteAll()
 		repo.MustDeleteAll()
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_DeleteAll_unsafe(t *testing.T) {
@@ -501,15 +547,17 @@ func TestRepository_DeleteAll_unsafe(t *testing.T) {
 		repo Repository
 	)
 
+	repo.ExpectDeleteAll(rel.From("books"))
 	assert.Panics(t, func() {
-		repo.ExpectDeleteAll(rel.From("books"))
 		repo.MustDeleteAll(rel.From("books"))
 	})
+	repo.AssertExpectations(t)
 
+	repo.ExpectDeleteAll(rel.From("books")).Unsafe()
 	assert.NotPanics(t, func() {
-		repo.ExpectDeleteAll(rel.From("books")).Unsafe()
 		repo.MustDeleteAll(rel.From("books"))
 	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Preload(t *testing.T) {
@@ -522,12 +570,14 @@ func TestRepository_Preload(t *testing.T) {
 	repo.ExpectPreload("author").Result(book)
 	assert.Nil(t, repo.Preload(&result, "author"))
 	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").Result(book)
 	assert.NotPanics(t, func() {
 		repo.MustPreload(&result, "author")
-		assert.Equal(t, book, result)
 	})
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Preload_error(t *testing.T) {
@@ -540,10 +590,31 @@ func TestRepository_Preload_error(t *testing.T) {
 	repo.ExpectPreload("author").ConnectionClosed()
 	assert.Equal(t, sql.ErrConnDone, repo.Preload(&result, "author"))
 	assert.NotEqual(t, book, result)
+	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").ConnectionClosed()
 	assert.Panics(t, func() {
 		repo.MustPreload(&result, "author")
-		assert.NotEqual(t, book, result)
 	})
+	assert.NotEqual(t, book, result)
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Transaction(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{Title: "Golang for dummies"}
+		book   = Book{ID: 1, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectTransaction(func(repo *Repository) {
+		repo.ExpectInsert()
+	})
+
+	assert.Nil(t, repo.Transaction(func(repo rel.Repository) error {
+		return repo.Insert(&result)
+	}))
+
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
 }

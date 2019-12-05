@@ -119,7 +119,7 @@ type ExpectModify struct {
 	*Expect
 }
 
-func (em *ExpectModify) Record(record interface{}) {
+func (em *ExpectModify) For(record interface{}) {
 	// adjust arguments
 	em.Arguments[0] = record
 }
@@ -381,7 +381,7 @@ type ExpectDelete struct {
 	*Expect
 }
 
-func (ed *ExpectDelete) Record(record interface{}) {
+func (ed *ExpectDelete) For(record interface{}) {
 	// adjust arguments
 	ed.Arguments[0] = record
 }

@@ -187,8 +187,6 @@ func TestAssociation_Collection(t *testing.T) {
 				col, loaded = assoc.Collection()
 			)
 
-			test.col.reflect()
-
 			assert.Equal(t, test.typ, assoc.Type())
 			assert.Equal(t, test.col, col)
 			assert.Equal(t, test.loaded, loaded)

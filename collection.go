@@ -23,22 +23,16 @@ type Collection struct {
 	rt reflect.Type
 }
 
-func (c *Collection) reflect() {
-	if c.rv.IsValid() {
-		return
-	}
+func (c Collection) Interface() interface{} {
+	return c.v
+}
 
-	c.rv = reflect.ValueOf(c.v)
-	if c.rv.Kind() != reflect.Ptr {
-		panic("rel: must be a pointer")
-	}
+func (c Collection) ReflectValue() reflect.Value {
+	return c.rv
+}
 
-	c.rv = c.rv.Elem()
-	c.rt = c.rv.Type()
-
-	if c.rt.Kind() != reflect.Slice {
-		panic("rel: must be a pointer to a slice")
-	}
+func (c Collection) ReflectType() reflect.Type {
+	return c.rt
 }
 
 func (c *Collection) Table() string {
@@ -50,8 +44,6 @@ func (c *Collection) Table() string {
 }
 
 func (c *Collection) tableName() string {
-	c.reflect()
-
 	var (
 		rt = c.rt.Elem()
 	)
@@ -112,8 +104,6 @@ func (c *Collection) PrimaryValue() interface{} {
 }
 
 func (c *Collection) searchPrimary() (string, int) {
-	c.reflect()
-
 	var (
 		rt = c.rt.Elem()
 	)
@@ -142,26 +132,18 @@ func (c *Collection) searchPrimary() (string, int) {
 }
 
 func (c *Collection) Get(index int) *Document {
-	c.reflect()
-
-	return NewDocument(c.rv.Index(index).Addr().Interface())
+	return NewDocument(c.rv.Index(index).Addr())
 }
 
 func (c *Collection) Len() int {
-	c.reflect()
-
 	return c.rv.Len()
 }
 
 func (c *Collection) Reset() {
-	c.reflect()
-
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
 func (c *Collection) Add() *Document {
-	c.reflect()
-
 	var (
 		index = c.Len()
 		typ   = c.rt.Elem()
@@ -170,7 +152,7 @@ func (c *Collection) Add() *Document {
 
 	c.rv.Set(reflect.Append(c.rv, drv))
 
-	return NewDocument(c.rv.Index(index).Addr().Interface())
+	return NewDocument(c.rv.Index(index).Addr())
 }
 
 func NewCollection(records interface{}) *Collection {
@@ -192,6 +174,20 @@ func NewCollection(records interface{}) *Collection {
 	case nil:
 		panic("rel: cannot be nil")
 	default:
-		return &Collection{v: v}
+
+		var (
+			rv = reflect.ValueOf(v)
+			rt = rv.Type()
+		)
+
+		if rt.Kind() != reflect.Ptr || rt.Elem().Kind() != reflect.Slice {
+			panic("rel: collection must be a pointer to a slice")
+		}
+
+		return &Collection{
+			v:  v,
+			rv: rv.Elem(),
+			rt: rt.Elem(),
+		}
 	}
 }

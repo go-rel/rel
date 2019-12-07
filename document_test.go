@@ -233,6 +233,52 @@ func TestDocument_Value(t *testing.T) {
 		assert.Equal(t, evalue, value)
 	}
 }
+
+func TestDocument_SetValue(t *testing.T) {
+	var (
+		record struct {
+			ID      int
+			Name    string
+			Skip    bool `db:"-"`
+			Number  float64
+			Address *string
+			Data    []byte
+		}
+		doc = NewDocument(&record)
+	)
+
+	assert.True(t, doc.SetValue("id", 1))
+	assert.True(t, doc.SetValue("name", "name"))
+	assert.True(t, doc.SetValue("number", 10.5))
+	assert.True(t, doc.SetValue("data", []byte("data")))
+	assert.True(t, doc.SetValue("address", "address"))
+
+	assert.False(t, doc.SetValue("id", "a"))
+	assert.False(t, doc.SetValue("skip", true))
+	assert.False(t, doc.SetValue("address", []byte("a")))
+	assert.False(t, doc.SetValue("number", reflect.ValueOf(0)))
+
+	assert.Equal(t, 1, record.ID)
+	assert.Equal(t, "name", record.Name)
+	assert.Equal(t, false, record.Skip)
+	assert.Equal(t, 10.5, record.Number)
+	assert.Equal(t, "address", *record.Address)
+	assert.Equal(t, []byte("data"), record.Data)
+
+	// test set zero
+	assert.True(t, doc.SetValue("id", nil))
+	assert.True(t, doc.SetValue("name", nil))
+	assert.True(t, doc.SetValue("number", nil))
+	assert.True(t, doc.SetValue("data", nil))
+	assert.True(t, doc.SetValue("address", nil))
+
+	assert.Equal(t, 0, record.ID)
+	assert.Equal(t, "", record.Name)
+	assert.Equal(t, float64(0), record.Number)
+	assert.Equal(t, (*string)(nil), record.Address)
+	assert.Equal(t, []byte(nil), record.Data)
+}
+
 func TestDocument_Scanners(t *testing.T) {
 	var (
 		address = "address"

@@ -28,12 +28,6 @@ type Changes struct {
 	assocChanges []AssocChanges
 }
 
-type AssocChanges struct {
-	Changes []Changes
-	// if nil, has many associations will be cleared.
-	StaleIDs []interface{}
-}
-
 // Empty returns true if changes is empty.
 func (c Changes) Empty() bool {
 	return len(c.changes) == 0
@@ -121,6 +115,12 @@ func (c *Changes) SetStaleAssoc(field string, ids []interface{}) {
 func (c *Changes) appendAssoc(field string, ac AssocChanges) {
 	c.assoc[field] = len(c.assocChanges)
 	c.assocChanges = append(c.assocChanges, ac)
+}
+
+type AssocChanges struct {
+	Changes []Changes
+	// if nil, has many associations will be cleared.
+	StaleIDs []interface{}
 }
 
 // ChangeOp represents type of change operation.

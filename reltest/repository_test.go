@@ -359,6 +359,28 @@ func TestRepository_InsertAll(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_InsertAll_map(t *testing.T) {
+	var (
+		repo    Repository
+		results []Book
+		books   = []Book{
+			{ID: 1, Title: "Golang for dummies"},
+			{ID: 1, Title: "Rel for dummies"},
+		}
+	)
+
+	repo.ExpectInsertAll(
+		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
+		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
+	)
+	assert.Nil(t, repo.InsertAll(&results,
+		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
+		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
+	))
+	assert.Equal(t, books, results)
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update(t *testing.T) {
 	var (
 		repo   Repository

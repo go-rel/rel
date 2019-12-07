@@ -341,25 +341,19 @@ func newExpectInsertAll(r *Repository, changes []rel.Changes) *ExpectModify {
 		)
 
 		if len(changes) == 0 {
-			changes = make([]rel.Changes, col.Len())
+			// just set primary keys
+			for i := 0; i < col.Len(); i++ {
+				doc := col.Get(i)
+				doc.SetValue(doc.PrimaryField(), 1)
+			}
+		} else {
+			col.Reset()
+
 			for i := range changes {
-				changes[i] = rel.BuildChanges(rel.NewStructset(col.Get(i)))
+				doc := col.Add()
+				applyChanges(doc, changes[i], true, false)
 			}
 		}
-
-		var (
-			rv     = reflect.ValueOf(records)
-			elTyp  = col.ReflectType().Elem()
-			result = reflect.MakeSlice(col.ReflectType(), 0, len(changes))
-		)
-
-		for i := range changes {
-			doc := rel.NewDocument(reflect.New(elTyp))
-			applyChanges(doc, changes[i], true, false)
-			result = reflect.Append(result, doc.ReflectValue())
-		}
-
-		rv.Elem().Set(result)
 	})
 
 	return em

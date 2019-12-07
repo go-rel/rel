@@ -952,12 +952,11 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 
 func TestRepository_saveHasMany_insert(t *testing.T) {
 	var (
-		adapter           = &testAdapter{}
-		repo              = repository{adapter: adapter}
-		user              = &User{ID: 1}
-		doc               = NewDocument(user)
-		transactionCollec = NewCollection(&user.Transactions)
-		changes           = BuildChanges(
+		adapter = &testAdapter{}
+		repo    = repository{adapter: adapter}
+		user    = &User{ID: 1}
+		doc     = NewDocument(user)
+		changes = BuildChanges(
 			Map{
 				"transactions": []Map{
 					{
@@ -973,8 +972,6 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(2)
 	)
-
-	transactionCollec.reflect()
 
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{2, 3}, nil).Once()
 	adapter.On("Query", q.Where(In("id", 2, 3))).Return(cur, nil).Once()
@@ -1046,9 +1043,8 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 				},
 			},
 		}
-		doc               = NewDocument(user)
-		transactionCollec = NewCollection(&user.Transactions)
-		changes           = BuildChanges(
+		doc     = NewDocument(user)
+		changes = BuildChanges(
 			Map{
 				"transactions": []Map{
 					{
@@ -1068,7 +1064,6 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 		cur2            = createCursor(1)
 	)
 
-	transactionCollec.reflect()
 	changes.assocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
@@ -1108,9 +1103,8 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 				},
 			},
 		}
-		doc               = NewDocument(user)
-		transactionCollec = NewCollection(&user.Transactions)
-		changes           = BuildChanges(
+		doc     = NewDocument(user)
+		changes = BuildChanges(
 			Map{
 				"transactions": []Map{
 					{
@@ -1130,7 +1124,6 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		insertAllCur    = createCursor(1)
 	)
 
-	transactionCollec.reflect()
 	changes.assocChanges[0].StaleIDs = []interface{}{3}
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
@@ -1242,9 +1235,8 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 				},
 			},
 		}
-		doc               = NewDocument(user)
-		transactionCollec = NewCollection(&user.Transactions)
-		changes           = BuildChanges(
+		doc     = NewDocument(user)
+		changes = BuildChanges(
 			Map{
 				"transactions": []Map{
 					{
@@ -1263,8 +1255,6 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(3)
 	)
-
-	transactionCollec.reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
@@ -1293,9 +1283,8 @@ func TestRepository_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 			ID:           1,
 			Transactions: []Transaction{},
 		}
-		doc               = NewDocument(user)
-		transactionCollec = NewCollection(&user.Transactions)
-		changes           = BuildChanges(
+		doc     = NewDocument(user)
+		changes = BuildChanges(
 			Map{
 				"transactions": []Map{
 					{
@@ -1314,8 +1303,6 @@ func TestRepository_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 		transactions, _ = changes.GetAssoc("transactions")
 		cur             = createCursor(3)
 	)
-
-	transactionCollec.reflect()
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.Changes).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()

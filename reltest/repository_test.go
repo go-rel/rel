@@ -426,6 +426,19 @@ func TestRepository_Update_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_Update_setNil(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+		book   = Book{ID: 2, Title: ""}
+	)
+
+	repo.ExpectUpdate(rel.Set("title", nil))
+	assert.Nil(t, repo.Update(&result, rel.Set("title", nil)))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update_map(t *testing.T) {
 	var (
 		repo   Repository

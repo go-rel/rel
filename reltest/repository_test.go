@@ -989,3 +989,59 @@ func TestRepository_Transaction(t *testing.T) {
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 }
+
+func TestRepository_Transaction_error(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{Title: "Golang for dummies"}
+		book   = Book{ID: 1, Title: "Golang for dummies"}
+	)
+
+	repo.ExpectTransaction(func(repo *Repository) {
+		repo.ExpectInsert().ConnectionClosed()
+	})
+
+	assert.Equal(t, sql.ErrConnDone, repo.Transaction(func(repo rel.Repository) error {
+		repo.MustInsert(&result)
+		return nil
+	}))
+
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Transaction_panic(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectTransaction(func(repo *Repository) {
+	})
+
+	assert.Panics(t, func() {
+		_ = repo.Transaction(func(repo rel.Repository) error {
+			panic("error")
+		})
+	})
+
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Transaction_runtimerError(t *testing.T) {
+	var (
+		book *Book
+		repo Repository
+	)
+
+	repo.ExpectTransaction(func(repo *Repository) {
+	})
+
+	assert.Panics(t, func() {
+		_ = repo.Transaction(func(repo rel.Repository) error {
+			_ = book.ID
+			return nil
+		})
+	})
+
+	repo.AssertExpectations(t)
+}

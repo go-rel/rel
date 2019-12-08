@@ -670,7 +670,7 @@ func (r repository) Transaction(fn func(Repository) error) error {
 	func() {
 		defer func() {
 			if p := recover(); p != nil {
-				txRepo.adapter.Rollback()
+				_ = txRepo.adapter.Rollback()
 
 				switch e := p.(type) {
 				case runtime.Error:
@@ -681,7 +681,7 @@ func (r repository) Transaction(fn func(Repository) error) error {
 					panic(e)
 				}
 			} else if err != nil {
-				txRepo.adapter.Rollback()
+				_ = txRepo.adapter.Rollback()
 			} else {
 				err = txRepo.adapter.Commit()
 			}

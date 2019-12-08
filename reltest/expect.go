@@ -255,42 +255,16 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 			pIndex[v] = i
 		}
 
-		if !insertion {
-			if !loaded {
-				panic("rel: association must be loaded to update")
-			}
-
-			// if deleted ids is specified, then only delete those.
-			// if it's nill, then clear old association (used by structset).
-			if len(ac.StaleIDs) > 0 {
-				for _, id := range ac.StaleIDs {
-					// update
-					pId, ok := pIndex[id]
-					if !ok {
-						panic("reltest: cannot delete has many assoc that is not loaded or doesn't belong to this record")
-					}
-
-					var (
-						doc       = col.Get(pId)
-						fValue, _ = doc.Value(fField)
-					)
-
-					if fValue != rValue {
-						panic("reltest: inconsistent foreign key when updating has many")
-					}
-
-					if col.Remove(pId) {
-						moved := col.Get(pId)
-						pIndex[moved.PrimaryValue()] = pId
-						delete(pIndex, id)
-					}
-				}
-			} else if ac.StaleIDs == nil {
-				// col.Reset()
-			}
+		if !insertion && !loaded {
+			panic("rel: association must be loaded to update")
 		}
 
-		// update and filter for bulk insertion in place
+		var (
+			curr    = 0
+			inserts []rel.Changes
+		)
+
+		// update
 		for _, ch := range ac.Changes {
 			if pChange, changed := ch.Get(pField); changed {
 				// update
@@ -299,8 +273,13 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 					panic("reltest: cannot update has many assoc that is not loaded or doesn't belong to this record")
 				}
 
+				if pId != curr {
+					col.Swap(pId, curr)
+					pValues[pId], pValues[curr] = pValues[curr], pValues[pId]
+				}
+
 				var (
-					doc       = col.Get(pId)
+					doc       = col.Get(curr)
 					fValue, _ = doc.Value(fField)
 				)
 
@@ -309,15 +288,24 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 				}
 
 				applyChanges(doc, ch, false, true)
-			} else {
-				// insert
-				var (
-					doc = col.Add()
-				)
 
-				ch.SetValue(fField, rValue)
-				applyChanges(doc, ch, true, true)
+				delete(pIndex, pChange.Value)
+				curr++
+			} else {
+				inserts = append(inserts, ch)
 			}
+		}
+
+		// delete stales
+		if curr < col.Len() {
+			col.Truncate(0, curr)
+		}
+
+		// inserts remaining
+		for _, ch := range inserts {
+			ch.SetValue(fField, rValue)
+
+			applyChanges(col.Add(), ch, true, true)
 		}
 	}
 }

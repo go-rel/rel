@@ -18,10 +18,11 @@ var (
 )
 
 type Collection struct {
-	v     interface{}
-	rv    reflect.Value
-	rt    reflect.Type
-	index map[interface{}]int
+	v       interface{}
+	rv      reflect.Value
+	rt      reflect.Type
+	index   map[interface{}]int
+	swapper func(i, j int)
 }
 
 func (c *Collection) Table() string {
@@ -145,15 +146,16 @@ func (c *Collection) Add() *Document {
 	return NewDocument(c.rv.Index(index).Addr())
 }
 
-// Remove document from collection by index.
-func (c *Collection) Remove(index int) bool {
-	if len := c.Len(); index < len {
-		c.rv.Index(index).Set(c.rv.Index(len - 1))
-		c.rv.Set(c.rv.Slice(0, len-1))
-		return true
+func (c *Collection) Truncate(i, j int) {
+	c.rv.Set(c.rv.Slice(i, j))
+}
+
+func (c *Collection) Swap(i, j int) {
+	if c.swapper == nil {
+		c.swapper = reflect.Swapper(c.rv.Interface())
 	}
 
-	return false
+	c.swapper(i, j)
 }
 
 func NewCollection(records interface{}) *Collection {

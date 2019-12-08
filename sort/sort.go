@@ -5,12 +5,10 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// Asc creates a query that sort the result ascending by specified field.
-func Asc(field string) rel.SortQuery {
-	return rel.NewSortAsc(field)
-}
+var (
+	// Asc creates a query that sort the result ascending by specified field.
+	Asc = rel.NewSortAsc
 
-// Desc creates a query that sort the result descending by specified field.
-func Desc(field string) rel.SortQuery {
-	return rel.NewSortDesc(field)
-}
+	// Desc creates a query that sort the result descending by specified field.
+	Desc = rel.NewSortDesc
+)

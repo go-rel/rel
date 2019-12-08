@@ -5,113 +5,71 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// And compares other filters using and.
-func And(inner ...rel.FilterQuery) rel.FilterQuery {
-	return rel.And(inner...)
-}
+var (
+	// And compares other filters using and.
+	And = rel.And
 
-// Or compares other filters using and.
-func Or(inner ...rel.FilterQuery) rel.FilterQuery {
-	return rel.Or(inner...)
-}
+	// Or compares other filters using and.
+	Or = rel.Or
 
-// Not wraps filters using not.
-// It'll negate the filter type if possible.
-func Not(inner ...rel.FilterQuery) rel.FilterQuery {
-	return rel.Not(inner...)
-}
+	// Not wraps filters using not.
+	// It'll negate the filter type if possible.
+	Not = rel.Not
 
-// Eq expression field equal to value.
-func Eq(field string, value interface{}) rel.FilterQuery {
-	return rel.Eq(field, value)
-}
+	// Eq expression field equal to value.
+	Eq = rel.Eq
 
-// Ne compares that left value is not equal to right value.
-func Ne(field string, value interface{}) rel.FilterQuery {
-	return rel.Ne(field, value)
-}
+	// Ne compares that left value is not equal to right value.
+	Ne = rel.Ne
 
-// Lt compares that left value is less than to right value.
-func Lt(field string, value interface{}) rel.FilterQuery {
-	return rel.Lt(field, value)
-}
+	// Lt compares that left value is less than to right value.
+	Lt = rel.Lt
 
-// Lte compares that left value is less than or equal to right value.
-func Lte(field string, value interface{}) rel.FilterQuery {
-	return rel.Lte(field, value)
-}
+	// Lte compares that left value is less than or equal to right value.
+	Lte = rel.Lte
 
-// Gt compares that left value is greater than to right value.
-func Gt(field string, value interface{}) rel.FilterQuery {
-	return rel.Gt(field, value)
-}
+	// Gt compares that left value is greater than to right value.
+	Gt = rel.Gt
 
-// Gte compares that left value is greater than or equal to right value.
-func Gte(field string, value interface{}) rel.FilterQuery {
-	return rel.Gte(field, value)
-}
+	// Gte compares that left value is greater than or equal to right value.
+	Gte = rel.Gte
 
-// Nil check whether field is nil.
-func Nil(field string) rel.FilterQuery {
-	return rel.Nil(field)
-}
+	// Nil check whether field is nil.
+	Nil = rel.Nil
 
-// NotNil check whether field is not nil.
-func NotNil(field string) rel.FilterQuery {
-	return rel.NotNil(field)
-}
+	// NotNil check whether field is not nil.
+	NotNil = rel.NotNil
 
-// In check whethers value of the field is included in values.
-func In(field string, values ...interface{}) rel.FilterQuery {
-	return rel.In(field, values...)
-}
+	// In check whethers value of the field is included in values.
+	In = rel.In
 
-// InInt check whethers integer value of the field is included in values.
-func InInt(field string, values []int) rel.FilterQuery {
-	return rel.InInt(field, values)
-}
+	// InInt check whethers integer value of the field is included in values.
+	InInt = rel.InInt
 
-// InUint check whethers unsigned integer value of the field is included in values.
-func InUint(field string, values []uint) rel.FilterQuery {
-	return rel.InUint(field, values)
-}
+	// InUint check whethers unsigned integer value of the field is included in values.
+	InUint = rel.InUint
 
-// InString check whethers string value of the field is included in values.
-func InString(field string, values []string) rel.FilterQuery {
-	return rel.InString(field, values)
-}
+	// InString check whethers string value of the field is included in values.
+	InString = rel.InString
 
-// Nin check whethers value of the field is not included in values.
-func Nin(field string, values ...interface{}) rel.FilterQuery {
-	return rel.Nin(field, values...)
-}
+	// Nin check whethers value of the field is not included in values.
+	Nin = rel.Nin
 
-// NinInt check whethers integer value of the field is not included in values.
-func NinInt(field string, values []int) rel.FilterQuery {
-	return rel.NinInt(field, values)
-}
+	// NinInt check whethers integer value of the field is not included in values.
+	NinInt = rel.NinInt
 
-// NinUint check whethers unsigned integer value of the field is not included in values.
-func NinUint(field string, values []uint) rel.FilterQuery {
-	return rel.NinUint(field, values)
-}
+	// NinUint check whethers unsigned integer value of the field is not included in values.
+	NinUint = rel.NinUint
 
-// NinString check whethers string value of the field is not included in values.
-func NinString(field string, values []string) rel.FilterQuery {
-	return rel.NinString(field, values)
-}
+	// NinString check whethers string value of the field is not included in values.
+	NinString = rel.NinString
 
-// Like compares value of field to match string pattern.
-func Like(field string, pattern string) rel.FilterQuery {
-	return rel.Like(field, pattern)
-}
+	// Like compares value of field to match string pattern.
+	Like = rel.Like
 
-// NotLike compares value of field to not match string pattern.
-func NotLike(field string, pattern string) rel.FilterQuery {
-	return rel.NotLike(field, pattern)
-}
+	// NotLike compares value of field to not match string pattern.
+	NotLike = rel.NotLike
 
-// Fragment add custom filter.
-func Fragment(expr string, values ...interface{}) rel.FilterQuery {
-	return rel.FilterFragment(expr, values...)
-}
+	// Fragment add custom filter.
+	Fragment = rel.FilterFragment
+)

@@ -133,7 +133,7 @@ func (c *Collection) Reset() {
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
-// TODO: rename to append
+// Add new document into collection.
 func (c *Collection) Add() *Document {
 	var (
 		index = c.Len()
@@ -146,10 +146,12 @@ func (c *Collection) Add() *Document {
 	return NewDocument(c.rv.Index(index).Addr())
 }
 
+// Truncate collection.
 func (c *Collection) Truncate(i, j int) {
 	c.rv.Set(c.rv.Slice(i, j))
 }
 
+// Swap element in the collection.
 func (c *Collection) Swap(i, j int) {
 	if c.swapper == nil {
 		c.swapper = reflect.Swapper(c.rv.Interface())

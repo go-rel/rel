@@ -1386,54 +1386,6 @@ func TestRepository_saveHasMany_replaceAssocNotLoaded(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_Save_insert(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = repository{adapter: adapter}
-		user    = User{Name: "name"}
-		cur     = createCursor(1)
-	)
-
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
-
-	assert.Nil(t, repo.Save(&user))
-	assert.False(t, cur.Next())
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
-}
-
-func TestRepository_Save_update(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = repository{adapter: adapter}
-		user    = User{ID: 1, Name: "name"}
-		queries = From("users").Where(Eq("id", 1))
-		cur     = createCursor(1)
-	)
-
-	adapter.On("Update", queries, mock.Anything).Return(nil).Once()
-	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
-
-	assert.Nil(t, repo.Save(&user))
-	assert.False(t, cur.Next())
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
-}
-
-func TestRepository_Save_nothing(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = repository{adapter: adapter}
-	)
-
-	assert.Nil(t, repo.Save(nil))
-
-	adapter.AssertExpectations(t)
-}
-
 func TestRepository_Delete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

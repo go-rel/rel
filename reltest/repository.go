@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -204,7 +205,26 @@ func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *Expec
 // Transaction provides a mock function with given fields: fn
 func (r *Repository) Transaction(fn func(rel.Repository) error) error {
 	r.mock.Called()
-	return fn(r.tx)
+
+	var err error
+	func() {
+		defer func() {
+			if p := recover(); p != nil {
+				switch e := p.(type) {
+				case runtime.Error:
+					panic(e)
+				case error:
+					err = e
+				default:
+					panic(e)
+				}
+			}
+		}()
+
+		err = fn(r.tx)
+	}()
+
+	return err
 }
 
 // ExpectTransaction declare expectation inside transaction.

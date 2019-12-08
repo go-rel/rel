@@ -1996,9 +1996,25 @@ func TestRepository_Transaction_panicWithStringAndRollback(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Panics(t, func() {
-		repository{adapter: adapter}.Transaction(func(r Repository) error {
+		_ = repository{adapter: adapter}.Transaction(func(r Repository) error {
 			// doing good things
 			panic("error")
+		})
+	})
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Transaction_runtimeError(t *testing.T) {
+	adapter := &testAdapter{}
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	var user *User
+	assert.Panics(t, func() {
+		_ = repository{adapter: adapter}.Transaction(func(r Repository) error {
+			_ = user.ID
+			return nil
 		})
 	})
 

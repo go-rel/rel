@@ -40,7 +40,8 @@ func Insert(t *testing.T, repo rel.Repository) {
 
 func InsertHasMany(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name:   "insert has many",
 			Gender: "male",
 			Age:    23,
@@ -65,11 +66,17 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.Addresses[1].UserID)
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
+
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "addresses")
+
+	assert.Equal(t, result, user)
 }
 
 func InsertHasOne(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name:           "insert has one",
 			Gender:         "male",
 			Age:            23,
@@ -87,10 +94,16 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
+
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "primary_address")
+
+	assert.Equal(t, result, user)
 }
 
 func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	var (
+		result  Address
 		address = Address{
 			Name: "insert belongs to",
 			User: User{
@@ -112,6 +125,11 @@ func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "zoro", address.User.Name)
 	assert.Equal(t, "male", address.User.Gender)
 	assert.Equal(t, 23, address.User.Age)
+
+	repo.MustFind(&result, where.Eq("id", address.ID))
+	repo.MustPreload(&result, "user")
+
+	assert.Equal(t, result, address)
 }
 
 // Inserts tests insert specifications.

@@ -43,7 +43,8 @@ func Update(t *testing.T, repo rel.Repository) {
 
 func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name: "update init",
 		}
 	)
@@ -69,12 +70,49 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
-	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "addresses")
+
+	assert.Equal(t, result, user)
+}
+
+func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
+	var (
+		user = User{
+			Name: "update init",
+			Addresses: []Address{
+				{Name: "old address"},
+			},
+		}
+		result User
+	)
+
+	repo.MustInsert(&user)
+	assert.NotEqual(t, 0, user.Addresses[0].ID)
+
+	user.Name = "update insert has many"
+	user.Addresses[0].Name = "new address"
+
+	err := repo.Update(&user)
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, user.ID)
+	assert.Equal(t, "update insert has many", user.Name)
+
+	assert.Len(t, user.Addresses, 1)
+	assert.NotEqual(t, 0, user.Addresses[0].ID)
+	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
+	assert.Equal(t, "new address", user.Addresses[0].Name)
+
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "addresses")
+
+	assert.Equal(t, result, user)
 }
 
 func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name: "update init",
 			Addresses: []Address{
 				{Name: "old address"},
@@ -103,12 +141,16 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
-	assert.Equal(t, 2, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "addresses")
+
+	assert.Equal(t, result, user)
 }
 
 func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name: "update init",
 		}
 	)
@@ -127,12 +169,16 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 
-	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "primary_address")
+
+	assert.Equal(t, result, user)
 }
 
 func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name:           "update init",
 			PrimaryAddress: &Address{Name: "primary"},
 		}
@@ -152,12 +198,16 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "updated primary", user.PrimaryAddress.Name)
 
-	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "primary_address")
+
+	assert.Equal(t, result, user)
 }
 
 func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{
+		result User
+		user   = User{
 			Name:           "update init",
 			PrimaryAddress: &Address{Name: "primary"},
 		}
@@ -177,11 +227,15 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "replaced primary", user.PrimaryAddress.Name)
 
-	assert.Equal(t, 1, repo.MustCount("addresses", where.Eq("user_id", user.ID)))
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustPreload(&result, "primary_address")
+
+	assert.Equal(t, result, user)
 }
 
 func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	var (
+		result  Address
 		address = Address{Name: "address init"}
 	)
 
@@ -198,10 +252,16 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, address.User.ID)
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "inserted user", address.User.Name)
+
+	repo.MustFind(&result, where.Eq("id", address.ID))
+	repo.MustPreload(&result, "user")
+
+	assert.Equal(t, result, address)
 }
 
 func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	var (
+		result  Address
 		address = Address{
 			Name: "address init",
 			User: User{Name: "user"},
@@ -221,6 +281,11 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, address.User.ID)
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "updated user", address.User.Name)
+
+	repo.MustFind(&result, where.Eq("id", address.ID))
+	repo.MustPreload(&result, "user")
+
+	assert.Equal(t, result, address)
 }
 
 // Update tests update specifications.

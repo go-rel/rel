@@ -24,8 +24,6 @@ type Repository interface {
 	MustInsertAll(records interface{}, changes ...Changes)
 	Update(record interface{}, changers ...Changer) error
 	MustUpdate(record interface{}, changers ...Changer)
-	Save(record interface{}, changers ...Changer) error
-	MustSave(record interface{}, changers ...Changer)
 	Delete(record interface{}) error
 	MustDelete(record interface{})
 	DeleteAll(queriers ...Querier) error
@@ -480,39 +478,6 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 	}
 
 	return nil
-}
-
-func (r repository) Save(record interface{}, changers ...Changer) error {
-	if record == nil {
-		return nil
-	}
-
-	var (
-		doc = NewDocument(record)
-	)
-
-	if len(changers) == 0 {
-		changers = []Changer{newStructset(doc)}
-	}
-
-	return r.save(doc, BuildChanges(changers...))
-}
-
-func (r repository) MustSave(record interface{}, changers ...Changer) {
-	must(r.Save(record, changers...))
-}
-
-func (r repository) save(doc *Document, changes Changes) error {
-	var (
-		pField = doc.PrimaryField()
-		pValue = doc.PrimaryValue()
-	)
-
-	if isZero(pValue) {
-		return r.insert(doc, changes)
-	}
-
-	return r.update(doc, changes, Eq(pField, pValue))
 }
 
 // Delete single entry.

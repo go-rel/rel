@@ -131,47 +131,33 @@ func (em *ExpectModify) NotUnique(key string) {
 	})
 }
 
-func applyChanges(rv reflect.Value, changes rel.Changes, insertion bool, includeAssoc bool) {
-	var (
-		doc   = rel.NewDocument(rv)
-		index = doc.Index()
-	)
-
-	rv = rv.Elem()
-
-	pv := rv.Field(index[doc.PrimaryField()])
-	if pv.Kind() == reflect.Int && pv.Int() == 0 {
+func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includeAssoc bool) {
+	if doc.PrimaryValue() == 0 {
 		if insertion {
-			pv.SetInt(1)
+			doc.SetValue(doc.PrimaryField(), 1)
 		} else {
 			panic("reltest: cannot update a record without using primary key")
 		}
 	}
 
 	if includeAssoc {
-		applyBelongsToChanges(rv, index, doc, &changes)
+		applyBelongsToChanges(doc, &changes)
 	}
 
 	for _, ch := range changes.All() {
-		if i, ok := index[ch.Field]; ok {
-			// TODO: other types
-			switch ch.Type {
-			case rel.ChangeSetOp:
-				rv.Field(i).Set(reflect.ValueOf(ch.Value))
-			}
-		} else {
+		if !doc.SetValue(ch.Field, ch.Value) {
 			panic("reltest: cannot apply changes, field " + ch.Field + " is not defined")
 		}
 	}
 
 	if includeAssoc {
-		applyHasOneChanges(rv, index, doc, &changes)
-		applyHasManyChanges(rv, index, doc, &changes, insertion)
+		applyHasOneChanges(doc, &changes)
+		applyHasManyChanges(doc, &changes, insertion)
 	}
 }
 
 // this logic should be similar to repository.saveBelongsTo
-func applyBelongsToChanges(rv reflect.Value, index map[string]int, doc *rel.Document, changes *rel.Changes) {
+func applyBelongsToChanges(doc *rel.Document, changes *rel.Changes) {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -200,10 +186,10 @@ func applyBelongsToChanges(rv reflect.Value, index map[string]int, doc *rel.Docu
 				panic("reltest: inconsistent referenced foreign key of belongs to assoc")
 			}
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false, true)
+			applyChanges(doc, assocChanges, false, true)
 		} else {
 			// insert
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true, true)
+			applyChanges(doc, assocChanges, true, true)
 
 			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
@@ -211,7 +197,7 @@ func applyBelongsToChanges(rv reflect.Value, index map[string]int, doc *rel.Docu
 }
 
 // This logic should be similar to repository.saveHasOne
-func applyHasOneChanges(rv reflect.Value, index map[string]int, doc *rel.Document, changes *rel.Changes) {
+func applyHasOneChanges(doc *rel.Document, changes *rel.Changes) {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -238,17 +224,17 @@ func applyHasOneChanges(rv reflect.Value, index map[string]int, doc *rel.Documen
 				panic("reltest: inconsistent referenced foreign key of has one assoc")
 			}
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, false, true)
+			applyChanges(doc, assocChanges, false, true)
 		} else {
 			// insert
 			assocChanges.SetValue(fField, rValue)
 
-			applyChanges(rv.Field(index[field]).Addr(), assocChanges, true, true)
+			applyChanges(doc, assocChanges, true, true)
 		}
 	}
 }
 
-func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Document, changes *rel.Changes, insertion bool) {
+func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool) {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -261,32 +247,39 @@ func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Docume
 			pField      = col.PrimaryField()
 			fField      = assoc.ForeignField()
 			rValue      = assoc.ReferenceValue()
-			fv          = rv.Field(index[field])
-			elTyp       = fv.Type().Elem()
-			result      = reflect.MakeSlice(fv.Type(), 0, len(ac.Changes))
-			pkIndex     = make(map[interface{}]int)
+			pIndex      = make(map[interface{}]int)
+			pValues     = col.PrimaryValue().([]interface{})
 		)
 
-		for i := 0; i < col.Len(); i++ {
-			pkIndex[col.Get(i).PrimaryValue()] = i
+		for i, v := range pValues {
+			pIndex[v] = i
 		}
 
 		if !insertion && !loaded {
 			panic("rel: association must be loaded to update")
 		}
 
-		// update and filter for bulk insertion in place
+		var (
+			curr    = 0
+			inserts []rel.Changes
+		)
+
+		// update
 		for _, ch := range ac.Changes {
 			if pChange, changed := ch.Get(pField); changed {
 				// update
-				pId, ok := pkIndex[pChange.Value]
+				pId, ok := pIndex[pChange.Value]
 				if !ok {
 					panic("reltest: cannot update has many assoc that is not loaded or doesn't belong to this record")
 				}
 
+				if pId != curr {
+					col.Swap(pId, curr)
+					pValues[pId], pValues[curr] = pValues[curr], pValues[pId]
+				}
+
 				var (
-					rv        = fv.Index(pId).Addr()
-					doc       = rel.NewDocument(rv)
+					doc       = col.Get(curr)
 					fValue, _ = doc.Value(fField)
 				)
 
@@ -294,21 +287,26 @@ func applyHasManyChanges(rv reflect.Value, index map[string]int, doc *rel.Docume
 					panic("reltest: inconsistent foreign key when updating has many")
 				}
 
-				applyChanges(rv, ch, false, true)
-				result = reflect.Append(result, rv.Elem())
-			} else {
-				// insert
-				var (
-					el = reflect.New(elTyp)
-				)
+				applyChanges(doc, ch, false, true)
 
-				ch.SetValue(fField, rValue)
-				applyChanges(el, ch, true, true)
-				result = reflect.Append(result, el.Elem())
+				delete(pIndex, pChange.Value)
+				curr++
+			} else {
+				inserts = append(inserts, ch)
 			}
 		}
 
-		fv.Set(result)
+		// delete stales
+		if curr < col.Len() {
+			col.Truncate(0, curr)
+		}
+
+		// inserts remaining
+		for _, ch := range inserts {
+			ch.SetValue(fField, rValue)
+
+			applyChanges(col.Add(), ch, true, true)
+		}
 	}
 }
 
@@ -332,7 +330,7 @@ func newExpectModify(r *Repository, methodName string, changers []rel.Changer, i
 			changes = rel.BuildChanges(changers...)
 		}
 
-		applyChanges(reflect.ValueOf(args[0]), changes, insertion, true)
+		applyChanges(rel.NewDocument(args[0]), changes, insertion, true)
 	})
 
 	return em
@@ -353,25 +351,19 @@ func newExpectInsertAll(r *Repository, changes []rel.Changes) *ExpectModify {
 		)
 
 		if len(changes) == 0 {
-			changes = make([]rel.Changes, col.Len())
+			// just set primary keys
+			for i := 0; i < col.Len(); i++ {
+				doc := col.Get(i)
+				doc.SetValue(doc.PrimaryField(), 1)
+			}
+		} else {
+			col.Reset()
+
 			for i := range changes {
-				changes[i] = rel.BuildChanges(rel.NewStructset(col.Get(i)))
+				doc := col.Add()
+				applyChanges(doc, changes[i], true, false)
 			}
 		}
-
-		var (
-			rv     = reflect.ValueOf(records)
-			elTyp  = rv.Type().Elem().Elem()
-			result = reflect.MakeSlice(rv.Elem().Type(), 0, len(changes))
-		)
-
-		for i := range changes {
-			el := reflect.New(elTyp)
-			applyChanges(el, changes[i], true, false)
-			result = reflect.Append(result, el.Elem())
-		}
-
-		rv.Elem().Set(result)
 	})
 
 	return em

@@ -138,6 +138,48 @@ func (d *Document) Value(field string) (interface{}, bool) {
 	return nil, false
 }
 
+func (d *Document) SetValue(field string, value interface{}) bool {
+	if i, ok := d.data.index[field]; ok {
+		var (
+			rv reflect.Value
+			rt reflect.Type
+			fv = d.rv.Field(i)
+			ft = fv.Type()
+		)
+
+		switch v := value.(type) {
+		case nil:
+			rv = reflect.Zero(ft)
+		case reflect.Value:
+			rv = reflect.Indirect(v)
+		default:
+			rv = reflect.Indirect(reflect.ValueOf(value))
+		}
+
+		rt = rv.Type()
+
+		if fv.Type() == rt || rt.AssignableTo(ft) {
+			fv.Set(rv)
+			return true
+		}
+
+		if ft.Kind() == reflect.Ptr {
+			if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
+				return false
+			}
+
+			if fv.IsNil() {
+				fv.Set(reflect.New(ft.Elem()))
+			}
+			fv.Elem().Set(rv)
+
+			return true
+		}
+	}
+
+	return false
+}
+
 func (d *Document) Scanners(fields []string) []interface{} {
 	var (
 		result = make([]interface{}, len(fields))

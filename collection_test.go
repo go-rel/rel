@@ -172,6 +172,38 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValue())
 }
 
+func TestCollection_Truncate(t *testing.T) {
+	assert.NotPanics(t, func() {
+		var (
+			users = []User{}
+			col   = NewCollection(&users)
+		)
+
+		col.Add()
+		assert.Equal(t, 1, col.Len())
+
+		col.Truncate(0, 0)
+		assert.Equal(t, 0, col.Len())
+	})
+}
+
+func TestCollection_Swap(t *testing.T) {
+	assert.NotPanics(t, func() {
+		var (
+			users = []User{
+				{ID: 1},
+				{ID: 2},
+			}
+			col = NewCollection(&users)
+		)
+
+		col.Swap(0, 1)
+
+		assert.Equal(t, 2, users[0].ID)
+		assert.Equal(t, 1, users[1].ID)
+	})
+}
+
 func TestCollection_Slice(t *testing.T) {
 	assert.NotPanics(t, func() {
 		var (

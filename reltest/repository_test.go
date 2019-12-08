@@ -222,6 +222,44 @@ func TestRepository_Insert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_Insert_nested(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			Title:  "Rel for dummies",
+			Author: Author{Name: "Kia"},
+			Ratings: []Rating{
+				{Score: 9},
+				{Score: 10},
+			},
+			Poster: Poster{Image: "http://image.url"},
+		}
+		book = Book{
+			ID:       1,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 1, Name: "Kia"},
+			AuthorID: 1,
+			Ratings: []Rating{
+				{ID: 1, Score: 9, BookID: 1},
+				{ID: 1, Score: 10, BookID: 1},
+			},
+			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
+		}
+	)
+
+	repo.ExpectInsert()
+	assert.Nil(t, repo.Insert(&result))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+
+	repo.ExpectInsert()
+	assert.NotPanics(t, func() {
+		repo.MustInsert(&result)
+		assert.Equal(t, book, result)
+	})
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Insert_record(t *testing.T) {
 	var (
 		repo   Repository
@@ -359,6 +397,28 @@ func TestRepository_InsertAll(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_InsertAll_map(t *testing.T) {
+	var (
+		repo    Repository
+		results []Book
+		books   = []Book{
+			{ID: 1, Title: "Golang for dummies"},
+			{ID: 1, Title: "Rel for dummies"},
+		}
+	)
+
+	repo.ExpectInsertAll(
+		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
+		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
+	)
+	assert.Nil(t, repo.InsertAll(&results,
+		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
+		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
+	))
+	assert.Equal(t, books, results)
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update(t *testing.T) {
 	var (
 		repo   Repository
@@ -372,6 +432,85 @@ func TestRepository_Update(t *testing.T) {
 	repo.ExpectUpdate()
 	assert.NotPanics(t, func() {
 		repo.MustUpdate(&result)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_nested(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:       2,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 2, Name: "Kia"},
+			AuthorID: 2,
+			Ratings: []Rating{
+				{ID: 1, BookID: 2, Score: 9},
+				{ID: 1, BookID: 2, Score: 10},
+			},
+			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
+		}
+		book = Book{
+			ID:       2,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 2, Name: "Kia"},
+			AuthorID: 2,
+			Ratings: []Rating{
+				{ID: 1, BookID: 2, Score: 9},
+				{ID: 1, BookID: 2, Score: 10},
+			},
+			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
+		}
+	)
+
+	repo.ExpectUpdate()
+	assert.Nil(t, repo.Update(&result))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+
+	repo.ExpectUpdate()
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result)
+		assert.Equal(t, book, result)
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Update_nestedInsert(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{
+			ID:     2,
+			Title:  "Rel for dummies",
+			Author: Author{Name: "Kia"},
+			Ratings: []Rating{
+				{Score: 9},
+				{Score: 10},
+			},
+			Poster: Poster{Image: "http://image.url"},
+		}
+		book = Book{
+			ID:       2,
+			Title:    "Rel for dummies",
+			Author:   Author{ID: 1, Name: "Kia"},
+			AuthorID: 1,
+			Ratings: []Rating{
+				{ID: 1, BookID: 2, Score: 9},
+				{ID: 1, BookID: 2, Score: 10},
+			},
+			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
+		}
+	)
+
+	repo.ExpectUpdate()
+	assert.Nil(t, repo.Update(&result))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+
+	repo.ExpectUpdate()
+	assert.NotPanics(t, func() {
+		repo.MustUpdate(&result)
+		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
 }
@@ -426,6 +565,19 @@ func TestRepository_Update_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRepository_Update_setNil(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Title: "Golang for dummies"}
+		book   = Book{ID: 2, Title: ""}
+	)
+
+	repo.ExpectUpdate(rel.Set("title", nil))
+	assert.Nil(t, repo.Update(&result, rel.Set("title", nil)))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+}
+
 func TestRepository_Update_map(t *testing.T) {
 	var (
 		repo   Repository
@@ -433,7 +585,9 @@ func TestRepository_Update_map(t *testing.T) {
 			ID:    2,
 			Title: "Golang for dummies",
 			Ratings: []Rating{
+				{ID: 4, BookID: 2, Score: 15},
 				{ID: 2, BookID: 2, Score: 5},
+				{ID: 3, BookID: 2, Score: 6},
 			},
 		}
 		book = Book{

@@ -18,27 +18,11 @@ var (
 )
 
 type Collection struct {
-	v  interface{}
-	rv reflect.Value
-	rt reflect.Type
-}
-
-func (c *Collection) reflect() {
-	if c.rv.IsValid() {
-		return
-	}
-
-	c.rv = reflect.ValueOf(c.v)
-	if c.rv.Kind() != reflect.Ptr {
-		panic("rel: must be a pointer")
-	}
-
-	c.rv = c.rv.Elem()
-	c.rt = c.rv.Type()
-
-	if c.rt.Kind() != reflect.Slice {
-		panic("rel: must be a pointer to a slice")
-	}
+	v       interface{}
+	rv      reflect.Value
+	rt      reflect.Type
+	index   map[interface{}]int
+	swapper func(i, j int)
 }
 
 func (c *Collection) Table() string {
@@ -50,8 +34,6 @@ func (c *Collection) Table() string {
 }
 
 func (c *Collection) tableName() string {
-	c.reflect()
-
 	var (
 		rt = c.rt.Elem()
 	)
@@ -112,8 +94,6 @@ func (c *Collection) PrimaryValue() interface{} {
 }
 
 func (c *Collection) searchPrimary() (string, int) {
-	c.reflect()
-
 	var (
 		rt = c.rt.Elem()
 	)
@@ -142,26 +122,19 @@ func (c *Collection) searchPrimary() (string, int) {
 }
 
 func (c *Collection) Get(index int) *Document {
-	c.reflect()
-
-	return NewDocument(c.rv.Index(index).Addr().Interface())
+	return NewDocument(c.rv.Index(index).Addr())
 }
 
 func (c *Collection) Len() int {
-	c.reflect()
-
 	return c.rv.Len()
 }
 
 func (c *Collection) Reset() {
-	c.reflect()
-
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
+// Add new document into collection.
 func (c *Collection) Add() *Document {
-	c.reflect()
-
 	var (
 		index = c.Len()
 		typ   = c.rt.Elem()
@@ -170,7 +143,21 @@ func (c *Collection) Add() *Document {
 
 	c.rv.Set(reflect.Append(c.rv, drv))
 
-	return NewDocument(c.rv.Index(index).Addr().Interface())
+	return NewDocument(c.rv.Index(index).Addr())
+}
+
+// Truncate collection.
+func (c *Collection) Truncate(i, j int) {
+	c.rv.Set(c.rv.Slice(i, j))
+}
+
+// Swap element in the collection.
+func (c *Collection) Swap(i, j int) {
+	if c.swapper == nil {
+		c.swapper = reflect.Swapper(c.rv.Interface())
+	}
+
+	c.swapper(i, j)
 }
 
 func NewCollection(records interface{}) *Collection {
@@ -192,6 +179,20 @@ func NewCollection(records interface{}) *Collection {
 	case nil:
 		panic("rel: cannot be nil")
 	default:
-		return &Collection{v: v}
+
+		var (
+			rv = reflect.ValueOf(v)
+			rt = rv.Type()
+		)
+
+		if rt.Kind() != reflect.Ptr || rt.Elem().Kind() != reflect.Slice {
+			panic("rel: collection must be a pointer to a slice")
+		}
+
+		return &Collection{
+			v:  v,
+			rv: rv.Elem(),
+			rt: rt.Elem(),
+		}
 	}
 }

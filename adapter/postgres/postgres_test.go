@@ -99,6 +99,7 @@ func TestAdapter_specs(t *testing.T) {
 	// Update Specs
 	specs.Update(t, repo)
 	specs.UpdateHasManyInsert(t, repo)
+	specs.UpdateHasManyUpdate(t, repo)
 	specs.UpdateHasManyReplace(t, repo)
 	specs.UpdateHasOneInsert(t, repo)
 	specs.UpdateHasOneUpdate(t, repo)

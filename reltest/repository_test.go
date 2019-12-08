@@ -336,12 +336,12 @@ func TestRepository_Insert_map(t *testing.T) {
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	// repo.ExpectInsert(ch)
-	// assert.NotPanics(t, func() {
-	// 	repo.MustInsert(&result, ch)
-	// 	assert.Equal(t, book, result)
-	// })
-	// repo.AssertExpectations(t)
+	repo.ExpectInsert(ch)
+	assert.NotPanics(t, func() {
+		repo.MustInsert(&result, ch)
+		assert.Equal(t, book, result)
+	})
+	repo.AssertExpectations(t)
 }
 
 func TestRepository_Insert_unknownField(t *testing.T) {

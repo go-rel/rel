@@ -49,18 +49,6 @@ type Document struct {
 	data documentData
 }
 
-func (d Document) Interface() interface{} {
-	return d.v
-}
-
-func (d Document) ReflectValue() reflect.Value {
-	return d.rv
-}
-
-func (d Document) ReflectType() reflect.Type {
-	return d.rt
-}
-
 func (d *Document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()

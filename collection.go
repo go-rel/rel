@@ -18,21 +18,10 @@ var (
 )
 
 type Collection struct {
-	v  interface{}
-	rv reflect.Value
-	rt reflect.Type
-}
-
-func (c Collection) Interface() interface{} {
-	return c.v
-}
-
-func (c Collection) ReflectValue() reflect.Value {
-	return c.rv
-}
-
-func (c Collection) ReflectType() reflect.Type {
-	return c.rt
+	v     interface{}
+	rv    reflect.Value
+	rt    reflect.Type
+	index map[interface{}]int
 }
 
 func (c *Collection) Table() string {
@@ -143,6 +132,7 @@ func (c *Collection) Reset() {
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
+// TODO: rename to append
 func (c *Collection) Add() *Document {
 	var (
 		index = c.Len()
@@ -153,6 +143,17 @@ func (c *Collection) Add() *Document {
 	c.rv.Set(reflect.Append(c.rv, drv))
 
 	return NewDocument(c.rv.Index(index).Addr())
+}
+
+// Remove document from collection by index.
+func (c *Collection) Remove(index int) bool {
+	if len := c.Len(); index < len {
+		c.rv.Index(index).Set(c.rv.Index(len - 1))
+		c.rv.Set(c.rv.Slice(0, len-1))
+		return true
+	}
+
+	return false
 }
 
 func NewCollection(records interface{}) *Collection {

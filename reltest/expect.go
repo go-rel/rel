@@ -132,10 +132,6 @@ func (em *ExpectModify) NotUnique(key string) {
 }
 
 func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includeAssoc bool) {
-	var (
-		index = doc.Index()
-	)
-
 	if doc.PrimaryValue() == 0 {
 		if insertion {
 			doc.SetValue(doc.PrimaryField(), 1)
@@ -145,7 +141,7 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	if includeAssoc {
-		applyBelongsToChanges(doc, index, &changes)
+		applyBelongsToChanges(doc, &changes)
 	}
 
 	for _, ch := range changes.All() {
@@ -155,13 +151,13 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	if includeAssoc {
-		applyHasOneChanges(doc, index, &changes)
-		applyHasManyChanges(doc, index, &changes, insertion)
+		applyHasOneChanges(doc, &changes)
+		applyHasManyChanges(doc, &changes, insertion)
 	}
 }
 
 // this logic should be similar to repository.saveBelongsTo
-func applyBelongsToChanges(doc *rel.Document, index map[string]int, changes *rel.Changes) {
+func applyBelongsToChanges(doc *rel.Document, changes *rel.Changes) {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -201,7 +197,7 @@ func applyBelongsToChanges(doc *rel.Document, index map[string]int, changes *rel
 }
 
 // This logic should be similar to repository.saveHasOne
-func applyHasOneChanges(doc *rel.Document, index map[string]int, changes *rel.Changes) {
+func applyHasOneChanges(doc *rel.Document, changes *rel.Changes) {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed || len(ac.Changes) == 0 {
@@ -238,7 +234,7 @@ func applyHasOneChanges(doc *rel.Document, index map[string]int, changes *rel.Ch
 	}
 }
 
-func applyHasManyChanges(doc *rel.Document, index map[string]int, changes *rel.Changes, insertion bool) {
+func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool) {
 	for _, field := range doc.HasMany() {
 		ac, changed := changes.GetAssoc(field)
 		if !changed {
@@ -251,24 +247,54 @@ func applyHasManyChanges(doc *rel.Document, index map[string]int, changes *rel.C
 			pField      = col.PrimaryField()
 			fField      = assoc.ForeignField()
 			rValue      = assoc.ReferenceValue()
-			elTyp       = col.ReflectType().Elem()
-			result      = reflect.MakeSlice(col.ReflectType(), 0, len(ac.Changes))
-			pkIndex     = make(map[interface{}]int)
+			pIndex      = make(map[interface{}]int)
+			pValues     = col.PrimaryValue().([]interface{})
 		)
 
-		for i := 0; i < col.Len(); i++ {
-			pkIndex[col.Get(i).PrimaryValue()] = i
+		for i, v := range pValues {
+			pIndex[v] = i
 		}
 
-		if !insertion && !loaded {
-			panic("rel: association must be loaded to update")
+		if !insertion {
+			if !loaded {
+				panic("rel: association must be loaded to update")
+			}
+
+			// if deleted ids is specified, then only delete those.
+			// if it's nill, then clear old association (used by structset).
+			if len(ac.StaleIDs) > 0 {
+				for _, id := range ac.StaleIDs {
+					// update
+					pId, ok := pIndex[id]
+					if !ok {
+						panic("reltest: cannot delete has many assoc that is not loaded or doesn't belong to this record")
+					}
+
+					var (
+						doc       = col.Get(pId)
+						fValue, _ = doc.Value(fField)
+					)
+
+					if fValue != rValue {
+						panic("reltest: inconsistent foreign key when updating has many")
+					}
+
+					if col.Remove(pId) {
+						moved := col.Get(pId)
+						pIndex[moved.PrimaryValue()] = pId
+						delete(pIndex, id)
+					}
+				}
+			} else if ac.StaleIDs == nil {
+				// col.Reset()
+			}
 		}
 
 		// update and filter for bulk insertion in place
 		for _, ch := range ac.Changes {
 			if pChange, changed := ch.Get(pField); changed {
 				// update
-				pId, ok := pkIndex[pChange.Value]
+				pId, ok := pIndex[pChange.Value]
 				if !ok {
 					panic("reltest: cannot update has many assoc that is not loaded or doesn't belong to this record")
 				}
@@ -283,20 +309,16 @@ func applyHasManyChanges(doc *rel.Document, index map[string]int, changes *rel.C
 				}
 
 				applyChanges(doc, ch, false, true)
-				result = reflect.Append(result, doc.ReflectValue())
 			} else {
 				// insert
 				var (
-					doc = rel.NewDocument(reflect.New(elTyp))
+					doc = col.Add()
 				)
 
 				ch.SetValue(fField, rValue)
 				applyChanges(doc, ch, true, true)
-				result = reflect.Append(result, doc.ReflectValue())
 			}
 		}
-
-		col.ReflectValue().Set(result)
 	}
 }
 

@@ -4,9 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/Fs02/rel"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	ErrConnectionClosed = sql.ErrConnDone
 )
 
 type Expect struct {
@@ -19,7 +24,7 @@ func (e *Expect) Error(err error) {
 }
 
 func (e *Expect) ConnectionClosed() {
-	e.Error(sql.ErrConnDone)
+	e.Error(ErrConnectionClosed)
 }
 
 func newExpect(r *Repository, methodName string, args []interface{}, rets []interface{}) *Expect {
@@ -42,7 +47,7 @@ func (ea *ExpectAggregate) Error(err error) {
 }
 
 func (ea *ExpectAggregate) ConnectionClosed() {
-	ea.Error(sql.ErrConnDone)
+	ea.Error(ErrConnectionClosed)
 }
 
 func newExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *ExpectAggregate {
@@ -122,6 +127,10 @@ type ExpectModify struct {
 func (em *ExpectModify) For(record interface{}) {
 	// adjust arguments
 	em.Arguments[0] = record
+}
+
+func (em *ExpectModify) ForType(typ string) {
+	em.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
 func (em *ExpectModify) NotUnique(key string) {
@@ -376,6 +385,10 @@ type ExpectDelete struct {
 func (ed *ExpectDelete) For(record interface{}) {
 	// adjust arguments
 	ed.Arguments[0] = record
+}
+
+func (ed *ExpectDelete) ForType(typ string) {
+	ed.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
 func newExpectDelete(r *Repository) *ExpectDelete {

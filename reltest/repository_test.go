@@ -267,12 +267,12 @@ func TestRepository_Insert_record(t *testing.T) {
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
 
-	repo.ExpectInsert().For(&result)
+	repo.ExpectInsert().ForType("reltest.Book")
 	assert.Nil(t, repo.Insert(&result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectInsert().For(&result)
+	repo.ExpectInsert().ForType("reltest.Book")
 	assert.NotPanics(t, func() {
 		repo.MustInsert(&result)
 		assert.Equal(t, book, result)
@@ -847,6 +847,22 @@ func TestRepository_Delete(t *testing.T) {
 	repo.AssertExpectations(t)
 
 	repo.ExpectDelete().For(&Book{ID: 1})
+	assert.NotPanics(t, func() {
+		repo.MustDelete(&Book{ID: 1})
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestRepository_Delete_forType(t *testing.T) {
+	var (
+		repo Repository
+	)
+
+	repo.ExpectDelete().ForType("reltest.Book")
+	assert.Nil(t, repo.Delete(&Book{ID: 1}))
+	repo.AssertExpectations(t)
+
+	repo.ExpectDelete().ForType("reltest.Book")
 	assert.NotPanics(t, func() {
 		repo.MustDelete(&Book{ID: 1})
 	})

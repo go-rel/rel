@@ -45,8 +45,8 @@ func (r *Repository) MustAggregate(query rel.Query, aggregate string, field stri
 }
 
 // ExpectAggregate apply mocks and expectations for Aggregate
-func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field string) *ExpectAggregate {
-	return newExpectAggregate(r, query, aggregate, field)
+func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field string) *Aggregate {
+	return ExpectAggregate(r, query, aggregate, field)
 }
 
 // Count provides a mock function with given fields: collection, queriers
@@ -62,9 +62,9 @@ func (r *Repository) MustCount(collection string, queriers ...rel.Querier) int {
 	return count
 }
 
-// ExpectAggregate apply mocks and expectations for Aggregate
-func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *ExpectAggregate {
-	return newExpectAggregateCount(r, collection, queriers)
+// ExpectCount apply mocks and expectations for Count
+func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *Aggregate {
+	return ExpectCount(r, collection, queriers)
 }
 
 // Find provides a mock function with given fields: record, queriers
@@ -78,8 +78,8 @@ func (r *Repository) MustFind(record interface{}, queriers ...rel.Querier) {
 }
 
 // ExpectFind apply mocks and expectations for Find
-func (r *Repository) ExpectFind(queriers ...rel.Querier) *ExpectFind {
-	return newExpectFind(r, queriers)
+func (r *Repository) ExpectFind(queriers ...rel.Querier) *Find {
+	return ExpectFind(r, queriers)
 }
 
 // FindAll provides a mock function with given fields: records, queriers
@@ -88,8 +88,8 @@ func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error
 }
 
 // ExpectFindAll apply mocks and expectations for FindAll
-func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *ExpectFindAll {
-	return newExpectFindAll(r, queriers)
+func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *FindAll {
+	return ExpectFindAll(r, queriers)
 }
 
 // MustFindAll provides a mock function with given fields: records, queriers
@@ -108,8 +108,8 @@ func (r *Repository) MustInsert(record interface{}, changers ...rel.Changer) {
 }
 
 // ExpectInsert apply mocks and expectations for Insert
-func (r *Repository) ExpectInsert(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Insert", changers, true)
+func (r *Repository) ExpectInsert(changers ...rel.Changer) *Modify {
+	return ExpectModify(r, "Insert", changers, true)
 }
 
 // InsertAll provides a mock function with given fields: records, changes
@@ -123,8 +123,8 @@ func (r *Repository) MustInsertAll(records interface{}, changes ...rel.Changes) 
 }
 
 // ExpectInsertAll apply mocks and expectations for InsertAll
-func (r *Repository) ExpectInsertAll(changes ...rel.Changes) *ExpectModify {
-	return newExpectInsertAll(r, changes)
+func (r *Repository) ExpectInsertAll(changes ...rel.Changes) *Modify {
+	return ExpectInsertAll(r, changes)
 }
 
 // Update provides a mock function with given fields: record, changers
@@ -138,23 +138,8 @@ func (r *Repository) MustUpdate(record interface{}, changers ...rel.Changer) {
 }
 
 // ExpectUpdate apply mocks and expectations for Update
-func (r *Repository) ExpectUpdate(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Update", changers, false)
-}
-
-// Save provides a mock function with given fields: record, changers
-func (r *Repository) Save(record interface{}, changers ...rel.Changer) error {
-	return r.mock.Called(record, changers).Error(0)
-}
-
-// MustSave provides a mock function with given fields: record, changers
-func (r *Repository) MustSave(record interface{}, changers ...rel.Changer) {
-	must(r.Save(record, changers...))
-}
-
-// ExpectSave apply mocks and expectations for Save
-func (r *Repository) ExpectSave(changers ...rel.Changer) *ExpectModify {
-	return newExpectModify(r, "Save", changers, false)
+func (r *Repository) ExpectUpdate(changers ...rel.Changer) *Modify {
+	return ExpectModify(r, "Update", changers, false)
 }
 
 // Delete provides a mock function with given fields: record
@@ -168,8 +153,8 @@ func (r *Repository) MustDelete(record interface{}) {
 }
 
 // ExpectDelete apply mocks and expectations for Delete
-func (r *Repository) ExpectDelete() *ExpectDelete {
-	return newExpectDelete(r)
+func (r *Repository) ExpectDelete() *Delete {
+	return ExpectDelete(r)
 }
 
 // DeleteAll provides a mock function with given fields: queriers
@@ -183,8 +168,8 @@ func (r *Repository) MustDeleteAll(queriers ...rel.Querier) {
 }
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
-func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *ExpectDeleteAll {
-	return newExpectDeleteAll(r, queriers)
+func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *DeleteAll {
+	return ExpectDeleteAll(r, queriers)
 }
 
 // Preload provides a mock function with given fields: records, field, queriers
@@ -238,6 +223,7 @@ func (r *Repository) ExpectTransaction(fn func(*Repository)) {
 	fn(r.tx)
 }
 
+// AssertExpectations asserts that everything was in fact called as expected. Calls may have occurred in any order.
 func (r *Repository) AssertExpectations(t *testing.T) bool {
 	if r.tx != nil {
 		return r.mock.AssertExpectations(t) && r.tx.AssertExpectations(t)

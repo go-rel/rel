@@ -13,23 +13,16 @@ type Preload struct {
 	*Expect
 }
 
-type slice interface {
-	ReflectValue() reflect.Value
-	Reset()
-	Get(index int) *rel.Document
-	Len() int
-}
-
 // Result sets the result of Preload query.
 func (p *Preload) Result(records interface{}) {
 	p.Run(func(args mock.Arguments) {
 		var (
-			target = p.asSlice(args[0])
-			result = p.asSlice(records)
+			target = asSlice(args[0])
+			result = asSlice(records)
 			path   = strings.Split(args[1].(string), ".")
 		)
 
-		p.preload(target, result, path)
+		preload(target, result, path)
 	})
 }
 
@@ -45,7 +38,24 @@ func (p *Preload) ForType(typ string) *Preload {
 	return p.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
-func (p Preload) asSlice(v interface{}) slice {
+// ExpectPreload to be called with given field and queries.
+func ExpectPreload(r *Repository, field string, queriers []rel.Querier) *Preload {
+	return &Preload{
+		Expect: newExpect(r, "Preload",
+			[]interface{}{mock.Anything, field, queriers},
+			[]interface{}{nil},
+		),
+	}
+}
+
+type slice interface {
+	ReflectValue() reflect.Value
+	Reset()
+	Get(index int) *rel.Document
+	Len() int
+}
+
+func asSlice(v interface{}) slice {
 	var (
 		sl slice
 		rt = reflect.TypeOf(v)
@@ -64,15 +74,15 @@ func (p Preload) asSlice(v interface{}) slice {
 	return sl
 }
 
-func (p Preload) preload(target slice, result slice, path []string) {
+func preload(target slice, result slice, path []string) {
 	type frame struct {
 		index int
 		doc   *rel.Document
 	}
 
 	var (
-		mapResult map[interface{}]reflect.Value
-		stack     = make([]frame, target.Len())
+		mappedResult map[interface{}]reflect.Value
+		stack        = make([]frame, target.Len())
 	)
 
 	// init stack
@@ -109,11 +119,11 @@ func (p Preload) preload(target slice, result slice, path []string) {
 
 			curr.Reset()
 
-			if mapResult == nil {
-				mapResult = p.mapResult(result, fField, hasMany)
+			if mappedResult == nil {
+				mappedResult = mapResult(result, fField, hasMany)
 			}
 
-			if rv, ok := mapResult[rValue]; ok {
+			if rv, ok := mappedResult[rValue]; ok {
 				curr.ReflectValue().Set(rv)
 			}
 		} else {
@@ -145,7 +155,7 @@ func (p Preload) preload(target slice, result slice, path []string) {
 	}
 }
 
-func (p Preload) mapResult(result slice, fField string, hasMany bool) map[interface{}]reflect.Value {
+func mapResult(result slice, fField string, hasMany bool) map[interface{}]reflect.Value {
 	var (
 		mapResult = make(map[interface{}]reflect.Value)
 	)
@@ -169,14 +179,4 @@ func (p Preload) mapResult(result slice, fField string, hasMany bool) map[interf
 	}
 
 	return mapResult
-}
-
-// ExpectPreload to be called with given field and queries.
-func ExpectPreload(r *Repository, field string, queriers []rel.Querier) *Preload {
-	return &Preload{
-		Expect: newExpect(r, "Preload",
-			[]interface{}{mock.Anything, field, queriers},
-			[]interface{}{nil},
-		),
-	}
 }

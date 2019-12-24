@@ -10,14 +10,16 @@ import (
 )
 
 type Author struct {
-	ID   int
-	Name string
+	ID    int
+	Name  string
+	Books []Book
 }
 
 type Rating struct {
 	ID     int
 	Score  int
 	BookID int
+	Book   *Book
 }
 
 type Poster struct {
@@ -944,46 +946,6 @@ func TestRepository_DeleteAll_unsafe(t *testing.T) {
 	assert.NotPanics(t, func() {
 		repo.MustDeleteAll(rel.From("books"))
 	})
-	repo.AssertExpectations(t)
-}
-
-func TestRepository_Preload(t *testing.T) {
-	var (
-		repo   Repository
-		result = Book{ID: 2, Title: "Rel for dummies"}
-		book   = Book{ID: 2, Title: "Rel for dummies", Author: Author{ID: 1, Name: "Kia"}}
-	)
-
-	repo.ExpectPreload("author").Result(book)
-	assert.Nil(t, repo.Preload(&result, "author"))
-	assert.Equal(t, book, result)
-	repo.AssertExpectations(t)
-
-	repo.ExpectPreload("author").Result(book)
-	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "author")
-	})
-	assert.Equal(t, book, result)
-	repo.AssertExpectations(t)
-}
-
-func TestRepository_Preload_error(t *testing.T) {
-	var (
-		repo   Repository
-		result = Book{ID: 2, Title: "Rel for dummies"}
-		book   = Book{ID: 2, Title: "Rel for dummies", Author: Author{ID: 1, Name: "Kia"}}
-	)
-
-	repo.ExpectPreload("author").ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.Preload(&result, "author"))
-	assert.NotEqual(t, book, result)
-	repo.AssertExpectations(t)
-
-	repo.ExpectPreload("author").ConnectionClosed()
-	assert.Panics(t, func() {
-		repo.MustPreload(&result, "author")
-	})
-	assert.NotEqual(t, book, result)
 	repo.AssertExpectations(t)
 }
 

@@ -198,8 +198,8 @@ func (r *Repository) MustPreload(records interface{}, field string, queriers ...
 }
 
 // ExpectPreload apply mocks and expectations for Preload
-func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *ExpectFindAll {
-	return newExpectPreload(r, field, queriers)
+func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *Preload {
+	return ExpectPreload(r, field, queriers)
 }
 
 // Transaction provides a mock function with given fields: fn

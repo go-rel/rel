@@ -74,7 +74,6 @@ type ExpectFindAll struct {
 
 // Result sets the result of Find query.
 func (efa *ExpectFindAll) Result(records interface{}) {
-	// adjust arguments
 	efa.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
 
 	efa.Run(func(args mock.Arguments) {
@@ -86,15 +85,6 @@ func newExpectFindAll(r *Repository, queriers []rel.Querier) *ExpectFindAll {
 	return &ExpectFindAll{
 		Expect: newExpect(r, "FindAll",
 			[]interface{}{mock.Anything, queriers},
-			[]interface{}{nil},
-		),
-	}
-}
-
-func newExpectPreload(r *Repository, field string, queriers []rel.Querier) *ExpectFindAll {
-	return &ExpectFindAll{
-		Expect: newExpect(r, "Preload",
-			[]interface{}{mock.Anything, field, queriers},
 			[]interface{}{nil},
 		),
 	}
@@ -125,7 +115,6 @@ type ExpectModify struct {
 }
 
 func (em *ExpectModify) For(record interface{}) {
-	// adjust arguments
 	em.Arguments[0] = record
 }
 
@@ -383,7 +372,6 @@ type ExpectDelete struct {
 }
 
 func (ed *ExpectDelete) For(record interface{}) {
-	// adjust arguments
 	ed.Arguments[0] = record
 }
 

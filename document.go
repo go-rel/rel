@@ -303,12 +303,12 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 		v:    v,
 		rv:   rv,
 		rt:   rt,
-		data: extractdocumentData(rv, rt),
+		data: extractDocumentData(rt, false),
 	}
 }
 
-func extractdocumentData(rv reflect.Value, rt reflect.Type) documentData {
-	if data, cached := documentDataCache.Load(rv.Type()); cached {
+func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
+	if data, cached := documentDataCache.Load(rt); cached {
 		return data.(documentData)
 	}
 
@@ -318,6 +318,7 @@ func extractdocumentData(rv reflect.Value, rt reflect.Type) documentData {
 		}
 	)
 
+	// TODO probably better to use slice index instead.
 	for i := 0; i < rt.NumField(); i++ {
 		var (
 			sf   = rt.Field(i)
@@ -347,17 +348,21 @@ func extractdocumentData(rv reflect.Value, rt reflect.Type) documentData {
 			continue
 		}
 
-		switch newAssociation(rv, i).Type() {
-		case BelongsTo:
-			data.belongsTo = append(data.belongsTo, name)
-		case HasOne:
-			data.hasOne = append(data.hasOne, name)
-		case HasMany:
-			data.hasMany = append(data.hasMany, name)
+		if !skipAssoc {
+			switch extractAssociationData(rt, i).typ {
+			case BelongsTo:
+				data.belongsTo = append(data.belongsTo, name)
+			case HasOne:
+				data.hasOne = append(data.hasOne, name)
+			case HasMany:
+				data.hasMany = append(data.hasMany, name)
+			}
 		}
 	}
 
-	documentDataCache.Store(rt, data)
+	if !skipAssoc {
+		documentDataCache.Store(rt, data)
+	}
 
 	return data
 }

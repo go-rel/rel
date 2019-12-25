@@ -5,12 +5,15 @@ import (
 )
 
 // ExtractString between two string.
-// TODO: use strings.Index
 func ExtractString(s, left, right string) string {
-	parts := strings.Split(s, left)
-	if len(parts) <= 1 {
+	var (
+		start = strings.Index(s, left)
+		end   = strings.LastIndex(s, right)
+	)
+
+	if start < 0 || end < 0 || start+len(left) >= end {
 		return s
 	}
 
-	return strings.Split(parts[1], right)[0]
+	return s[start+len(left) : end]
 }

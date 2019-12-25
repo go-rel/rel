@@ -58,7 +58,7 @@ func NewInnerJoin(table string) JoinQuery {
 	return NewInnerJoinOn(table, "", "")
 }
 
-// NewInnerJoinOn table wtih given field.
+// NewInnerJoinOn table with given field.
 func NewInnerJoinOn(table string, from string, to string) JoinQuery {
 	return NewJoinWith("INNER JOIN", table, from, to)
 }
@@ -68,7 +68,7 @@ func NewLeftJoin(table string) JoinQuery {
 	return NewLeftJoinOn(table, "", "")
 }
 
-// NewLeftJoinOn table wtih given field.
+// NewLeftJoinOn table with given field.
 func NewLeftJoinOn(table string, from string, to string) JoinQuery {
 	return NewJoinWith("LEFT JOIN", table, from, to)
 }
@@ -78,7 +78,7 @@ func NewRightJoin(table string) JoinQuery {
 	return NewRightJoinOn(table, "", "")
 }
 
-// NewRightJoinOn table wtih given field.
+// NewRightJoinOn table with given field.
 func NewRightJoinOn(table string, from string, to string) JoinQuery {
 	return NewJoinWith("RIGHT JOIN", table, from, to)
 }
@@ -88,7 +88,7 @@ func NewFullJoin(table string) JoinQuery {
 	return NewFullJoinOn(table, "", "")
 }
 
-// NewFullJoinOn table wtih given field.
+// NewFullJoinOn table with given field.
 func NewFullJoinOn(table string, from string, to string) JoinQuery {
 	return NewJoinWith("FULL JOIN", table, from, to)
 }

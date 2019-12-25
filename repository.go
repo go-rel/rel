@@ -135,10 +135,8 @@ func (r repository) findAll(col *Collection, query Query) error {
 }
 
 // Insert an record to database.
-// TODO: insert all (multiple changes as multiple records)
 func (r repository) Insert(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
-	// TODO: support not returning via changeset table inference
 	if record == nil {
 		return nil
 	}
@@ -262,7 +260,6 @@ func (r repository) insertAll(col *Collection, changes []Changes) error {
 // - replace has one or has many - may cause duplicate record, update instead
 func (r repository) Update(record interface{}, changers ...Changer) error {
 	// TODO: perform reference check on library level for record instead of adapter level
-	// TODO: support not returning via changeset table inference
 	// TODO: make sure primary id not changed
 	if record == nil {
 		return nil

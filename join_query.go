@@ -4,35 +4,38 @@ import (
 	"strings"
 )
 
-// JoinQuery defines join information in query.
+// JoinQuery defines join clause in query.
 type JoinQuery struct {
-	Mode       string
-	Collection string
-	From       string
-	To         string
-	Arguments  []interface{}
+	Mode      string
+	Table     string
+	From      string
+	To        string
+	Arguments []interface{}
 }
 
+// Build query.
 func (jq JoinQuery) Build(query *Query) {
 	query.JoinQuery = append(query.JoinQuery, jq)
 }
 
 func (jq *JoinQuery) buildJoin(query Query) {
 	if jq.Arguments == nil && (jq.From == "" || jq.To == "") {
-		jq.From = query.Collection + "." + strings.TrimSuffix(jq.Collection, "s") + "_id"
-		jq.To = jq.Collection + ".id"
+		jq.From = query.Table + "." + strings.TrimSuffix(jq.Table, "s") + "_id"
+		jq.To = jq.Table + ".id"
 	}
 }
 
-func NewJoinWith(mode string, collection string, from string, to string) JoinQuery {
+// NewJoinWith query with custom join mode, table and field.
+func NewJoinWith(mode string, table string, from string, to string) JoinQuery {
 	return JoinQuery{
-		Mode:       mode,
-		Collection: collection,
-		From:       from,
-		To:         to,
+		Mode:  mode,
+		Table: table,
+		From:  from,
+		To:    to,
 	}
 }
 
+// NewJoinFragment defines a join clause using raw query.
 func NewJoinFragment(expr string, args ...interface{}) JoinQuery {
 	return JoinQuery{
 		Mode:      expr,
@@ -40,42 +43,52 @@ func NewJoinFragment(expr string, args ...interface{}) JoinQuery {
 	}
 }
 
-func NewJoin(collection string) JoinQuery {
-	return NewJoinWith("JOIN", collection, "", "")
+// NewJoin with given table.
+func NewJoin(table string) JoinQuery {
+	return NewJoinWith("JOIN", table, "", "")
 }
 
-func NewJoinOn(collection string, from string, to string) JoinQuery {
-	return NewJoinWith("JOIN", collection, from, to)
+// NewJoinOn table with given field.
+func NewJoinOn(table string, from string, to string) JoinQuery {
+	return NewJoinWith("JOIN", table, from, to)
 }
 
-func NewInnerJoin(collection string) JoinQuery {
-	return NewInnerJoinOn(collection, "", "")
+// NewInnerJoin with given table.
+func NewInnerJoin(table string) JoinQuery {
+	return NewInnerJoinOn(table, "", "")
 }
 
-func NewInnerJoinOn(collection string, from string, to string) JoinQuery {
-	return NewJoinWith("INNER JOIN", collection, from, to)
+// NewInnerJoinOn table wtih given field.
+func NewInnerJoinOn(table string, from string, to string) JoinQuery {
+	return NewJoinWith("INNER JOIN", table, from, to)
 }
 
-func NewLeftJoin(collection string) JoinQuery {
-	return NewLeftJoinOn(collection, "", "")
+// NewLeftJoin with given table.
+func NewLeftJoin(table string) JoinQuery {
+	return NewLeftJoinOn(table, "", "")
 }
 
-func NewLeftJoinOn(collection string, from string, to string) JoinQuery {
-	return NewJoinWith("LEFT JOIN", collection, from, to)
+// NewLeftJoinOn table wtih given field.
+func NewLeftJoinOn(table string, from string, to string) JoinQuery {
+	return NewJoinWith("LEFT JOIN", table, from, to)
 }
 
-func NewRightJoin(collection string) JoinQuery {
-	return NewRightJoinOn(collection, "", "")
+// NewRightJoin with given table.
+func NewRightJoin(table string) JoinQuery {
+	return NewRightJoinOn(table, "", "")
 }
 
-func NewRightJoinOn(collection string, from string, to string) JoinQuery {
-	return NewJoinWith("RIGHT JOIN", collection, from, to)
+// NewRightJoinOn table wtih given field.
+func NewRightJoinOn(table string, from string, to string) JoinQuery {
+	return NewJoinWith("RIGHT JOIN", table, from, to)
 }
 
-func NewFullJoin(collection string) JoinQuery {
-	return NewFullJoinOn(collection, "", "")
+// NewFullJoin with given table.
+func NewFullJoin(table string) JoinQuery {
+	return NewFullJoinOn(table, "", "")
 }
 
-func NewFullJoinOn(collection string, from string, to string) JoinQuery {
-	return NewJoinWith("FULL JOIN", collection, from, to)
+// NewFullJoinOn table wtih given field.
+func NewFullJoinOn(table string, from string, to string) JoinQuery {
+	return NewJoinWith("FULL JOIN", table, from, to)
 }

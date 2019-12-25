@@ -5,24 +5,17 @@ import (
 	"sync"
 )
 
+// AssociationType defines the type of association in database.
 type AssociationType uint8
 
 const (
+	// BelongsTo association.
 	BelongsTo = iota
+	// HasOne association.
 	HasOne
+	// HasMany association.
 	HasMany
 )
-
-// type Association interface {
-// 	Type() AssociationType
-// 	Document() (Document, bool)
-// 	Collection() (Collection, bool)
-// 	IsZero() bool
-// 	ReferenceField() string
-// 	ReferenceValue() interface{}
-// 	ForeignField() string
-// 	ForeignValue() interface{}
-// }
 
 type associationKey struct {
 	rt    reflect.Type
@@ -40,63 +33,19 @@ type associationData struct {
 
 var associationCache sync.Map
 
+// Association provides abstraction to work with association of document or collection.
 type Association struct {
 	data associationData
 	rv   reflect.Value
 }
 
+// Type of association.
 func (a Association) Type() AssociationType {
 	return a.data.typ
 }
 
-// // Replace Target with Document and Collection
-// func (a Association) Target() (*Collection, bool) {
-// 	var (
-// 		rv = a.rv.FieldByIndex(a.data.targetIndex)
-// 	)
-
-// 	switch rv.Kind() {
-// 	case reflect.Slice:
-// 		var (
-// 			loaded = !rv.IsNil()
-// 		)
-
-// 		if !loaded {
-// 			rv.Set(reflect.MakeSlice(rv.Type(), 0, 0))
-// 		}
-
-// 		return NewCollection(rv.Addr()), loaded
-// 	case reflect.Ptr:
-// 		var (
-// 			loaded = !rv.IsNil()
-// 		)
-
-// 		if !loaded {
-// 			rv.Set(reflect.New(rv.Type().Elem()))
-// 		}
-
-// 		if rv.Elem().Kind() == reflect.Slice {
-// 			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
-
-// 			return NewCollection(rv), loaded
-// 		}
-
-// 		var (
-// 			doc = NewDocument(rv)
-// 			id  = doc.PrimaryValue()
-// 		)
-
-// 		return doc, loaded && !isZero(id)
-// 	default:
-// 		var (
-// 			doc = NewDocument(rv.Addr())
-// 			id  = doc.PrimaryValue()
-// 		)
-
-// 		return doc, !isZero(id)
-// 	}
-// }
-
+// Document returns association target as document.
+// If association is zero, second return value will be false.
 func (a Association) Document() (*Document, bool) {
 	var (
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
@@ -125,6 +74,8 @@ func (a Association) Document() (*Document, bool) {
 	}
 }
 
+// Collection returns association target as collection.
+// If association is zero, second return value will be false.
 func (a Association) Collection() (*Collection, bool) {
 	var (
 		rv     = a.rv.FieldByIndex(a.data.targetIndex)
@@ -147,6 +98,7 @@ func (a Association) Collection() (*Collection, bool) {
 	return NewCollection(rv.Addr()), loaded
 }
 
+// IsZero returns true if association is not loaded.
 func (a Association) IsZero() bool {
 	var (
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
@@ -155,18 +107,23 @@ func (a Association) IsZero() bool {
 	return isDeepZero(rv, 1)
 }
 
+// ReferenceField of the association.
 func (a Association) ReferenceField() string {
 	return a.data.referenceColumn
 }
 
+// ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
 	return indirect(a.rv.FieldByIndex(a.data.referenceIndex))
 }
 
+// ForeignField of the association.
 func (a Association) ForeignField() string {
 	return a.data.foreignField
 }
 
+// ForeignValue of the association.
+// It'll panic if association type is has many.
 func (a Association) ForeignValue() interface{} {
 	if a.Type() == HasMany {
 		panic("cannot infer foreign value for has many association")

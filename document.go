@@ -42,6 +42,7 @@ type documentData struct {
 	hasMany   []string
 }
 
+// Document provides an abstraction over reflect to easily works with struct for database purpose.
 type Document struct {
 	v    interface{}
 	rv   reflect.Value
@@ -49,7 +50,13 @@ type Document struct {
 	data documentData
 }
 
-func (d *Document) Table() string {
+// ReflectValue of referenced document.
+func (d Document) ReflectValue() reflect.Value {
+	return d.rv
+}
+
+// Table returns name of the table.
+func (d Document) Table() string {
 	if tn, ok := d.v.(table); ok {
 		return tn.Table()
 	}
@@ -58,7 +65,8 @@ func (d *Document) Table() string {
 	return tableName(d.rt)
 }
 
-func (d *Document) PrimaryField() string {
+// PrimaryField column name of this document.
+func (d Document) PrimaryField() string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -74,7 +82,8 @@ func (d *Document) PrimaryField() string {
 	return field
 }
 
-func (d *Document) PrimaryValue() interface{} {
+// PrimaryValue of this document.
+func (d Document) PrimaryValue() interface{} {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -90,15 +99,18 @@ func (d *Document) PrimaryValue() interface{} {
 	return d.rv.Field(index).Interface()
 }
 
-func (d *Document) Index() map[string]int {
+// Index returns map of column name and it's struct index.
+func (d Document) Index() map[string]int {
 	return d.data.index
 }
 
-func (d *Document) Fields() []string {
+// Fields returns list of fields available on this document.
+func (d Document) Fields() []string {
 	return d.data.fields
 }
 
-func (d *Document) Type(field string) (reflect.Type, bool) {
+// Type returns reflect.Type of given field. if field does not exist, second returns value will be false.
+func (d Document) Type(field string) (reflect.Type, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			ft = d.rt.Field(i).Type
@@ -116,7 +128,8 @@ func (d *Document) Type(field string) (reflect.Type, bool) {
 	return nil, false
 }
 
-func (d *Document) Value(field string) (interface{}, bool) {
+// Value returns value of given field. if field does not exist, second returns value will be false.
+func (d Document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			value interface{}
@@ -138,7 +151,8 @@ func (d *Document) Value(field string) (interface{}, bool) {
 	return nil, false
 }
 
-func (d *Document) SetValue(field string, value interface{}) bool {
+// SetValue of the field, it returns false if field does not exist, or it's not assignable.
+func (d Document) SetValue(field string, value interface{}) bool {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			rv reflect.Value
@@ -180,7 +194,8 @@ func (d *Document) SetValue(field string, value interface{}) bool {
 	return false
 }
 
-func (d *Document) Scanners(fields []string) []interface{} {
+// Scanners returns slice of sql.Scanner for given fields.
+func (d Document) Scanners(fields []string) []interface{} {
 	var (
 		result = make([]interface{}, len(fields))
 	)
@@ -205,19 +220,23 @@ func (d *Document) Scanners(fields []string) []interface{} {
 	return result
 }
 
-func (d *Document) BelongsTo() []string {
+// BelongsTo fields of this document.
+func (d Document) BelongsTo() []string {
 	return d.data.belongsTo
 }
 
-func (d *Document) HasOne() []string {
+// HasOne fields of this document.
+func (d Document) HasOne() []string {
 	return d.data.hasOne
 }
 
-func (d *Document) HasMany() []string {
+// HasMany fields of this document.
+func (d Document) HasMany() []string {
 	return d.data.hasMany
 }
 
-func (d *Document) Association(name string) Association {
+// Association of this document with given name.
+func (d Document) Association(name string) Association {
 	index, ok := d.data.index[name]
 	if !ok {
 		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
@@ -226,64 +245,65 @@ func (d *Document) Association(name string) Association {
 	return newAssociation(d.rv, index)
 }
 
-func (d *Document) Reset() {
+// Reset this document, this is a noop for compatibility with collection.
+func (d Document) Reset() {
 }
 
+// Add returns this document, this is a noop for compatibility with collection.
 func (d *Document) Add() *Document {
 	return d
 }
 
+// Get always returns this document, this is a noop for compatibility with collection.
 func (d *Document) Get(index int) *Document {
 	return d
 }
 
+// Len always returns 1 for document, this is a noop for compatibility with collection.
 func (d *Document) Len() int {
 	return 1
 }
 
-func NewDocument(record interface{}) *Document {
+// NewDocument used to create abstraction to work with struct.
+// Document can be created using interface or reflect.Value.
+func NewDocument(record interface{}, readonly ...bool) *Document {
 	switch v := record.(type) {
 	case *Document:
 		return v
 	case reflect.Value:
-		if v.Kind() != reflect.Ptr || v.Elem().Kind() == reflect.Slice {
-			panic("rel: must be a pointer to a struct")
-		}
-
-		var (
-			rv = v.Elem()
-			rt = rv.Type()
-		)
-
-		return &Document{
-			v:    v.Interface(),
-			rv:   rv,
-			rt:   rt,
-			data: extractdocumentData(rv, rt),
-		}
+		return newDocument(v.Interface(), v, len(readonly) > 0 && readonly[0])
 	case reflect.Type:
 		panic("rel: cannot use reflect.Type")
 	case nil:
 		panic("rel: cannot be nil")
 	default:
-		var (
-			rv = reflect.ValueOf(v)
-			rt = rv.Type()
-		)
+		return newDocument(v, reflect.ValueOf(v), len(readonly) > 0 && readonly[0])
+	}
+}
 
-		if rt.Kind() != reflect.Ptr && rt.Elem().Kind() != reflect.Struct {
+func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
+	var (
+		rt = rv.Type()
+	)
+
+	if rt.Kind() != reflect.Ptr {
+		if !readonly {
 			panic("rel: must be a pointer to struct")
 		}
-
+	} else {
 		rv = rv.Elem()
 		rt = rt.Elem()
+	}
 
-		return &Document{
-			v:    v,
-			rv:   rv,
-			rt:   rt,
-			data: extractdocumentData(rv, rt),
-		}
+	if rt.Kind() != reflect.Struct {
+		panic("rel: must be a struct or pointer to a struct")
+	}
+
+	return &Document{
+		v:    v,
+		rv:   rv,
+		rt:   rt,
+		data: extractdocumentData(rv, rt),
 	}
 }
 

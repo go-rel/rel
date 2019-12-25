@@ -17,8 +17,8 @@ type Preload struct {
 func (p *Preload) Result(records interface{}) {
 	p.Run(func(args mock.Arguments) {
 		var (
-			target = asSlice(args[0])
-			result = asSlice(records)
+			target = asSlice(args[0], false)
+			result = asSlice(records, true)
 			path   = strings.Split(args[1].(string), ".")
 		)
 
@@ -55,7 +55,7 @@ type slice interface {
 	Len() int
 }
 
-func asSlice(v interface{}) slice {
+func asSlice(v interface{}, readonly bool) slice {
 	var (
 		sl slice
 		rt = reflect.TypeOf(v)
@@ -66,9 +66,9 @@ func asSlice(v interface{}) slice {
 	}
 
 	if rt.Kind() == reflect.Slice {
-		sl = rel.NewCollection(v)
+		sl = rel.NewCollection(v, readonly)
 	} else {
-		sl = rel.NewDocument(v)
+		sl = rel.NewDocument(v, readonly)
 	}
 
 	return sl

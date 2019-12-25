@@ -17,6 +17,7 @@ var (
 	primaryRt = reflect.TypeOf((*primary)(nil)).Elem()
 )
 
+// Collection provides an abstraction over reflect to easily works with slice for database purpose.
 type Collection struct {
 	v       interface{}
 	rv      reflect.Value
@@ -25,6 +26,12 @@ type Collection struct {
 	swapper func(i, j int)
 }
 
+// ReflectValue of referenced document.
+func (c Collection) ReflectValue() reflect.Value {
+	return c.rv
+}
+
+// Table returns name of the table.
 func (c *Collection) Table() string {
 	if tn, ok := c.v.(table); ok {
 		return tn.Table()
@@ -33,7 +40,7 @@ func (c *Collection) Table() string {
 	return c.tableName()
 }
 
-func (c *Collection) tableName() string {
+func (c Collection) tableName() string {
 	var (
 		rt = c.rt.Elem()
 	)
@@ -55,7 +62,8 @@ func (c *Collection) tableName() string {
 	return tableName(rt)
 }
 
-func (c *Collection) PrimaryField() string {
+// PrimaryField column name of this collection.
+func (c Collection) PrimaryField() string {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryField()
 	}
@@ -67,7 +75,9 @@ func (c *Collection) PrimaryField() string {
 	return field
 }
 
-func (c *Collection) PrimaryValue() interface{} {
+// PrimaryValue of collection.
+// Returned value will be interface of slice interface.
+func (c Collection) PrimaryValue() interface{} {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryValue()
 	}
@@ -93,7 +103,7 @@ func (c *Collection) PrimaryValue() interface{} {
 	return ids
 }
 
-func (c *Collection) searchPrimary() (string, int) {
+func (c Collection) searchPrimary() (string, int) {
 	var (
 		rt = c.rt.Elem()
 	)
@@ -121,20 +131,23 @@ func (c *Collection) searchPrimary() (string, int) {
 	return searchPrimary(rt)
 }
 
-func (c *Collection) Get(index int) *Document {
+// Get an element from the underlying slice as a document.
+func (c Collection) Get(index int) *Document {
 	return NewDocument(c.rv.Index(index).Addr())
 }
 
-func (c *Collection) Len() int {
+// Len of the underlying slice.
+func (c Collection) Len() int {
 	return c.rv.Len()
 }
 
-func (c *Collection) Reset() {
+// Reset underlying slice to be zero length.
+func (c Collection) Reset() {
 	c.rv.Set(reflect.Zero(c.rt))
 }
 
 // Add new document into collection.
-func (c *Collection) Add() *Document {
+func (c Collection) Add() *Document {
 	var (
 		index = c.Len()
 		typ   = c.rt.Elem()
@@ -147,12 +160,12 @@ func (c *Collection) Add() *Document {
 }
 
 // Truncate collection.
-func (c *Collection) Truncate(i, j int) {
+func (c Collection) Truncate(i, j int) {
 	c.rv.Set(c.rv.Slice(i, j))
 }
 
 // Swap element in the collection.
-func (c *Collection) Swap(i, j int) {
+func (c Collection) Swap(i, j int) {
 	if c.swapper == nil {
 		c.swapper = reflect.Swapper(c.rv.Interface())
 	}
@@ -160,39 +173,44 @@ func (c *Collection) Swap(i, j int) {
 	c.swapper(i, j)
 }
 
-func NewCollection(records interface{}) *Collection {
+// NewCollection used to create abstraction to work with slice.
+// COllection can be created using interface or reflect.Value.
+func NewCollection(records interface{}, readonly ...bool) *Collection {
 	switch v := records.(type) {
 	case *Collection:
 		return v
 	case reflect.Value:
-		if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Slice {
-			panic("rel: must be a pointer to a slice")
-		}
-
-		return &Collection{
-			v:  v.Interface(),
-			rv: v.Elem(),
-			rt: v.Elem().Type(),
-		}
+		return newCollection(v.Interface(), v, len(readonly) > 0 && readonly[0])
 	case reflect.Type:
 		panic("rel: cannot use reflect.Type")
 	case nil:
 		panic("rel: cannot be nil")
 	default:
+		return newCollection(v, reflect.ValueOf(v), len(readonly) > 0 && readonly[0])
+	}
+}
 
-		var (
-			rv = reflect.ValueOf(v)
-			rt = rv.Type()
-		)
+func newCollection(v interface{}, rv reflect.Value, readonly bool) *Collection {
+	var (
+		rt = rv.Type()
+	)
 
-		if rt.Kind() != reflect.Ptr || rt.Elem().Kind() != reflect.Slice {
-			panic("rel: collection must be a pointer to a slice")
+	if rt.Kind() != reflect.Ptr {
+		if !readonly {
+			panic("rel: must be a pointer to slice")
 		}
+	} else {
+		rv = rv.Elem()
+		rt = rt.Elem()
+	}
 
-		return &Collection{
-			v:  v,
-			rv: rv.Elem(),
-			rt: rt.Elem(),
-		}
+	if rt.Kind() != reflect.Slice {
+		panic("rel: must be a slice or pointer to a slice")
+	}
+
+	return &Collection{
+		v:  v,
+		rv: rv,
+		rt: rt,
 	}
 }

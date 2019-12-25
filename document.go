@@ -318,6 +318,7 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 		}
 	)
 
+	// TODO probably better to use slice index instead.
 	for i := 0; i < rt.NumField(); i++ {
 		var (
 			sf   = rt.Field(i)

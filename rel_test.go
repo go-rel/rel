@@ -10,7 +10,7 @@ type User struct {
 	ID           int
 	Name         string
 	Age          int
-	Transactions []Transaction `references:"ID" foreign_key:"BuyerID"`
+	Transactions []Transaction `ref:"id" fk:"user_id"`
 	Address      Address
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -21,7 +21,7 @@ type Transaction struct {
 	Item    string
 	Status  Status
 	BuyerID int  `db:"user_id"`
-	Buyer   User `references:"BuyerID" foreign_key:"ID"`
+	Buyer   User `ref:"user_id" fk:"id"`
 }
 
 type Address struct {

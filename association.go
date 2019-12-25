@@ -3,6 +3,8 @@ package rel
 import (
 	"reflect"
 	"sync"
+
+	"github.com/azer/snakecase"
 )
 
 // AssociationType defines the type of association in database.
@@ -26,9 +28,9 @@ type associationData struct {
 	typ             AssociationType
 	targetIndex     []int
 	referenceColumn string
-	referenceIndex  []int
+	referenceIndex  int
 	foreignField    string
-	foreignIndex    []int
+	foreignIndex    int
 }
 
 var associationCache sync.Map
@@ -114,7 +116,7 @@ func (a Association) ReferenceField() string {
 
 // ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
-	return indirect(a.rv.FieldByIndex(a.data.referenceIndex))
+	return indirect(a.rv.Field(a.data.referenceIndex))
 }
 
 // ForeignField of the association.
@@ -141,7 +143,7 @@ func (a Association) ForeignValue() interface{} {
 		rv = rv.Elem()
 	}
 
-	return indirect(rv.FieldByIndex(a.data.foreignIndex))
+	return indirect(rv.Field(a.data.foreignIndex))
 }
 
 func newAssociation(rv reflect.Value, index int) Association {
@@ -149,8 +151,14 @@ func newAssociation(rv reflect.Value, index int) Association {
 		rv = rv.Elem()
 	}
 
+	return Association{
+		data: extractAssociationData(rv.Type(), index),
+		rv:   rv,
+	}
+}
+
+func extractAssociationData(rt reflect.Type, index int) associationData {
 	var (
-		rt  = rv.Type()
 		key = associationKey{
 			rt:    rt,
 			index: index,
@@ -158,21 +166,17 @@ func newAssociation(rv reflect.Value, index int) Association {
 	)
 
 	if val, cached := associationCache.Load(key); cached {
-		return Association{
-			data: val.(associationData),
-			rv:   rv,
-		}
+		return val.(associationData)
 	}
 
-	// TODO: maybe use column name instead of field name for ref and fk key
 	var (
-		st   = rt.Field(index)
-		ft   = st.Type
-		ref  = st.Tag.Get("references")
-		fk   = st.Tag.Get("foreign_key")
-		typ  = st.Tag.Get("association")
-		data = associationData{
-			targetIndex: st.Index,
+		sf        = rt.Field(index)
+		ft        = sf.Type
+		ref       = sf.Tag.Get("ref")
+		fk        = sf.Tag.Get("fk")
+		fName     = fieldName(sf)
+		assocData = associationData{
+			targetIndex: sf.Index,
 		}
 	)
 
@@ -180,46 +184,48 @@ func newAssociation(rv reflect.Value, index int) Association {
 		ft = ft.Elem()
 	}
 
+	var (
+		refDocData = extractDocumentData(rt, true)
+		fkDocData  = extractDocumentData(ft, true)
+	)
+
 	// Try to guess ref and fk if not defined.
 	if ref == "" || fk == "" {
-		if _, isBelongsTo := rt.FieldByName(st.Name + "ID"); isBelongsTo {
-			ref = st.Name + "ID"
-			fk = "ID"
+		if _, isBelongsTo := refDocData.index[fName+"_id"]; isBelongsTo {
+			ref = fName + "_id"
+			fk = "id"
 		} else {
-			ref = "ID"
-			fk = rt.Name() + "ID"
+			ref = "id"
+			fk = snakecase.SnakeCase(rt.Name()) + "_id"
 		}
 	}
 
-	if reft, exist := rt.FieldByName(ref); !exist {
+	if id, exist := refDocData.index[ref]; !exist {
 		panic("rel: references (" + ref + ") field not found ")
 	} else {
-		data.referenceIndex = reft.Index
-		data.referenceColumn = fieldName(reft)
+		assocData.referenceIndex = id
+		assocData.referenceColumn = ref
 	}
 
-	if fkt, exist := ft.FieldByName(fk); !exist {
-		panic("rel: foreign_key (" + fk + ") field not found " + fk)
+	if id, exist := fkDocData.index[fk]; !exist {
+		panic("rel: foreign_key (" + fk + ") field not found")
 	} else {
-		data.foreignIndex = fkt.Index
-		data.foreignField = fieldName(fkt)
+		assocData.foreignIndex = id
+		assocData.foreignField = fk
 	}
 
 	// guess assoc type
-	if st.Type.Kind() == reflect.Slice || st.Type.Kind() == reflect.Array {
-		data.typ = HasMany
+	if sf.Type.Kind() == reflect.Slice || sf.Type.Kind() == reflect.Array {
+		assocData.typ = HasMany
 	} else {
-		if typ == "belongs_to" || len(data.referenceColumn) > len(data.foreignField) {
-			data.typ = BelongsTo
+		if len(assocData.referenceColumn) > len(assocData.foreignField) {
+			assocData.typ = BelongsTo
 		} else {
-			data.typ = HasOne
+			assocData.typ = HasOne
 		}
 	}
 
-	associationCache.Store(key, data)
+	associationCache.Store(key, assocData)
 
-	return Association{
-		data: data,
-		rv:   rv,
-	}
+	return assocData
 }

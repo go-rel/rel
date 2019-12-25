@@ -51,7 +51,7 @@ func Open(dsn string) (*Adapter, error) {
 func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		id              int64
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Collection, changes)
+		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, changes)
 		rows, err       = adapter.query(statement, args, loggers)
 	)
 
@@ -67,7 +67,7 @@ func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...
 func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
 	var (
 		ids             []interface{}
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Collection, fields, allchanges)
+		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Table, fields, allchanges)
 		rows, err       = adapter.query(statement, args, loggers)
 	)
 

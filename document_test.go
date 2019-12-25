@@ -27,6 +27,15 @@ func (i Item) PrimaryValue() interface{} {
 	return i.UUID
 }
 
+func TestDocument_ReflectValue(t *testing.T) {
+	var (
+		record = User{}
+		doc    = NewDocument(&record)
+	)
+
+	assert.Equal(t, doc.rv, doc.ReflectValue())
+}
+
 func TestDocument_Table(t *testing.T) {
 	var (
 		record = User{}

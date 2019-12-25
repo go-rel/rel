@@ -30,6 +30,15 @@ func (it *Items) PrimaryValue() interface{} {
 	return ids
 }
 
+func TestCollection_ReflectValue(t *testing.T) {
+	var (
+		record = []User{}
+		doc    = NewCollection(&record)
+	)
+
+	assert.Equal(t, doc.rv, doc.ReflectValue())
+}
+
 func TestCollection_Table(t *testing.T) {
 	var (
 		records = []User{}

@@ -19,7 +19,6 @@ func Delete(t *testing.T, repo rel.Repository) {
 
 	assert.Nil(t, repo.Delete(&user))
 	assert.Equal(t, rel.NoResultError{}, repo.Find(&user, where.Eq("id", user.ID)))
-
 }
 
 // DeleteAll tests delete specifications.
@@ -44,7 +43,7 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, query := range tests {
-		statement, _ := builder.Delete(query.Collection, query.WhereQuery)
+		statement, _ := builder.Delete(query.Table, query.WhereQuery)
 		t.Run("Delete|"+statement, func(t *testing.T) {
 			var result []User
 			assert.Nil(t, repo.FindAll(&result, query))

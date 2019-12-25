@@ -58,7 +58,7 @@ func (b *Builder) Aggregate(query rel.Query, mode string, field string) (string,
 }
 
 func (b *Builder) query(buffer *Buffer, query rel.Query) {
-	b.from(buffer, query.Collection)
+	b.from(buffer, query.Table)
 	b.join(buffer, query.JoinQuery)
 	b.where(buffer, query.WhereQuery)
 
@@ -79,14 +79,14 @@ func (b *Builder) query(buffer *Buffer, query rel.Query) {
 }
 
 // Insert generates query for insert.
-func (b *Builder) Insert(collection string, changes rel.Changes) (string, []interface{}) {
+func (b *Builder) Insert(table string, changes rel.Changes) (string, []interface{}) {
 	var (
 		buffer Buffer
 		count  = changes.Count()
 	)
 
 	buffer.WriteString("INSERT INTO ")
-	buffer.WriteString(b.escape(collection))
+	buffer.WriteString(b.escape(table))
 
 	if count == 0 && b.config.InsertDefaultValues {
 		buffer.WriteString(" DEFAULT VALUES")
@@ -133,7 +133,7 @@ func (b *Builder) Insert(collection string, changes rel.Changes) (string, []inte
 }
 
 // InsertAll generates query for multiple insert.
-func (b *Builder) InsertAll(collection string, fields []string, allchanges []rel.Changes) (string, []interface{}) {
+func (b *Builder) InsertAll(table string, fields []string, allchanges []rel.Changes) (string, []interface{}) {
 	var (
 		buffer       Buffer
 		fieldsCount  = len(fields)
@@ -145,7 +145,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []rel
 	buffer.WriteString("INSERT INTO ")
 
 	buffer.WriteString(b.config.EscapeChar)
-	buffer.WriteString(collection)
+	buffer.WriteString(table)
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(" (")
 
@@ -197,7 +197,7 @@ func (b *Builder) InsertAll(collection string, fields []string, allchanges []rel
 }
 
 // Update generates query for update.
-func (b *Builder) Update(collection string, changes rel.Changes, filter rel.FilterQuery) (string, []interface{}) {
+func (b *Builder) Update(table string, changes rel.Changes, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
 		count  = changes.Count()
@@ -205,7 +205,7 @@ func (b *Builder) Update(collection string, changes rel.Changes, filter rel.Filt
 
 	buffer.WriteString("UPDATE ")
 	buffer.WriteString(b.config.EscapeChar)
-	buffer.WriteString(collection)
+	buffer.WriteString(table)
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(" SET ")
 
@@ -248,14 +248,14 @@ func (b *Builder) Update(collection string, changes rel.Changes, filter rel.Filt
 }
 
 // Delete generates query for delete.
-func (b *Builder) Delete(collection string, filter rel.FilterQuery) (string, []interface{}) {
+func (b *Builder) Delete(table string, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
 	)
 
 	buffer.WriteString("DELETE FROM ")
 	buffer.WriteString(b.config.EscapeChar)
-	buffer.WriteString(collection)
+	buffer.WriteString(table)
 	buffer.WriteString(b.config.EscapeChar)
 
 	b.where(&buffer, filter)
@@ -291,10 +291,10 @@ func (b *Builder) fields(buffer *Buffer, distinct bool, fields []string) {
 	}
 }
 
-func (b *Builder) from(buffer *Buffer, collection string) {
+func (b *Builder) from(buffer *Buffer, table string) {
 	buffer.WriteString(" FROM ")
 	buffer.WriteString(b.config.EscapeChar)
-	buffer.WriteString(collection)
+	buffer.WriteString(table)
 	buffer.WriteString(b.config.EscapeChar)
 }
 
@@ -308,7 +308,7 @@ func (b *Builder) join(buffer *Buffer, joins []rel.JoinQuery) {
 		buffer.WriteString(join.Mode)
 		buffer.WriteByte(' ')
 		buffer.WriteString(b.config.EscapeChar)
-		buffer.WriteString(join.Collection)
+		buffer.WriteString(join.Table)
 		buffer.WriteString(b.config.EscapeChar)
 		buffer.WriteString(" ON ")
 		buffer.WriteString(b.escape(join.From))

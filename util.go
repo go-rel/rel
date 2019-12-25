@@ -30,7 +30,7 @@ type isZeroer interface {
 // isZero shallowly check wether a field in struct is zero or not
 func isZero(value interface{}) bool {
 	var (
-		zero = false
+		zero bool
 	)
 
 	switch v := value.(type) {

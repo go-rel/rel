@@ -6,6 +6,7 @@ type SortQuery struct {
 	Sort  int
 }
 
+// Build sort query.
 func (sq SortQuery) Build(query *Query) {
 	query.SortQuery = append(query.SortQuery, sq)
 }

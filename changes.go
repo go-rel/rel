@@ -117,6 +117,7 @@ func (c *Changes) appendAssoc(field string, ac AssocChanges) {
 	c.assocChanges = append(c.assocChanges, ac)
 }
 
+// AssocChanges stores changes for association.
 type AssocChanges struct {
 	Changes []Changes
 	// if nil, has many associations will be cleared.
@@ -127,10 +128,15 @@ type AssocChanges struct {
 type ChangeOp int
 
 const (
+	// ChangeInvalidOp operation.
 	ChangeInvalidOp ChangeOp = iota
+	// ChangeSetOp operation.
 	ChangeSetOp
+	// ChangeIncOp operation.
 	ChangeIncOp
+	// ChangeDecOp operation.
 	ChangeDecOp
+	// ChangeFragmentOp operation.
 	ChangeFragmentOp
 )
 

@@ -104,7 +104,7 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 // Insert inserts a record to database and returns its id.
 func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Collection, changes)
+		statement, args = NewBuilder(adapter.Config).Insert(query.Table, changes)
 		id, _, err      = adapter.Exec(statement, args, loggers...)
 	)
 
@@ -113,7 +113,7 @@ func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...
 
 // InsertAll inserts all record to database and returns its ids.
 func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Collection, fields, allchanges)
+	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, allchanges)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges [
 // Update updates a record in database.
 func (adapter *Adapter) Update(query rel.Query, changes rel.Changes, loggers ...rel.Logger) error {
 	var (
-		statement, args = NewBuilder(adapter.Config).Update(query.Collection, changes, query.WhereQuery)
+		statement, args = NewBuilder(adapter.Config).Update(query.Table, changes, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
 	)
 
@@ -148,7 +148,7 @@ func (adapter *Adapter) Update(query rel.Query, changes rel.Changes, loggers ...
 // Delete deletes all results that match the query.
 func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) error {
 	var (
-		statement, args = NewBuilder(adapter.Config).Delete(query.Collection, query.WhereQuery)
+		statement, args = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
 	)
 

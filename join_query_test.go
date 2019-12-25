@@ -9,10 +9,10 @@ import (
 
 func TestJoinWith(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewJoinWith("JOIN", "transactions", "user_id", "id"))
 }
 
@@ -25,80 +25,80 @@ func TestJoinFragment(t *testing.T) {
 
 func TestJoin(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "JOIN",
-		Collection: "transactions",
+		Mode:  "JOIN",
+		Table: "transactions",
 	}, rel.NewJoin("transactions"))
 }
 
 func TestJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewJoinOn("transactions", "user_id", "id"))
 }
 
 func TestInnerJoin(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "INNER JOIN",
-		Collection: "transactions",
+		Mode:  "INNER JOIN",
+		Table: "transactions",
 	}, rel.NewInnerJoin("transactions"))
 }
 
 func TestInnerJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "INNER JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "INNER JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewInnerJoinOn("transactions", "user_id", "id"))
 }
 
 func TestLeftJoin(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "LEFT JOIN",
-		Collection: "transactions",
+		Mode:  "LEFT JOIN",
+		Table: "transactions",
 	}, rel.NewLeftJoin("transactions"))
 }
 
 func TestLeftJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "LEFT JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "LEFT JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewLeftJoinOn("transactions", "user_id", "id"))
 }
 
 func TestRightJoin(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "RIGHT JOIN",
-		Collection: "transactions",
+		Mode:  "RIGHT JOIN",
+		Table: "transactions",
 	}, rel.NewRightJoin("transactions"))
 }
 
 func TestRightJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "RIGHT JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "RIGHT JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewRightJoinOn("transactions", "user_id", "id"))
 }
 
 func TestFullJoin(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "FULL JOIN",
-		Collection: "transactions",
+		Mode:  "FULL JOIN",
+		Table: "transactions",
 	}, rel.NewFullJoin("transactions"))
 }
 
 func TestFullJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
-		Mode:       "FULL JOIN",
-		Collection: "transactions",
-		From:       "user_id",
-		To:         "id",
+		Mode:  "FULL JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
 	}, rel.NewFullJoinOn("transactions", "user_id", "id"))
 }

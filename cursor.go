@@ -5,6 +5,7 @@ import (
 	"reflect"
 )
 
+// Cursor is interface to work with database result (used by adapter).
 type Cursor interface {
 	Close() error
 	Fields() ([]string, error)

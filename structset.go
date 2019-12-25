@@ -8,10 +8,14 @@ var (
 	now = time.Now
 )
 
+// Structset can be used as changes for repository insert or update operation.
+// This will save every field in struct and it's association as long as it's loaded.
+// This is the default changer used by repository.
 type Structset struct {
 	doc *Document
 }
 
+// Build changes from structset.
 func (s Structset) Build(changes *Changes) {
 	var (
 		pField = s.doc.PrimaryField()
@@ -94,6 +98,7 @@ func newStructset(doc *Document) Structset {
 	}
 }
 
+// NewStructset from a struct.
 func NewStructset(record interface{}) Structset {
 	return newStructset(NewDocument(record))
 }

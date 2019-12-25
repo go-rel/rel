@@ -906,7 +906,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 		cur     = createCursor(1)
 	)
 
-	// foreign value set after associations infered
+	// foreign value set after associations inferred
 	user.ID = 1
 	address.SetValue("user_id", user.ID)
 
@@ -938,7 +938,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 		address = BuildChanges(Set("street", "street1"))
 	)
 
-	// foreign value set after associations infered
+	// foreign value set after associations inferred
 	user.ID = 1
 	address.SetValue("user_id", user.ID)
 

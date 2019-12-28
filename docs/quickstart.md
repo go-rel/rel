@@ -1,4 +1,6 @@
-## Basic Usage
+## Quick Start
+
+### Basic Usage
 
 Below is a very basic example on how to utilize rel using mysql adapter.
 
@@ -52,7 +54,7 @@ func run(repo *rel.Repository) {
 }
 ```
 
-## Testing
+### Testing
 
 Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
 

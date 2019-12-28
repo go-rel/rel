@@ -1,18 +1,9 @@
-# rel
-[![GoDoc](https://godoc.org/github.com/Fs02/rel?status.svg)](https://godoc.org/github.com/Fs02/rel) [![Build Status](https://travis-ci.com/Fs02/rel.svg?branch=master)](https://travis-ci.com/Fs02/rel) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/rel)](https://goreportcard.com/report/github.com/Fs02/rel) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/rel/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/rel/test_coverage)
+## Basic Usage
 
-rel is a testable repository layer for sql database. 
+Below is a very basic example on how to utilize rel using mysql adapter.
 
-## Install
-
-```bash
-go get github.com/Fs02/rel
-```
-
-## Quick Start
-
-### Basic Usage
 ```golang
+// main.go
 package main
 
 import (
@@ -21,7 +12,6 @@ import (
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/adapter/mysql"
 	"github.com/Fs02/rel/where"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type Product struct {
@@ -46,6 +36,8 @@ func main() {
 	run(repo)
 }
 
+// run is an actual service function that run a complex business package.
+// beware: it's actually doing nonsense here.
 func run(repo *rel.Repository) {
 	// Inserting Products.
 	product := Product{
@@ -60,9 +52,12 @@ func run(repo *rel.Repository) {
 }
 ```
 
-### Testing
+## Testing
+
+Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
 
 ```golang
+// main_test.go
 package main
 
 import (
@@ -93,7 +88,3 @@ func TestInsert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 ```
-
-## License
-
-Released under the [MIT License](https://github.com/Fs02/rel/blob/master/LICENSE)

@@ -107,6 +107,7 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	for _, ch := range changes.All() {
+		// TODO: support increment and decrement.
 		if !doc.SetValue(ch.Field, ch.Value) {
 			panic("reltest: cannot apply changes, field " + ch.Field + " is not defined")
 		}

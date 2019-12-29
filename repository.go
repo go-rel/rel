@@ -7,6 +7,7 @@ import (
 )
 
 // Repository defines sets of available database operations.
+// TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
 	SetLogger(logger ...Logger)

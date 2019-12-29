@@ -10,12 +10,16 @@ Rel uses adapter in order to generate and execute query to a database, below is 
 | PostgreSQL | github.com/Fs02/rel/adapter/postgres | [![GoDoc](https://godoc.org/github.com/Fs02/rel/adapter/postgres?status.svg)](https://godoc.org/github.com/Fs02/rel/adapter/postgres) |
 | SQLite3    | github.com/Fs02/rel/adapter/sqlite3  | [![GoDoc](https://godoc.org/github.com/Fs02/rel/adapter/sqlite3?status.svg)](https://godoc.org/github.com/Fs02/rel/adapter/sqlite3)   |
 
-### Basic Usage
+### Example
 
 Below is a very basic example on how to utilize rel using mysql adapter.
+Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
+
+<!-- tabs:start -->
+
+#### **main.go**
 
 ```golang
-// main.go
 package main
 
 import (
@@ -51,7 +55,7 @@ func main() {
 
 // run is an actual service function that run a complex business package.
 // beware: it's actually doing nonsense here.
-func run(repo *rel.Repository) {
+func run(repo rel.Repository) {
 	// Inserting Products.
 	product := Product{
 		Name: "shampoo",
@@ -65,9 +69,7 @@ func run(repo *rel.Repository) {
 }
 ```
 
-### Testing
-
-Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
+#### **main_test.go**
 
 ```golang
 // main_test.go
@@ -101,3 +103,9 @@ func TestInsert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 ```
+
+<!-- tabs:end -->
+
+### Conventions
+
+TODO: table name, primary key, column name, timestamp

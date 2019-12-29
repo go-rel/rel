@@ -16,10 +16,17 @@
     window.$docsify = {
       name: 'rel',
       repo: 'https://github.com/Fs02/rel',
+      loadSidebar: true,
+      subMaxLevel: 1,
+      tabs: {
+        sync: false,
+        tabHeadings: true
+      },
       plugins: [
-        EditOnGithubPlugin.create('https://github.com/Fs02/rel/blob/master/docs')
+        EditOnGithubPlugin.create('https://github.com/Fs02/rel/blob/master/docs/')
       ]
     }
   </script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
 </body>
 </html>

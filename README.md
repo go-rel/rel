@@ -46,7 +46,7 @@ func main() {
 	run(repo)
 }
 
-func run(repo *rel.Repository) {
+func run(repo rel.Repository) {
 	// Inserting Products.
 	product := Product{
 		Name: "shampoo",

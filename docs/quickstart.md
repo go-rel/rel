@@ -19,7 +19,7 @@ Testing database query using rel can be done using [reltest](https://godoc.org/g
 
 #### **main.go**
 
-```golang
+```go
 package main
 
 import (
@@ -71,7 +71,7 @@ func run(repo rel.Repository) {
 
 #### **main_test.go**
 
-```golang
+```go
 // main_test.go
 package main
 

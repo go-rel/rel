@@ -8,7 +8,7 @@ A new record can be inserted to database using a struct, map or set function. To
 
 #### **main.go**
 
-```golang
+```go
 book := Book{
     Title:    "Rel for dummies",
     Category: "education",
@@ -24,7 +24,7 @@ if err := repo.Insert(&book); err != nil {
 
 > reltest.Repository will automatically sets any primary key value to be 1.
 
-```golang
+```go
 // Expect any insert called.
 repo.ExpectInsert()
 
@@ -52,7 +52,7 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 #### **main.go**
 
-```golang
+```go
 var book Book
 data := rel.Map{
     "title":    "Rel for dummies",
@@ -67,7 +67,7 @@ repo.Insert(&book, data)
 
 > reltest.Repository will automatically populate record using value provided by map.
 
-```golang
+```go
 // Expect insertion with given changer.
 repo.ExpectInsert(rel.Map{
     "title":    "Rel for dummies",
@@ -83,14 +83,14 @@ It's also possible to insert a new record manually using `rel.Set`, which is a v
 
 #### **main.go**
 
-```golang
+```go
 // Insert using set.
 repo.Insert(&book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect insertion with given changer.
 repo.ExpectInsert(
     rel.Set("title", "Rel for dummies"),
@@ -107,14 +107,14 @@ To inserts multiple records at once, use `InsertAll`.
 
 #### **main.go**
 
-```golang
+```go
 // InsertAll books.
 repo.InsertAll(&books)
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect any insert all.
 repo.ExpectInsertAll()
 ```
@@ -131,7 +131,7 @@ rel provides a powerful API for querying data from database. To query a single r
 
 #### **main.go**
 
-```golang
+```go
 repo.Find(&book, rel.Eq("id", 1))
 
 // OR: with sugar alias
@@ -140,7 +140,7 @@ repo.Find(&book, where.Eq("id", 1))
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect a find query and mock the returned result.
 repo.ExpectFind(rel.Eq("id", 1)).Result(book)
 
@@ -157,13 +157,13 @@ To query multiple records, use `FindAll` method.
 
 #### **main.go**
 
-```golang
+```go
 repo.FindAll(&books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect a find all query and mock the returned result.
 repo.ExpectFindAll(where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))).Result(books)
 ```
@@ -177,14 +177,14 @@ rel also support chainable query api for a more complex query use case.
 
 #### **main.go**
 
-```golang
+```go
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.FindAll(&books, query)
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect a find all query and mock the returned result.
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.ExpectFindAll(query).Result(books)
@@ -202,14 +202,14 @@ Similar to create, updating a record in rel can also be done using struct, map o
 
 > An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not.
 
-```golang
+```go
 // Update directly using struct.
 repo.Update(&book)
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect any update is called.
 repo.ExpectUpdate()
 ```
@@ -222,14 +222,14 @@ Besides struct, map and set function. There's also increment and decrement chang
 
 #### **main.go**
 
-```golang
+```go
 // Update directly using struct.
 repo.Update(&book, rel.Inc("views"))
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect any update is called.
 repo.ExpectUpdate(rel.Inc("views"))
 ```
@@ -244,14 +244,14 @@ To delete a record in rel, simply pass the record to be deleted.
 
 #### **main.go**
 
-```golang
+```go
 // Delete a record.
 repo.Delete(&book)
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect book to be deleted.
 repo.ExpectDelete().For(&book)
 ```
@@ -265,14 +265,14 @@ Deleting multiple records is possible using `DeleteAll`.
 
 #### **main.go**
 
-```golang
+```go
 // We have manually define the table here.
 repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 ```
 
 #### **main_test.go**
 
-```golang
+```go
 // Expect books to be deleted.
 repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 ```

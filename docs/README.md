@@ -48,7 +48,7 @@ func (ur userRepository) Find(user *User, int id) error {
 
 Compared to other orm, rel api is built with [testability](https://godoc.org/github.com/Fs02/rel/reltest) in mind. rel uses [interface](https://godoc.org/github.com/Fs02/rel#Repository) to define contract of every database query or execution, all while making a chainable query possible. The ultimate goal of rel is to be **your repository package without the needs of making your own wrapper**. example:
 
-```golang
+```go
 // rel repository
 repo.Find(&user, where.Eq("id", 1))
 ```

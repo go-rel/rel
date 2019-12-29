@@ -1,7 +1,16 @@
 # rel
 [![GoDoc](https://godoc.org/github.com/Fs02/rel?status.svg)](https://godoc.org/github.com/Fs02/rel) [![Build Status](https://travis-ci.com/Fs02/rel.svg?branch=master)](https://travis-ci.com/Fs02/rel) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/rel)](https://goreportcard.com/report/github.com/Fs02/rel) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/rel/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/rel/test_coverage)
 
-rel is a testable repository layer for sql database. 
+> Golang SQL Repository Layer for Clean (Onion) Architecture.
+
+rel is orm-ish library for golang that aims to be the repository layer of onion architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
+
+## Features
+
+- Testable repository with builtin reltest package.
+- Elegant, yet extendable query builder.
+- Supports Eager loading.
+- Multi adapter support.
 
 ## Install
 
@@ -21,6 +30,7 @@ import (
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/adapter/mysql"
 	"github.com/Fs02/rel/where"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Product struct {
@@ -45,7 +55,7 @@ func main() {
 	run(repo)
 }
 
-func run(repo *rel.Repository) {
+func run(repo rel.Repository) {
 	// Inserting Products.
 	product := Product{
 		Name: "shampoo",
@@ -91,6 +101,37 @@ func TestInsert(t *testing.T) {
 	// asserts
 	repo.AssertExpectations(t)
 }
+```
+
+## Why rel
+
+Most (if not all) orm for golang is written as a chainable API, meaning all of the query need to be called before performing actual action as a chain of method invocations. example:
+
+```go
+db.Where("id = ?", 1).First(&user)
+```
+
+Chainable api is very hard to be unit tested without writing a wrapper. One way to make it testable is to make an interface that also acts as a wrapper, which is usually ends up as its own repository package resides somewhere in your project:
+
+```go
+// mockable interface.
+type UserRepository interface {
+	Find(user *User, int id) error
+}
+// actual implementation
+type userRepository struct{
+	db *DB
+}
+func (ur userRepository) Find(user *User, int id) error {
+	return db.Where("id = ?", 1).First(&user)
+}
+```
+
+Compared to other orm, rel api is built with [testability](https://godoc.org/github.com/Fs02/rel/reltest) in mind. rel uses [interface](https://godoc.org/github.com/Fs02/rel#Repository) to define contract of every database query or execution, all while making a chainable query possible. The ultimate goal of rel is to be **your repository package without the needs of making your own wrapper**. example:
+
+```go
+// rel repository
+repo.Find(&user, where.Eq("id", 1))
 ```
 
 ## License

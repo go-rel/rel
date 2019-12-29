@@ -12,14 +12,15 @@ type Delete struct {
 }
 
 // For match expect calls for given record.
-func (d *Delete) For(record interface{}) {
+func (d *Delete) For(record interface{}) *Delete {
 	d.Arguments[0] = record
+	return d
 }
 
 // ForType match expect calls for given type.
 // Type must include package name, example: `model.User`.
-func (d *Delete) ForType(typ string) {
-	d.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
+func (d *Delete) ForType(typ string) *Delete {
+	return d.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
 // ExpectDelete to be called with given field and queries.

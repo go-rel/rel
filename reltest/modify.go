@@ -13,19 +13,20 @@ type Modify struct {
 }
 
 // For match expect calls for given record.
-func (e *Modify) For(record interface{}) {
-	e.Arguments[0] = record
+func (m *Modify) For(record interface{}) *Modify {
+	m.Arguments[0] = record
+	return m
 }
 
 // ForType match expect calls for given type.
 // Type must include package name, example: `model.User`.
-func (e *Modify) ForType(typ string) {
-	e.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
+func (m *Modify) ForType(typ string) *Modify {
+	return m.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
 // NotUnique sets not unique error to be returned.
-func (e *Modify) NotUnique(key string) {
-	e.Error(rel.ConstraintError{
+func (m *Modify) NotUnique(key string) {
+	m.Error(rel.ConstraintError{
 		Key:  key,
 		Type: rel.UniqueConstraint,
 	})
@@ -106,6 +107,7 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	for _, ch := range changes.All() {
+		// TODO: support increment and decrement.
 		if !doc.SetValue(ch.Field, ch.Value) {
 			panic("reltest: cannot apply changes, field " + ch.Field + " is not defined")
 		}

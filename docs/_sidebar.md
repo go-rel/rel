@@ -1,10 +1,10 @@
-* Quick Start
+* [Basics](#basics.md)
 
-    * [Adapters](quickstart.md#adapters)
-    * [Example](quickstart.md#example)
-    * [Conventions](quickstart.md#conventions)
+    * [Adapters](basics.md#adapters)
+    * [Example](basics.md#example)
+    * [Conventions](basics.md#conventions)
 
-* Reading and Writing Data
+* [Reading and Writing Data](crud.md)
 
     * [Create](crud.md#create)
     * [Read](crud.md#read)

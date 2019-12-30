@@ -96,6 +96,7 @@ func ExpectInsertAll(r *Repository, changes []rel.Changes) *Modify {
 func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includeAssoc bool) {
 	if doc.PrimaryValue() == 0 {
 		if insertion {
+			// FIXME: support other field types.
 			doc.SetValue(doc.PrimaryField(), 1)
 		} else {
 			panic("reltest: cannot update a record without using primary key")
@@ -107,7 +108,7 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	for _, ch := range changes.All() {
-		// TODO: support increment and decrement.
+		// FIXME: support increment and decrement.
 		if !doc.SetValue(ch.Field, ch.Value) {
 			panic("reltest: cannot apply changes, field " + ch.Field + " is not defined")
 		}

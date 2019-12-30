@@ -164,4 +164,4 @@ type Book struct {
 
 rel automatically track created and updated time of each struct if `CreatedAt` or `UpdatedAt` field exists.
 
-Next: [Reading and Writing Data](crud.md)
+**Next: [Reading and Writing Data](crud.md)**

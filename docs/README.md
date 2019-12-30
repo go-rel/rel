@@ -53,8 +53,4 @@ Compared to other orm, rel api is built with [testability](https://godoc.org/git
 repo.Find(&user, where.Eq("id", 1))
 ```
 
-## Learn More
-
-- [Basic Usage](basics.md)
-- [Package documentation](https://godoc.org/github.com/Fs02/rel)
-- [Test package documentation](https://godoc.org/github.com/Fs02/rel/reltest)
+**Learn More: [Basics](basics.md)**

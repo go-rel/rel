@@ -306,10 +306,3 @@ func Where(filters ...FilterQuery) Query {
 		WhereQuery: And(filters...),
 	}
 }
-
-// Group create a query with chainable syntax, using group as the starting point.
-func Group(fields ...string) Query {
-	return Query{
-		GroupQuery: NewGroup(fields...),
-	}
-}

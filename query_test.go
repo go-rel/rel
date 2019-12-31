@@ -81,9 +81,6 @@ func TestQuerier(t *testing.T) {
 					rel.From("transactions").Select("sum(amount)", "name").Join("users").Group("name").Having(where.Gt("amount", 10)).Offset(10).Limit(5),
 				},
 				{
-					rel.From("transactions").Select("sum(amount)", "name"), rel.Join("users"), rel.Group("name").Having(where.Gt("amount", 10)), rel.Offset(10), rel.Limit(5),
-				},
-				{
 					rel.From("transactions").Select("sum(amount)", "name"), join.Join("users"), group.By("name").Having(where.Gt("amount", 10)), rel.Offset(10), rel.Limit(5),
 				},
 				{
@@ -372,7 +369,6 @@ func TestQuery_Group(t *testing.T) {
 	}
 
 	assert.Equal(t, result, rel.From("users").Group("active", "plan"))
-	assert.Equal(t, result, rel.Group("active", "plan").From("users"))
 }
 
 func TestQuery_Having(t *testing.T) {

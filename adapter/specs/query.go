@@ -53,8 +53,8 @@ func Query(t *testing.T, repo rel.Repository) {
 		sort.Asc("name"),
 		sort.Desc("name"),
 		rel.Select().SortAsc("name").SortDesc("age"),
-		rel.Group("gender").Select("COUNT(id)"),
-		rel.Group("age").Having(where.Gt("age", 10)).Select("COUNT(id)"),
+		rel.Select("gender", "COUNT(id) AS count").Group("gender"),
+		rel.Select("age", "COUNT(id) AS count").Group("age").Having(where.Gt("age", 10)),
 		rel.Limit(5),
 		rel.Select().Limit(5),
 		rel.Select().Limit(5).Offset(5),
@@ -75,6 +75,7 @@ func QueryJoin(t *testing.T, repo rel.Repository) {
 		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")),
 		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")).SortAsc("addresses.name"),
 		rel.From("addresses").JoinWith("LEFT JOIN", "users", "addresses.user_id", "users.id"),
+		rel.From("addresses").Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"),
 	}
 
 	run(t, repo, tests)

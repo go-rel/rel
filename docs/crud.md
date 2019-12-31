@@ -1,4 +1,4 @@
-## Reading and Writing Data
+## Reading and Writing Record
 
 ### Create
 
@@ -124,7 +124,7 @@ repo.ExpectInsertAll()
 
 ### Read
 
-rel provides a powerful API for querying data from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
+rel provides a powerful API for querying record from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
 
 
 <!-- tabs:start -->
@@ -141,7 +141,7 @@ repo.Find(&book, where.Eq("id", 1))
 #### **main_test.go**
 
 ```go
-// Expect a find query and mock the returned result.
+// Expect a find query and mock the result.
 repo.ExpectFind(rel.Eq("id", 1)).Result(book)
 
 // OR: Expect a find query and returns rel.NoResultError
@@ -164,7 +164,7 @@ repo.FindAll(&books, where.Like("title", "%dummies%").AndEq("category", "educati
 #### **main_test.go**
 
 ```go
-// Expect a find all query and mock the returned result.
+// Expect a find all query and mock the result.
 repo.ExpectFindAll(where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))).Result(books)
 ```
 
@@ -185,7 +185,7 @@ repo.FindAll(&books, query)
 #### **main_test.go**
 
 ```go
-// Expect a find all query and mock the returned result.
+// Expect a find all query and mock the result.
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.ExpectFindAll(query).Result(books)
 ```
@@ -196,11 +196,11 @@ repo.ExpectFindAll(query).Result(books)
 
 Similar to create, updating a record in rel can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
 
+> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specified fields.
+
 <!-- tabs:start -->
 
 #### **main.go**
-
-> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specified fields.
 
 ```go
 // Update directly using struct.
@@ -279,3 +279,5 @@ repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 
 <!-- tabs:end -->
 
+
+**Next: [Query Interface](query.md)**

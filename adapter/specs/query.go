@@ -75,7 +75,6 @@ func QueryJoin(t *testing.T, repo rel.Repository) {
 		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")),
 		rel.From("addresses").Join("users").Where(where.Eq("addresses.name", "address1")).SortAsc("addresses.name"),
 		rel.From("addresses").JoinWith("LEFT JOIN", "users", "addresses.user_id", "users.id"),
-		rel.From("addresses").Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"),
 	}
 
 	run(t, repo, tests)

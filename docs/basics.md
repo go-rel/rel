@@ -13,7 +13,7 @@ Rel uses adapter in order to generate and execute query to a database, below is 
 ### Example
 
 Below is a very basic example on how to utilize rel using mysql adapter.
-Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
+Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.
 
 <!-- tabs:start -->
 
@@ -86,9 +86,10 @@ import (
 )
 
 func TestInsert(t *testing.T) {
+	// create a mocked repository.
 	repo := reltest.New()
 	
-	// expectations
+	// prepare mocks
 	repo.ExpectInsert()
 	repo.ExpectFind(where.Eq("id", 1)).Result(Product{
 		ID: 5,

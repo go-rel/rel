@@ -200,7 +200,7 @@ Similar to create, updating a record in rel can also be done using struct, map o
 
 #### **main.go**
 
-> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not.
+> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specified fields.
 
 ```go
 // Update directly using struct.

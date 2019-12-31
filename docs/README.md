@@ -4,8 +4,6 @@
 
 rel is orm-ish library for golang that aims to be the repository layer of onion architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
 
-See the [Quick start](basics.md) guide for more details.
-
 ## Features
 
 - Testable repository with builtin reltest package.
@@ -46,11 +44,6 @@ func (ur userRepository) Find(user *User, int id) error {
 }
 ```
 
-Compared to other orm, rel api is built with [testability](https://godoc.org/github.com/Fs02/rel/reltest) in mind. rel uses [interface](https://godoc.org/github.com/Fs02/rel#Repository) to define contract of every database query or execution, all while making a chainable query possible. The ultimate goal of rel is to be **your repository package without the needs of making your own wrapper**. example:
-
-```go
-// rel repository
-repo.Find(&user, where.Eq("id", 1))
-```
+Compared to other orm, rel api is built with [testability](https://godoc.org/github.com/Fs02/rel/reltest) in mind. rel uses [interface](https://godoc.org/github.com/Fs02/rel#Repository) to define contract of every database query or execution, all while making a chainable query possible. The ultimate **goal of rel is to be your repository package** without the needs of making your own wrapper.
 
 **Learn More: [Basics](basics.md)**

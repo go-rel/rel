@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Document</title>
+  <title>rel</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
+  <meta name="keywords" content="rel,orm,go,golang,repository,database,mysql,postgres">
+  <meta name="description" content="Golang SQL Repository Layer for Clean (Onion) Architecture">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
 </head>
@@ -19,10 +20,13 @@
       auto2top: true,
       themeColor: '#007d9c',
       loadSidebar: true,
-      subMaxLevel: 1,
       tabs: {
         sync: false,
         tabHeadings: true
+      },
+      relativePath: true,
+      alias: {
+        '/v/([\.a-zA-Z0-9_-]*)/?(.*)': 'https://raw.githubusercontent.com/Fs02/rel/$1/docs/$2'
       },
       plugins: [
         EditOnGithubPlugin.create('https://github.com/Fs02/rel/blob/master/docs/')

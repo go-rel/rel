@@ -307,13 +307,16 @@ func (b *Builder) join(buffer *Buffer, joins []rel.JoinQuery) {
 		buffer.WriteByte(' ')
 		buffer.WriteString(join.Mode)
 		buffer.WriteByte(' ')
-		buffer.WriteString(b.config.EscapeChar)
-		buffer.WriteString(join.Table)
-		buffer.WriteString(b.config.EscapeChar)
-		buffer.WriteString(" ON ")
-		buffer.WriteString(b.escape(join.From))
-		buffer.WriteString("=")
-		buffer.WriteString(b.escape(join.To))
+
+		if join.Table != "" {
+			buffer.WriteString(b.config.EscapeChar)
+			buffer.WriteString(join.Table)
+			buffer.WriteString(b.config.EscapeChar)
+			buffer.WriteString(" ON ")
+			buffer.WriteString(b.escape(join.From))
+			buffer.WriteString("=")
+			buffer.WriteString(b.escape(join.To))
+		}
 
 		buffer.Append(join.Arguments...)
 	}

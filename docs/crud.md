@@ -1,12 +1,12 @@
-## Reading and Writing Data
+# Reading and Writing Record
 
-### Create
+## Create
 
 A new record can be inserted to database using a struct, map or set function. To insert a new record using a struct, simply pass the pointer to the instance as the only argment. Insertion using struct will update `created_at` and `updated_at` field if any.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 book := Book{
@@ -20,7 +20,7 @@ if err := repo.Insert(&book); err != nil {
 }
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 > reltest.Repository will automatically sets any primary key value to be 1.
 
@@ -50,7 +50,7 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 var book Book
@@ -63,7 +63,7 @@ data := rel.Map{
 repo.Insert(&book, data)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 > reltest.Repository will automatically populate record using value provided by map.
 
@@ -81,14 +81,14 @@ It's also possible to insert a new record manually using `rel.Set`, which is a v
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // Insert using set.
 repo.Insert(&book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect insertion with given changer.
@@ -105,14 +105,14 @@ To inserts multiple records at once, use `InsertAll`.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // InsertAll books.
 repo.InsertAll(&books)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect any insert all.
@@ -122,14 +122,14 @@ repo.ExpectInsertAll()
 <!-- tabs:end -->
 
 
-### Read
+## Read
 
-rel provides a powerful API for querying data from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
+rel provides a powerful API for querying record from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
 
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.Find(&book, rel.Eq("id", 1))
@@ -138,10 +138,10 @@ repo.Find(&book, rel.Eq("id", 1))
 repo.Find(&book, where.Eq("id", 1))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
-// Expect a find query and mock the returned result.
+// Expect a find query and mock the result.
 repo.ExpectFind(rel.Eq("id", 1)).Result(book)
 
 // OR: Expect a find query and returns rel.NoResultError
@@ -155,16 +155,16 @@ To query multiple records, use `FindAll` method.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
-// Expect a find all query and mock the returned result.
+// Expect a find all query and mock the result.
 repo.ExpectFindAll(where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))).Result(books)
 ```
 
@@ -175,39 +175,39 @@ rel also support chainable query api for a more complex query use case.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.FindAll(&books, query)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
-// Expect a find all query and mock the returned result.
+// Expect a find all query and mock the result.
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.ExpectFindAll(query).Result(books)
 ```
 
 <!-- tabs:end -->
 
-### Update
+## Update
 
 Similar to create, updating a record in rel can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
 
+> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specified fields.
+
 <!-- tabs:start -->
 
-#### **main.go**
-
-> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not.
+### **main.go**
 
 ```go
 // Update directly using struct.
 repo.Update(&book)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect any update is called.
@@ -220,14 +220,14 @@ Besides struct, map and set function. There's also increment and decrement chang
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // Update directly using struct.
 repo.Update(&book, rel.Inc("views"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect any update is called.
@@ -236,20 +236,20 @@ repo.ExpectUpdate(rel.Inc("views"))
 
 <!-- tabs:end -->
 
-### Delete
+## Delete
 
 To delete a record in rel, simply pass the record to be deleted.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // Delete a record.
 repo.Delete(&book)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect book to be deleted.
@@ -263,14 +263,14 @@ Deleting multiple records is possible using `DeleteAll`.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // We have manually define the table here.
 repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // Expect books to be deleted.
@@ -279,3 +279,5 @@ repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 
 <!-- tabs:end -->
 
+
+**Next: [Query Interface](query.md)**

@@ -1,6 +1,6 @@
-## Basics
+# Basics
 
-### Adapters
+## Adapters
 
 Rel uses adapter in order to generate and execute query to a database, below is the list of available adapters supported by rel out of the box.
 
@@ -10,14 +10,14 @@ Rel uses adapter in order to generate and execute query to a database, below is 
 | PostgreSQL | github.com/Fs02/rel/adapter/postgres | [![GoDoc](https://godoc.org/github.com/Fs02/rel/adapter/postgres?status.svg)](https://godoc.org/github.com/Fs02/rel/adapter/postgres) |
 | SQLite3    | github.com/Fs02/rel/adapter/sqlite3  | [![GoDoc](https://godoc.org/github.com/Fs02/rel/adapter/sqlite3?status.svg)](https://godoc.org/github.com/Fs02/rel/adapter/sqlite3)   |
 
-### Example
+## Example
 
 Below is a very basic example on how to utilize rel using mysql adapter.
-Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package which is based on testify mock libarary.
+Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 package main
@@ -69,7 +69,7 @@ func run(repo rel.Repository) {
 }
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 // main_test.go
@@ -86,9 +86,10 @@ import (
 )
 
 func TestInsert(t *testing.T) {
+	// create a mocked repository.
 	repo := reltest.New()
 	
-	// expectations
+	// prepare mocks
 	repo.ExpectInsert()
 	repo.ExpectFind(where.Eq("id", 1)).Result(Product{
 		ID: 5,
@@ -106,9 +107,9 @@ func TestInsert(t *testing.T) {
 
 <!-- tabs:end -->
 
-### Conventions
+## Conventions
 
-#### Schema Definition
+### Schema Definition
 
 rel uses a struct as the schema to infer `table name`, `columns` and `primary field`.
 
@@ -123,7 +124,7 @@ type Book struct {
 }
 ```
 
-#### Table Name
+### Table Name
 
 Table name will be the pluralized struct name in snake case, you may create a `Table() string` method to override the default table name.
 
@@ -137,7 +138,7 @@ func (b Book) Table() string {
 }
 ```
 
-#### Column Name
+### Column Name
 
 Column name will be the struct field name in snake case, you may override the column name by using using `db` tag.
 
@@ -149,7 +150,7 @@ type Book struct {
 }
 ```
 
-#### Primary Key
+### Primary Key
 
 rel requires every struct to have at least `primary` key. by default field named `id` will be used as primary key. to use other field as primary key. you may define it as `primary` using `db` tag.
 
@@ -160,8 +161,8 @@ type Book struct {
 }
 ```
 
-#### Timestamp
+### Timestamp
 
 rel automatically track created and updated time of each struct if `CreatedAt` or `UpdatedAt` field exists.
 
-**Next: [Reading and Writing Data](crud.md)**
+**Next: [Reading and Writing Record](crud.md)**

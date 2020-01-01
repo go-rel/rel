@@ -1,6 +1,6 @@
-## Query Iterface
+# Query Iterface
 
-### Retrieving Data
+## Retrieving Data
 
 rel provides two basic finders method, `Find` for retrieving single record, and `FindAll` for retrieving multiple record.
 
@@ -8,13 +8,13 @@ rel provides two basic finders method, `Find` for retrieving single record, and 
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.Find(&book)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFind().Result(book)
@@ -26,13 +26,13 @@ repo.ExpectFind().Result(book)
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books)
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll().Result(books)
@@ -40,13 +40,13 @@ repo.ExpectFindAll().Result(books)
 
 <!-- tabs:end -->
 
-### Conditions
+## Conditions
 
 To retrieve filtered recods from database, you can use filter api to specify coondition. For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.Eq("available", true))
@@ -58,7 +58,7 @@ repo.FindAll(&books, where.Eq("available", true))
 repo.FindAll(&books, where.Fragment("available=?", true))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Eq("available", true)).Result(book)
@@ -76,7 +76,7 @@ You can use `rel.And` or `rel.Or` to specify more conditions.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
@@ -88,7 +88,7 @@ repo.FindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount"
 repo.FindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true)))).Result(book)
@@ -102,12 +102,12 @@ repo.ExpectFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq(
 
 <!-- tabs:end -->
 
-### Sorting
+## Sorting
 
 To retrieve records from database in a specific order, you can use the sort api.
 
 <!-- tabs:start -->
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.NewSortAsc("updated_at"))
@@ -116,7 +116,7 @@ repo.FindAll(&books, rel.NewSortAsc("updated_at"))
 repo.FindAll(&books, sort.Asc("updated_at"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.NewSortAsc("updated_at")).Result(book)
@@ -131,7 +131,7 @@ You can also chain sort with other query.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.Where(where.Eq("available", true).SortAsc("updated_at")))
@@ -140,7 +140,7 @@ repo.FindAll(&books, rel.Where(where.Eq("available", true).SortAsc("updated_at")
 repo.FindAll(&books, where.Eq("available", true), sort.Asc("updated_at"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Where(where.Eq("available", true).SortAsc("updated_at"))).Result(books)
@@ -151,19 +151,19 @@ repo.ExpectFindAll(where.Eq("available", true), sort.Asc("updated_at")).Result(b
 
 <!-- tabs:end -->
 
-### Selecting Specific Fields
+## Selecting Specific Fields
 
 To select specific fields, you can use `Select` method, this way only specificied field will be mapped to books.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.Select("id", "title"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
@@ -171,13 +171,13 @@ repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
 
 <!-- tabs:end -->
 
-### Using Specific Table
+## Using Specific Table
 
 By default, rel will use pluralized-snakecase struct name as the table name. To select from specific table, you can use `From` method.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.From("ebooks"))
@@ -186,7 +186,7 @@ repo.FindAll(&books, rel.From("ebooks"))
 repo.FindAll(&books, rel.Select("id", "title").From("ebooks"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.From("ebooks")).Result(books)
@@ -197,13 +197,13 @@ repo.ExpectFindAll(rel.Select("id", "title").From("ebooks")).Result(books)
 
 <!-- tabs:end -->
 
-### Limit and Offset
+## Limit and Offset
 
 To set the limit and offset of query, use `Limit` and `Offset` api. `Offset` will be ignored if `Limit` is not specified.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.Limit(10), rel.Offset(20))
@@ -212,7 +212,7 @@ repo.FindAll(&books, rel.Limit(10), rel.Offset(20))
 repo.FindAll(&books, rel.Select().Limit(10).Offset(20))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Limit(10), rel.Offset(20)).Result(books)
@@ -223,13 +223,13 @@ repo.ExpectFindAll(rel.Select().Limit(10).Offset(20)).Result(books)
 
 <!-- tabs:end -->
 
-### Group
+## Group
 
 To use group by query, you can use `Group` method.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 // custom struct to store the result.
@@ -242,7 +242,7 @@ var results []struct {
 repo.FindAll(&results, rel.Select("category", "COUNT(id) as id").From("books").Group("category"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group("category")).Result(results)
@@ -250,7 +250,7 @@ repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group
 
 <!-- tabs:end -->
 
-### Joining Tables
+## Joining Tables
 
 To join tables, you can use `join` api.
 
@@ -258,7 +258,7 @@ To join tables, you can use `join` api.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.FindAll(&books, rel.Join("users"))
@@ -272,7 +272,7 @@ repo.FindAll(&books, rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "u
 repo.FindAll(&books, rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFindAll(rel.Join("users")).Result(books)
@@ -288,13 +288,13 @@ repo.ExpectFindAll(rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`
 
 <!-- tabs:end -->
 
-### Pessimistic Locking
+## Pessimistic Locking
 
 rel supports pessimistic locking by using mechanism provided by the underlying database. `Lock` can be only used only inside transaction.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 repo.Find(&book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
@@ -304,7 +304,7 @@ repo.Find(&book, where.Eq("id", 1), rel.ForUpdate())
 repo.Find(&book, query.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectFind(where.Eq("id", 1), rel.Lock("FOR UPDATE")).Result(book)
@@ -316,13 +316,13 @@ repo.ExpectFind(query.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
 
 <!-- tabs:end -->
 
-### Aggregation
+## Aggregation
 
 rel provides a very basic `Aggregate` method which can be used to count, sum, max etc.
 
 <!-- tabs:start -->
 
-#### **main.go**
+### **main.go**
 
 ```go
 count, err = repo.Aggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id")
@@ -332,7 +332,7 @@ count, err = repo.Count("books", where.Eq("available", true))
 count, err = repo.Count("books")
 ```
 
-#### **main_test.go**
+### **main_test.go**
 
 ```go
 repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)

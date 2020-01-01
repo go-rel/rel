@@ -6,11 +6,69 @@ TODO:
 
 ### Conditions
 
+To retrieve filtered recods from database, you can use filter api to specify coondition. For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
+<!-- tabs:start -->
+
+#### **main.go**
+
+```go
+repo.MustFindAll(&books, rel.Eq("available", true))
+
+// or use alias: github.com/Fs02/rel/where
+repo.MustFindAll(&books, where.Eq("available", true))
+
+// or use raw query
+repo.MustFindAll(&books, where.Fragment("available=?", true))
+```
+
+#### **main_test.go**
+
+```go
+repo.ExpectFindAll(rel.Eq("available", true)).Result(book)
+
+// or use alias: github.com/Fs02/rel/where
+repo.ExpectFindAll(where.Eq("available", true)).Result(book)
+
+// or use raw query
+repo.ExpectFindAll(&books, where.Fragment("available=?", true)).Result(book)
+```
+
+<!-- tabs:end -->
+
+You can use `rel.And` or `rel.Or` to specify more conditions.
+
+<!-- tabs:start -->
+
+#### **main.go**
+
+```go
+repo.MustFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
+
+// or use filter chain
+repo.MustFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
+
+// or use alias: github.com/Fs02/rel/where
+repo.MustFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
+```
+
+#### **main_test.go**
+
+```go
+repo.ExpectFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true)))).Result(book)
+
+// or use filter chain
+repo.ExpectFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true))).Result(book)
+
+// or use alias: github.com/Fs02/rel/where
+repo.ExpectFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true))).Result(book)
+```
+
+<!-- tabs:end -->
 
 ### Sorting
 
-To retrieve a record from database in a specific order, you can use the sort api.
+To retrieve records from database in a specific order, you can use the sort api.
 
 <!-- tabs:start -->
 #### **main.go**
@@ -18,7 +76,7 @@ To retrieve a record from database in a specific order, you can use the sort api
 ```go
 repo.MustFindAll(&books, rel.NewSortAsc("updated_at"))
 
-// or use alias: github.com/Fs02/rel/sort 
+// or use alias: github.com/Fs02/rel/sort
 repo.MustFindAll(&books, sort.Asc("updated_at"))
 ```
 
@@ -27,7 +85,7 @@ repo.MustFindAll(&books, sort.Asc("updated_at"))
 ```go
 repo.ExpectFindAll(rel.NewSortAsc("updated_at")).Result(book)
 
-// or use alias: github.com/Fs02/rel/sort 
+// or use alias: github.com/Fs02/rel/sort
 repo.ExpectFindAll(sort.Asc("updated_at")).Result(book)
 ```
 

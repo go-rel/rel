@@ -9,7 +9,7 @@ rel is orm-ish library for golang that aims to be the repository layer of onion 
 - Testable repository with builtin reltest package.
 - Elegant, yet extendable query builder.
 - Supports Eager loading.
-- Multi adapter support.
+- Multi adapter.
 
 ## Install
 

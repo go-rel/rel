@@ -11,7 +11,7 @@ rel provides two basic finders method, `Find` for retrieving single record, and 
 #### **main.go**
 
 ```go
-repo.MustFind(&book)
+repo.Find(&book)
 ```
 
 #### **main_test.go**
@@ -29,7 +29,7 @@ repo.ExpectFind().Result(book)
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books)
+repo.FindAll(&books)
 ```
 
 #### **main_test.go**
@@ -49,13 +49,13 @@ To retrieve filtered recods from database, you can use filter api to specify coo
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.Eq("available", true))
+repo.FindAll(&books, rel.Eq("available", true))
 
 // or use alias: github.com/Fs02/rel/where
-repo.MustFindAll(&books, where.Eq("available", true))
+repo.FindAll(&books, where.Eq("available", true))
 
 // or use raw query
-repo.MustFindAll(&books, where.Fragment("available=?", true))
+repo.FindAll(&books, where.Fragment("available=?", true))
 ```
 
 #### **main_test.go**
@@ -79,13 +79,13 @@ You can use `rel.And` or `rel.Or` to specify more conditions.
 #### **main.go**
 
 ```go
-repo.MustFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
+repo.FindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
 
 // or use filter chain
-repo.MustFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
+repo.FindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
 
 // or use alias: github.com/Fs02/rel/where
-repo.MustFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
+repo.FindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
 ```
 
 #### **main_test.go**
@@ -110,10 +110,10 @@ To retrieve records from database in a specific order, you can use the sort api.
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.NewSortAsc("updated_at"))
+repo.FindAll(&books, rel.NewSortAsc("updated_at"))
 
 // or use alias: github.com/Fs02/rel/sort
-repo.MustFindAll(&books, sort.Asc("updated_at"))
+repo.FindAll(&books, sort.Asc("updated_at"))
 ```
 
 #### **main_test.go**
@@ -134,10 +134,10 @@ You can also chain sort with other query.
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.Where(where.Eq("available", true).SortAsc("updated_at")))
+repo.FindAll(&books, rel.Where(where.Eq("available", true).SortAsc("updated_at")))
 
 // which is equal to:
-repo.MustFindAll(&books, where.Eq("available", true), sort.Asc("updated_at"))
+repo.FindAll(&books, where.Eq("available", true), sort.Asc("updated_at"))
 ```
 
 #### **main_test.go**
@@ -160,7 +160,7 @@ To select specific fields, you can use `Select` method, this way only specificie
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.Select("id", "title"))
+repo.FindAll(&books, rel.Select("id", "title"))
 ```
 
 #### **main_test.go**
@@ -180,10 +180,10 @@ By default, rel will use pluralized-snakecase struct name as the table name. To 
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.From("ebooks"))
+repo.FindAll(&books, rel.From("ebooks"))
 
 // chain it with select
-repo.MustFindAll(&books, rel.Select("id", "title").From("ebooks"))
+repo.FindAll(&books, rel.Select("id", "title").From("ebooks"))
 ```
 
 #### **main_test.go**
@@ -206,10 +206,10 @@ To set the limit and offset of query, use `Limit` and `Offset` api. `Offset` wil
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.Limit(10), rel.Offset(20))
+repo.FindAll(&books, rel.Limit(10), rel.Offset(20))
 
 // as chainable query.
-repo.MustFindAll(&books, rel.Select().Limit(10).Offset(20))
+repo.FindAll(&books, rel.Select().Limit(10).Offset(20))
 ```
 
 #### **main_test.go**
@@ -239,7 +239,7 @@ var results []struct {
 }
 
 // we need to explicitly specify table name since we are using an anonymous struct. 
-repo.MustFindAll(&results, rel.Select("category", "COUNT(id) as id").From("books").Group("category"))
+repo.FindAll(&results, rel.Select("category", "COUNT(id) as id").From("books").Group("category"))
 ```
 
 #### **main_test.go**
@@ -261,15 +261,15 @@ To join tables, you can use `join` api.
 #### **main.go**
 
 ```go
-repo.MustFindAll(&books, rel.Join("users"))
+repo.FindAll(&books, rel.Join("users"))
 // or with explicit columns
-repo.MustFindAll(&books, rel.JoinOn("users", "addresses.users_id", "users.id"))
+repo.FindAll(&books, rel.JoinOn("users", "addresses.users_id", "users.id"))
 // or use alias: github.com/Fs02/rel/join
-repo.MustFindAll(&books, join.On("users", "addresses.users_id", "users.id"))
+repo.FindAll(&books, join.On("users", "addresses.users_id", "users.id"))
 // or with custom join mode.
-repo.MustFindAll(&books, rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id"))
+repo.FindAll(&books, rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id"))
 // or with raw sql
-repo.MustFindAll(&books, rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"))
+repo.FindAll(&books, rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"))
 ```
 
 #### **main_test.go**
@@ -297,11 +297,11 @@ rel supports pessimistic locking by using mechanism provided by the underlying d
 #### **main.go**
 
 ```go
-repo.MustFind(&book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
+repo.Find(&book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
 // or
-repo.MustFind(&book, where.Eq("id", 1), rel.ForUpdate())
+repo.Find(&book, where.Eq("id", 1), rel.ForUpdate())
 // or
-repo.MustFind(&book, query.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
+repo.Find(&book, query.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
 ```
 
 #### **main_test.go**
@@ -325,17 +325,17 @@ rel provides a very basic `Aggregate` method which can be used to count, sum, ma
 #### **main.go**
 
 ```go
-repo.MustAggregaate(rel.From("books").Where(where.Eq("available", true)), "count", "id")
+count, err = repo.Aggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id")
 // or
-repo.MustCount("books", where.Eq("available", true))
+count, err = repo.Count("books", where.Eq("available", true))
 // or just count all books.
-repo.MustCount("books")
+count, err = repo.Count("books")
 ```
 
 #### **main_test.go**
 
 ```go
-repo.ExpectAggregaate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
+repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
 // or
 repo.ExpectCount("books", where.Eq("available", true)).Result(5)
 // or just count all books.

@@ -15,6 +15,7 @@
   <script src="//unpkg.com/docsify-edit-on-github/index.js"></script>
   <script>
     window.$docsify = {
+      
       name: 'rel',
       repo: 'https://github.com/Fs02/rel',
       auto2top: true,
@@ -23,6 +24,10 @@
       tabs: {
         sync: false,
         tabHeadings: true
+      },
+      relativePath: true,
+      alias: {
+        '/v/([\.a-zA-Z0-9_-]*)/?(.*)': 'https://raw.githubusercontent.com/Fs02/rel/$1/docs/$2'
       },
       plugins: [
         EditOnGithubPlugin.create('https://github.com/Fs02/rel/blob/master/docs/')

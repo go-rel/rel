@@ -103,6 +103,8 @@ func TestInsert(t *testing.T) {
 }
 ```
 
+**Learn More:** [https://fs02.github.io/rel](https://fs02.github.io/rel)
+
 ## Why rel
 
 Most (if not all) orm for golang is written as a chainable API, meaning all of the query need to be called before performing actual action as a chain of method invocations. example:

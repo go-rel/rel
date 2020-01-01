@@ -17,6 +17,7 @@
     * [Conditions](query.md#conditions)
     * [Sorting](query.md#sorting)
     * [Selecting Specific Fields](query.md#selecting-specific-fields)
+    * [Using Specific Table](query.md#using-specific-table)
     * [Limit and Offset](query.md#limit-and-offset)
     * [Group](query.md#group)
     * [Joining Tables](query.md#joining-tables)

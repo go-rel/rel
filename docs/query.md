@@ -2,7 +2,43 @@
 
 ### Retrieving Data
 
-TODO:
+rel provides two basic finders method, `Find` for retrieving single record, and `FindAll` for retrieving multiple record.
+
+`Find` only accepts struct as the first argument, and always return the first result from the query.
+
+<!-- tabs:start -->
+
+#### **main.go**
+
+```go
+repo.MustFind(&book)
+```
+
+#### **main_test.go**
+
+```go
+repo.ExpectFind().Result(book)
+```
+
+<!-- tabs:end -->
+
+`FindAll` only accepts slice as the first argument, and always return all result from the query.
+
+<!-- tabs:start -->
+
+#### **main.go**
+
+```go
+repo.MustFindAll(&books)
+```
+
+#### **main_test.go**
+
+```go
+repo.ExpectFindAll().Result(books)
+```
+
+<!-- tabs:end -->
 
 ### Conditions
 

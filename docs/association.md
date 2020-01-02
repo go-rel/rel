@@ -9,35 +9,39 @@ By following that convention, rel currently supports `belongs to`, `has one` and
 
 ```go
 type User struct {
-	ID           int
-	Name         string
-    Age          int
-    // has many transactions.
-    // with custom reference and foreign field declaration.
-    // references: id refers to User.ID field.
-    // foreign_key: buyer_id refers to Transaction.BuyerID
-    Transactions []Transaction `references:"id" foreign_key:"buyer_id"`
-    // has one address.
-    // doesn't contains primary key of other struct.
-    // rel can guess the reference and foreign field if it's not specified.
-    Address      Address
-    CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID        int
+	Name      string
+	Age       int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	// has many transactions.
+	// with custom reference and foreign field declaration.
+	// references: id refers to User.ID field.
+	// foreign_key: buyer_id refers to Transaction.BuyerID
+	Transactions []Transaction `references:"id" foreign_key:"buyer_id"`
+
+	// has one address.
+	// doesn't contains primary key of other struct.
+	// rel can guess the reference and foreign field if it's not specified.
+	Address Address
 }
 
 type Transaction struct {
-	ID      int
-    // belongs to user.
-    // contains primary key of other struct.
+	ID   int
+	Paid bool
+
+	// belongs to user.
+	// contains primary key of other struct.
 	Buyer   User `ref:"buyer_id" foreign_key:"id"`
-    BuyerID int
-    Paid    bool
+	BuyerID int
 }
 
 type Address struct {
-	ID     int
-    City   string
-    // belongs to user.
+	ID   int
+	City string
+
+	// belongs to user.
 	User   *User
 	UserID *int
 }
@@ -61,6 +65,9 @@ repo.Preload(&user, "address")
 // preload user `has many` transactions association
 repo.Preload(&user, "transactions")
 
+// preload paid transactions from user.
+repo.Preload(&user, "transactions", where.Eq("paid", true))
+
 // preload every buyer's address in transactions.
 // note: buyer needs to be preloaded before preloading buyer's address.
 repo.Preload(&transactions, "buyer.address")
@@ -77,6 +84,9 @@ repo.ExpectPreload("address").Result(address)
 
 // preload user `has many` transactions association
 repo.ExpectPreload("transactions").Result(transactions)
+
+// preload paid transactions from user.
+repo.ExpectPreload(&user, "transactions", where.Eq("paid", true)).Result(transactions)
 
 // preload every buyer's address in transactions.
 // note: buyer needs to be preloaded before preloading buyer's address.

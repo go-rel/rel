@@ -1,8 +1,10 @@
 # Transactions
 
-To declare a transaction, use `Transaction` method. It accepts a function with `rel.Repository` argument and returns an error.
+To declare a transaction, use `Transaction` method.
+It accepts a function with `rel.Repository` argument and returns an error.
 
-If any error occured within transaction, the transaction will be rolled back, and returns the error. If the error is a runtime error or `panic` with string argument, it'll panic after rollback.
+If any error occured within transaction, the transaction will be rolled back, and returns the error.
+If the error is a runtime error or `panic` with string argument, it'll panic after rollback.
 
 <!-- tabs:start -->
 

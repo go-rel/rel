@@ -47,7 +47,7 @@ type Address struct {
 }
 ```
 
-## Preloading
+## Preloading Association
 
 Preload will load association to structs. To preload association, use `Preload`.
 
@@ -95,4 +95,97 @@ repo.ExpectPreload("buyer.address").Result(addresses)
 
 <!-- tabs:end -->
 
-## Modifying Associations
+## Modifying Association
+
+rel will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, rel will try to update the association, else it'll create a new association.
+
+rel will try to create a new record for association if `ID` is a zero value.
+
+<!-- tabs:start -->
+
+### **main.go**
+
+```go
+user := User{
+    Name: "rel",
+    Address: Address{
+        City: "Bandung",
+    },
+}
+
+// Inserts a new record to users and address table.
+// Result: User{ID: 1, Name: "rel", Address: Address{ID: 1, City: "Bandung", UserID: 1}}
+repo.Insert(&user)
+```
+
+### **main_tesst.go**
+
+```go
+repo.ExpectInsert().For(&user)
+```
+
+<!-- tabs:end -->
+
+rel will try to update a new record for association if `ID` is a zero value. To update association, it first needs to be preloaded.
+
+<!-- tabs:start -->
+
+### **main.go**
+
+```go
+userId := 1
+user := User{
+    ID:   1,
+    Name: "rel",
+    // association is loaded when the primary key (id) is not zero.
+    Address: Address{
+        ID:     1,
+        UserID: &userId,
+        City:   "Bandung",
+    },
+}
+
+// Update user record with id 1.
+// Update address record with id 1.
+repo.Update(&user)
+```
+
+### **main_tesst.go**
+
+```go
+repo.ExpectUpdate().For(&user)
+```
+
+<!-- tabs:end -->
+
+To selectively update only specific fields or association, `use rel.Map`.
+
+<!-- tabs:start -->
+
+### **main.go**
+
+```go
+changes := rel.Map{
+    "address": rel.Map{
+        "city": "bandung",
+    },
+}
+
+// Update address record with id 1, only set city to bandung.
+repo.Update(&user, changes)
+```
+
+### **main_test.go**
+
+```go
+changes := rel.Map{
+    "address": rel.Map{
+        "city": "bandung",
+    },
+}
+
+// Update address record with id 1, only set city to bandung.
+repo.ExpectUpdate(changes).For(&user)
+```
+
+<!-- tabs:end -->

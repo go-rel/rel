@@ -27,8 +27,8 @@
 * [Association](association.md)
 
     * [Defining Association](association.md#defining-association)
-    * [Preloading](association.md#preloading)
-    * [Modifying Associations](association.md#modifying-association)
+    * [Preloading Association](association.md#preloading-association)
+    * [Modifying Association](association.md#modifying-association)
 
 * Others
 

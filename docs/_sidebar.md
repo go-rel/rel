@@ -30,7 +30,4 @@
     * [Preloading Association](association.md#preloading-association)
     * [Modifying Association](association.md#modifying-association)
 
-* Others
-
-    * Transactions
-    * Logging
+* [Transactions](transactions.md)

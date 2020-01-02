@@ -24,17 +24,11 @@
     * [Pessimistic Locking](query.md#pessimistic-locking)
     * [Aggregation](query.md#aggregation)
 
-* Change Builder
+* [Association](association.md)
 
-    * Field
-    * Map
-    * Struct
-
-* Associations
-
-    * Defining Association
-    * Preloading
-    * Modifying Association
+    * [Defining Association](association.md#defining-association)
+    * [Preloading](association.md#preloading)
+    * [Modifying Associations](association.md#modifying-association)
 
 * Others
 

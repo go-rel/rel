@@ -8,11 +8,32 @@
   <meta name="description" content="Golang SQL Repository Layer for Clean (Onion) Architecture">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <style>
+    .markdown-section iframe {
+      margin: 0 0 0 1em;
+    }
+    .markdown-section iframe {
+      border: initial;
+      min-width: initial;
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>
-  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-  <script src="//unpkg.com/docsify-edit-on-github/index.js"></script>
+  <script src="//unpkg.com/js-polyfills@0.1.42/dom.js"></script>
+  <script>
+    function reloadJs(src) {
+      var head = document.getElementsByTagName('head')[0];
+      var script = head.querySelector('script[src$="' + src + '"]');
+      if (script) {
+        head.removeChild(script);
+      }
+
+      script = document.createElement('script');
+      script.src = src;
+      head.appendChild(script);
+    }
+  </script>
   <script>
     window.$docsify = {
       name: 'rel',
@@ -29,11 +50,33 @@
       alias: {
         '/v/([\.a-zA-Z0-9_-]*)/?(.*)': 'https://raw.githubusercontent.com/Fs02/rel/$1/docs/$2'
       },
+      executeScript: true,
       plugins: [
-        EditOnGithubPlugin.create('https://github.com/Fs02/rel/blob/master/docs/')
+        function (hook, vm) {
+          hook.beforeEach(function (html) {
+            if (/githubusercontent\.com/.test(vm.route.file)) {
+              url = vm.route.file
+                .replace('raw.githubusercontent.com', 'github.com')
+                .replace(/\/master/, '/blob/master')
+            } else {
+              url = 'https://github.com/docsifyjs/docsify/blob/master/docs/' + vm.route.file
+            }
+            var editHtml = '[:memo: Edit Document](' + url + ')\n'
+            return editHtml
+              + html
+              + '\n\n----\n\n'
+              + '<a class="github-button" href="https://github.com/Fs02/rel" data-icon="octicon-star" data-show-count="true" aria-label="Star Fs02/rel on GitHub">Star</a>'
+              + '<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="Golang SQL Repository Layer for Clean (Onion) Architecture" data-url="https://fs02.github.io/rel" data-show-count="false">Tweet</a>'
+          })
+          hook.afterEach(function (html) {
+            reloadJs('//buttons.github.io/buttons.js');
+            reloadJs('//platform.twitter.com/widgets.js');
+          })
+        },
       ]
     }
   </script>
+  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="//unpkg.com/docsify/lib/plugins/ga.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-go.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>

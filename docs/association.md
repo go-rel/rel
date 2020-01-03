@@ -17,9 +17,9 @@ type User struct {
 
 	// has many transactions.
 	// with custom reference and foreign field declaration.
-	// references: id refers to User.ID field.
-	// foreign_key: buyer_id refers to Transaction.BuyerID
-	Transactions []Transaction `references:"id" foreign_key:"buyer_id"`
+	// ref: id refers to User.ID field.
+	// fk: buyer_id refers to Transaction.BuyerID
+	Transactions []Transaction `ref:"id" fk:"buyer_id"`
 
 	// has one address.
 	// doesn't contains primary key of other struct.
@@ -33,7 +33,7 @@ type Transaction struct {
 
 	// belongs to user.
 	// contains primary key of other struct.
-	Buyer   User `ref:"buyer_id" foreign_key:"id"`
+	Buyer   User `ref:"buyer_id" fk:"id"`
 	BuyerID int
 }
 

@@ -9,7 +9,7 @@ import (
 
 func TestPreload(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
 		author = Author{ID: 1, Name: "Kia"}
 	)
@@ -29,7 +29,7 @@ func TestPreload(t *testing.T) {
 
 func TestPreload_nested(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Rating{
 			Book: &Book{ID: 2, Title: "Rel for dummies", AuthorID: 1},
 		}
@@ -51,7 +51,7 @@ func TestPreload_nested(t *testing.T) {
 
 func TestPreload_slice(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = []Book{
 			{ID: 1, Title: "Golang for dummies"},
 			{ID: 2, Title: "Rel for dummies"},
@@ -84,7 +84,7 @@ func TestPreload_slice(t *testing.T) {
 
 func TestPreload_sliceNested(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = []Author{
 			{
 				Books: []Book{
@@ -124,7 +124,7 @@ func TestPreload_sliceNested(t *testing.T) {
 
 func TestPreload_nilReferenceValue(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = struct {
 			ID       int
 			Author   *Author
@@ -150,7 +150,7 @@ func TestPreload_nilReferenceValue(t *testing.T) {
 
 func TestPreload_For(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
 	)
 
@@ -167,7 +167,7 @@ func TestPreload_For(t *testing.T) {
 
 func TestPreload_ForType(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
 	)
 
@@ -184,7 +184,7 @@ func TestPreload_ForType(t *testing.T) {
 
 func TestPreload_error(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
 	)
 

@@ -10,7 +10,7 @@ import (
 
 func TestAggregate(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectAggregate(rel.From("books"), "sum", "id").Result(3)
@@ -29,7 +29,7 @@ func TestAggregate(t *testing.T) {
 
 func TestAggregate_error(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectAggregate(rel.From("books"), "sum", "id").ConnectionClosed()
@@ -48,7 +48,7 @@ func TestAggregate_error(t *testing.T) {
 
 func TestAggregate_Count(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectCount("books").Result(2)
@@ -67,7 +67,7 @@ func TestAggregate_Count(t *testing.T) {
 
 func TestAggregate_Count_error(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectCount("books").ConnectionClosed()

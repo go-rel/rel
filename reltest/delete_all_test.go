@@ -11,7 +11,7 @@ import (
 
 func TestDeleteAll(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
@@ -27,7 +27,7 @@ func TestDeleteAll(t *testing.T) {
 
 func TestDeleteAll_error(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
@@ -43,7 +43,7 @@ func TestDeleteAll_error(t *testing.T) {
 
 func TestDeleteAll_noTable(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDeleteAll()
@@ -55,7 +55,7 @@ func TestDeleteAll_noTable(t *testing.T) {
 
 func TestDeleteAll_unsafe(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDeleteAll(rel.From("books"))

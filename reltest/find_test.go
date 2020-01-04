@@ -10,7 +10,7 @@ import (
 
 func TestFind(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result Book
 		book   = Book{ID: 2, Title: "Rel for dummies"}
 	)
@@ -30,8 +30,8 @@ func TestFind(t *testing.T) {
 
 func TestFind_noResult(t *testing.T) {
 	var (
-		repo   Repository
 		result Book
+		repo   = New()
 		book   = Book{ID: 2, Title: "Rel for dummies"}
 	)
 

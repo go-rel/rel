@@ -1,29 +1,69 @@
+/// [example]
 package main
 
 import (
 	"testing"
 
+	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/reltest"
 	"github.com/Fs02/rel/where"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExample(t *testing.T) {
 	// create a mocked repository.
-	repo := reltest.New()
-
-	// mocks insert
-	repo.ExpectInsert()
+	var (
+		repo = reltest.New()
+		book = Book{
+			ID:       1,
+			Title:    "Go for dummies",
+			Category: "learning",
+		}
+	)
 
 	// mock find and return other result
-	repo.ExpectFind(where.Eq("id", 1)).Result(Book{
-		ID:       1,
-		Title:    "Go for dummies",
-		Category: "learning",
-	})
+	repo.ExpectFind(where.Eq("id", 1)).Result(book)
 
-	// run
-	Example(repo)
+	// mocks update
+	book.Title = "rel for dummies"
+	repo.ExpectUpdate().For(&book)
 
-	// asserts
+	// run and asserts
+	assert.Nil(t, Example(repo))
 	repo.AssertExpectations(t)
+}
+
+func TestExample_findNoResult(t *testing.T) {
+	// create a mocked repository.
+	var repo = reltest.New()
+
+	// mock find and return other result
+	repo.ExpectFind(where.Eq("id", 1)).NoResult()
+
+	// run and asserts
+	assert.Equal(t, rel.NoResultError{}, Example(repo))
+	repo.AssertExpectations(t)
+}
+
+func TestExample_updateError(t *testing.T) {
+	// create a mocked repository.
+	var repo = reltest.New()
+
+	// mock find and return other result
+	repo.ExpectFind(where.Eq("id", 1)).Result(Book{ID: 1})
+
+	// mocks update
+	repo.ExpectUpdate().ForType("main.Book").ConnectionClosed()
+
+	// run and asserts
+	assert.Equal(t, reltest.ErrConnectionClosed, Example(repo))
+	repo.AssertExpectations(t)
+}
+
+/// [example]
+
+func TestMain(t *testing.T) {
+	assert.NotPanics(t, func() {
+		main()
+	})
 }

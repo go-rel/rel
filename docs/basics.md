@@ -13,7 +13,7 @@ Testing database query using rel can be done using [reltest](https://godoc.org/g
 
 ### **main_test.go**
 
-[main_test.go](basics_test.go ':include')
+[main_test.go](basics_test.go ':include :fragment=example')
 
 <!-- tabs:end -->
 

@@ -9,7 +9,7 @@ import (
 
 func TestModify_Insert(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{Title: "Golang for dummies"}
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
@@ -29,7 +29,7 @@ func TestModify_Insert(t *testing.T) {
 
 func TestModify_Insert_nested(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			Title:  "Rel for dummies",
 			Author: Author{Name: "Kia"},
@@ -67,7 +67,7 @@ func TestModify_Insert_nested(t *testing.T) {
 
 func TestModify_Insert_record(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{Title: "Golang for dummies"}
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
@@ -87,7 +87,7 @@ func TestModify_Insert_record(t *testing.T) {
 
 func TestModify_Insert_set(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result Book
 		book   = Book{ID: 1, Title: "Rel for dummies"}
 	)
@@ -107,7 +107,7 @@ func TestModify_Insert_set(t *testing.T) {
 
 func TestModify_Insert_inc(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result Book
 	)
 
@@ -121,7 +121,7 @@ func TestModify_Insert_inc(t *testing.T) {
 
 func TestModify_Insert_dec(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result Book
 	)
 
@@ -135,7 +135,7 @@ func TestModify_Insert_dec(t *testing.T) {
 
 func TestModify_Insert_map(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result Book
 		book   = Book{
 			ID:       1,
@@ -179,7 +179,7 @@ func TestModify_Insert_map(t *testing.T) {
 
 func TestModify_Insert_unknownField(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
@@ -192,7 +192,7 @@ func TestModify_Insert_unknownField(t *testing.T) {
 
 func TestModify_Insert_notUnique(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
@@ -254,7 +254,7 @@ func TestModify_InsertAll_map(t *testing.T) {
 
 func TestModify_Update(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
@@ -271,7 +271,7 @@ func TestModify_Update(t *testing.T) {
 
 func TestModify_Update_nested(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:       2,
 			Title:    "Rel for dummies",
@@ -311,7 +311,7 @@ func TestModify_Update_nested(t *testing.T) {
 
 func TestModify_Update_nestedInsert(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:     2,
 			Title:  "Rel for dummies",
@@ -350,7 +350,7 @@ func TestModify_Update_nestedInsert(t *testing.T) {
 
 func TestModify_Update_record(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
@@ -367,7 +367,7 @@ func TestModify_Update_record(t *testing.T) {
 
 func TestModify_Update_withoutPrimaryValue(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{Title: "Golang for dummies"}
 	)
 
@@ -380,7 +380,7 @@ func TestModify_Update_withoutPrimaryValue(t *testing.T) {
 
 func TestModify_Update_set(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 		book   = Book{ID: 2, Title: "Rel for dummies"}
 	)
@@ -400,7 +400,7 @@ func TestModify_Update_set(t *testing.T) {
 
 func TestModify_Update_inc(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Views: 10}
 		book   = Book{ID: 2, Views: 11}
 	)
@@ -413,7 +413,7 @@ func TestModify_Update_inc(t *testing.T) {
 
 func TestModify_Update_dec(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Views: 10}
 		book   = Book{ID: 2, Views: 9}
 	)
@@ -426,7 +426,7 @@ func TestModify_Update_dec(t *testing.T) {
 
 func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Views: 10}
 	)
 
@@ -440,7 +440,7 @@ func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
 
 func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Views: 10}
 	)
 
@@ -454,7 +454,7 @@ func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
 
 func TestModify_Update_setNil(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 		book   = Book{ID: 2, Title: ""}
 	)
@@ -467,7 +467,7 @@ func TestModify_Update_setNil(t *testing.T) {
 
 func TestModify_Update_map(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:    2,
 			Title: "Golang for dummies",
@@ -519,7 +519,7 @@ func TestModify_Update_map(t *testing.T) {
 
 func TestModify_Update_belongsToInconsistentPk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:       2,
 			Title:    "Golang for dummies",
@@ -543,7 +543,7 @@ func TestModify_Update_belongsToInconsistentPk(t *testing.T) {
 
 func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:       2,
 			Title:    "Golang for dummies",
@@ -567,7 +567,7 @@ func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 
 func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:     2,
 			Title:  "Golang for dummies",
@@ -590,7 +590,7 @@ func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 
 func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:     2,
 			Title:  "Golang for dummies",
@@ -613,7 +613,7 @@ func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 
 func TestModify_Update_hasManyNotLoaded(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:    2,
 			Title: "Golang for dummies",
@@ -634,7 +634,7 @@ func TestModify_Update_hasManyNotLoaded(t *testing.T) {
 
 func TestModify_Update_hasManyInconsistentPk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:    2,
 			Title: "Golang for dummies",
@@ -658,7 +658,7 @@ func TestModify_Update_hasManyInconsistentPk(t *testing.T) {
 
 func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{
 			ID:    2,
 			Title: "Golang for dummies",
@@ -682,7 +682,7 @@ func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
 
 func TestModify_Update_unknownField(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
@@ -695,7 +695,7 @@ func TestModify_Update_unknownField(t *testing.T) {
 
 func TestModify_Update_notUnique(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 

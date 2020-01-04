@@ -10,7 +10,7 @@ import (
 
 func TestFindAll(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result []Book
 		books  = []Book{
 			{ID: 1, Title: "Golang for dummies"},
@@ -33,7 +33,7 @@ func TestFindAll(t *testing.T) {
 
 func TestFindAll_error(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result []Book
 		books  = []Book{
 			{ID: 1, Title: "Golang for dummies"},

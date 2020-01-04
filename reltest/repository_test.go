@@ -43,7 +43,7 @@ func TestRepository_Adapter(t *testing.T) {
 
 func TestRepository_Transaction(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{Title: "Golang for dummies"}
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
@@ -62,7 +62,7 @@ func TestRepository_Transaction(t *testing.T) {
 
 func TestRepository_Transaction_error(t *testing.T) {
 	var (
-		repo   Repository
+		repo   = New()
 		result = Book{Title: "Golang for dummies"}
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
@@ -82,7 +82,7 @@ func TestRepository_Transaction_error(t *testing.T) {
 
 func TestRepository_Transaction_panic(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectTransaction(func(repo *Repository) {
@@ -100,7 +100,7 @@ func TestRepository_Transaction_panic(t *testing.T) {
 func TestRepository_Transaction_runtimerError(t *testing.T) {
 	var (
 		book *Book
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectTransaction(func(repo *Repository) {

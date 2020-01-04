@@ -9,7 +9,7 @@ import (
 
 func TestDelete(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDelete().For(&Book{ID: 1})
@@ -25,7 +25,7 @@ func TestDelete(t *testing.T) {
 
 func TestDelete_forType(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDelete().ForType("reltest.Book")
@@ -41,7 +41,7 @@ func TestDelete_forType(t *testing.T) {
 
 func TestDelete_error(t *testing.T) {
 	var (
-		repo Repository
+		repo = New()
 	)
 
 	repo.ExpectDelete().ConnectionClosed()

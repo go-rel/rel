@@ -35,7 +35,7 @@ type UserRepository interface {
 }
 
 // actual implementation
-type userRepository struct{
+type userRepository struct {
 	db *DB
 }
 

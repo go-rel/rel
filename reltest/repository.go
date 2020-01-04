@@ -231,3 +231,8 @@ func (r *Repository) AssertExpectations(t *testing.T) bool {
 
 	return r.mock.AssertExpectations(t)
 }
+
+// New test repository.
+func New() *Repository {
+	return &Repository{}
+}

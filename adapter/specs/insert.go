@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Insert tests specification for database insertion.
 func Insert(t *testing.T, repo rel.Repository) {
 	var (
 		note = "swordsman"
@@ -38,6 +39,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user, queried)
 }
 
+// InsertHasMany tests specification insertion with has many association.
 func InsertHasMany(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -73,6 +75,7 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// InsertHasOne tests specification for insertion with has one association.
 func InsertHasOne(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -101,6 +104,7 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// InsertBelongsTo tests specification for insertion with belongs to association.
 func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	var (
 		result  Address

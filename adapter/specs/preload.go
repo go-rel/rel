@@ -27,6 +27,7 @@ func createPreloadUser(repo rel.Repository) User {
 	return user
 }
 
+// PreloadHasMany tests specification for preloading has many association.
 func PreloadHasMany(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -41,6 +42,7 @@ func PreloadHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user, result)
 }
 
+// PreloadHasManyWithQuery tests specification for preloading has many association.
 func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -56,6 +58,7 @@ func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.Addresses[0], result.Addresses[0])
 }
 
+// PreloadHasManySlice tests specification for preloading has many association from multiple records.
 func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 	var (
 		result []User
@@ -73,6 +76,7 @@ func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, users, result)
 }
 
+// PreloadHasOne tests specification for preloading has one association.
 func PreloadHasOne(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -87,6 +91,7 @@ func PreloadHasOne(t *testing.T, repo rel.Repository) {
 	assert.NotNil(t, result.PrimaryAddress)
 }
 
+// PreloadHasOneWithQuery tests specification for preloading has one association.
 func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -101,6 +106,7 @@ func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.Addresses[0], *result.PrimaryAddress)
 }
 
+// PreloadHasOneSlice tests specification for preloading has one association from multiple records.
 func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 	var (
 		result []User
@@ -119,6 +125,7 @@ func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 	assert.NotNil(t, result[1].PrimaryAddress)
 }
 
+// PreloadBelongsTo tests specification for preloading belongs to association.
 func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 	var (
 		result Address
@@ -135,6 +142,7 @@ func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user, result.User)
 }
 
+// PreloadBelongsToWithQuery tests specification for preloading belongs to association.
 func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 	var (
 		result Address
@@ -151,6 +159,7 @@ func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 	assert.Zero(t, result.User)
 }
 
+// PreloadBelongsToSlice tests specification for preloading belongs to association from multiple records.
 func PreloadBelongsToSlice(t *testing.T, repo rel.Repository) {
 	var (
 		user      = createPreloadUser(repo)

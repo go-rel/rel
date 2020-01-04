@@ -34,6 +34,7 @@ type Book struct {
 	AuthorID int
 	Ratings  []Rating
 	Poster   Poster
+	Views    int
 }
 
 func TestRepository_Adapter(t *testing.T) {

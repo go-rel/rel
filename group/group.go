@@ -6,6 +6,8 @@ import (
 )
 
 var (
-	By     = rel.NewGroup
+	// By is alias for rel.NewGroup
+	By = rel.NewGroup
+	// Fields is alias for rel.NewGroup
 	Fields = rel.NewGroup
 )

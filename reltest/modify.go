@@ -108,9 +108,23 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	for _, ch := range changes.All() {
-		// FIXME: support increment and decrement.
-		if !doc.SetValue(ch.Field, ch.Value) {
-			panic("reltest: cannot apply changes, field " + ch.Field + " is not defined")
+		switch ch.Type {
+		case rel.ChangeSetOp:
+			if !doc.SetValue(ch.Field, ch.Value) {
+				panic("reltest: cannot apply changes, field " + ch.Field + " is not defined or not assignable")
+			}
+		case rel.ChangeIncOp:
+			if insertion {
+				panic("reltest: increment is not supported for insertion")
+			}
+
+			applyIncOrDec(doc, ch.Field, ch.Value.(int))
+		case rel.ChangeDecOp:
+			if insertion {
+				panic("reltest: decrement is not supported for insertion")
+			}
+
+			applyIncOrDec(doc, ch.Field, -ch.Value.(int))
 		}
 	}
 
@@ -118,6 +132,20 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 		applyHasOneChanges(doc, &changes)
 		applyHasManyChanges(doc, &changes, insertion)
 	}
+}
+
+func applyIncOrDec(doc *rel.Document, field string, n int) {
+	v, ok := doc.Value(field)
+	if !ok {
+		panic("reltest: " + field + " field doesn't exists")
+	}
+
+	vi, ok := v.(int)
+	if !ok {
+		panic("reltest: can't inc/dec " + field + " field")
+	}
+
+	doc.SetValue(field, vi+n)
 }
 
 // this logic should be similar to repository.saveBelongsTo

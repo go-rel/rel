@@ -1,6 +1,5 @@
-* [Basics](#basics.md)
+* [Basics](basics.md)
 
-    * [Adapters](basics.md#adapters)
     * [Example](basics.md#example)
     * [Conventions](basics.md#conventions)
 
@@ -31,4 +30,5 @@
     * [Modifying Association](association.md#modifying-association)
 
 * [Transactions](transactions.md)
+* [Adapters](adapters.md)
 * [Github](https://github.com/Fs02/rel)

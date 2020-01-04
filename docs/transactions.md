@@ -29,3 +29,5 @@ repo.ExpectTransaction(func(repo *Repository) {
 ```
 
 <!-- tabs:end -->
+
+**Next: [Adapters](adapters.md)**

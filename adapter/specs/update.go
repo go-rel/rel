@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Update tests specification for updating a record.
 func Update(t *testing.T, repo rel.Repository) {
 	var (
 		note = "swordsman"
@@ -41,6 +42,7 @@ func Update(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user, queried)
 }
 
+// UpdateHasManyInsert tests specification for updating a record and inserting has many association.
 func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -76,6 +78,7 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateHasManyUpdate tests specification for updating a record and updating has many association.
 func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	var (
 		user = User{
@@ -109,6 +112,7 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateHasManyReplace tests specification for updating a record and replacing has many association.
 func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -147,6 +151,7 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateHasOneInsert tests specification for updating a record and inserting has many association.
 func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -175,6 +180,7 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateHasOneUpdate tests specification for updating a record and updating has one association.
 func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -204,6 +210,7 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateHasOneReplace tests specification for updating a record and replacing has one association.
 func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	var (
 		result User
@@ -233,6 +240,7 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, user)
 }
 
+// UpdateBelongsToInsert tests specification for updating a record and inserting belongs to association.
 func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	var (
 		result  Address
@@ -259,6 +267,7 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, address)
 }
 
+// UpdateBelongsToUpdate tests specification for updating a record and updating belongs to association.
 func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	var (
 		result  Address
@@ -288,10 +297,22 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, result, address)
 }
 
-// Update tests update specifications.
-// TODO: atomic update
-// TODO: update all
-// TODO: update with assoc
+// UpdateAtomic tests increment and decerement operation when updating a record.
+func UpdateAtomic(t *testing.T, repo rel.Repository) {
+	var (
+		user = User{Name: "update", Age: 10}
+	)
+
+	repo.MustInsert(&user)
+
+	assert.Nil(t, repo.Update(&user, rel.Inc("age")))
+	assert.Equal(t, 11, user.Age)
+
+	assert.Nil(t, repo.Update(&user, rel.Dec("age")))
+	assert.Equal(t, 10, user.Age)
+}
+
+// Updates tests update specifications.
 func Updates(t *testing.T, repo rel.Repository) {
 	var (
 		note    = "note"

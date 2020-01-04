@@ -105,6 +105,34 @@ func TestModify_Insert_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestModify_Insert_inc(t *testing.T) {
+	var (
+		repo   Repository
+		result Book
+	)
+
+	repo.ExpectInsert(rel.Inc("views"))
+	assert.Panics(t, func() {
+		assert.Nil(t, repo.Insert(&result, rel.Inc("views")))
+	})
+
+	repo.AssertExpectations(t)
+}
+
+func TestModify_Insert_dec(t *testing.T) {
+	var (
+		repo   Repository
+		result Book
+	)
+
+	repo.ExpectInsert(rel.Dec("views"))
+	assert.Panics(t, func() {
+		assert.Nil(t, repo.Insert(&result, rel.Dec("views")))
+	})
+
+	repo.AssertExpectations(t)
+}
+
 func TestModify_Insert_map(t *testing.T) {
 	var (
 		repo   Repository
@@ -367,6 +395,60 @@ func TestModify_Update_set(t *testing.T) {
 		repo.MustUpdate(&result, rel.Set("title", "Rel for dummies"))
 		assert.Equal(t, book, result)
 	})
+	repo.AssertExpectations(t)
+}
+
+func TestModify_Update_inc(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Views: 10}
+		book   = Book{ID: 2, Views: 11}
+	)
+
+	repo.ExpectUpdate(rel.Inc("views"))
+	assert.Nil(t, repo.Update(&result, rel.Inc("views")))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+}
+
+func TestModify_Update_dec(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Views: 10}
+		book   = Book{ID: 2, Views: 9}
+	)
+
+	repo.ExpectUpdate(rel.Dec("views"))
+	assert.Nil(t, repo.Update(&result, rel.Dec("views")))
+	assert.Equal(t, book, result)
+	repo.AssertExpectations(t)
+}
+
+func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Views: 10}
+	)
+
+	repo.ExpectUpdate(rel.Inc("watistis"))
+	assert.Panics(t, func() {
+		assert.Nil(t, repo.Update(&result, rel.Inc("watistis")))
+	})
+
+	repo.AssertExpectations(t)
+}
+
+func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
+	var (
+		repo   Repository
+		result = Book{ID: 2, Views: 10}
+	)
+
+	repo.ExpectUpdate(rel.Inc("title"))
+	assert.Panics(t, func() {
+		assert.Nil(t, repo.Update(&result, rel.Inc("title")))
+	})
+
 	repo.AssertExpectations(t)
 }
 

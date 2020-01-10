@@ -15,8 +15,8 @@ type Structset struct {
 	doc *Document
 }
 
-// Build changes from structset.
-func (s Structset) Build(changes *Changes) {
+// Apply changes.
+func (s Structset) Apply(doc *Document, changes *Changes) error {
 	var (
 		pField = s.doc.PrimaryField()
 		t      = now()
@@ -27,6 +27,7 @@ func (s Structset) Build(changes *Changes) {
 		case pField:
 			continue
 		case "created_at", "inserted_at":
+			// TODO: handle *time.Time
 			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
 				if value, ok := s.doc.Value(field); ok && value.(time.Time).IsZero() {
 					changes.SetValue(field, t)
@@ -56,6 +57,8 @@ func (s Structset) Build(changes *Changes) {
 	for _, field := range s.doc.HasMany() {
 		s.buildAssocMany(field, changes)
 	}
+
+	return nil
 }
 
 func (s Structset) buildAssoc(field string, changes *Changes) {
@@ -66,7 +69,7 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			ch     = BuildChanges(Structset{doc: doc})
+			ch, _  = ApplyChanges(doc, Structset{doc: doc})
 		)
 
 		changes.SetAssoc(field, ch)
@@ -85,7 +88,11 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 		)
 
 		for i := range chs {
-			chs[i] = BuildChanges(newStructset(col.Get(i)))
+			var (
+				doc = col.Get(i)
+			)
+
+			chs[i], _ = ApplyChanges(doc, newStructset(doc))
 		}
 
 		changes.SetAssoc(field, chs...)

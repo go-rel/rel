@@ -6,23 +6,29 @@ package rel
 // Insert/Update of has many can be done using slice of Map as a value.
 type Map map[string]interface{}
 
-// Build changes from map.
-func (m Map) Build(changes *Changes) {
+// Apply changes.
+func (m Map) Apply(doc *Document, changes *Changes) error {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
-			changes.SetAssoc(field, BuildChanges(v))
+			// TODO: apply assoc
+			assoc, _ := ApplyChanges(nil, v)
+			changes.SetAssoc(field, assoc)
 		case []Map:
 			var (
 				chs = make([]Changes, len(v))
 			)
 
+			// TODO: apply assoc
 			for i := range v {
-				chs[i] = BuildChanges(v[i])
+				assoc, _ := ApplyChanges(nil, v[i])
+				chs[i] = assoc
 			}
 			changes.SetAssoc(field, chs...)
 		default:
 			changes.SetValue(field, v)
 		}
 	}
+
+	return nil
 }

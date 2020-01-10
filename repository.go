@@ -7,6 +7,7 @@ import (
 )
 
 // Repository defines sets of available database operations.
+// TODO: InsertAll only accepts records not changes, this eliminates the needs of exposing changes and making the api more consistent.
 // TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
@@ -143,14 +144,19 @@ func (r repository) Insert(record interface{}, changers ...Changer) error {
 	}
 
 	var (
+		err     error
 		changes Changes
 		doc     = NewDocument(record)
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(newStructset(doc))
+		changes, err = ApplyChanges(doc, newStructset(doc))
 	} else {
-		changes = BuildChanges(changers...)
+		changes, err = ApplyChanges(doc, changers...)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	if changes.AssocCount() > 0 {
@@ -205,13 +211,17 @@ func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 	}
 
 	var (
+		err error
 		col = NewCollection(records)
 	)
 
 	if len(changes) == 0 {
 		changes = make([]Changes, col.Len())
 		for i := range changes {
-			changes[i] = BuildChanges(newStructset(col.Get(i)))
+			changes[i], err = ApplyChanges(nil, newStructset(col.Get(i)))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -267,6 +277,7 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	}
 
 	var (
+		err     error
 		changes Changes
 		doc     = NewDocument(record)
 		pField  = doc.PrimaryField()
@@ -274,9 +285,13 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(newStructset(doc))
+		changes, err = ApplyChanges(doc, newStructset(doc))
 	} else {
-		changes = BuildChanges(changers...)
+		changes, err = ApplyChanges(doc, changers...)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	if len(changes.assoc) > 0 {

@@ -41,7 +41,7 @@ func BenchmarkStructset(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		BuildChanges(NewStructset(user))
+		ApplyChanges(nil, NewStructset(user))
 	}
 }
 
@@ -52,15 +52,17 @@ func TestStructset(t *testing.T) {
 			Name: "Luffy",
 			Age:  20,
 		}
-		changes = BuildChanges(
+		changes, _ = ApplyChanges(nil,
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		)
+		result, err = ApplyChanges(nil, NewStructset(user))
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user)))
+	assert.Nil(t, err)
+	assertChanges(t, changes, result)
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -79,18 +81,18 @@ func TestStructset_withAssoc(t *testing.T) {
 			},
 			CreatedAt: time.Now(),
 		}
-		userChanges = BuildChanges(
+		userChanges, _ = ApplyChanges(nil,
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("updated_at", now()),
 		)
-		transaction1Changes = BuildChanges(
+		transaction1Changes, _ = ApplyChanges(nil,
 			Set("item", "Sword"),
 		)
-		transaction2Changes = BuildChanges(
+		transaction2Changes, _ = ApplyChanges(nil,
 			Set("item", "Shield"),
 		)
-		addressChanges = BuildChanges(
+		addressChanges, _ = ApplyChanges(nil,
 			Set("street", "Grove Street"),
 		)
 	)
@@ -98,7 +100,9 @@ func TestStructset_withAssoc(t *testing.T) {
 	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
 	userChanges.SetAssoc("address", addressChanges)
 
-	assertChanges(t, userChanges, BuildChanges(NewStructset(user)))
+	result, err := ApplyChanges(nil, NewStructset(user))
+	assert.Nil(t, err)
+	assertChanges(t, userChanges, result)
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -113,11 +117,13 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
-		changes = BuildChanges(
+		changes, _ = ApplyChanges(nil,
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user)))
+	result, err := ApplyChanges(nil, NewStructset(user))
+	assert.Nil(t, err)
+	assertChanges(t, changes, result)
 }

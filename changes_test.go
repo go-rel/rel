@@ -35,7 +35,9 @@ func TestBuildChanges(t *testing.T) {
 			},
 			assoc: map[string]int{},
 		}
+		result, err = ApplyChanges(nil, changers...)
 	)
 
-	assert.Equal(t, changes, BuildChanges(changers...))
+	assert.Nil(t, err)
+	assert.Equal(t, changes, result)
 }

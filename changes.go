@@ -2,21 +2,23 @@ package rel
 
 // Changer is interface for a record changer.
 type Changer interface {
-	Build(changes *Changes)
+	Apply(doc *Document, changes *Changes) error
 }
 
-// BuildChanges using given changers.
-func BuildChanges(changers ...Changer) Changes {
+// ApplyChanges using given changers.
+func ApplyChanges(doc *Document, changers ...Changer) (Changes, error) {
 	changes := Changes{
 		fields: make(map[string]int),
 		assoc:  make(map[string]int),
 	}
 
 	for i := range changers {
-		changers[i].Build(&changes)
+		if err := changers[i].Apply(doc, &changes); err != nil {
+			return changes, err
+		}
 	}
 
-	return changes
+	return changes, nil
 }
 
 // Changes represents value to be inserted or updated to database.
@@ -26,6 +28,7 @@ type Changes struct {
 	changes      []Change
 	assoc        map[string]int
 	assocChanges []AssocChanges
+	reload       bool
 }
 
 // Empty returns true if changes is empty.
@@ -147,9 +150,10 @@ type Change struct {
 	Value interface{}
 }
 
-// Build changes using this change.
-func (c Change) Build(changes *Changes) {
+// Apply changes.
+func (c Change) Apply(doc *Document, changes *Changes) error {
 	changes.Set(c)
+	return nil
 }
 
 // Set create a change using set operation.

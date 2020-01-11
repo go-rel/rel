@@ -77,7 +77,7 @@ func TestApplyChanges_incValueError(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		ApplyChanges(doc, Set("field1", 1))
+		ApplyChanges(doc, IncBy("field1", 2))
 	})
 	assert.Equal(t, "", record.Field1)
 }
@@ -89,7 +89,7 @@ func TestApplyChanges_unknownFieldValueError(t *testing.T) {
 	)
 
 	assert.Panics(t, func() {
-		ApplyChanges(doc, Set("field1", 1))
+		ApplyChanges(doc, DecBy("field0", 2))
 	})
 	assert.Equal(t, "", record.Field1)
 }

@@ -144,19 +144,14 @@ func (r repository) Insert(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		err     error
 		changes Changes
 		doc     = NewDocument(record)
 	)
 
 	if len(changers) == 0 {
-		changes, err = ApplyChanges(doc, newStructset(doc))
+		changes = ApplyChanges(doc, newStructset(doc))
 	} else {
-		changes, err = ApplyChanges(doc, changers...)
-	}
-
-	if err != nil {
-		return err
+		changes = ApplyChanges(doc, changers...)
 	}
 
 	if changes.AssocCount() > 0 {
@@ -211,17 +206,14 @@ func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 	}
 
 	var (
-		err error
 		col = NewCollection(records)
 	)
 
 	if len(changes) == 0 {
 		changes = make([]Changes, col.Len())
+
 		for i := range changes {
-			changes[i], err = ApplyChanges(nil, newStructset(col.Get(i)))
-			if err != nil {
-				return err
-			}
+			changes[i] = ApplyChanges(nil, newStructset(col.Get(i)))
 		}
 	}
 
@@ -277,7 +269,6 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		err     error
 		changes Changes
 		doc     = NewDocument(record)
 		pField  = doc.PrimaryField()
@@ -285,13 +276,9 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes, err = ApplyChanges(doc, newStructset(doc))
+		changes = ApplyChanges(doc, newStructset(doc))
 	} else {
-		changes, err = ApplyChanges(doc, changers...)
-	}
-
-	if err != nil {
-		return err
+		changes = ApplyChanges(doc, changers...)
 	}
 
 	if len(changes.assoc) > 0 {

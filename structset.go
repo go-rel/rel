@@ -16,7 +16,8 @@ type Structset struct {
 }
 
 // Apply changes.
-func (s Structset) Apply(doc *Document, changes *Changes) error {
+// TODO: apply changes if it's applying to struct.
+func (s Structset) Apply(doc *Document, changes *Changes) {
 	var (
 		pField = s.doc.PrimaryField()
 		t      = now()
@@ -57,8 +58,6 @@ func (s Structset) Apply(doc *Document, changes *Changes) error {
 	for _, field := range s.doc.HasMany() {
 		s.buildAssocMany(field, changes)
 	}
-
-	return nil
 }
 
 func (s Structset) buildAssoc(field string, changes *Changes) {
@@ -69,7 +68,7 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			ch, _  = ApplyChanges(doc, Structset{doc: doc})
+			ch     = ApplyChanges(doc, Structset{doc: doc})
 		)
 
 		changes.SetAssoc(field, ch)
@@ -92,7 +91,7 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 				doc = col.Get(i)
 			)
 
-			chs[i], _ = ApplyChanges(doc, newStructset(doc))
+			chs[i] = ApplyChanges(doc, newStructset(doc))
 		}
 
 		changes.SetAssoc(field, chs...)

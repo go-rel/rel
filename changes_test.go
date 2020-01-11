@@ -46,11 +46,9 @@ func TestApplyChanges(t *testing.T) {
 			assoc:  map[string]int{},
 			reload: true,
 		}
-		result, err = ApplyChanges(doc, changers...)
 	)
 
-	assert.Nil(t, err)
-	assert.Equal(t, changes, result)
+	assert.Equal(t, changes, ApplyChanges(doc, changers...))
 	assert.Equal(t, "string", record.Field1)
 	assert.Equal(t, true, record.Field2)
 	assert.Equal(t, "string pointer", *record.Field3)

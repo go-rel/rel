@@ -7,23 +7,21 @@ import (
 
 // Changer is interface for a record changer.
 type Changer interface {
-	Apply(doc *Document, changes *Changes) error
+	Apply(doc *Document, changes *Changes)
 }
 
 // ApplyChanges using given changers.
-func ApplyChanges(doc *Document, changers ...Changer) (Changes, error) {
+func ApplyChanges(doc *Document, changers ...Changer) Changes {
 	changes := Changes{
 		fields: make(map[string]int),
 		assoc:  make(map[string]int),
 	}
 
 	for i := range changers {
-		if err := changers[i].Apply(doc, &changes); err != nil {
-			return changes, err
-		}
+		changers[i].Apply(doc, &changes)
 	}
 
-	return changes, nil
+	return changes
 }
 
 // Changes represents value to be inserted or updated to database.
@@ -156,7 +154,7 @@ type Change struct {
 }
 
 // Apply changes.
-func (c Change) Apply(doc *Document, changes *Changes) error {
+func (c Change) Apply(doc *Document, changes *Changes) {
 	invalid := false
 
 	switch c.Type {
@@ -183,7 +181,6 @@ func (c Change) Apply(doc *Document, changes *Changes) error {
 	}
 
 	changes.Set(c)
-	return nil
 }
 
 // Set create a change using set operation.

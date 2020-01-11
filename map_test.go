@@ -23,20 +23,20 @@ func TestMap(t *testing.T) {
 				"street": "Grove Street",
 			},
 		}
-		userChanges, _ = ApplyChanges(NewDocument(&User{}),
+		userChanges = ApplyChanges(NewDocument(&User{}),
 			Set("id", 1),
 			Set("name", "Luffy"),
 			Set("age", 20),
 		)
-		transaction1Changes, _ = ApplyChanges(NewDocument(&Transaction{}),
+		transaction1Changes = ApplyChanges(NewDocument(&Transaction{}),
 			Set("id", 1),
 			Set("item", "Sword"),
 		)
-		transaction2Changes, _ = ApplyChanges(NewDocument(&Transaction{}),
+		transaction2Changes = ApplyChanges(NewDocument(&Transaction{}),
 			Set("id", 2),
 			Set("item", "Shield"),
 		)
-		addressChanges, _ = ApplyChanges(NewDocument(&Address{}),
+		addressChanges = ApplyChanges(NewDocument(&Address{}),
 			Set("id", 1),
 			Set("street", "Grove Street"),
 		)
@@ -45,7 +45,18 @@ func TestMap(t *testing.T) {
 	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
 	userChanges.SetAssoc("address", addressChanges)
 
-	result, err := ApplyChanges(doc, data)
-	assert.Nil(t, err)
-	assertChanges(t, userChanges, result)
+	assertChanges(t, userChanges, ApplyChanges(doc, data))
+	assert.Equal(t, User{
+		ID:   1,
+		Name: "Luffy",
+		Age:  20,
+		Transactions: []Transaction{
+			// {ID: 1, Item: "Sword"}, FIXME
+			{ID: 2, Item: "Shield"},
+		},
+		Address: Address{
+			ID:     1,
+			Street: "Grove Street",
+		},
+	}, user)
 }

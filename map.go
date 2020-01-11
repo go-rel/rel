@@ -11,7 +11,7 @@ import (
 type Map map[string]interface{}
 
 // Apply changes.
-func (m Map) Apply(doc *Document, changes *Changes) error {
+func (m Map) Apply(doc *Document, changes *Changes) {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
@@ -24,8 +24,8 @@ func (m Map) Apply(doc *Document, changes *Changes) error {
 			}
 
 			var (
-				assocDoc, _     = assoc.Document()
-				assocChanges, _ = ApplyChanges(assocDoc, v)
+				assocDoc, _  = assoc.Document()
+				assocChanges = ApplyChanges(assocDoc, v)
 			)
 
 			changes.SetAssoc(field, assocChanges)
@@ -38,8 +38,7 @@ func (m Map) Apply(doc *Document, changes *Changes) error {
 			)
 
 			for i := range v {
-				assoc, _ := ApplyChanges(doc, v[i])
-				chs[i] = assoc
+				chs[i] = ApplyChanges(doc, v[i])
 			}
 			changes.SetAssoc(field, chs...)
 			changes.reload = true // TODO: optimistic create/update.
@@ -51,6 +50,4 @@ func (m Map) Apply(doc *Document, changes *Changes) error {
 			changes.SetValue(field, v)
 		}
 	}
-
-	return nil
 }

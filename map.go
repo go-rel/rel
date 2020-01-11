@@ -1,5 +1,9 @@
 package rel
 
+import (
+	"fmt"
+)
+
 // Map can be used as changes for repository insert or update operation.
 // This allows inserting or updating only on specified field.
 // Insert/Update of has one or belongs to can be done using other Map as a value.
@@ -11,21 +15,39 @@ func (m Map) Apply(doc *Document, changes *Changes) error {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
-			// TODO: apply assoc
-			assoc, _ := ApplyChanges(nil, v)
-			changes.SetAssoc(field, assoc)
-		case []Map:
 			var (
-				chs = make([]Changes, len(v))
+				assoc = doc.Association(field)
 			)
 
-			// TODO: apply assoc
+			if assoc.Type() != HasOne && assoc.Type() != BelongsTo {
+				panic(fmt.Sprint("rel: cannot associate has many", v, "as", field, "into", doc.Table()))
+			}
+
+			var (
+				assocDoc, _     = assoc.Document()
+				assocChanges, _ = ApplyChanges(assocDoc, v)
+			)
+
+			changes.SetAssoc(field, assocChanges)
+		case []Map:
+			var (
+				chs    = make([]Changes, len(v))
+				assoc  = doc.Association(field)
+				col, _ = assoc.Collection()
+				doc    = col.Add() // Note: it's resettede again in has to many
+			)
+
 			for i := range v {
-				assoc, _ := ApplyChanges(nil, v[i])
+				assoc, _ := ApplyChanges(doc, v[i])
 				chs[i] = assoc
 			}
 			changes.SetAssoc(field, chs...)
+			changes.reload = true // TODO: optimistic create/update.
 		default:
+			if !doc.SetValue(field, v) {
+				panic(fmt.Sprint("rel: cannot assign", v, "as", field, "into", doc.Table()))
+			}
+
 			changes.SetValue(field, v)
 		}
 	}

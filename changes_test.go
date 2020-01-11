@@ -64,14 +64,11 @@ func TestApplyChanges_setValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
-		_, err = ApplyChanges(doc, Set("field1", 1))
 	)
 
-	assert.Equal(t, ValueError{
-		Table: doc.Table(),
-		Field: "field1",
-		Value: 1,
-	}, err)
+	assert.Panics(t, func() {
+		ApplyChanges(doc, Set("field1", 1))
+	})
 	assert.Equal(t, "", record.Field1)
 }
 
@@ -79,14 +76,11 @@ func TestApplyChanges_incValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
-		_, err = ApplyChanges(doc, Inc("field1"))
 	)
 
-	assert.Equal(t, ValueError{
-		Table: doc.Table(),
-		Field: "field1",
-		Value: 1,
-	}, err)
+	assert.Panics(t, func() {
+		ApplyChanges(doc, Set("field1", 1))
+	})
 	assert.Equal(t, "", record.Field1)
 }
 
@@ -94,13 +88,10 @@ func TestApplyChanges_unknownFieldValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
-		_, err = ApplyChanges(doc, Dec("field0"))
 	)
 
-	assert.Equal(t, ValueError{
-		Table: doc.Table(),
-		Field: "field0",
-		Value: 1,
-	}, err)
+	assert.Panics(t, func() {
+		ApplyChanges(doc, Set("field1", 1))
+	})
 	assert.Equal(t, "", record.Field1)
 }

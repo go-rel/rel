@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -156,33 +157,29 @@ type Change struct {
 
 // Apply changes.
 func (c Change) Apply(doc *Document, changes *Changes) error {
-	isValueError := false
+	invalid := false
 
 	switch c.Type {
 	case ChangeSetOp:
 		if !doc.SetValue(c.Field, c.Value) {
-			isValueError = true
+			invalid = true
 		}
 	case ChangeFragmentOp:
 		changes.reload = true
 	default:
 		if typ, ok := doc.Type(c.Field); ok {
 			kind := typ.Kind()
-			isValueError = (c.Type == ChangeIncOp || c.Type == ChangeDecOp) &&
+			invalid = (c.Type == ChangeIncOp || c.Type == ChangeDecOp) &&
 				(kind < reflect.Int || kind > reflect.Uint64)
 		} else {
-			isValueError = true
+			invalid = true
 		}
 
 		changes.reload = true
 	}
 
-	if isValueError {
-		return ValueError{
-			Table: doc.Table(),
-			Field: c.Field,
-			Value: c.Value,
-		}
+	if invalid {
+		panic(fmt.Sprint("rel: cannot assign", c.Value, "as", c.Field, "into", doc.Table()))
 	}
 
 	changes.Set(c)

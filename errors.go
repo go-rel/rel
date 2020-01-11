@@ -1,9 +1,5 @@
 package rel
 
-import (
-	"fmt"
-)
-
 // NoResultError returned whenever Find returns no result.
 type NoResultError struct{}
 
@@ -65,15 +61,4 @@ func (ce ConstraintError) Error() string {
 	}
 
 	return ce.Type.String() + "Error"
-}
-
-// ValueError returned whenever a field in a document is not exists or assigned using incorrect type.
-type ValueError struct {
-	Table string
-	Field string
-	Value interface{}
-}
-
-func (ve ValueError) Error() string {
-	return fmt.Sprint("rel: cannot assign", ve.Value, "as", ve.Field, "into", ve.Table, "table.")
 }

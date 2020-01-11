@@ -654,7 +654,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil,
+		changes, _  = ApplyChanges(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -685,7 +685,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil,
+		changes, _  = ApplyChanges(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -712,7 +712,7 @@ func TestRepository_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{Buyer: User{ID: 1}}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil,
+		changes, _  = ApplyChanges(doc,
 			Map{
 				"buyer": Map{
 					"id":   2,
@@ -736,7 +736,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil,
+		changes, _  = ApplyChanges(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -772,7 +772,7 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil,
+		changes, _  = ApplyChanges(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -803,7 +803,7 @@ func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 		repo        = repository{adapter: adapter}
 		transaction = &Transaction{}
 		doc         = NewDocument(transaction)
-		changes, _  = ApplyChanges(nil)
+		changes, _  = ApplyChanges(doc)
 	)
 
 	err := repo.saveBelongsTo(doc, &changes)
@@ -817,7 +817,7 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1, Address: Address{ID: 2}}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -846,7 +846,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1, Address: Address{ID: 2}}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -871,7 +871,7 @@ func TestRepository_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1, Address: Address{ID: 2}}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"address": Map{
 					"id":     1,
@@ -929,7 +929,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 		user       = &User{}
 		doc        = NewDocument(user)
 		addrDoc, _ = doc.Association("address").Document()
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -958,7 +958,7 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -999,7 +999,7 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1046,7 +1046,7 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1106,7 +1106,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1160,7 +1160,7 @@ func TestRepository_saveHasMany_updateDeleteError(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1196,7 +1196,7 @@ func TestRepository_saveHasMany_updateError(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1238,7 +1238,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1286,7 +1286,7 @@ func TestRepository_saveHasMany_replaceEmptyAssoc(t *testing.T) {
 			Transactions: []Transaction{},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1343,7 +1343,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 			},
 		}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{
@@ -1370,7 +1370,7 @@ func TestRepository_saveHasMany_replaceAssocNotLoaded(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{ID: 1}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"transactions": []Map{
 					{

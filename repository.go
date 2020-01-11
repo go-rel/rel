@@ -439,16 +439,10 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 				filter = Eq(fField, rValue)
 			)
 
-			// if deleted ids is specified, then only delete those.
+			// FIXME: if deleted ids is specified, then only delete those.
 			// if it's nill, then clear old association (used by structset).
-			if len(ac.StaleIDs) > 0 {
-				if err := r.deleteAll(BuildQuery(table, filter.AndIn(pField, ac.StaleIDs...))); err != nil {
-					return err
-				}
-			} else if ac.StaleIDs == nil {
-				if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
-					return err
-				}
+			if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
+				return err
 			}
 		}
 

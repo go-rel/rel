@@ -107,17 +107,6 @@ func (c *Changes) SetAssoc(field string, chs ...Changes) {
 	}
 }
 
-// SetStaleAssoc sets list of ids marked as stale.
-func (c *Changes) SetStaleAssoc(field string, ids []interface{}) {
-	if index, exist := c.assoc[field]; exist {
-		c.assocChanges[index].StaleIDs = ids
-	} else {
-		c.appendAssoc(field, AssocChanges{
-			StaleIDs: ids,
-		})
-	}
-}
-
 func (c *Changes) appendAssoc(field string, ac AssocChanges) {
 	c.assoc[field] = len(c.assocChanges)
 	c.assocChanges = append(c.assocChanges, ac)
@@ -126,8 +115,6 @@ func (c *Changes) appendAssoc(field string, ac AssocChanges) {
 // AssocChanges stores changes for association.
 type AssocChanges struct {
 	Changes []Changes
-	// if nil, has many associations will be cleared.
-	StaleIDs []interface{}
 }
 
 // ChangeOp represents type of change operation.

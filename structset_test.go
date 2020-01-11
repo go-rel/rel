@@ -22,7 +22,6 @@ func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
 			ac1 = ch1.assocChanges[ch1.assoc[assoc]]
 			ac2 = ch2.assocChanges[ch2.assoc[assoc]]
 		)
-		assert.Equal(t, ac1.StaleIDs, ac2.StaleIDs)
 		assert.Equal(t, len(ac1.Changes), len(ac2.Changes))
 
 		for i := range ac1.Changes {

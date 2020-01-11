@@ -1,5 +1,9 @@
 package rel
 
+import (
+	"reflect"
+)
+
 // Changer is interface for a record changer.
 type Changer interface {
 	Apply(doc *Document, changes *Changes) error
@@ -152,6 +156,35 @@ type Change struct {
 
 // Apply changes.
 func (c Change) Apply(doc *Document, changes *Changes) error {
+	isValueError := false
+
+	switch c.Type {
+	case ChangeSetOp:
+		if !doc.SetValue(c.Field, c.Value) {
+			isValueError = true
+		}
+	case ChangeFragmentOp:
+		changes.reload = true
+	default:
+		if typ, ok := doc.Type(c.Field); ok {
+			kind := typ.Kind()
+			isValueError = (c.Type == ChangeIncOp || c.Type == ChangeDecOp) &&
+				(kind < reflect.Int || kind > reflect.Uint64)
+		} else {
+			isValueError = true
+		}
+
+		changes.reload = true
+	}
+
+	if isValueError {
+		return ValueError{
+			Table: doc.Table(),
+			Field: c.Field,
+			Value: c.Value,
+		}
+	}
+
 	changes.Set(c)
 	return nil
 }

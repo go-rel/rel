@@ -268,7 +268,7 @@ func TestRepository_Insert(t *testing.T) {
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 		cur        = createCursor(1)
 	)
 
@@ -292,7 +292,7 @@ func TestRepository_Insert_oneError(t *testing.T) {
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 		cur        = &testCursor{}
 		err        = errors.New("error")
 	)
@@ -390,7 +390,7 @@ func TestRepository_Insert_error(t *testing.T) {
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 	)
 
 	adapter.On("Insert", From("users"), changes).Return(0, errors.New("error")).Once()
@@ -499,7 +499,7 @@ func TestRepository_Update(t *testing.T) {
 			Set("name", "name"),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 		queries    = From("users").Where(Eq("id", user.ID))
 		cur        = createCursor(1)
 	)
@@ -523,7 +523,7 @@ func TestRepository_Update_oneError(t *testing.T) {
 			Set("name", "name"),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 		queries    = From("users").Where(Eq("id", user.ID))
 		cur        = &testCursor{}
 		err        = errors.New("error")
@@ -637,7 +637,7 @@ func TestRepository_Update_error(t *testing.T) {
 			Set("name", "name"),
 			Set("updated_at", now()),
 		}
-		changes, _ = ApplyChanges(nil, cbuilders...)
+		changes, _ = ApplyChanges(NewDocument(&user), cbuilders...)
 		queries    = From("users").Where(Eq("id", user.ID))
 	)
 
@@ -894,7 +894,8 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{}
 		doc        = NewDocument(user)
-		changes, _ = ApplyChanges(nil,
+		addrDoc, _ = doc.Association("address").Document()
+		changes, _ = ApplyChanges(doc,
 			Map{
 				"address": Map{
 					"street": "street1",
@@ -902,7 +903,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 			},
 		)
 		q          = BuildQuery("addresses")
-		address, _ = ApplyChanges(nil, Set("street", "street1"))
+		address, _ = ApplyChanges(addrDoc, Set("street", "street1"))
 		cur        = createCursor(1)
 	)
 
@@ -927,6 +928,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 		repo       = repository{adapter: adapter}
 		user       = &User{}
 		doc        = NewDocument(user)
+		addrDoc, _ = doc.Association("address").Document()
 		changes, _ = ApplyChanges(nil,
 			Map{
 				"address": Map{
@@ -935,7 +937,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 			},
 		)
 		q          = BuildQuery("addresses")
-		address, _ = ApplyChanges(nil, Set("street", "street1"))
+		address, _ = ApplyChanges(addrDoc, Set("street", "street1"))
 	)
 
 	// foreign value set after associations inferred

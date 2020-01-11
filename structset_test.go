@@ -52,7 +52,7 @@ func TestStructset(t *testing.T) {
 			Name: "Luffy",
 			Age:  20,
 		}
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", now()),
@@ -81,18 +81,18 @@ func TestStructset_withAssoc(t *testing.T) {
 			},
 			CreatedAt: time.Now(),
 		}
-		userChanges, _ = ApplyChanges(nil,
+		userChanges, _ = ApplyChanges(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("updated_at", now()),
 		)
-		transaction1Changes, _ = ApplyChanges(nil,
+		transaction1Changes, _ = ApplyChanges(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Changes, _ = ApplyChanges(nil,
+		transaction2Changes, _ = ApplyChanges(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
-		addressChanges, _ = ApplyChanges(nil,
+		addressChanges, _ = ApplyChanges(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 		)
 	)
@@ -117,7 +117,7 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
-		changes, _ = ApplyChanges(nil,
+		changes, _ = ApplyChanges(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)

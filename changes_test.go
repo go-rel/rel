@@ -6,13 +6,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildChanges(t *testing.T) {
+type TestRecord struct {
+	Field1 string
+	Field2 bool
+	Field3 *string
+	Field4 int
+	Field5 int
+}
+
+func TestApplyChanges(t *testing.T) {
 	var (
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
 		changers = []Changer{
-			Set("field1", 10),
-			Inc("field2"),
-			IncBy("field3", 2),
-			Dec("field4"),
+			Set("field1", "string"),
+			Set("field2", true),
+			Set("field3", "string pointer"),
+			IncBy("field4", 2),
 			DecBy("field5", 2),
 			ChangeFragment("field6=?", true),
 		}
@@ -26,18 +36,71 @@ func TestBuildChanges(t *testing.T) {
 				"field6=?": 5,
 			},
 			changes: []Change{
-				Set("field1", 10),
-				Inc("field2"),
-				IncBy("field3", 2),
-				Dec("field4"),
+				Set("field1", "string"),
+				Set("field2", true),
+				Set("field3", "string pointer"),
+				IncBy("field4", 2),
 				DecBy("field5", 2),
 				ChangeFragment("field6=?", true),
 			},
-			assoc: map[string]int{},
+			assoc:  map[string]int{},
+			reload: true,
 		}
-		result, err = ApplyChanges(nil, changers...)
+		result, err = ApplyChanges(doc, changers...)
 	)
 
 	assert.Nil(t, err)
 	assert.Equal(t, changes, result)
+	assert.Equal(t, "string", record.Field1)
+	assert.Equal(t, true, record.Field2)
+	assert.Equal(t, "string pointer", *record.Field3)
+
+	// non set op won't update the struct
+	assert.Equal(t, 0, record.Field4)
+	assert.Equal(t, 0, record.Field5)
+}
+
+func TestApplyChanges_setValueError(t *testing.T) {
+	var (
+		record = TestRecord{}
+		doc    = NewDocument(&record)
+		_, err = ApplyChanges(doc, Set("field1", 1))
+	)
+
+	assert.Equal(t, ValueError{
+		Table: doc.Table(),
+		Field: "field1",
+		Value: 1,
+	}, err)
+	assert.Equal(t, "", record.Field1)
+}
+
+func TestApplyChanges_incValueError(t *testing.T) {
+	var (
+		record = TestRecord{}
+		doc    = NewDocument(&record)
+		_, err = ApplyChanges(doc, Inc("field1"))
+	)
+
+	assert.Equal(t, ValueError{
+		Table: doc.Table(),
+		Field: "field1",
+		Value: 1,
+	}, err)
+	assert.Equal(t, "", record.Field1)
+}
+
+func TestApplyChanges_unknownFieldValueError(t *testing.T) {
+	var (
+		record = TestRecord{}
+		doc    = NewDocument(&record)
+		_, err = ApplyChanges(doc, Dec("field0"))
+	)
+
+	assert.Equal(t, ValueError{
+		Table: doc.Table(),
+		Field: "field0",
+		Value: 1,
+	}, err)
+	assert.Equal(t, "", record.Field1)
 }

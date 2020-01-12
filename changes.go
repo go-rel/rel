@@ -30,7 +30,7 @@ type Changes struct {
 	fields       map[string]int // TODO: not copy friendly
 	changes      []Change
 	assoc        map[string]int
-	assocChanges []AssocChanges
+	assocChanges [][]Changes
 	reload       bool
 }
 
@@ -88,33 +88,26 @@ func (c *Changes) SetValue(field string, value interface{}) {
 }
 
 // GetAssoc by field name.
-func (c Changes) GetAssoc(field string) (AssocChanges, bool) {
+func (c Changes) GetAssoc(field string) ([]Changes, bool) {
 	if index, ok := c.assoc[field]; ok {
 		return c.assocChanges[index], true
 	}
 
-	return AssocChanges{}, false
+	return nil, false
 }
 
 // SetAssoc by field name.
 func (c *Changes) SetAssoc(field string, chs ...Changes) {
 	if index, exist := c.assoc[field]; exist {
-		c.assocChanges[index].Changes = chs
+		c.assocChanges[index] = chs
 	} else {
-		c.appendAssoc(field, AssocChanges{
-			Changes: chs,
-		})
+		c.appendAssoc(field, chs)
 	}
 }
 
-func (c *Changes) appendAssoc(field string, ac AssocChanges) {
+func (c *Changes) appendAssoc(field string, ac []Changes) {
 	c.assoc[field] = len(c.assocChanges)
 	c.assocChanges = append(c.assocChanges, ac)
-}
-
-// AssocChanges stores changes for association.
-type AssocChanges struct {
-	Changes []Changes
 }
 
 // ChangeOp represents type of change operation.

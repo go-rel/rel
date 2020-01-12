@@ -34,14 +34,14 @@ func (m Map) Apply(doc *Document, changes *Changes) {
 				chs    = make([]Changes, len(v))
 				assoc  = doc.Association(field)
 				col, _ = assoc.Collection()
-				doc    = col.Add() // Note: it's resettede again in has to many
+				doc    = col.Add() // Note: it's reseted again in has to many
 			)
 
 			for i := range v {
 				chs[i] = ApplyChanges(doc, v[i])
 			}
 			changes.SetAssoc(field, chs...)
-			changes.reload = true // TODO: optimistic create/update.
+			changes.reload = true // TODO: optimistic create/update, also wrong reload.
 		default:
 			if !doc.SetValue(field, v) {
 				panic(fmt.Sprint("rel: cannot assign", v, "as", field, "into", doc.Table()))

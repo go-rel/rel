@@ -330,12 +330,12 @@ func (r repository) MustUpdate(record interface{}, changers ...Changer) {
 func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 	for _, field := range doc.BelongsTo() {
 		ac, changed := changes.GetAssoc(field)
-		if !changed || len(ac.Changes) == 0 {
+		if !changed || len(ac) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac.Changes[0]
+			assocChanges = ac[0]
 			assoc        = doc.Association(field)
 			fValue       = assoc.ForeignValue()
 			doc, loaded  = assoc.Document()
@@ -374,12 +374,12 @@ func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 func (r repository) saveHasOne(doc *Document, changes *Changes) error {
 	for _, field := range doc.HasOne() {
 		ac, changed := changes.GetAssoc(field)
-		if !changed || len(ac.Changes) == 0 {
+		if !changed || len(ac) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac.Changes[0]
+			assocChanges = ac[0]
 			assoc        = doc.Association(field)
 			fField       = assoc.ForeignField()
 			rValue       = assoc.ReferenceValue()
@@ -449,7 +449,7 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 		// update and filter for bulk insertion in place
 		// TODO: load updated result once
 		n := 0
-		for _, ch := range ac.Changes {
+		for _, ch := range ac {
 			if pChange, changed := ch.Get(pField); changed {
 				var (
 					filter = Eq(pField, pChange.Value).AndEq(fField, rValue)
@@ -460,13 +460,13 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 				}
 			} else {
 				ch.SetValue(fField, rValue)
-				ac.Changes[n] = ch
+				ac[n] = ch
 				n++
 			}
 		}
-		ac.Changes = ac.Changes[:n]
+		ac = ac[:n]
 
-		if err := r.insertAll(col, ac.Changes); err != nil {
+		if err := r.insertAll(col, ac); err != nil {
 			return err
 		}
 	}

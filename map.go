@@ -44,7 +44,7 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 			modification.SetAssoc(field, mods...)
 		default:
 			if !doc.SetValue(field, v) {
-				panic(fmt.Sprint("rel: cannot assign", v, "as", field, "into", doc.Table()))
+				panic(fmt.Sprint("rel: cannot assign ", v, " as ", field, " into ", doc.Table()))
 			}
 
 			modification.SetValue(field, v)

@@ -7,20 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func assertModification(t *testing.T, ch1 Modification, ch2 Modification) {
-	assert.Equal(t, len(ch1.fields), len(ch2.fields))
-	assert.Equal(t, len(ch1.modification), len(ch2.modification))
-	assert.Equal(t, len(ch1.assoc), len(ch2.assoc))
-	assert.Equal(t, len(ch1.assocModification), len(ch2.assocModification))
+func assertModification(t *testing.T, mod1 Modification, mod2 Modification) {
+	assert.Equal(t, len(mod1.fields), len(mod2.fields))
+	assert.Equal(t, len(mod1.modification), len(mod2.modification))
+	assert.Equal(t, len(mod1.assoc), len(mod2.assoc))
+	assert.Equal(t, len(mod1.assocModification), len(mod2.assocModification))
 
-	for field := range ch1.fields {
-		assert.Equal(t, ch1.modification[ch1.fields[field]], ch2.modification[ch2.fields[field]])
+	for field := range mod1.fields {
+		assert.Equal(t, mod1.modification[mod1.fields[field]], mod2.modification[mod2.fields[field]])
 	}
 
-	for assoc := range ch1.assoc {
+	for assoc := range mod1.assoc {
 		var (
-			ac1 = ch1.assocModification[ch1.assoc[assoc]]
-			ac2 = ch2.assocModification[ch2.assoc[assoc]]
+			ac1 = mod1.assocModification[mod1.assoc[assoc]]
+			ac2 = mod2.assocModification[mod2.assoc[assoc]]
 		)
 		assert.Equal(t, len(ac1), len(ac2))
 
@@ -46,10 +46,11 @@ func BenchmarkStructset(b *testing.B) {
 			},
 			CreatedAt: time.Now(),
 		}
+		doc = NewDocument(user)
 	)
 
 	for n := 0; n < b.N; n++ {
-		Apply(nil, NewStructset(user))
+		Apply(doc, NewStructset(user))
 	}
 }
 
@@ -60,6 +61,7 @@ func TestStructset(t *testing.T) {
 			Name: "Luffy",
 			Age:  20,
 		}
+		doc          = NewDocument(user)
 		modification = Apply(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("age", 20),
@@ -68,7 +70,7 @@ func TestStructset(t *testing.T) {
 		)
 	)
 
-	assertModification(t, modification, Apply(nil, NewStructset(user)))
+	assertModification(t, modification, Apply(doc, NewStructset(user)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -87,26 +89,27 @@ func TestStructset_withAssoc(t *testing.T) {
 			},
 			CreatedAt: time.Now(),
 		}
-		userModification = Apply(NewDocument(&User{}),
+		doc     = NewDocument(user)
+		userMod = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("updated_at", now()),
 		)
-		transaction1Modification = Apply(NewDocument(&Transaction{}),
+		trx1Mod = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Modification = Apply(NewDocument(&Transaction{}),
+		trx2Mod = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
-		addressModification = Apply(NewDocument(&Address{}),
+		addrMod = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 		)
 	)
 
-	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
-	userModification.SetAssoc("address", addressModification)
+	userMod.SetAssoc("transactions", trx1Mod, trx2Mod)
+	userMod.SetAssoc("address", addrMod)
 
-	assertModification(t, userModification, Apply(nil, NewStructset(user)))
+	assertModification(t, userMod, Apply(doc, NewStructset(user)))
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -121,11 +124,59 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
+		doc          = NewDocument(user)
 		modification = Apply(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)
 	)
 
-	assertModification(t, modification, Apply(nil, NewStructset(user)))
+	assertModification(t, modification, Apply(doc, NewStructset(user)))
+}
+
+func TestStructset_differentStruct(t *testing.T) {
+	type UserTmp struct {
+		ID   int
+		Name string
+		Age  int
+	}
+
+	var (
+		usertmp UserTmp
+		user    = &User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+		}
+		doc          = NewDocument(&usertmp)
+		modification = Apply(NewDocument(user),
+			Set("name", "Luffy"),
+			Set("age", 20),
+		)
+	)
+
+	assertModification(t, modification, Apply(doc, NewStructset(user)))
+	assert.Equal(t, user.Name, usertmp.Name)
+	assert.Equal(t, user.Age, usertmp.Age)
+}
+
+func TestStructset_differentStructMissingField(t *testing.T) {
+	// missing age field.
+	type UserTmp struct {
+		ID   int
+		Name string
+	}
+
+	var (
+		user = &User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+		}
+		doc = NewDocument(&UserTmp{})
+	)
+
+	assert.Panics(t, func() {
+		Apply(doc, NewStructset(user))
+	})
 }

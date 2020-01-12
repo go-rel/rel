@@ -157,7 +157,7 @@ func (m Modify) Apply(doc *Document, modification *Modification) {
 	}
 
 	if invalid {
-		panic(fmt.Sprint("rel: cannot assign", m.Value, "as", m.Field, "into", doc.Table()))
+		panic(fmt.Sprint("rel: cannot assign ", m.Value, " as ", m.Field, " into ", doc.Table()))
 	}
 
 	modification.Add(m)

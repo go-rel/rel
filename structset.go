@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -16,8 +17,7 @@ type Structset struct {
 }
 
 // Apply modification.
-// TODO: apply modification if it's applying to struct.
-func (s Structset) Apply(doc *Document, modification *Modification) {
+func (s Structset) Apply(doc *Document, mod *Modification) {
 	var (
 		pField = s.doc.PrimaryField()
 		t      = now()
@@ -28,39 +28,46 @@ func (s Structset) Apply(doc *Document, modification *Modification) {
 		case pField:
 			continue
 		case "created_at", "inserted_at":
-			// TODO: handle *time.Time
-			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
-				if value, ok := s.doc.Value(field); ok && value.(time.Time).IsZero() {
-					modification.SetValue(field, t)
+			if typ, ok := doc.Type(field); ok && typ == rtTime {
+				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
+					s.set(doc, mod, field, t)
 				}
 				continue
 			}
 		case "updated_at":
-			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
-				modification.SetValue(field, t)
+			if typ, ok := doc.Type(field); ok && typ == rtTime {
+				s.set(doc, mod, field, t)
 				continue
 			}
 		}
 
 		if value, ok := s.doc.Value(field); ok && !isZero(value) {
-			modification.SetValue(field, value)
+			s.set(doc, mod, field, value)
 		}
 	}
 
 	for _, field := range s.doc.BelongsTo() {
-		s.buildAssoc(field, modification)
+		s.buildAssoc(field, mod)
 	}
 
 	for _, field := range s.doc.HasOne() {
-		s.buildAssoc(field, modification)
+		s.buildAssoc(field, mod)
 	}
 
 	for _, field := range s.doc.HasMany() {
-		s.buildAssocMany(field, modification)
+		s.buildAssocMany(field, mod)
 	}
 }
 
-func (s Structset) buildAssoc(field string, modification *Modification) {
+func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}) {
+	if doc.v != s.doc.v && !doc.SetValue(field, value) {
+		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
+	}
+
+	mod.SetValue(field, value)
+}
+
+func (s Structset) buildAssoc(field string, mod *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -68,14 +75,13 @@ func (s Structset) buildAssoc(field string, modification *Modification) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			mod    = Apply(doc, Structset{doc: doc})
 		)
 
-		modification.SetAssoc(field, mod)
+		mod.SetAssoc(field, Apply(doc, Structset{doc: doc}))
 	}
 }
 
-func (s Structset) buildAssocMany(field string, modification *Modification) {
+func (s Structset) buildAssocMany(field string, mod *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -94,7 +100,7 @@ func (s Structset) buildAssocMany(field string, modification *Modification) {
 			mods[i] = Apply(doc, newStructset(doc))
 		}
 
-		modification.SetAssoc(field, mods...)
+		mod.SetAssoc(field, mods...)
 	}
 }
 

@@ -5,8 +5,8 @@ type Querier interface {
 	Build(*Query)
 }
 
-// BuildQuery for given table using given queriers.
-func BuildQuery(table string, queriers ...Querier) Query {
+// Build for given table using given queriers.
+func Build(table string, queriers ...Querier) Query {
 	var (
 		query Query
 	)

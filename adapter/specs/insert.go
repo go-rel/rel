@@ -158,8 +158,8 @@ func Inserts(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		var (
-			changes      = rel.BuildChanges(rel.NewStructset(record))
-			statement, _ = builder.Insert("collection", changes)
+			modification = rel.BuildModification(rel.NewStructset(record))
+			statement, _ = builder.Insert("collection", modification)
 		)
 
 		t.Run("Insert|"+statement, func(t *testing.T) {
@@ -190,8 +190,8 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		// var (
-		// 	changes      = rel.BuildChanges(rel.Struct(record))
-		// 	statement, _ = builder.Insert("collection", changes)
+		// 	modification      = rel.BuildModification(rel.Struct(record))
+		// 	statement, _ = builder.Insert("collection", modification)
 		// )
 
 		t.Run("InsertAll", func(t *testing.T) {

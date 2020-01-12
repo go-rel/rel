@@ -7,7 +7,7 @@ import (
 )
 
 // Repository defines sets of available database operations.
-// TODO: InsertAll only accepts records not changes, this eliminates the needs of exposing changes and making the api more consistent.
+// TODO: InsertAll only accepts records not modification, this eliminates the needs of exposing modification and making the api more consistent.
 // TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
@@ -20,12 +20,12 @@ type Repository interface {
 	MustFind(record interface{}, queriers ...Querier)
 	FindAll(records interface{}, queriers ...Querier) error
 	MustFindAll(records interface{}, queriers ...Querier)
-	Insert(record interface{}, changers ...Changer) error
-	MustInsert(record interface{}, changers ...Changer)
-	InsertAll(records interface{}, changes ...Changes) error
-	MustInsertAll(records interface{}, changes ...Changes)
-	Update(record interface{}, changers ...Changer) error
-	MustUpdate(record interface{}, changers ...Changer)
+	Insert(record interface{}, modifiers ...Modifier) error
+	MustInsert(record interface{}, modifiers ...Modifier)
+	InsertAll(records interface{}, modification ...Modification) error
+	MustInsertAll(records interface{}, modification ...Modification)
+	Update(record interface{}, modifiers ...Modifier) error
+	MustUpdate(record interface{}, modifiers ...Modifier)
 	Delete(record interface{}) error
 	MustDelete(record interface{})
 	DeleteAll(queriers ...Querier) error
@@ -72,7 +72,7 @@ func (r repository) MustAggregate(query Query, aggregate string, field string) i
 
 // Count retrieves count of results that match the query.
 func (r repository) Count(collection string, queriers ...Querier) (int, error) {
-	return r.Aggregate(BuildQuery(collection, queriers...), "count", "*")
+	return r.Aggregate(Build(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
@@ -88,7 +88,7 @@ func (r repository) MustCount(collection string, queriers ...Querier) int {
 func (r repository) Find(record interface{}, queriers ...Querier) error {
 	var (
 		doc   = NewDocument(record)
-		query = BuildQuery(doc.Table(), queriers...)
+		query = Build(doc.Table(), queriers...)
 	)
 
 	return r.find(doc, query)
@@ -113,7 +113,7 @@ func (r repository) find(doc *Document, query Query) error {
 func (r repository) FindAll(records interface{}, queriers ...Querier) error {
 	var (
 		col   = NewCollection(records)
-		query = BuildQuery(col.Table(), queriers...)
+		query = Build(col.Table(), queriers...)
 	)
 
 	col.Reset()
@@ -137,43 +137,43 @@ func (r repository) findAll(col *Collection, query Query) error {
 }
 
 // Insert an record to database.
-func (r repository) Insert(record interface{}, changers ...Changer) error {
+func (r repository) Insert(record interface{}, modifiers ...Modifier) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	if record == nil {
 		return nil
 	}
 
 	var (
-		changes Changes
-		doc     = NewDocument(record)
+		modification Modification
+		doc          = NewDocument(record)
 	)
 
-	if len(changers) == 0 {
-		changes = ApplyChanges(doc, newStructset(doc))
+	if len(modifiers) == 0 {
+		modification = Apply(doc, newStructset(doc))
 	} else {
-		changes = ApplyChanges(doc, changers...)
+		modification = Apply(doc, modifiers...)
 	}
 
-	if changes.AssocCount() > 0 {
+	if modification.AssocCount() > 0 {
 		return r.Transaction(func(r Repository) error {
-			return r.(*repository).insert(doc, changes)
+			return r.(*repository).insert(doc, modification)
 		})
 	}
 
-	return r.insert(doc, changes)
+	return r.insert(doc, modification)
 }
 
-func (r repository) insert(doc *Document, changes Changes) error {
+func (r repository) insert(doc *Document, modification Modification) error {
 	var (
 		pField   = doc.PrimaryField()
-		queriers = BuildQuery(doc.Table())
+		queriers = Build(doc.Table())
 	)
 
-	if err := r.saveBelongsTo(doc, &changes); err != nil {
+	if err := r.saveBelongsTo(doc, &modification); err != nil {
 		return err
 	}
 
-	id, err := r.Adapter().Insert(queriers, changes, r.logger...)
+	id, err := r.Adapter().Insert(queriers, modification, r.logger...)
 	if err != nil {
 		return err
 	}
@@ -183,11 +183,11 @@ func (r repository) insert(doc *Document, changes Changes) error {
 		return err
 	}
 
-	if err := r.saveHasOne(doc, &changes); err != nil {
+	if err := r.saveHasOne(doc, &modification); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(doc, &changes, true); err != nil {
+	if err := r.saveHasMany(doc, &modification, true); err != nil {
 		return err
 	}
 
@@ -196,11 +196,11 @@ func (r repository) insert(doc *Document, changes Changes) error {
 
 // MustInsert an record to database.
 // It'll panic if any error occurred.
-func (r repository) MustInsert(record interface{}, changers ...Changer) {
-	must(r.Insert(record, changers...))
+func (r repository) MustInsert(record interface{}, modifiers ...Modifier) {
+	must(r.Insert(record, modifiers...))
 }
 
-func (r repository) InsertAll(records interface{}, changes ...Changes) error {
+func (r repository) InsertAll(records interface{}, modification ...Modification) error {
 	if records == nil {
 		return nil
 	}
@@ -209,46 +209,46 @@ func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 		col = NewCollection(records)
 	)
 
-	if len(changes) == 0 {
-		changes = make([]Changes, col.Len())
+	if len(modification) == 0 {
+		modification = make([]Modification, col.Len())
 
-		for i := range changes {
-			changes[i] = ApplyChanges(nil, newStructset(col.Get(i)))
+		for i := range modification {
+			modification[i] = Apply(nil, newStructset(col.Get(i)))
 		}
 	}
 
 	col.Reset()
 
-	return r.insertAll(col, changes)
+	return r.insertAll(col, modification)
 }
 
-func (r repository) MustInsertAll(records interface{}, changes ...Changes) {
-	must(r.InsertAll(records, changes...))
+func (r repository) MustInsertAll(records interface{}, modification ...Modification) {
+	must(r.InsertAll(records, modification...))
 }
 
 // TODO: support assocs
-func (r repository) insertAll(col *Collection, changes []Changes) error {
-	if len(changes) == 0 {
+func (r repository) insertAll(col *Collection, modification []Modification) error {
+	if len(modification) == 0 {
 		return nil
 	}
 
 	var (
 		pField   = col.PrimaryField()
-		queriers = BuildQuery(col.Table())
-		fields   = make([]string, 0, changes[0].Count())
-		fieldMap = make(map[string]struct{}, changes[0].Count())
+		queriers = Build(col.Table())
+		fields   = make([]string, 0, modification[0].Count())
+		fieldMap = make(map[string]struct{}, modification[0].Count())
 	)
 
-	for i := range changes {
-		for _, ch := range changes[i].All() {
-			if _, exist := fieldMap[ch.Field]; !exist {
-				fieldMap[ch.Field] = struct{}{}
-				fields = append(fields, ch.Field)
+	for i := range modification {
+		for _, mod := range modification[i].All() {
+			if _, exist := fieldMap[mod.Field]; !exist {
+				fieldMap[mod.Field] = struct{}{}
+				fields = append(fields, mod.Field)
 			}
 		}
 	}
 
-	ids, err := r.adapter.InsertAll(queriers, fields, changes, r.logger...)
+	ids, err := r.adapter.InsertAll(queriers, fields, modification, r.logger...)
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func (r repository) insertAll(col *Collection, changes []Changes) error {
 // not supported:
 // - update has many (will be replaced by default)
 // - replace has one or has many - may cause duplicate record, update instead
-func (r repository) Update(record interface{}, changers ...Changer) error {
+func (r repository) Update(record interface{}, modifiers ...Modifier) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: make sure primary id not changed
 	if record == nil {
@@ -269,38 +269,38 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	}
 
 	var (
-		changes Changes
-		doc     = NewDocument(record)
-		pField  = doc.PrimaryField()
-		pValue  = doc.PrimaryValue()
+		modification Modification
+		doc          = NewDocument(record)
+		pField       = doc.PrimaryField()
+		pValue       = doc.PrimaryValue()
 	)
 
-	if len(changers) == 0 {
-		changes = ApplyChanges(doc, newStructset(doc))
+	if len(modifiers) == 0 {
+		modification = Apply(doc, newStructset(doc))
 	} else {
-		changes = ApplyChanges(doc, changers...)
+		modification = Apply(doc, modifiers...)
 	}
 
-	if len(changes.assoc) > 0 {
+	if len(modification.assoc) > 0 {
 		return r.Transaction(func(r Repository) error {
-			return r.(*repository).update(doc, changes, Eq(pField, pValue))
+			return r.(*repository).update(doc, modification, Eq(pField, pValue))
 		})
 	}
 
-	return r.update(doc, changes, Eq(pField, pValue))
+	return r.update(doc, modification, Eq(pField, pValue))
 }
 
-func (r repository) update(doc *Document, changes Changes, filter FilterQuery) error {
-	if err := r.saveBelongsTo(doc, &changes); err != nil {
+func (r repository) update(doc *Document, modification Modification, filter FilterQuery) error {
+	if err := r.saveBelongsTo(doc, &modification); err != nil {
 		return err
 	}
 
-	if !changes.Empty() {
+	if !modification.Empty() {
 		var (
-			queriers = BuildQuery(doc.Table(), filter)
+			queriers = Build(doc.Table(), filter)
 		)
 
-		if err := r.adapter.Update(queriers, changes, r.logger...); err != nil {
+		if err := r.adapter.Update(queriers, modification, r.logger...); err != nil {
 			return err
 		}
 
@@ -309,11 +309,11 @@ func (r repository) update(doc *Document, changes Changes, filter FilterQuery) e
 		}
 	}
 
-	if err := r.saveHasOne(doc, &changes); err != nil {
+	if err := r.saveHasOne(doc, &modification); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(doc, &changes, false); err != nil {
+	if err := r.saveHasMany(doc, &modification, false); err != nil {
 		return err
 	}
 
@@ -322,23 +322,23 @@ func (r repository) update(doc *Document, changes Changes, filter FilterQuery) e
 
 // MustUpdate an record in database.
 // It'll panic if any error occurred.
-func (r repository) MustUpdate(record interface{}, changers ...Changer) {
-	must(r.Update(record, changers...))
+func (r repository) MustUpdate(record interface{}, modifiers ...Modifier) {
+	must(r.Update(record, modifiers...))
 }
 
 // TODO: support deletion
-func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
+func (r repository) saveBelongsTo(doc *Document, modification *Modification) error {
 	for _, field := range doc.BelongsTo() {
-		ac, changed := changes.GetAssoc(field)
+		ac, changed := modification.GetAssoc(field)
 		if !changed || len(ac) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac[0]
-			assoc        = doc.Association(field)
-			fValue       = assoc.ForeignValue()
-			doc, loaded  = assoc.Document()
+			assocModification = ac[0]
+			assoc             = doc.Association(field)
+			fValue            = assoc.ForeignValue()
+			doc, loaded       = assoc.Document()
 		)
 
 		if loaded {
@@ -347,7 +347,7 @@ func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 				pValue = doc.PrimaryValue()
 			)
 
-			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
 				panic("cannot update assoc: inconsistent primary value")
 			}
 
@@ -355,15 +355,15 @@ func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if err := r.update(doc, assocChanges, filter); err != nil {
+			if err := r.update(doc, assocModification, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(doc, assocChanges); err != nil {
+			if err := r.insert(doc, assocModification); err != nil {
 				return err
 			}
 
-			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
+			modification.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
 	}
 
@@ -371,25 +371,25 @@ func (r repository) saveBelongsTo(doc *Document, changes *Changes) error {
 }
 
 // TODO: suppprt deletion
-func (r repository) saveHasOne(doc *Document, changes *Changes) error {
+func (r repository) saveHasOne(doc *Document, modification *Modification) error {
 	for _, field := range doc.HasOne() {
-		ac, changed := changes.GetAssoc(field)
+		ac, changed := modification.GetAssoc(field)
 		if !changed || len(ac) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac[0]
-			assoc        = doc.Association(field)
-			fField       = assoc.ForeignField()
-			rValue       = assoc.ReferenceValue()
-			doc, loaded  = assoc.Document()
-			pField       = doc.PrimaryField()
-			pValue       = doc.PrimaryValue()
+			assocModification = ac[0]
+			assoc             = doc.Association(field)
+			fField            = assoc.ForeignField()
+			rValue            = assoc.ReferenceValue()
+			doc, loaded       = assoc.Document()
+			pField            = doc.PrimaryField()
+			pValue            = doc.PrimaryValue()
 		)
 
 		if loaded {
-			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
 				panic("cannot update assoc: inconsistent primary key")
 			}
 
@@ -397,13 +397,13 @@ func (r repository) saveHasOne(doc *Document, changes *Changes) error {
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(doc, assocChanges, filter); err != nil {
+			if err := r.update(doc, assocModification, filter); err != nil {
 				return err
 			}
 		} else {
-			assocChanges.SetValue(fField, rValue)
+			assocModification.SetValue(fField, rValue)
 
-			if err := r.insert(doc, assocChanges); err != nil {
+			if err := r.insert(doc, assocModification); err != nil {
 				return err
 			}
 		}
@@ -412,9 +412,9 @@ func (r repository) saveHasOne(doc *Document, changes *Changes) error {
 	return nil
 }
 
-func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool) error {
+func (r repository) saveHasMany(doc *Document, modification *Modification, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		ac, changed := changes.GetAssoc(field)
+		ac, changed := modification.GetAssoc(field)
 		if !changed {
 			continue
 		}
@@ -441,7 +441,7 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 
 			// FIXME: if deleted ids is specified, then only delete those.
 			// if it's nill, then clear old association (used by structset).
-			if err := r.deleteAll(BuildQuery(table, filter)); err != nil {
+			if err := r.deleteAll(Build(table, filter)); err != nil {
 				return err
 			}
 		}
@@ -449,18 +449,18 @@ func (r repository) saveHasMany(doc *Document, changes *Changes, insertion bool)
 		// update and filter for bulk insertion in place
 		// TODO: load updated result once
 		n := 0
-		for _, ch := range ac {
-			if pChange, changed := ch.Get(pField); changed {
+		for _, mod := range ac {
+			if pChange, changed := mod.Get(pField); changed {
 				var (
 					filter = Eq(pField, pChange.Value).AndEq(fField, rValue)
 				)
 
-				if err := r.update(col.Add(), ch, filter); err != nil {
+				if err := r.update(col.Add(), mod, filter); err != nil {
 					return err
 				}
 			} else {
-				ch.SetValue(fField, rValue)
-				ac[n] = ch
+				mod.SetValue(fField, rValue)
+				ac[n] = mod
 				n++
 			}
 		}
@@ -481,7 +481,7 @@ func (r repository) Delete(record interface{}) error {
 		table  = doc.Table()
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
-		q      = BuildQuery(table, Eq(pField, pValue))
+		q      = Build(table, Eq(pField, pValue))
 	)
 
 	return r.adapter.Delete(q, r.logger...)
@@ -495,7 +495,7 @@ func (r repository) MustDelete(record interface{}) {
 
 func (r repository) DeleteAll(queriers ...Querier) error {
 	var (
-		q = BuildQuery("", queriers...)
+		q = Build("", queriers...)
 	)
 
 	return r.deleteAll(q)
@@ -547,7 +547,7 @@ func (r repository) Preload(records interface{}, field string, queriers ...Queri
 	}
 
 	var (
-		query    = BuildQuery(table, append(queriers, In(keyField, ids...))...)
+		query    = Build(table, append(queriers, In(keyField, ids...))...)
 		cur, err = r.adapter.Query(query, r.logger...)
 	)
 

@@ -14,11 +14,11 @@ type TestRecord struct {
 	Field5 int
 }
 
-func TestApplyChanges(t *testing.T) {
+func TestApplyModification(t *testing.T) {
 	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
-		changers = []Changer{
+		record    = TestRecord{}
+		doc       = NewDocument(&record)
+		modifiers = []Modifier{
 			Set("field1", "string"),
 			Set("field2", true),
 			Set("field3", "string pointer"),
@@ -26,7 +26,7 @@ func TestApplyChanges(t *testing.T) {
 			DecBy("field5", 2),
 			ChangeFragment("field6=?", true),
 		}
-		changes = Changes{
+		modification = Modification{
 			fields: map[string]int{
 				"field1":   0,
 				"field2":   1,
@@ -35,7 +35,7 @@ func TestApplyChanges(t *testing.T) {
 				"field5":   4,
 				"field6=?": 5,
 			},
-			changes: []Change{
+			modification: []Modify{
 				Set("field1", "string"),
 				Set("field2", true),
 				Set("field3", "string pointer"),
@@ -48,7 +48,7 @@ func TestApplyChanges(t *testing.T) {
 		}
 	)
 
-	assert.Equal(t, changes, ApplyChanges(doc, changers...))
+	assert.Equal(t, modification, Apply(doc, modifiers...))
 	assert.Equal(t, "string", record.Field1)
 	assert.Equal(t, true, record.Field2)
 	assert.Equal(t, "string pointer", *record.Field3)
@@ -58,38 +58,38 @@ func TestApplyChanges(t *testing.T) {
 	assert.Equal(t, 0, record.Field5)
 }
 
-func TestApplyChanges_setValueError(t *testing.T) {
+func TestApplyModification_setValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
 	)
 
 	assert.Panics(t, func() {
-		ApplyChanges(doc, Set("field1", 1))
+		Apply(doc, Set("field1", 1))
 	})
 	assert.Equal(t, "", record.Field1)
 }
 
-func TestApplyChanges_incValueError(t *testing.T) {
+func TestApplyModification_incValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
 	)
 
 	assert.Panics(t, func() {
-		ApplyChanges(doc, IncBy("field1", 2))
+		Apply(doc, Inc("field1"))
 	})
 	assert.Equal(t, "", record.Field1)
 }
 
-func TestApplyChanges_unknownFieldValueError(t *testing.T) {
+func TestApplyModification_unknownFieldValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
 	)
 
 	assert.Panics(t, func() {
-		ApplyChanges(doc, DecBy("field0", 2))
+		Apply(doc, Dec("field0"))
 	})
 	assert.Equal(t, "", record.Field1)
 }

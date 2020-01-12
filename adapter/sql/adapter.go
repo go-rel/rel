@@ -102,9 +102,9 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, modification rel.Modification, loggers ...rel.Logger) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Table, changes)
+		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modification)
 		id, _, err      = adapter.Exec(statement, args, loggers...)
 	)
 
@@ -112,8 +112,8 @@ func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, allchanges)
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modifications []rel.Modification, loggers ...rel.Logger) ([]interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, modifications)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges [
 		inc = adapter.Config.IncrementFunc(*adapter)
 	}
 
-	for i := 1; i < len(allchanges); i++ {
+	for i := 1; i < len(modifications); i++ {
 		ids = append(ids, id+int64(inc*i))
 	}
 
@@ -136,9 +136,9 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges [
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query rel.Query, changes rel.Changes, loggers ...rel.Logger) error {
+func (adapter *Adapter) Update(query rel.Query, modification rel.Modification, loggers ...rel.Logger) error {
 	var (
-		statement, args = NewBuilder(adapter.Config).Update(query.Table, changes, query.WhereQuery)
+		statement, args = NewBuilder(adapter.Config).Update(query.Table, modification, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
 	)
 

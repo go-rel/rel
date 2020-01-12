@@ -8,16 +8,16 @@ var (
 	now = time.Now
 )
 
-// Structset can be used as changes for repository insert or update operation.
+// Structset can be used as modification for repository insert or update operation.
 // This will save every field in struct and it's association as long as it's loaded.
-// This is the default changer used by repository.
+// This is the default modifier used by repository.
 type Structset struct {
 	doc *Document
 }
 
-// Apply changes.
-// TODO: apply changes if it's applying to struct.
-func (s Structset) Apply(doc *Document, changes *Changes) {
+// Apply modification.
+// TODO: apply modification if it's applying to struct.
+func (s Structset) Apply(doc *Document, modification *Modification) {
 	var (
 		pField = s.doc.PrimaryField()
 		t      = now()
@@ -31,36 +31,36 @@ func (s Structset) Apply(doc *Document, changes *Changes) {
 			// TODO: handle *time.Time
 			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
 				if value, ok := s.doc.Value(field); ok && value.(time.Time).IsZero() {
-					changes.SetValue(field, t)
+					modification.SetValue(field, t)
 				}
 				continue
 			}
 		case "updated_at":
 			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
-				changes.SetValue(field, t)
+				modification.SetValue(field, t)
 				continue
 			}
 		}
 
 		if value, ok := s.doc.Value(field); ok && !isZero(value) {
-			changes.SetValue(field, value)
+			modification.SetValue(field, value)
 		}
 	}
 
 	for _, field := range s.doc.BelongsTo() {
-		s.buildAssoc(field, changes)
+		s.buildAssoc(field, modification)
 	}
 
 	for _, field := range s.doc.HasOne() {
-		s.buildAssoc(field, changes)
+		s.buildAssoc(field, modification)
 	}
 
 	for _, field := range s.doc.HasMany() {
-		s.buildAssocMany(field, changes)
+		s.buildAssocMany(field, modification)
 	}
 }
 
-func (s Structset) buildAssoc(field string, changes *Changes) {
+func (s Structset) buildAssoc(field string, modification *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -68,14 +68,14 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			ch     = ApplyChanges(doc, Structset{doc: doc})
+			mod    = Apply(doc, Structset{doc: doc})
 		)
 
-		changes.SetAssoc(field, ch)
+		modification.SetAssoc(field, mod)
 	}
 }
 
-func (s Structset) buildAssocMany(field string, changes *Changes) {
+func (s Structset) buildAssocMany(field string, modification *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -83,18 +83,18 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			col, _ = assoc.Collection()
-			chs    = make([]Changes, col.Len())
+			mods   = make([]Modification, col.Len())
 		)
 
-		for i := range chs {
+		for i := range mods {
 			var (
 				doc = col.Get(i)
 			)
 
-			chs[i] = ApplyChanges(doc, newStructset(doc))
+			mods[i] = Apply(doc, newStructset(doc))
 		}
 
-		changes.SetAssoc(field, chs...)
+		modification.SetAssoc(field, mods...)
 	}
 }
 

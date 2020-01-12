@@ -165,27 +165,27 @@ To selectively update only specific fields or association, `use rel.Map`.
 ### **main.go**
 
 ```go
-changes := rel.Map{
+modification := rel.Map{
     "address": rel.Map{
         "city": "bandung",
     },
 }
 
 // Update address record with id 1, only set city to bandung.
-repo.Update(&user, changes)
+repo.Update(&user, modification)
 ```
 
 ### **main_test.go**
 
 ```go
-changes := rel.Map{
+modification := rel.Map{
     "address": rel.Map{
         "city": "bandung",
     },
 }
 
 // Update address record with id 1, only set city to bandung.
-repo.ExpectUpdate(changes).For(&user)
+repo.ExpectUpdate(modification).For(&user)
 ```
 
 <!-- tabs:end -->

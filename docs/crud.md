@@ -46,7 +46,7 @@ repo.AssertExpectations(t)
 
 <!-- tabs:end -->
 
-To insert a new record using a map, simply pass a `rel.Map` as the second argument, changes defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` asnd `updated_at` field.
+To insert a new record using a map, simply pass a `rel.Map` as the second argument, modification defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` asnd `updated_at` field.
 
 <!-- tabs:start -->
 
@@ -68,7 +68,7 @@ repo.Insert(&book, data)
 > reltest.Repository will automatically populate record using value provided by map.
 
 ```go
-// Expect insertion with given changer.
+// Expect insertion with given modifier.
 repo.ExpectInsert(rel.Map{
     "title":    "Rel for dummies",
     "category": "education",
@@ -77,7 +77,7 @@ repo.ExpectInsert(rel.Map{
 
 <!-- tabs:end -->
 
-It's also possible to insert a new record manually using `rel.Set`, which is a very basic type of `changer`.
+It's also possible to insert a new record manually using `rel.Set`, which is a very basic type of `modifier`.
 
 <!-- tabs:start -->
 
@@ -91,7 +91,7 @@ repo.Insert(&book, rel.Set("title", "Rel for dummies"), rel.Set("category", "edu
 ### **main_test.go**
 
 ```go
-// Expect insertion with given changer.
+// Expect insertion with given modifier.
 repo.ExpectInsert(
     rel.Set("title", "Rel for dummies"),
     rel.Set("category", "education"),
@@ -216,7 +216,7 @@ repo.ExpectUpdate()
 
 <!-- tabs:end -->
 
-Besides struct, map and set function. There's also increment and decrement changer to atomically increment/decrement any value in database.
+Besides struct, map and set function. There's also increment and decrement modifier to atomically increment/decrement any value in database.
 
 <!-- tabs:start -->
 

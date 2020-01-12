@@ -126,12 +126,12 @@ func TestAdapter_specs(t *testing.T) {
 // 	defer adapter.Close()
 
 // 	fields := []string{"notexist"}
-// 	allchanges := []map[string]interface{}{
+// 	modifications := []map[string]interface{}{
 // 		{"notexist": "12"},
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, modifications)
 
 // 	assert.NotNil(t, err)
 // }

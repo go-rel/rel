@@ -33,37 +33,37 @@ func (m *Modify) NotUnique(key string) {
 }
 
 // ExpectModify to be called with given field and queries.
-func ExpectModify(r *Repository, methodName string, changers []rel.Changer, insertion bool) *Modify {
+func ExpectModify(r *Repository, methodName string, modifiers []rel.Modifier, insertion bool) *Modify {
 	em := &Modify{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, changers},
+			[]interface{}{mock.Anything, modifiers},
 			[]interface{}{nil},
 		),
 	}
 
 	em.Run(func(args mock.Arguments) {
 		var (
-			changes  rel.Changes
-			changers = args[1].([]rel.Changer)
+			modification rel.Modification
+			modifiers    = args[1].([]rel.Modifier)
 		)
 
-		if len(changers) == 0 {
-			changes = rel.BuildChanges(rel.NewStructset(args[0]))
+		if len(modifiers) == 0 {
+			modification = rel.BuildModification(rel.NewStructset(args[0]))
 		} else {
-			changes = rel.BuildChanges(changers...)
+			modification = rel.BuildModification(modifiers...)
 		}
 
-		applyChanges(rel.NewDocument(args[0]), changes, insertion, true)
+		applyModification(rel.NewDocument(args[0]), modification, insertion, true)
 	})
 
 	return em
 }
 
 // ExpectInsertAll to be called with given field and queries.
-func ExpectInsertAll(r *Repository, changes []rel.Changes) *Modify {
+func ExpectInsertAll(r *Repository, modification []rel.Modification) *Modify {
 	em := &Modify{
 		Expect: newExpect(r, "InsertAll",
-			[]interface{}{mock.Anything, changes},
+			[]interface{}{mock.Anything, modification},
 			[]interface{}{nil},
 		),
 	}
@@ -74,7 +74,7 @@ func ExpectInsertAll(r *Repository, changes []rel.Changes) *Modify {
 			col     = rel.NewCollection(records)
 		)
 
-		if len(changes) == 0 {
+		if len(modification) == 0 {
 			// just set primary keys
 			for i := 0; i < col.Len(); i++ {
 				doc := col.Get(i)
@@ -83,9 +83,9 @@ func ExpectInsertAll(r *Repository, changes []rel.Changes) *Modify {
 		} else {
 			col.Reset()
 
-			for i := range changes {
+			for i := range modification {
 				doc := col.Add()
-				applyChanges(doc, changes[i], true, false)
+				applyModification(doc, modification[i], true, false)
 			}
 		}
 	})
@@ -93,7 +93,7 @@ func ExpectInsertAll(r *Repository, changes []rel.Changes) *Modify {
 	return em
 }
 
-func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includeAssoc bool) {
+func applyModification(doc *rel.Document, modification rel.Modification, insertion bool, includeAssoc bool) {
 	if doc.PrimaryValue() == 0 {
 		if insertion {
 			// FIXME: support other field types.
@@ -104,33 +104,33 @@ func applyChanges(doc *rel.Document, changes rel.Changes, insertion bool, includ
 	}
 
 	if includeAssoc {
-		applyBelongsToChanges(doc, &changes)
+		applyBelongsToModification(doc, &modification)
 	}
 
-	for _, ch := range changes.All() {
-		switch ch.Type {
+	for _, mod := range modification.All() {
+		switch mod.Type {
 		case rel.ChangeSetOp:
-			if !doc.SetValue(ch.Field, ch.Value) {
-				panic("reltest: cannot apply changes, field " + ch.Field + " is not defined or not assignable")
+			if !doc.SetValue(mod.Field, mod.Value) {
+				panic("reltest: cannot apply modification, field " + mod.Field + " is not defined or not assignable")
 			}
 		case rel.ChangeIncOp:
 			if insertion {
 				panic("reltest: increment is not supported for insertion")
 			}
 
-			applyIncOrDec(doc, ch.Field, ch.Value.(int))
+			applyIncOrDec(doc, mod.Field, mod.Value.(int))
 		case rel.ChangeDecOp:
 			if insertion {
 				panic("reltest: decrement is not supported for insertion")
 			}
 
-			applyIncOrDec(doc, ch.Field, -ch.Value.(int))
+			applyIncOrDec(doc, mod.Field, -mod.Value.(int))
 		}
 	}
 
 	if includeAssoc {
-		applyHasOneChanges(doc, &changes)
-		applyHasManyChanges(doc, &changes, insertion)
+		applyHasOneModification(doc, &modification)
+		applyHasManyModification(doc, &modification, insertion)
 	}
 }
 
@@ -149,18 +149,18 @@ func applyIncOrDec(doc *rel.Document, field string, n int) {
 }
 
 // this logic should be similar to repository.saveBelongsTo
-func applyBelongsToChanges(doc *rel.Document, changes *rel.Changes) {
+func applyBelongsToModification(doc *rel.Document, modification *rel.Modification) {
 	for _, field := range doc.BelongsTo() {
-		ac, changed := changes.GetAssoc(field)
-		if !changed || len(ac.Changes) == 0 {
+		ac, changed := modification.GetAssoc(field)
+		if !changed || len(ac.Modification) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac.Changes[0]
-			assoc        = doc.Association(field)
-			fValue       = assoc.ForeignValue()
-			doc, loaded  = assoc.Document()
+			assocModification = ac.Modification[0]
+			assoc             = doc.Association(field)
+			fValue            = assoc.ForeignValue()
+			doc, loaded       = assoc.Document()
 		)
 
 		if loaded {
@@ -170,7 +170,7 @@ func applyBelongsToChanges(doc *rel.Document, changes *rel.Changes) {
 				pValue = doc.PrimaryValue()
 			)
 
-			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
 				panic("reltest: inconsistent primary value of belongs to assoc")
 			}
 
@@ -178,37 +178,37 @@ func applyBelongsToChanges(doc *rel.Document, changes *rel.Changes) {
 				panic("reltest: inconsistent referenced foreign key of belongs to assoc")
 			}
 
-			applyChanges(doc, assocChanges, false, true)
+			applyModification(doc, assocModification, false, true)
 		} else {
 			// insert
-			applyChanges(doc, assocChanges, true, true)
+			applyModification(doc, assocModification, true, true)
 
-			changes.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
+			modification.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
 		}
 	}
 }
 
 // This logic should be similar to repository.saveHasOne
-func applyHasOneChanges(doc *rel.Document, changes *rel.Changes) {
+func applyHasOneModification(doc *rel.Document, modification *rel.Modification) {
 	for _, field := range doc.HasOne() {
-		ac, changed := changes.GetAssoc(field)
-		if !changed || len(ac.Changes) == 0 {
+		ac, changed := modification.GetAssoc(field)
+		if !changed || len(ac.Modification) == 0 {
 			continue
 		}
 
 		var (
-			assocChanges = ac.Changes[0]
-			assoc        = doc.Association(field)
-			fField       = assoc.ForeignField()
-			rValue       = assoc.ReferenceValue()
-			doc, loaded  = assoc.Document()
-			pField       = doc.PrimaryField()
-			pValue       = doc.PrimaryValue()
+			assocModification = ac.Modification[0]
+			assoc             = doc.Association(field)
+			fField            = assoc.ForeignField()
+			rValue            = assoc.ReferenceValue()
+			doc, loaded       = assoc.Document()
+			pField            = doc.PrimaryField()
+			pValue            = doc.PrimaryValue()
 		)
 
 		if loaded {
 			// update
-			if pch, exist := assocChanges.Get(pField); exist && pch.Value != pValue {
+			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
 				panic("cannot update assoc: inconsistent primary key")
 			}
 
@@ -216,19 +216,19 @@ func applyHasOneChanges(doc *rel.Document, changes *rel.Changes) {
 				panic("reltest: inconsistent referenced foreign key of has one assoc")
 			}
 
-			applyChanges(doc, assocChanges, false, true)
+			applyModification(doc, assocModification, false, true)
 		} else {
 			// insert
-			assocChanges.SetValue(fField, rValue)
+			assocModification.SetValue(fField, rValue)
 
-			applyChanges(doc, assocChanges, true, true)
+			applyModification(doc, assocModification, true, true)
 		}
 	}
 }
 
-func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool) {
+func applyHasManyModification(doc *rel.Document, modification *rel.Modification, insertion bool) {
 	for _, field := range doc.HasMany() {
-		ac, changed := changes.GetAssoc(field)
+		ac, changed := modification.GetAssoc(field)
 		if !changed {
 			continue
 		}
@@ -253,12 +253,12 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 
 		var (
 			curr    = 0
-			inserts []rel.Changes
+			inserts []rel.Modification
 		)
 
 		// update
-		for _, ch := range ac.Changes {
-			if pChange, changed := ch.Get(pField); changed {
+		for _, mod := range ac.Modification {
+			if pChange, changed := mod.Get(pField); changed {
 				// update
 				pID, ok := pIndex[pChange.Value]
 				if !ok {
@@ -279,12 +279,12 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 					panic("reltest: inconsistent foreign key when updating has many")
 				}
 
-				applyChanges(doc, ch, false, true)
+				applyModification(doc, mod, false, true)
 
 				delete(pIndex, pChange.Value)
 				curr++
 			} else {
-				inserts = append(inserts, ch)
+				inserts = append(inserts, mod)
 			}
 		}
 
@@ -294,10 +294,10 @@ func applyHasManyChanges(doc *rel.Document, changes *rel.Changes, insertion bool
 		}
 
 		// inserts remaining
-		for _, ch := range inserts {
-			ch.SetValue(fField, rValue)
+		for _, mod := range inserts {
+			mod.SetValue(fField, rValue)
 
-			applyChanges(col.Add(), ch, true, true)
+			applyModification(col.Add(), mod, true, true)
 		}
 	}
 }

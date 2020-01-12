@@ -125,7 +125,7 @@ func TestQuerier(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, b := range test.queriers {
-				assert.Equal(t, test.query, rel.BuildQuery("", b...))
+				assert.Equal(t, test.query, rel.Build("", b...))
 			}
 		})
 	}
@@ -133,7 +133,7 @@ func TestQuerier(t *testing.T) {
 
 func TestQuery_Build(t *testing.T) {
 	q := rel.From("users").Select("*")
-	assert.Equal(t, q, rel.BuildQuery("", q))
+	assert.Equal(t, q, rel.Build("", q))
 }
 
 func TestQuery_Select(t *testing.T) {
@@ -175,9 +175,9 @@ func TestQuery_Join(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, result, rel.BuildQuery("", rel.From("users").Join("transactions")))
-	assert.Equal(t, result, rel.BuildQuery("", rel.Join("transactions").From("users")))
-	assert.Equal(t, result, rel.BuildQuery("users", rel.Join("transactions")))
+	assert.Equal(t, result, rel.Build("", rel.From("users").Join("transactions")))
+	assert.Equal(t, result, rel.Build("", rel.Join("transactions").From("users")))
+	assert.Equal(t, result, rel.Build("users", rel.Join("transactions")))
 }
 
 func TestQuery_JoinOn(t *testing.T) {

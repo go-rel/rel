@@ -215,12 +215,12 @@ func TestAdapter_Transaction_nestedRollback(t *testing.T) {
 // 	defer adapter.Close()
 
 // 	fields := []string{"notexist"}
-// 	allchanges := []map[string]interface{}{
+// 	modifications := []map[string]interface{}{
 // 		{"notexist": "12"},
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(query.Query{}, fields, allchanges)
+// 	_, err = adapter.InsertAll(query.Query{}, fields, modifications)
 
 // 	assert.NotNil(t, err)
 // }

@@ -7,25 +7,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
+func assertModification(t *testing.T, ch1 Modification, ch2 Modification) {
 	assert.Equal(t, len(ch1.fields), len(ch2.fields))
-	assert.Equal(t, len(ch1.changes), len(ch2.changes))
+	assert.Equal(t, len(ch1.modification), len(ch2.modification))
 	assert.Equal(t, len(ch1.assoc), len(ch2.assoc))
-	assert.Equal(t, len(ch1.assocChanges), len(ch2.assocChanges))
+	assert.Equal(t, len(ch1.assocModification), len(ch2.assocModification))
 
 	for field := range ch1.fields {
-		assert.Equal(t, ch1.changes[ch1.fields[field]], ch2.changes[ch2.fields[field]])
+		assert.Equal(t, ch1.modification[ch1.fields[field]], ch2.modification[ch2.fields[field]])
 	}
 
 	for assoc := range ch1.assoc {
 		var (
-			ac1 = ch1.assocChanges[ch1.assoc[assoc]]
-			ac2 = ch2.assocChanges[ch2.assoc[assoc]]
+			ac1 = ch1.assocModification[ch1.assoc[assoc]]
+			ac2 = ch2.assocModification[ch2.assoc[assoc]]
 		)
 		assert.Equal(t, len(ac1), len(ac2))
 
 		for i := range ac1 {
-			assertChanges(t, ac1[i], ac2[i])
+			assertModification(t, ac1[i], ac2[i])
 		}
 	}
 }
@@ -49,7 +49,7 @@ func BenchmarkStructset(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		ApplyChanges(nil, NewStructset(user))
+		Apply(nil, NewStructset(user))
 	}
 }
 
@@ -60,7 +60,7 @@ func TestStructset(t *testing.T) {
 			Name: "Luffy",
 			Age:  20,
 		}
-		changes = ApplyChanges(NewDocument(user),
+		modification = Apply(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", now()),
@@ -68,7 +68,7 @@ func TestStructset(t *testing.T) {
 		)
 	)
 
-	assertChanges(t, changes, ApplyChanges(nil, NewStructset(user)))
+	assertModification(t, modification, Apply(nil, NewStructset(user)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -87,26 +87,26 @@ func TestStructset_withAssoc(t *testing.T) {
 			},
 			CreatedAt: time.Now(),
 		}
-		userChanges = ApplyChanges(NewDocument(&User{}),
+		userModification = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("updated_at", now()),
 		)
-		transaction1Changes = ApplyChanges(NewDocument(&Transaction{}),
+		transaction1Modification = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Changes = ApplyChanges(NewDocument(&Transaction{}),
+		transaction2Modification = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
-		addressChanges = ApplyChanges(NewDocument(&Address{}),
+		addressModification = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 		)
 	)
 
-	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
-	userChanges.SetAssoc("address", addressChanges)
+	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
+	userModification.SetAssoc("address", addressModification)
 
-	assertChanges(t, userChanges, ApplyChanges(nil, NewStructset(user)))
+	assertModification(t, userModification, Apply(nil, NewStructset(user)))
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -121,11 +121,11 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
-		changes = ApplyChanges(NewDocument(user),
+		modification = Apply(NewDocument(user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)
 	)
 
-	assertChanges(t, changes, ApplyChanges(nil, NewStructset(user)))
+	assertModification(t, modification, Apply(nil, NewStructset(user)))
 }

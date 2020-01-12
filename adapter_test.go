@@ -31,18 +31,18 @@ func (ta *testAdapter) Query(query Query, logger ...Logger) (Cursor, error) {
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(query Query, changes Changes, logger ...Logger) (interface{}, error) {
-	args := ta.Called(query, changes)
+func (ta *testAdapter) Insert(query Query, modification Modification, logger ...Logger) (interface{}, error) {
+	args := ta.Called(query, modification)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(query Query, fields []string, changess []Changes, logger ...Logger) ([]interface{}, error) {
-	args := ta.Called(query, fields, changess)
+func (ta *testAdapter) InsertAll(query Query, fields []string, modifications []Modification, logger ...Logger) ([]interface{}, error) {
+	args := ta.Called(query, fields, modifications)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(query Query, changes Changes, logger ...Logger) error {
-	args := ta.Called(query, changes)
+func (ta *testAdapter) Update(query Query, modification Modification, logger ...Logger) error {
+	args := ta.Called(query, modification)
 	return args.Error(0)
 }
 

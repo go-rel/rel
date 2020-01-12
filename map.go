@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-// Map can be used as changes for repository insert or update operation.
+// Map can be used as modification for repository insert or update operation.
 // This allows inserting or updating only on specified field.
 // Insert/Update of has one or belongs to can be done using other Map as a value.
 // Insert/Update of has many can be done using slice of Map as a value.
 type Map map[string]interface{}
 
-// Apply changes.
-func (m Map) Apply(doc *Document, changes *Changes) {
+// Apply modification.
+func (m Map) Apply(doc *Document, modification *Modification) {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
@@ -24,30 +24,30 @@ func (m Map) Apply(doc *Document, changes *Changes) {
 			}
 
 			var (
-				assocDoc, _  = assoc.Document()
-				assocChanges = ApplyChanges(assocDoc, v)
+				assocDoc, _       = assoc.Document()
+				assocModification = Apply(assocDoc, v)
 			)
 
-			changes.SetAssoc(field, assocChanges)
+			modification.SetAssoc(field, assocModification)
 		case []Map:
 			var (
-				chs    = make([]Changes, len(v))
+				mods   = make([]Modification, len(v))
 				assoc  = doc.Association(field)
 				col, _ = assoc.Collection()
-				doc    = col.Add() // Note: it's reseted again in has to many
 			)
 
+			col.Reset()
+
 			for i := range v {
-				chs[i] = ApplyChanges(doc, v[i])
+				mods[i] = Apply(col.Add(), v[i])
 			}
-			changes.SetAssoc(field, chs...)
-			changes.reload = true // TODO: optimistic create/update, also wrong reload.
+			modification.SetAssoc(field, mods...)
 		default:
 			if !doc.SetValue(field, v) {
 				panic(fmt.Sprint("rel: cannot assign", v, "as", field, "into", doc.Table()))
 			}
 
-			changes.SetValue(field, v)
+			modification.SetValue(field, v)
 		}
 	}
 }

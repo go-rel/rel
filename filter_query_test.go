@@ -12,7 +12,7 @@ var result rel.Query
 func BenchmarkFilterQuery_chain1(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.Eq("id", 1))
+		query = rel.Build("test", rel.Eq("id", 1))
 	}
 	result = query
 }
@@ -20,7 +20,7 @@ func BenchmarkFilterQuery_chain1(b *testing.B) {
 func BenchmarkFilterQuery_chain2(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.Eq("id", 1).AndNe("name", "foo"))
+		query = rel.Build("test", rel.Eq("id", 1).AndNe("name", "foo"))
 	}
 	result = query
 }
@@ -28,7 +28,7 @@ func BenchmarkFilterQuery_chain2(b *testing.B) {
 func BenchmarkFilterQuery_chain3(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80))
+		query = rel.Build("test", rel.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80))
 	}
 	result = query
 }
@@ -36,7 +36,7 @@ func BenchmarkFilterQuery_chain3(b *testing.B) {
 func BenchmarkFilterQuery_chain4(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10))
+		query = rel.Build("test", rel.Eq("id", 1).AndNe("name", "foo").AndGt("score", 80).AndLt("avg", 10))
 	}
 	result = query
 }
@@ -44,7 +44,7 @@ func BenchmarkFilterQuery_chain4(b *testing.B) {
 func BenchmarkFilterQuery_slice1(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.And(rel.Eq("id", 1)))
+		query = rel.Build("test", rel.And(rel.Eq("id", 1)))
 	}
 	result = query
 }
@@ -52,7 +52,7 @@ func BenchmarkFilterQuery_slice1(b *testing.B) {
 func BenchmarkFilterQuery_slice2(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo")))
+		query = rel.Build("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo")))
 	}
 	result = query
 }
@@ -60,7 +60,7 @@ func BenchmarkFilterQuery_slice2(b *testing.B) {
 func BenchmarkFilterQuery_slice3(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo"), rel.Gt("score", 80)))
+		query = rel.Build("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo"), rel.Gt("score", 80)))
 	}
 	result = query
 }
@@ -68,7 +68,7 @@ func BenchmarkFilterQuery_slice3(b *testing.B) {
 func BenchmarkFilterQuery_slice4(b *testing.B) {
 	var query rel.Query
 	for n := 0; n < b.N; n++ {
-		query = rel.BuildQuery("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo"), rel.Gt("score", 80), rel.Lt("avg", 10)))
+		query = rel.Build("test", rel.And(rel.Eq("id", 1), rel.Ne("name", "foo"), rel.Gt("score", 80), rel.Lt("avg", 10)))
 	}
 	result = query
 }

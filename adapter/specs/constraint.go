@@ -6,20 +6,21 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// UniqueConstraint tests unique constraint specifications.
-func UniqueConstraint(t *testing.T, repo rel.Repository) {
+func createExtra(repo rel.Repository, slug string) Extra {
 	var user User
 	repo.MustInsert(&user)
 
-	var (
-		slug1  = "slug1"
-		slug2  = "slug2"
-		extra1 = Extra{Slug: &slug1, UserID: user.ID}
-		extra2 = Extra{Slug: &slug2, UserID: user.ID}
-	)
+	extra := Extra{Slug: &slug, UserID: user.ID}
+	repo.MustInsert(&extra)
+	return extra
+}
 
-	repo.MustInsert(&extra1)
-	repo.MustInsert(&extra2)
+// UniqueConstraint tests unique constraint specifications.
+func UniqueConstraint(t *testing.T, repo rel.Repository) {
+	var (
+		extra1 = createExtra(repo, "unique-slug1")
+		extra2 = createExtra(repo, "unique-slug2")
+	)
 
 	t.Run("UniqueConstraint", func(t *testing.T) {
 		// inserting
@@ -34,11 +35,9 @@ func UniqueConstraint(t *testing.T, repo rel.Repository) {
 
 // ForeignKeyConstraint tests foreign key constraint specifications.
 func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
-	var user User
-	repo.MustInsert(&user)
-
-	extra := Extra{UserID: user.ID}
-	repo.MustInsert(&extra)
+	var (
+		extra = createExtra(repo, "fk-slug")
+	)
 
 	t.Run("ForeignKeyConstraint", func(t *testing.T) {
 		// inserting
@@ -54,11 +53,9 @@ func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
 
 // CheckConstraint tests foreign key constraint specifications.
 func CheckConstraint(t *testing.T, repo rel.Repository) {
-	var user User
-	repo.MustInsert(&user)
-
-	extra := Extra{UserID: user.ID}
-	repo.MustInsert(&extra)
+	var (
+		extra = createExtra(repo, "check-slug")
+	)
 
 	t.Run("CheckConstraint", func(t *testing.T) {
 		// inserting

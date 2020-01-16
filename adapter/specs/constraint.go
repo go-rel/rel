@@ -34,10 +34,10 @@ func UniqueConstraint(t *testing.T, repo rel.Repository) {
 
 // ForeignKeyConstraint tests foreign key constraint specifications.
 func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
-	var (
-		extra Extra
-	)
+	var user User
+	repo.MustInsert(&user)
 
+	extra := Extra{UserID: user.ID}
 	repo.MustInsert(&extra)
 
 	t.Run("ForeignKeyConstraint", func(t *testing.T) {
@@ -57,10 +57,7 @@ func CheckConstraint(t *testing.T, repo rel.Repository) {
 	var user User
 	repo.MustInsert(&user)
 
-	var (
-		extra = Extra{UserID: user.ID}
-	)
-
+	extra := Extra{UserID: user.ID}
 	repo.MustInsert(&extra)
 
 	t.Run("CheckConstraint", func(t *testing.T) {

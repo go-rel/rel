@@ -8,11 +8,14 @@ import (
 
 // UniqueConstraint tests unique constraint specifications.
 func UniqueConstraint(t *testing.T, repo rel.Repository) {
+	var user User
+	repo.MustInsert(&user)
+
 	var (
 		slug1  = "slug1"
 		slug2  = "slug2"
-		extra1 = Extra{Slug: &slug1}
-		extra2 = Extra{Slug: &slug2}
+		extra1 = Extra{Slug: &slug1, UserID: user.ID}
+		extra2 = Extra{Slug: &slug2, UserID: user.ID}
 	)
 
 	repo.MustInsert(&extra1)
@@ -51,8 +54,11 @@ func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
 
 // CheckConstraint tests foreign key constraint specifications.
 func CheckConstraint(t *testing.T, repo rel.Repository) {
+	var user User
+	repo.MustInsert(&user)
+
 	var (
-		extra Extra
+		extra = Extra{UserID: user.ID}
 	)
 
 	repo.MustInsert(&extra)

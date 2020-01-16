@@ -158,7 +158,7 @@ func Inserts(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		var (
-			changes      = rel.BuildChanges(rel.NewStructset(record))
+			changes      = rel.BuildChanges(rel.NewStructset(record, false))
 			statement, _ = builder.Insert("collection", changes)
 		)
 

@@ -334,7 +334,7 @@ func Updates(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		var (
-			changes      = rel.BuildChanges(rel.NewStructset(record))
+			changes      = rel.BuildChanges(rel.NewStructset(record, false))
 			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
 		)
 

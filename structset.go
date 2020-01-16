@@ -12,7 +12,8 @@ var (
 // This will save every field in struct and it's association as long as it's loaded.
 // This is the default changer used by repository.
 type Structset struct {
-	doc *Document
+	doc      *Document
+	skipZero bool
 }
 
 // Build changes from structset.
@@ -40,7 +41,11 @@ func (s Structset) Build(changes *Changes) {
 			}
 		}
 
-		if value, ok := s.doc.Value(field); ok && !isZero(value) {
+		if value, ok := s.doc.Value(field); ok {
+			if s.skipZero && isZero(value) {
+				continue
+			}
+
 			changes.SetValue(field, value)
 		}
 	}
@@ -66,7 +71,7 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			ch     = BuildChanges(Structset{doc: doc})
+			ch     = BuildChanges(newStructset(doc, s.skipZero))
 		)
 
 		changes.SetAssoc(field, ch)
@@ -85,20 +90,21 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 		)
 
 		for i := range chs {
-			chs[i] = BuildChanges(newStructset(col.Get(i)))
+			chs[i] = BuildChanges(newStructset(col.Get(i), s.skipZero))
 		}
 
 		changes.SetAssoc(field, chs...)
 	}
 }
 
-func newStructset(doc *Document) Structset {
+func newStructset(doc *Document, skipZero bool) Structset {
 	return Structset{
-		doc: doc,
+		doc:      doc,
+		skipZero: skipZero,
 	}
 }
 
 // NewStructset from a struct.
-func NewStructset(record interface{}) Structset {
-	return newStructset(NewDocument(record))
+func NewStructset(record interface{}, skipZero bool) Structset {
+	return newStructset(NewDocument(record), skipZero)
 }

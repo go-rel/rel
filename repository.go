@@ -148,7 +148,7 @@ func (r repository) Insert(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(newStructset(doc))
+		changes = BuildChanges(newStructset(doc, false))
 	} else {
 		changes = BuildChanges(changers...)
 	}
@@ -211,7 +211,7 @@ func (r repository) InsertAll(records interface{}, changes ...Changes) error {
 	if len(changes) == 0 {
 		changes = make([]Changes, col.Len())
 		for i := range changes {
-			changes[i] = BuildChanges(newStructset(col.Get(i)))
+			changes[i] = BuildChanges(newStructset(col.Get(i), false))
 		}
 	}
 
@@ -274,7 +274,7 @@ func (r repository) Update(record interface{}, changers ...Changer) error {
 	)
 
 	if len(changers) == 0 {
-		changes = BuildChanges(newStructset(doc))
+		changes = BuildChanges(newStructset(doc, false))
 	} else {
 		changes = BuildChanges(changers...)
 	}

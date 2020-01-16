@@ -370,7 +370,7 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
 	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
-	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Once()
+	adapter.On("InsertAll", From("transactions"), []string{"item", "status", "user_id"}, mock.Anything).Return([]interface{}{}, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(&user))
@@ -438,18 +438,20 @@ func TestRepository_InsertAll_collection(t *testing.T) {
 	var (
 		users = []User{
 			{Name: "name1"},
-			{Name: "name2"},
+			{Name: "name2", Age: 12},
 		}
 		adapter = &testAdapter{}
 		repo    = repository{adapter: adapter}
 		changes = []Changes{
 			BuildChanges(
 				Set("name", "name1"),
+				Set("age", 0),
 				Set("created_at", now()),
 				Set("updated_at", now()),
 			),
 			BuildChanges(
 				Set("name", "name2"),
+				Set("age", 12),
 				Set("created_at", now()),
 				Set("updated_at", now()),
 			),
@@ -457,7 +459,7 @@ func TestRepository_InsertAll_collection(t *testing.T) {
 		cur = createCursor(2)
 	)
 
-	adapter.On("InsertAll", From("users"), []string{"name", "created_at", "updated_at"}, changes).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), []string{"name", "age", "created_at", "updated_at"}, changes).Return([]interface{}{1, 2}, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(&users))

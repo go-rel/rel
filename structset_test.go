@@ -18,7 +18,15 @@ func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
 	}
 
 	for assoc := range ch1.assoc {
-		assert.Equal(t, ch1.assocChanges[ch1.assoc[assoc]], ch2.assocChanges[ch2.assoc[assoc]])
+		var (
+			ac1 = ch1.assocChanges[ch1.assoc[assoc]].Changes
+			ac2 = ch2.assocChanges[ch2.assoc[assoc]].Changes
+		)
+		assert.Equal(t, len(ac1), len(ac2))
+
+		for i := range ac1 {
+			assertChanges(t, ac1[i], ac2[i])
+		}
 	}
 }
 
@@ -41,7 +49,7 @@ func BenchmarkStructset(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		BuildChanges(NewStructset(user))
+		BuildChanges(NewStructset(user, false))
 	}
 }
 
@@ -50,17 +58,32 @@ func TestStructset(t *testing.T) {
 		user = &User{
 			ID:   1,
 			Name: "Luffy",
-			Age:  20,
 		}
 		changes = BuildChanges(
 			Set("name", "Luffy"),
-			Set("age", 20),
+			Set("age", 0),
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		)
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user)))
+	assertChanges(t, changes, BuildChanges(NewStructset(user, false)))
+}
+
+func TestStructset_skipZero(t *testing.T) {
+	var (
+		user = &User{
+			ID:   1,
+			Name: "Luffy",
+		}
+		changes = BuildChanges(
+			Set("name", "Luffy"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
+		)
+	)
+
+	assertChanges(t, changes, BuildChanges(NewStructset(user, true)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -86,19 +109,24 @@ func TestStructset_withAssoc(t *testing.T) {
 		)
 		transaction1Changes = BuildChanges(
 			Set("item", "Sword"),
+			Set("status", Status("")),
+			Set("user_id", 0),
 		)
 		transaction2Changes = BuildChanges(
 			Set("item", "Shield"),
+			Set("status", Status("")),
+			Set("user_id", 0),
 		)
 		addressChanges = BuildChanges(
 			Set("street", "Grove Street"),
+			Set("user_id", nil),
 		)
 	)
 
 	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
 	userChanges.SetAssoc("address", addressChanges)
 
-	assertChanges(t, userChanges, BuildChanges(NewStructset(user)))
+	assertChanges(t, userChanges, BuildChanges(NewStructset(user, false)))
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -119,5 +147,5 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 		)
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user)))
+	assertChanges(t, changes, BuildChanges(NewStructset(user, false)))
 }

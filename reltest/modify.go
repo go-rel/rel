@@ -48,7 +48,7 @@ func ExpectModify(r *Repository, methodName string, changers []rel.Changer, inse
 		)
 
 		if len(changers) == 0 {
-			changes = rel.BuildChanges(rel.NewStructset(args[0]))
+			changes = rel.BuildChanges(rel.NewStructset(args[0], false))
 		} else {
 			changes = rel.BuildChanges(changers...)
 		}

@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"errors"
 	"reflect"
 	"runtime"
 	"strings"
@@ -266,7 +267,7 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 // It'll panic if any error occurred.
 // not supported:
 // - update has many (will be replaced by default)
-// - replace has one or has many - may cause duplicate record, update instead
+// - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
 func (r repository) Update(record interface{}, modifiers ...Modifier) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: make sure primary id not changed
@@ -310,8 +311,10 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 			return err
 		}
 
-		if err := r.find(doc, queriers); err != nil {
-			return err
+		if modification.reload {
+			if err := r.find(doc, queriers); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -343,18 +346,20 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 		var (
 			assocModification = ac[0]
 			assoc             = doc.Association(field)
-			fValue            = assoc.ForeignValue()
 			assocDoc, loaded  = assoc.Document()
 		)
 
 		if loaded {
 			var (
-				pField = assocDoc.PrimaryField()
-				pValue = assocDoc.PrimaryValue()
+				fValue = assoc.ForeignValue()
 			)
 
-			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
-				panic("cannot update assoc: inconsistent primary value")
+			if assoc.ReferenceValue() != fValue {
+				return ConstraintError{
+					Key:  assoc.ReferenceField(),
+					Type: ForeignKeyConstraint,
+					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+				}
 			}
 
 			var (
@@ -401,8 +406,12 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 		)
 
 		if loaded {
-			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
-				panic("cannot update assoc: inconsistent primary key")
+			if rValue != assoc.ForeignValue() {
+				return ConstraintError{
+					Key:  fField,
+					Type: ForeignKeyConstraint,
+					Err:  errors.New("rel: inconsistent has one ref and fk"),
+				}
 			}
 
 			var (
@@ -414,12 +423,13 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 			}
 		} else {
 			assocModification.SetValue(fField, rValue)
-			assocDoc.SetValue(fField, rValue)
 
 			if err := r.insert(assocDoc, assocModification); err != nil {
 				return err
 			}
 		}
+
+		assocDoc.SetValue(fField, rValue)
 	}
 
 	return nil
@@ -460,7 +470,6 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 		}
 
 		// update and filter for bulk insertion in place
-		// TODO: load updated result once
 		n := 0
 		for _, mod := range ac {
 			if pChange, changed := mod.Get(pField); changed {

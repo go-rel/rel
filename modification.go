@@ -201,12 +201,15 @@ func DecBy(field string, n int) Modify {
 	}
 }
 
-// ChangeFragment create a modify operation using randoc fragment operation.
+// SetFragment create a modify operation using randoc fragment operation.
 // Only available for Update.
-func ChangeFragment(raw string, args ...interface{}) Modify {
+func SetFragment(raw string, args ...interface{}) Modify {
 	return Modify{
 		Type:  ChangeFragmentOp,
 		Field: raw,
 		Value: args,
 	}
 }
+
+// Setf is an alias for SetFragment
+var Setf = SetFragment

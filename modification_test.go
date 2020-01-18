@@ -24,7 +24,7 @@ func TestApplyModification(t *testing.T) {
 			Set("field3", "string pointer"),
 			IncBy("field4", 2),
 			DecBy("field5", 2),
-			ChangeFragment("field6=?", true),
+			SetFragment("field6=?", true),
 		}
 		modification = Modification{
 			fields: map[string]int{
@@ -41,7 +41,7 @@ func TestApplyModification(t *testing.T) {
 				Set("field3", "string pointer"),
 				IncBy("field4", 2),
 				DecBy("field5", 2),
-				ChangeFragment("field6=?", true),
+				SetFragment("field6=?", true),
 			},
 			assoc:  map[string]int{},
 			reload: true,

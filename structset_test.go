@@ -62,7 +62,7 @@ func TestStructset(t *testing.T) {
 			Age:  20,
 		}
 		doc          = NewDocument(user)
-		modification = Apply(NewDocument(user),
+		modification = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", now()),

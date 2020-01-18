@@ -17,6 +17,7 @@ func Apply(doc *Document, modifiers ...Modifier) Modification {
 		assoc:  make(map[string]int),
 	}
 
+	// FIXME: supports db default
 	for i := range modifiers {
 		modifiers[i].Apply(doc, &modification)
 	}
@@ -63,8 +64,8 @@ func (m Modification) Get(field string) (Modify, bool) {
 	return Modify{}, false
 }
 
-// Add a modify op directly, will existing value replace if it's already exists.
-func (m *Modification) Add(mod Modify) {
+// Set a modify op directly, will existing value replace if it's already exists.
+func (m *Modification) Set(mod Modify) {
 	if index, exist := m.fields[mod.Field]; exist {
 		m.modification[index] = mod
 	} else {
@@ -84,7 +85,7 @@ func (m Modification) GetValue(field string) (interface{}, bool) {
 
 // SetValue using field name and changed value.
 func (m *Modification) SetValue(field string, value interface{}) {
-	m.Add(Set(field, value))
+	m.Set(Set(field, value))
 }
 
 // GetAssoc by field name.
@@ -160,7 +161,7 @@ func (m Modify) Apply(doc *Document, modification *Modification) {
 		panic(fmt.Sprint("rel: cannot assign ", m.Value, " as ", m.Field, " into ", doc.Table()))
 	}
 
-	modification.Add(m)
+	modification.Set(m)
 }
 
 // Set create a modify using set operation.

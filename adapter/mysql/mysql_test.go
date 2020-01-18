@@ -25,7 +25,7 @@ func init() {
 	_, _, err = adapter.Exec(`CREATE TABLE users (
 		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		gender VARCHAR(10) NOT NULL DEFAULT '',
 		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
 		created_at DATETIME,

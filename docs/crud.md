@@ -46,7 +46,7 @@ repo.AssertExpectations(t)
 
 <!-- tabs:end -->
 
-To insert a new record using a map, simply pass a `rel.Map` as the second argument, modification defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` asnd `updated_at` field.
+To insert a new record using a map, simply pass a `rel.Map` as the second argument, modification defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` or `updated_at` field.
 
 <!-- tabs:start -->
 

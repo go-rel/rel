@@ -177,6 +177,11 @@ func (d Document) SetValue(field string, value interface{}) bool {
 			return true
 		}
 
+		if rt.ConvertibleTo(ft) {
+			fv.Set(rv.Convert(ft))
+			return true
+		}
+
 		if ft.Kind() == reflect.Ptr {
 			if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
 				return false

@@ -173,14 +173,19 @@ func (r repository) insert(doc *Document, modification Modification) error {
 		return err
 	}
 
-	id, err := r.Adapter().Insert(queriers, modification, r.logger...)
+	pValue, err := r.Adapter().Insert(queriers, modification, r.logger...)
 	if err != nil {
 		return err
 	}
 
-	// fetch record
-	if err := r.find(doc, queriers.Where(Eq(pField, id))); err != nil {
-		return err
+	if modification.reload {
+		// fetch record
+		if err := r.find(doc, queriers.Where(Eq(pField, pValue))); err != nil {
+			return err
+		}
+	} else {
+		// update primary value
+		doc.SetValue(pField, pValue)
 	}
 
 	if err := r.saveHasOne(doc, &modification); err != nil {
@@ -213,7 +218,8 @@ func (r repository) InsertAll(records interface{}, modification ...Modification)
 		modification = make([]Modification, col.Len())
 
 		for i := range modification {
-			modification[i] = Apply(nil, newStructset(col.Get(i)))
+			doc := col.Get(i)
+			modification[i] = Apply(doc, newStructset(doc))
 		}
 	}
 
@@ -338,13 +344,13 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 			assocModification = ac[0]
 			assoc             = doc.Association(field)
 			fValue            = assoc.ForeignValue()
-			doc, loaded       = assoc.Document()
+			assocDoc, loaded  = assoc.Document()
 		)
 
 		if loaded {
 			var (
-				pField = doc.PrimaryField()
-				pValue = doc.PrimaryValue()
+				pField = assocDoc.PrimaryField()
+				pValue = assocDoc.PrimaryValue()
 			)
 
 			if pch, exist := assocModification.Get(pField); exist && pch.Value != pValue {
@@ -355,15 +361,21 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if err := r.update(doc, assocModification, filter); err != nil {
+			if err := r.update(assocDoc, assocModification, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(doc, assocModification); err != nil {
+			if err := r.insert(assocDoc, assocModification); err != nil {
 				return err
 			}
 
-			modification.SetValue(assoc.ReferenceField(), assoc.ForeignValue())
+			var (
+				rField = assoc.ReferenceField()
+				fValue = assoc.ForeignValue()
+			)
+
+			modification.SetValue(rField, fValue)
+			doc.SetValue(rField, fValue)
 		}
 	}
 
@@ -383,9 +395,9 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 			assoc             = doc.Association(field)
 			fField            = assoc.ForeignField()
 			rValue            = assoc.ReferenceValue()
-			doc, loaded       = assoc.Document()
-			pField            = doc.PrimaryField()
-			pValue            = doc.PrimaryValue()
+			assocDoc, loaded  = assoc.Document()
+			pField            = assocDoc.PrimaryField()
+			pValue            = assocDoc.PrimaryValue()
 		)
 
 		if loaded {
@@ -397,13 +409,14 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(doc, assocModification, filter); err != nil {
+			if err := r.update(assocDoc, assocModification, filter); err != nil {
 				return err
 			}
 		} else {
 			assocModification.SetValue(fField, rValue)
+			assocDoc.SetValue(fField, rValue)
 
-			if err := r.insert(doc, assocModification); err != nil {
+			if err := r.insert(assocDoc, assocModification); err != nil {
 				return err
 			}
 		}

@@ -20,7 +20,7 @@ type Structset struct {
 func (s Structset) Apply(doc *Document, mod *Modification) {
 	var (
 		pField = s.doc.PrimaryField()
-		t      = now()
+		t      = now().Truncate(time.Second)
 	)
 
 	for _, field := range s.doc.Fields() {
@@ -30,19 +30,19 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 		case "created_at", "inserted_at":
 			if typ, ok := doc.Type(field); ok && typ == rtTime {
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
-					s.set(doc, mod, field, t)
+					s.set(doc, mod, field, t, true)
 				}
 				continue
 			}
 		case "updated_at":
 			if typ, ok := doc.Type(field); ok && typ == rtTime {
-				s.set(doc, mod, field, t)
+				s.set(doc, mod, field, t, true)
 				continue
 			}
 		}
 
 		if value, ok := s.doc.Value(field); ok && !isZero(value) {
-			s.set(doc, mod, field, value)
+			s.set(doc, mod, field, value, false)
 		}
 	}
 
@@ -59,8 +59,8 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 	}
 }
 
-func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}) {
-	if doc.v != s.doc.v && !doc.SetValue(field, value) {
+func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}, force bool) {
+	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
 		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
 	}
 

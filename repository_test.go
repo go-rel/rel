@@ -10,8 +10,9 @@ import (
 )
 
 func init() {
+	t := time.Now().Truncate(time.Second)
 	now = func() time.Time {
-		return time.Time{}
+		return t
 	}
 }
 
@@ -269,41 +270,19 @@ func TestRepository_Insert(t *testing.T) {
 			Set("updated_at", now()),
 		}
 		modification = Apply(NewDocument(&user), cbuilders...)
-		cur          = createCursor(1)
 	)
 
 	adapter.On("Insert", From("users"), modification).Return(1, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Insert(&user, cbuilders...))
-	assert.False(t, cur.Next())
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+	}, user)
 
 	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
-}
-
-func TestRepository_Insert_oneError(t *testing.T) {
-	var (
-		user      User
-		adapter   = &testAdapter{}
-		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
-			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		}
-		modification = Apply(NewDocument(&user), cbuilders...)
-		cur          = &testCursor{}
-		err          = errors.New("error")
-	)
-
-	adapter.On("Insert", From("users"), modification).Return(1, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, err).Once()
-
-	assert.Equal(t, err, repo.Insert(&user, cbuilders...))
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_Insert_saveBelongsToError(t *testing.T) {
@@ -328,7 +307,8 @@ func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 
 func TestRepository_Insert_saveHasOneError(t *testing.T) {
 	var (
-		user = User{
+		userID = 1
+		user   = User{
 			Name: "name",
 			Address: Address{
 				Street: "street",
@@ -336,21 +316,27 @@ func TestRepository_Insert_saveHasOneError(t *testing.T) {
 		}
 		adapter = &testAdapter{}
 		repo    = repository{adapter: adapter}
-		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
 	adapter.On("Insert", From("addresses"), mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(&user))
-	assert.False(t, cur.Next())
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Address: Address{
+			Street: "street",
+			UserID: &userID,
+		},
+	}, user)
 
 	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_Insert_saveHasManyError(t *testing.T) {
@@ -363,21 +349,23 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 		}
 		adapter = &testAdapter{}
 		repo    = repository{adapter: adapter}
-		cur     = createCursor(1)
 		err     = errors.New("error")
 	)
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(&user))
-	assert.False(t, cur.Next())
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+	}, user)
 
 	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_Insert_error(t *testing.T) {
@@ -732,38 +720,41 @@ func TestRepository_saveBelongsTo_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 	var (
+		transaction  Transaction
 		adapter      = &testAdapter{}
 		repo         = repository{adapter: adapter}
-		transaction  = &Transaction{}
-		doc          = NewDocument(transaction)
+		doc          = NewDocument(&transaction)
 		modification = Apply(doc,
 			Map{
 				"buyer": Map{
-					"name":       "buyer1",
-					"age":        20,
-					"created_at": now(),
-					"updated_at": now(),
+					"name": "buyer1",
+					"age":  20,
 				},
 			},
 		)
 		q        = Build("users")
 		buyer, _ = modification.GetAssoc("buyer")
-		cur      = createCursor(1)
 	)
 
 	adapter.On("Insert", q, buyer[0]).Return(1, nil).Once()
-	adapter.On("Query", q.Where(Eq("id", 1)).Limit(1)).Return(cur, nil).Once()
 
 	err := repo.saveBelongsTo(doc, &modification)
 	assert.Nil(t, err)
-	assert.False(t, cur.Next())
 
 	ref, ok := modification.Get("user_id")
 	assert.True(t, ok)
-	assert.Equal(t, Set("user_id", 10), ref)
+	assert.Equal(t, Set("user_id", 1), ref)
+
+	assert.Equal(t, Transaction{
+		Buyer: User{
+			ID:   1,
+			Name: "buyer1",
+			Age:  20,
+		},
+		BuyerID: 1,
+	}, transaction)
 
 	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
@@ -890,10 +881,10 @@ func TestRepository_saveHasOne_updateInconsistentPrimaryKey(t *testing.T) {
 
 func TestRepository_saveHasOne_insertNew(t *testing.T) {
 	var (
+		user         User
 		adapter      = &testAdapter{}
 		repo         = repository{adapter: adapter}
-		user         = &User{}
-		doc          = NewDocument(user)
+		doc          = NewDocument(&user)
 		addrDoc, _   = doc.Association("address").Document()
 		modification = Apply(doc,
 			Map{
@@ -902,24 +893,29 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 				},
 			},
 		)
-		q       = Build("addresses")
-		address = Apply(addrDoc, Set("street", "street1"))
-		cur     = createCursor(1)
+		q          = Build("addresses")
+		addressMod = Apply(addrDoc, Set("street", "street1"))
 	)
 
 	// foreign value set after associations inferred
 	user.ID = 1
-	address.SetValue("user_id", user.ID)
+	addressMod.SetValue("user_id", user.ID)
 
-	adapter.On("Insert", q, address).Return(2, nil).Once()
-	adapter.On("Query", q.Where(Eq("id", 2)).Limit(1)).Return(cur, nil).Once()
+	adapter.On("Insert", q, addressMod).Return(2, nil).Once()
 
 	err := repo.saveHasOne(doc, &modification)
 	assert.Nil(t, err)
-	assert.False(t, cur.Next())
+
+	assert.Equal(t, User{
+		ID: 1,
+		Address: Address{
+			ID:     2,
+			Street: "street1",
+			UserID: &user.ID,
+		},
+	}, user)
 
 	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_saveHasOne_insertNewError(t *testing.T) {

@@ -158,7 +158,8 @@ func Inserts(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		var (
-			modification = rel.BuildModification(rel.NewStructset(record))
+			doc          = rel.NewDocument(record)
+			modification = rel.Apply(doc, rel.NewStructset(doc))
 			statement, _ = builder.Insert("collection", modification)
 		)
 

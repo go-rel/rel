@@ -178,6 +178,16 @@ func (d Document) SetValue(field string, value interface{}) bool {
 		}
 
 		if rt.ConvertibleTo(ft) {
+			var (
+				rk = rt.Kind()
+				fk = ft.Kind()
+			)
+
+			// prevents unintentional convertion
+			if (rk >= reflect.Int || rk <= reflect.Uint64) && fk == reflect.String {
+				return false
+			}
+
 			fv.Set(rv.Convert(ft))
 			return true
 		}

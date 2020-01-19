@@ -59,7 +59,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Local"
 }
 
 func TestAdapter_specs(t *testing.T) {

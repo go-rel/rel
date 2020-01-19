@@ -96,8 +96,7 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	user.Name = "update insert has many"
 	user.Addresses[0].Name = "new address"
 
-	err := repo.Update(&user)
-	assert.Nil(t, err)
+	assert.Nil(t, repo.Update(&user))
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 

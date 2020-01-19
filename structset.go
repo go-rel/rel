@@ -31,8 +31,8 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 			if typ, ok := doc.Type(field); ok && typ == rtTime {
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
 					s.set(doc, mod, field, t, true)
+					continue
 				}
-				continue
 			}
 		case "updated_at":
 			if typ, ok := doc.Type(field); ok && typ == rtTime {
@@ -89,6 +89,7 @@ func (s Structset) buildAssocMany(field string, mod *Modification) {
 	if !assoc.IsZero() {
 		var (
 			col, _ = assoc.Collection()
+			pField = col.PrimaryField()
 			mods   = make([]Modification, col.Len())
 		)
 
@@ -98,6 +99,7 @@ func (s Structset) buildAssocMany(field string, mod *Modification) {
 			)
 
 			mods[i] = Apply(doc, newStructset(doc))
+			doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
 		}
 
 		mod.SetAssoc(field, mods...)

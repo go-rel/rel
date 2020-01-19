@@ -75,7 +75,8 @@ func TestStructset(t *testing.T) {
 
 func TestStructset_withAssoc(t *testing.T) {
 	var (
-		user = &User{
+		createdAt = time.Now().Add(-time.Hour) // should retains
+		user      = &User{
 			ID:   1,
 			Name: "Luffy",
 			Age:  20,
@@ -87,12 +88,13 @@ func TestStructset_withAssoc(t *testing.T) {
 				ID:     1,
 				Street: "Grove Street",
 			},
-			CreatedAt: time.Now(),
+			CreatedAt: createdAt,
 		}
 		doc     = NewDocument(user)
 		userMod = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
+			Set("created_at", createdAt),
 			Set("updated_at", now()),
 		)
 		trx1Mod = Apply(NewDocument(&Transaction{}),

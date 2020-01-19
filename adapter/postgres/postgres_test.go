@@ -27,7 +27,7 @@ func init() {
 		id SERIAL NOT NULL PRIMARY KEY,
 		slug VARCHAR(30) DEFAULT NULL,
 		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		gender VARCHAR(10) NOT NULL DEFAULT '',
 		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
 		created_at TIMESTAMP,

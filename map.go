@@ -37,11 +37,12 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 			modification.SetAssoc(field, assocModification)
 		case []Map:
 			var (
-				assoc = doc.Association(field)
-				mods  = applyMaps(v, assoc)
+				assoc            = doc.Association(field)
+				mods, deletedIDs = applyMaps(v, assoc)
 			)
 
 			modification.SetAssoc(field, mods...)
+			modification.SetDeletedIDs(field, deletedIDs)
 		default:
 			if field == pField {
 				if v != pValue {
@@ -60,13 +61,14 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 	}
 }
 
-func applyMaps(maps []Map, assoc Association) []Modification {
+func applyMaps(maps []Map, assoc Association) ([]Modification, []interface{}) {
 	var (
-		mods    = make([]Modification, len(maps))
-		col, _  = assoc.Collection()
-		pField  = col.PrimaryField()
-		pIndex  = make(map[interface{}]int)
-		pValues = col.PrimaryValue().([]interface{})
+		deletedIDs []interface{}
+		mods       = make([]Modification, len(maps))
+		col, _     = assoc.Collection()
+		pField     = col.PrimaryField()
+		pIndex     = make(map[interface{}]int)
+		pValues    = col.PrimaryValue().([]interface{})
 	)
 
 	for i, v := range pValues {
@@ -101,8 +103,10 @@ func applyMaps(maps []Map, assoc Association) []Modification {
 
 	// delete stales
 	if curr < col.Len() {
-		// TODO: add to stale ids
+		deletedIDs = pValues[curr:]
 		col.Truncate(0, curr)
+	} else {
+		deletedIDs = []interface{}{}
 	}
 
 	// inserts remaining
@@ -110,5 +114,6 @@ func applyMaps(maps []Map, assoc Association) []Modification {
 		mods[curr+i] = Apply(col.Add(), m)
 	}
 
-	return mods
+	return mods, deletedIDs
+
 }

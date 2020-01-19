@@ -337,15 +337,15 @@ func (r repository) MustUpdate(record interface{}, modifiers ...Modifier) {
 // TODO: support deletion
 func (r repository) saveBelongsTo(doc *Document, modification *Modification) error {
 	for _, field := range doc.BelongsTo() {
-		ac, changed := modification.GetAssoc(field)
-		if !changed || len(ac) == 0 {
+		assocMods, changed := modification.GetAssoc(field)
+		if !changed || len(assocMods.modifications) == 0 {
 			continue
 		}
 
 		var (
-			assocModification = ac[0]
-			assoc             = doc.Association(field)
-			assocDoc, loaded  = assoc.Document()
+			assocMod         = assocMods.modifications[0]
+			assoc            = doc.Association(field)
+			assocDoc, loaded = assoc.Document()
 		)
 
 		if loaded {
@@ -365,11 +365,11 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if err := r.update(assocDoc, assocModification, filter); err != nil {
+			if err := r.update(assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(assocDoc, assocModification); err != nil {
+			if err := r.insert(assocDoc, assocMod); err != nil {
 				return err
 			}
 
@@ -389,19 +389,19 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 // TODO: suppprt deletion
 func (r repository) saveHasOne(doc *Document, modification *Modification) error {
 	for _, field := range doc.HasOne() {
-		ac, changed := modification.GetAssoc(field)
-		if !changed || len(ac) == 0 {
+		assocMods, changed := modification.GetAssoc(field)
+		if !changed || len(assocMods.modifications) == 0 {
 			continue
 		}
 
 		var (
-			assocModification = ac[0]
-			assoc             = doc.Association(field)
-			fField            = assoc.ForeignField()
-			rValue            = assoc.ReferenceValue()
-			assocDoc, loaded  = assoc.Document()
-			pField            = assocDoc.PrimaryField()
-			pValue            = assocDoc.PrimaryValue()
+			assocMod         = assocMods.modifications[0]
+			assoc            = doc.Association(field)
+			fField           = assoc.ForeignField()
+			rValue           = assoc.ReferenceValue()
+			assocDoc, loaded = assoc.Document()
+			pField           = assocDoc.PrimaryField()
+			pValue           = assocDoc.PrimaryValue()
 		)
 
 		if loaded {
@@ -417,13 +417,13 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(assocDoc, assocModification, filter); err != nil {
+			if err := r.update(assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
-			assocModification.SetValue(fField, rValue)
+			assocMod.SetValue(fField, rValue)
 
-			if err := r.insert(assocDoc, assocModification); err != nil {
+			if err := r.insert(assocDoc, assocMod); err != nil {
 				return err
 			}
 		}
@@ -437,40 +437,47 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 // saveHasMany expects has many modification to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(doc *Document, modification *Modification, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		ac, changed := modification.GetAssoc(field)
+		assocMods, changed := modification.GetAssoc(field)
 		if !changed {
 			continue
 		}
 
 		var (
-			assoc  = doc.Association(field)
-			col, _ = assoc.Collection()
-			// table  = col.Table()
-			pField = col.PrimaryField()
-			fField = assoc.ForeignField()
-			rValue = assoc.ReferenceValue()
+			assoc      = doc.Association(field)
+			col, _     = assoc.Collection()
+			table      = col.Table()
+			pField     = col.PrimaryField()
+			fField     = assoc.ForeignField()
+			rValue     = assoc.ReferenceValue()
+			mods       = assocMods.modifications
+			deletedIDs = assocMods.deletedIDs
 		)
 
 		// this shouldn't happen unless there's bug in the modifier.
-		if len(ac) != col.Len() {
+		if len(mods) != col.Len() {
 			panic("rel: invalid modifier")
 		}
 
 		if !insertion {
-			// var (
-			// 	filter = Eq(fField, rValue)
-			// )
+			var (
+				filter = Eq(fField, rValue)
+			)
 
-			// FIXME: if deleted ids is specified, then only delete those.
-			// if it's nill, then clear old association (used by structset).
-			// if err := r.deleteAll(Build(table, filter)); err != nil {
-			// 	return err
-			// }
+			if deletedIDs == nil {
+				// if it's nil, then clear old association (used by structset).
+				if err := r.deleteAll(Build(table, filter)); err != nil {
+					return err
+				}
+			} else if len(deletedIDs) > 0 {
+				if err := r.deleteAll(Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+					return err
+				}
+			}
 		}
 
-		// update and filter for bulk insertion in place
+		// update and filter for bulk insertion.
 		updateCount := 0
-		for i := range ac {
+		for i := range mods {
 			var (
 				assocDoc = col.Get(i)
 				pValue   = assocDoc.PrimaryValue()
@@ -492,29 +499,29 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 
 				if updateCount < i {
 					col.Swap(updateCount, i)
-					ac[i], ac[updateCount] = ac[updateCount], ac[i]
+					mods[i], mods[updateCount] = mods[updateCount], mods[i]
 				}
 
-				if err := r.update(assocDoc, ac[i], filter); err != nil {
+				if err := r.update(assocDoc, mods[i], filter); err != nil {
 					return err
 				}
 
 				updateCount++
 			} else {
-				ac[i].SetValue(fField, rValue)
+				mods[i].SetValue(fField, rValue)
 				assocDoc.SetValue(fField, rValue)
 			}
 		}
 
-		if len(ac)-updateCount > 0 {
+		if len(mods)-updateCount > 0 {
 			var (
-				insertMods = ac
+				insertMods = mods
 				insertCol  = col
 			)
 
 			if updateCount > 0 {
-				insertMods = ac[updateCount:]
-				insertCol = col.Slice(updateCount, len(ac))
+				insertMods = mods[updateCount:]
+				insertCol = col.Slice(updateCount, len(mods))
 			}
 
 			if err := r.insertAll(insertCol, insertMods); err != nil {

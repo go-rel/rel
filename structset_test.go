@@ -19,13 +19,13 @@ func assertModification(t *testing.T, mod1 Modification, mod2 Modification) {
 
 	for assoc := range mod1.assoc {
 		var (
-			ac1 = mod1.assocModification[mod1.assoc[assoc]]
-			ac2 = mod2.assocModification[mod2.assoc[assoc]]
+			am1 = mod1.assocModification[mod1.assoc[assoc]].modifications
+			am2 = mod2.assocModification[mod2.assoc[assoc]].modifications
 		)
-		assert.Equal(t, len(ac1), len(ac2))
+		assert.Equal(t, len(am1), len(am2))
 
-		for i := range ac1 {
-			assertModification(t, ac1[i], ac2[i])
+		for i := range am1 {
+			assertModification(t, am1[i], am2[i])
 		}
 	}
 }

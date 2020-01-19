@@ -25,13 +25,18 @@ func Apply(doc *Document, modifiers ...Modifier) Modification {
 	return modification
 }
 
+type AssocModification struct {
+	modifications []Modification
+	deletedIDs    []interface{}
+}
+
 // Modification represents value to be inserted or updated to database.
 // It's not safe to be used multiple time. some operation my alter modification data.
 type Modification struct {
-	fields            map[string]int // TODO: not copy friendly
+	fields            map[string]int
 	modification      []Modify
 	assoc             map[string]int
-	assocModification [][]Modification
+	assocModification []AssocModification
 	reload            bool
 }
 
@@ -89,26 +94,39 @@ func (m *Modification) SetValue(field string, value interface{}) {
 }
 
 // GetAssoc by field name.
-func (m Modification) GetAssoc(field string) ([]Modification, bool) {
+func (m Modification) GetAssoc(field string) (AssocModification, bool) {
 	if index, ok := m.assoc[field]; ok {
 		return m.assocModification[index], true
 	}
 
-	return nil, false
+	return AssocModification{}, false
 }
 
 // SetAssoc by field name.
 func (m *Modification) SetAssoc(field string, mods ...Modification) {
 	if index, exist := m.assoc[field]; exist {
-		m.assocModification[index] = mods
+		m.assocModification[index].modifications = mods
 	} else {
-		m.appendAssoc(field, mods)
+		m.appendAssoc(field, AssocModification{
+			modifications: mods,
+		})
 	}
 }
 
-func (m *Modification) appendAssoc(field string, ac []Modification) {
+// SetDeletedIDs by field name.
+func (m *Modification) SetDeletedIDs(field string, pValues []interface{}) {
+	if index, exist := m.assoc[field]; exist {
+		m.assocModification[index].deletedIDs = pValues
+	} else {
+		m.appendAssoc(field, AssocModification{
+			deletedIDs: pValues,
+		})
+	}
+}
+
+func (m *Modification) appendAssoc(field string, assoc AssocModification) {
 	m.assoc[field] = len(m.assocModification)
-	m.assocModification = append(m.assocModification, ac)
+	m.assocModification = append(m.assocModification, assoc)
 }
 
 // ChangeOp represents type of modify operation.

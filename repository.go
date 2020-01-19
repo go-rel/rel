@@ -434,6 +434,7 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 	return nil
 }
 
+// saveHasMany expects has many modification to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(doc *Document, modification *Modification, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		ac, changed := modification.GetAssoc(field)
@@ -442,54 +443,85 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 		}
 
 		var (
-			assoc       = doc.Association(field)
-			col, loaded = assoc.Collection()
-			table       = col.Table()
-			pField      = col.PrimaryField()
-			fField      = assoc.ForeignField()
-			rValue      = assoc.ReferenceValue()
+			assoc  = doc.Association(field)
+			col, _ = assoc.Collection()
+			// table  = col.Table()
+			pField = col.PrimaryField()
+			fField = assoc.ForeignField()
+			rValue = assoc.ReferenceValue()
 		)
 
-		col.Reset()
+		// this shouldn't happen unless there's bug in the modifier.
+		if len(ac) != col.Len() {
+			panic("rel: invalid modifier")
+		}
 
 		if !insertion {
-			if !loaded {
-				panic("rel: association must be loaded to update")
-			}
-
-			var (
-				filter = Eq(fField, rValue)
-			)
+			// var (
+			// 	filter = Eq(fField, rValue)
+			// )
 
 			// FIXME: if deleted ids is specified, then only delete those.
 			// if it's nill, then clear old association (used by structset).
-			if err := r.deleteAll(Build(table, filter)); err != nil {
+			// if err := r.deleteAll(Build(table, filter)); err != nil {
+			// 	return err
+			// }
+		}
+
+		// update and filter for bulk insertion in place
+		updateCount := 0
+		for i := range ac {
+			var (
+				assocDoc = col.Get(i)
+				pValue   = assocDoc.PrimaryValue()
+			)
+
+			if !isZero(pValue) {
+				var (
+					fValue, _ = assocDoc.Value(fField)
+					filter    = Eq(pField, pValue).AndEq(fField, rValue)
+				)
+
+				if rValue != fValue {
+					return ConstraintError{
+						Key:  fField,
+						Type: ForeignKeyConstraint,
+						Err:  errors.New("rel: inconsistent has many ref and fk"),
+					}
+				}
+
+				if updateCount < i {
+					col.Swap(updateCount, i)
+					ac[i], ac[updateCount] = ac[updateCount], ac[i]
+				}
+
+				if err := r.update(assocDoc, ac[i], filter); err != nil {
+					return err
+				}
+
+				updateCount++
+			} else {
+				ac[i].SetValue(fField, rValue)
+				assocDoc.SetValue(fField, rValue)
+			}
+		}
+
+		if len(ac)-updateCount > 0 {
+			var (
+				insertMods = ac
+				insertCol  = col
+			)
+
+			if updateCount > 0 {
+				insertMods = ac[updateCount:]
+				insertCol = col.Slice(updateCount, len(ac))
+			}
+
+			if err := r.insertAll(insertCol, insertMods); err != nil {
 				return err
 			}
 		}
 
-		// update and filter for bulk insertion in place
-		n := 0
-		for _, mod := range ac {
-			if pChange, changed := mod.Get(pField); changed {
-				var (
-					filter = Eq(pField, pChange.Value).AndEq(fField, rValue)
-				)
-
-				if err := r.update(col.Add(), mod, filter); err != nil {
-					return err
-				}
-			} else {
-				mod.SetValue(fField, rValue)
-				ac[n] = mod
-				n++
-			}
-		}
-		ac = ac[:n]
-
-		if err := r.insertAll(col, ac); err != nil {
-			return err
-		}
 	}
 
 	return nil

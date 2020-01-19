@@ -400,60 +400,40 @@ func TestRepository_Insert_nothing(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-// func TestRepository_InsertAll(t *testing.T) {
-// 	var (
-// 		users   []User
-// 		adapter = &testAdapter{}
-// 		repo    = repository{adapter: adapter}
-// 		modification = []Modification{
-// 			BuildModification(nil, Set("name", "name1")),
-// 			BuildModification(nil, Set("name", "name2")),
-// 		}
-// 		cur = createCursor(2)
-// 	)
+func TestRepository_InsertAll(t *testing.T) {
+	var (
+		users = []User{
+			{Name: "name1"},
+			{Name: "name2"},
+		}
+		adapter      = &testAdapter{}
+		repo         = repository{adapter: adapter}
+		modification = []Modification{
+			Apply(NewDocument(&User{}),
+				Set("name", "name1"),
+				Set("created_at", now()),
+				Set("updated_at", now()),
+			),
+			Apply(NewDocument(&User{}),
+				Set("name", "name2"),
+				Set("created_at", now()),
+				Set("updated_at", now()),
+			),
+		}
+	)
 
-// 	adapter.On("InsertAll", From("users"), []string{"name"}, modification).Return([]interface{}{1, 2}, nil).Once()
-// 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
+	adapter.On("InsertAll", From("users"), []string{"name", "created_at", "updated_at"}, modification).Return([]interface{}{1, 2}, nil).Once()
 
-// 	assert.Nil(t, repo.InsertAll(&users, modification...))
+	assert.Nil(t, repo.InsertAll(&users))
+	assert.Equal(t, []User{
+		{ID: 1, Name: "name1", CreatedAt: now(), UpdatedAt: now()},
+		{ID: 2, Name: "name2", CreatedAt: now(), UpdatedAt: now()},
+	}, users)
 
-// 	adapter.AssertExpectations(t)
-// 	cur.AssertExpectations(t)
-// }
+	adapter.AssertExpectations(t)
+}
 
-// func TestRepository_InsertAll_collection(t *testing.T) {
-// 	var (
-// 		users = []User{
-// 			{Name: "name1"},
-// 			{Name: "name2"},
-// 		}
-// 		adapter = &testAdapter{}
-// 		repo    = repository{adapter: adapter}
-// 		modification = []Modification{
-// 			BuildModification(nil,
-// 				Set("name", "name1"),
-// 				Set("created_at", now()),
-// 				Set("updated_at", now()),
-// 			),
-// 			BuildModification(nil,
-// 				Set("name", "name2"),
-// 				Set("created_at", now()),
-// 				Set("updated_at", now()),
-// 			),
-// 		}
-// 		cur = createCursor(2)
-// 	)
-
-// 	adapter.On("InsertAll", From("users"), []string{"name", "created_at", "updated_at"}, modification).Return([]interface{}{1, 2}, nil).Once()
-// 	adapter.On("Query", From("users").Where(In("id", 1, 2))).Return(cur, nil).Once()
-
-// 	assert.Nil(t, repo.InsertAll(&users))
-
-// 	adapter.AssertExpectations(t)
-// 	cur.AssertExpectations(t)
-// }
-
-func TestRepository_InsertAll_unchanged(t *testing.T) {
+func TestRepository_InsertAll_empty(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -864,7 +844,7 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 		modification = Apply(doc,
 			Map{
 				"address": Map{
-					"id":     1,
+					"id":     2,
 					"street": "street1",
 				},
 			},

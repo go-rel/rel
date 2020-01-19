@@ -8,7 +8,6 @@ import (
 )
 
 // Repository defines sets of available database operations.
-// TODO: InsertAll only accepts records not modification, this eliminates the needs of exposing modification and making the api more consistent.
 // TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
@@ -23,8 +22,8 @@ type Repository interface {
 	MustFindAll(records interface{}, queriers ...Querier)
 	Insert(record interface{}, modifiers ...Modifier) error
 	MustInsert(record interface{}, modifiers ...Modifier)
-	InsertAll(records interface{}, modification ...Modification) error
-	MustInsertAll(records interface{}, modification ...Modification)
+	InsertAll(records interface{}) error
+	MustInsertAll(records interface{})
 	Update(record interface{}, modifiers ...Modifier) error
 	MustUpdate(record interface{}, modifiers ...Modifier)
 	Delete(record interface{}) error
@@ -206,31 +205,26 @@ func (r repository) MustInsert(record interface{}, modifiers ...Modifier) {
 	must(r.Insert(record, modifiers...))
 }
 
-func (r repository) InsertAll(records interface{}, modification ...Modification) error {
+func (r repository) InsertAll(records interface{}) error {
 	if records == nil {
 		return nil
 	}
 
 	var (
-		col = NewCollection(records)
+		col  = NewCollection(records)
+		mods = make([]Modification, col.Len())
 	)
 
-	if len(modification) == 0 {
-		modification = make([]Modification, col.Len())
-
-		for i := range modification {
-			doc := col.Get(i)
-			modification[i] = Apply(doc, newStructset(doc))
-		}
+	for i := range mods {
+		doc := col.Get(i)
+		mods[i] = Apply(doc, newStructset(doc))
 	}
 
-	col.Reset()
-
-	return r.insertAll(col, modification)
+	return r.insertAll(col, mods)
 }
 
-func (r repository) MustInsertAll(records interface{}, modification ...Modification) {
-	must(r.InsertAll(records, modification...))
+func (r repository) MustInsertAll(records interface{}) {
+	must(r.InsertAll(records))
 }
 
 // TODO: support assocs
@@ -260,7 +254,12 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 		return err
 	}
 
-	return r.findAll(col, queriers.Where(In(pField, ids...)))
+	// apply ids
+	for i, id := range ids {
+		col.Get(i).SetValue(pField, id)
+	}
+
+	return nil
 }
 
 // Update an record in database.

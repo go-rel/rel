@@ -120,7 +120,7 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modification
 	}
 
 	var (
-		ids = []interface{}{id}
+		ids = make([]interface{}, len(modifications))
 		inc = 1
 	)
 
@@ -128,8 +128,13 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modification
 		inc = adapter.Config.IncrementFunc(*adapter)
 	}
 
-	for i := 1; i < len(modifications); i++ {
-		ids = append(ids, id+int64(inc*i))
+	if inc < 0 {
+		id = id + int64((len(modifications)-1)*inc)
+		inc *= -1
+	}
+
+	for i := range ids {
+		ids[i] = id + int64(i*inc)
 	}
 
 	return ids, nil

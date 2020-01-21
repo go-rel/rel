@@ -64,7 +64,7 @@ func (s Structset) set(doc *Document, mod *Modification, field string, value int
 		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
 	}
 
-	mod.SetValue(field, value)
+	mod.Add(Set(field, value))
 }
 
 func (s Structset) buildAssoc(field string, mod *Modification) {

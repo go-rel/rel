@@ -154,7 +154,7 @@ func (r repository) Insert(record interface{}, modifiers ...Modifier) error {
 		modification = Apply(doc, modifiers...)
 	}
 
-	if modification.AssocCount() > 0 {
+	if len(modification.Assoc) > 0 {
 		return r.Transaction(func(r Repository) error {
 			return r.(*repository).insert(doc, modification)
 		})
@@ -173,12 +173,12 @@ func (r repository) insert(doc *Document, modification Modification) error {
 		return err
 	}
 
-	pValue, err := r.Adapter().Insert(queriers, modification, r.logger...)
+	pValue, err := r.Adapter().Insert(queriers, modification.Modifies, r.logger...)
 	if err != nil {
 		return err
 	}
 
-	if modification.reload {
+	if modification.Reload {
 		// fetch record
 		if err := r.find(doc, queriers.Where(Eq(pField, pValue))); err != nil {
 			return err
@@ -236,24 +236,27 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 	var (
 		pField   = col.PrimaryField()
 		queriers = Build(col.Table())
-		fields   = make([]string, 0, modification[0].Count())
-		fieldMap = make(map[string]struct{}, modification[0].Count())
+		fields   = make([]string, 0, len(modification[0].Modifies))
+		fieldMap = make(map[string]struct{}, len(modification[0].Modifies))
+		modifies = make([]map[string]Modify, len(modification))
 	)
 
 	for i := range modification {
-		for _, mod := range modification[i].All() {
-			if _, exist := fieldMap[mod.Field]; !exist {
-				fieldMap[mod.Field] = struct{}{}
-				fields = append(fields, mod.Field)
+		for field := range modification[i].Modifies {
+			if _, exist := fieldMap[field]; !exist {
+				fieldMap[field] = struct{}{}
+				fields = append(fields, field)
 			}
 		}
+		modifies[i] = modification[i].Modifies
 	}
 
-	ids, err := r.adapter.InsertAll(queriers, fields, modification, r.logger...)
+	ids, err := r.adapter.InsertAll(queriers, fields, modifies, r.logger...)
 	if err != nil {
 		return err
 	}
 
+	// TODO: reload
 	// apply ids
 	for i, id := range ids {
 		col.Get(i).SetValue(pField, id)
@@ -287,7 +290,7 @@ func (r repository) Update(record interface{}, modifiers ...Modifier) error {
 		modification = Apply(doc, modifiers...)
 	}
 
-	if len(modification.assoc) > 0 {
+	if len(modification.Assoc) > 0 {
 		return r.Transaction(func(r Repository) error {
 			return r.(*repository).update(doc, modification, Eq(pField, pValue))
 		})
@@ -301,16 +304,16 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 		return err
 	}
 
-	if !modification.Empty() {
+	if len(modification.Modifies) != 0 {
 		var (
 			queriers = Build(doc.Table(), filter)
 		)
 
-		if err := r.adapter.Update(queriers, modification, r.logger...); err != nil {
+		if err := r.adapter.Update(queriers, modification.Modifies, r.logger...); err != nil {
 			return err
 		}
 
-		if modification.reload {
+		if modification.Reload {
 			if err := r.find(doc, queriers); err != nil {
 				return err
 			}
@@ -337,15 +340,15 @@ func (r repository) MustUpdate(record interface{}, modifiers ...Modifier) {
 // TODO: support deletion
 func (r repository) saveBelongsTo(doc *Document, modification *Modification) error {
 	for _, field := range doc.BelongsTo() {
-		assocMods, changed := modification.GetAssoc(field)
-		if !changed || len(assocMods.modifications) == 0 {
+		assocMods, changed := modification.Assoc[field]
+		if !changed || len(assocMods.Modifications) == 0 {
 			continue
 		}
 
 		var (
-			assocMod         = assocMods.modifications[0]
 			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
+			assocMod         = assocMods.Modifications[0]
 		)
 
 		if loaded {
@@ -378,7 +381,7 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 				fValue = assoc.ForeignValue()
 			)
 
-			modification.SetValue(rField, fValue)
+			modification.Add(Set(rField, fValue))
 			doc.SetValue(rField, fValue)
 		}
 	}
@@ -389,19 +392,19 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 // TODO: suppprt deletion
 func (r repository) saveHasOne(doc *Document, modification *Modification) error {
 	for _, field := range doc.HasOne() {
-		assocMods, changed := modification.GetAssoc(field)
-		if !changed || len(assocMods.modifications) == 0 {
+		assocMods, changed := modification.Assoc[field]
+		if !changed || len(assocMods.Modifications) == 0 {
 			continue
 		}
 
 		var (
-			assocMod         = assocMods.modifications[0]
 			assoc            = doc.Association(field)
 			fField           = assoc.ForeignField()
 			rValue           = assoc.ReferenceValue()
 			assocDoc, loaded = assoc.Document()
 			pField           = assocDoc.PrimaryField()
 			pValue           = assocDoc.PrimaryValue()
+			assocMod         = assocMods.Modifications[0]
 		)
 
 		if loaded {
@@ -421,7 +424,7 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 				return err
 			}
 		} else {
-			assocMod.SetValue(fField, rValue)
+			assocMod.Add(Set(fField, rValue))
 
 			if err := r.insert(assocDoc, assocMod); err != nil {
 				return err
@@ -437,7 +440,7 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 // saveHasMany expects has many modification to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(doc *Document, modification *Modification, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		assocMods, changed := modification.GetAssoc(field)
+		assocMods, changed := modification.Assoc[field]
 		if !changed {
 			continue
 		}
@@ -449,8 +452,8 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
-			mods       = assocMods.modifications
-			deletedIDs = assocMods.deletedIDs
+			mods       = assocMods.Modifications
+			deletedIDs = assocMods.DeletedIDs
 		)
 
 		// this shouldn't happen unless there's bug in the modifier.
@@ -508,7 +511,7 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 
 				updateCount++
 			} else {
-				mods[i].SetValue(fField, rValue)
+				mods[i].Add(Set(fField, rValue))
 				assocDoc.SetValue(fField, rValue)
 			}
 		}

@@ -27,24 +27,16 @@ func TestApplyModification(t *testing.T) {
 			SetFragment("field6=?", true),
 		}
 		modification = Modification{
-			fields: map[string]int{
-				"field1":   0,
-				"field2":   1,
-				"field3":   2,
-				"field4":   3,
-				"field5":   4,
-				"field6=?": 5,
+			Modifies: map[string]Modify{
+				"field1":   Set("field1", "string"),
+				"field2":   Set("field2", true),
+				"field3":   Set("field3", "string pointer"),
+				"field4":   IncBy("field4", 2),
+				"field5":   DecBy("field5", 2),
+				"field6=?": SetFragment("field6=?", true),
 			},
-			modification: []Modify{
-				Set("field1", "string"),
-				Set("field2", true),
-				Set("field3", "string pointer"),
-				IncBy("field4", 2),
-				DecBy("field5", 2),
-				SetFragment("field6=?", true),
-			},
-			assoc:  map[string]int{},
-			reload: true,
+			Assoc:  map[string]AssocModification{},
+			Reload: true,
 		}
 	)
 

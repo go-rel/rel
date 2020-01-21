@@ -7,29 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func assertModification(t *testing.T, mod1 Modification, mod2 Modification) {
-	assert.Equal(t, len(mod1.fields), len(mod2.fields))
-	assert.Equal(t, len(mod1.modification), len(mod2.modification))
-	assert.Equal(t, len(mod1.assoc), len(mod2.assoc))
-	assert.Equal(t, len(mod1.assocModification), len(mod2.assocModification))
-
-	for field := range mod1.fields {
-		assert.Equal(t, mod1.modification[mod1.fields[field]], mod2.modification[mod2.fields[field]])
-	}
-
-	for assoc := range mod1.assoc {
-		var (
-			am1 = mod1.assocModification[mod1.assoc[assoc]].modifications
-			am2 = mod2.assocModification[mod2.assoc[assoc]].modifications
-		)
-		assert.Equal(t, len(am1), len(am2))
-
-		for i := range am1 {
-			assertModification(t, am1[i], am2[i])
-		}
-	}
-}
-
 func BenchmarkStructset(b *testing.B) {
 	var (
 		user = &User{
@@ -70,7 +47,7 @@ func TestStructset(t *testing.T) {
 		)
 	)
 
-	assertModification(t, modification, Apply(doc, NewStructset(user)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(user)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -111,7 +88,7 @@ func TestStructset_withAssoc(t *testing.T) {
 	userMod.SetAssoc("transactions", trx1Mod, trx2Mod)
 	userMod.SetAssoc("address", addrMod)
 
-	assertModification(t, userMod, Apply(doc, NewStructset(user)))
+	assert.Equal(t, userMod, Apply(doc, NewStructset(user)))
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -133,7 +110,7 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 		)
 	)
 
-	assertModification(t, modification, Apply(doc, NewStructset(user)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(user)))
 }
 
 func TestStructset_differentStruct(t *testing.T) {
@@ -157,7 +134,7 @@ func TestStructset_differentStruct(t *testing.T) {
 		)
 	)
 
-	assertModification(t, modification, Apply(doc, NewStructset(user)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(user)))
 	assert.Equal(t, user.Name, usertmp.Name)
 	assert.Equal(t, user.Age, usertmp.Age)
 }

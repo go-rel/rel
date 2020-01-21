@@ -59,11 +59,11 @@ func ExpectModify(r *Repository, methodName string, modifiers []rel.Modifier, in
 	return em
 }
 
-// ExpectInsertAll to be called with given field and queries.
-func ExpectInsertAll(r *Repository, modification []rel.Modification) *Modify {
+// ExpectInsertAll to be called.
+func ExpectInsertAll(r *Repository) *Modify {
 	em := &Modify{
 		Expect: newExpect(r, "InsertAll",
-			[]interface{}{mock.Anything, modification},
+			[]interface{}{mock.Anything},
 			[]interface{}{nil},
 		),
 	}
@@ -73,21 +73,6 @@ func ExpectInsertAll(r *Repository, modification []rel.Modification) *Modify {
 			records = args[0]
 			col     = rel.NewCollection(records)
 		)
-
-		if len(modification) == 0 {
-			// just set primary keys
-			for i := 0; i < col.Len(); i++ {
-				doc := col.Get(i)
-				doc.SetValue(doc.PrimaryField(), 1)
-			}
-		} else {
-			col.Reset()
-
-			for i := range modification {
-				doc := col.Add()
-				applyModification(doc, modification[i], true, false)
-			}
-		}
 	})
 
 	return em

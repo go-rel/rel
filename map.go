@@ -56,7 +56,7 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 				panic(fmt.Sprint("rel: cannot assign ", v, " as ", field, " into ", doc.Table()))
 			}
 
-			modification.SetValue(field, v)
+			modification.Add(Set(field, v))
 		}
 	}
 }

@@ -38,8 +38,9 @@ func TestMap(t *testing.T) {
 
 	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
 	userModification.SetAssoc("address", addressModification)
+	userModification.SetDeletedIDs("transactions", []interface{}{})
 
-	assertModification(t, userModification, Apply(doc, data))
+	assert.Equal(t, userModification, Apply(doc, data))
 	assert.Equal(t, User{
 		Name: "Luffy",
 		Age:  20,
@@ -94,8 +95,9 @@ func TestMap_update(t *testing.T) {
 
 	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
 	userModification.SetAssoc("address", addressModification)
+	userModification.SetDeletedIDs("transactions", []interface{}{})
 
-	assertModification(t, userModification, Apply(doc, data))
+	assert.Equal(t, userModification, Apply(doc, data))
 	assert.Equal(t, User{
 		ID:   1,
 		Name: "Luffy",
@@ -136,8 +138,9 @@ func TestMap_hasManyUpdateDeleteInsert(t *testing.T) {
 	)
 
 	userModification.SetAssoc("transactions", transaction2Modification, transaction1Modification)
+	userModification.SetDeletedIDs("transactions", []interface{}{2})
 
-	assertModification(t, userModification, Apply(doc, data))
+	assert.Equal(t, userModification, Apply(doc, data))
 	assert.Equal(t, User{
 		Transactions: []Transaction{
 			{ID: 3, Item: "Shield"},

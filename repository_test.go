@@ -264,17 +264,21 @@ func TestRepository_Insert(t *testing.T) {
 		user      User
 		adapter   = &testAdapter{}
 		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
+		modifiers = []Modifier{
 			Set("name", "name"),
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		}
-		modification = Apply(NewDocument(&user), cbuilders...)
+		modifies = map[string]Modify{
+			"name":       Set("name", "name"),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
 	)
 
-	adapter.On("Insert", From("users"), modification).Return(1, nil).Once()
+	adapter.On("Insert", From("users"), modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.Insert(&user, cbuilders...))
+	assert.Nil(t, repo.Insert(&user, modifiers...))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -353,7 +357,8 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Once()
+	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Maybe()
+	adapter.On("InsertAll", From("transactions"), []string{"user_id", "item"}, mock.Anything).Return([]interface{}{}, err).Maybe()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(&user))
@@ -375,18 +380,22 @@ func TestRepository_Insert_error(t *testing.T) {
 		user      User
 		adapter   = &testAdapter{}
 		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
+		modifiers = []Modifier{
 			Set("name", "name"),
 			Set("created_at", now()),
 			Set("updated_at", now()),
 		}
-		modification = Apply(NewDocument(&user), cbuilders...)
+		modifies = map[string]Modify{
+			"name":       Set("name", "name"),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
 	)
 
-	adapter.On("Insert", From("users"), modification).Return(0, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), modifies).Return(0, errors.New("error")).Once()
 
-	assert.NotNil(t, repo.Insert(&user, cbuilders...))
-	assert.Panics(t, func() { repo.MustInsert(&user, cbuilders...) })
+	assert.NotNil(t, repo.Insert(&user, modifiers...))
+	assert.Panics(t, func() { repo.MustInsert(&user, modifiers...) })
 
 	adapter.AssertExpectations(t)
 }
@@ -409,23 +418,23 @@ func TestRepository_InsertAll(t *testing.T) {
 			{Name: "name1"},
 			{Name: "name2"},
 		}
-		adapter      = &testAdapter{}
-		repo         = repository{adapter: adapter}
-		modification = []Modification{
-			Apply(NewDocument(&User{}),
-				Set("name", "name1"),
-				Set("created_at", now()),
-				Set("updated_at", now()),
-			),
-			Apply(NewDocument(&User{}),
-				Set("name", "name2"),
-				Set("created_at", now()),
-				Set("updated_at", now()),
-			),
+		adapter  = &testAdapter{}
+		repo     = repository{adapter: adapter}
+		modifies = []map[string]Modify{
+			{
+				"name":       Set("name", "name1"),
+				"created_at": Set("created_at", now()),
+				"updated_at": Set("updated_at", now()),
+			},
+			{
+				"name":       Set("name", "name2"),
+				"created_at": Set("created_at", now()),
+				"updated_at": Set("updated_at", now()),
+			},
 		}
 	)
 
-	adapter.On("InsertAll", From("users"), []string{"name", "created_at", "updated_at"}, modification).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), mock.Anything, modifies).Return([]interface{}{1, 2}, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(&users))
 	assert.Equal(t, []User{
@@ -465,17 +474,20 @@ func TestRepository_Update(t *testing.T) {
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
 		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
+		modifiers = []Modifier{
 			Set("name", "name"),
 			Set("updated_at", now()),
 		}
-		modification = Apply(NewDocument(&user), cbuilders...)
-		queries      = From("users").Where(Eq("id", user.ID))
+		modifies = map[string]Modify{
+			"name":       Set("name", "name"),
+			"updated_at": Set("updated_at", now()),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, modification).Return(nil).Once()
+	adapter.On("Update", queries, modifies).Return(nil).Once()
 
-	assert.Nil(t, repo.Update(&user, cbuilders...))
+	assert.Nil(t, repo.Update(&user, modifiers...))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -490,18 +502,20 @@ func TestRepository_Update_reload(t *testing.T) {
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
 		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
+		modifiers = []Modifier{
 			SetFragment("name=?", "name"),
 		}
-		modification = Apply(NewDocument(&user), cbuilders...)
-		queries      = From("users").Where(Eq("id", user.ID))
-		cur          = createCursor(1)
+		modifies = map[string]Modify{
+			"name=?": SetFragment("name=?", "name"),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
+		cur     = createCursor(1)
 	)
 
-	adapter.On("Update", queries, modification).Return(nil).Once()
+	adapter.On("Update", queries, modifies).Return(nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.Update(&user, cbuilders...))
+	assert.Nil(t, repo.Update(&user, modifiers...))
 	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
@@ -601,18 +615,21 @@ func TestRepository_Update_error(t *testing.T) {
 		user      = User{ID: 1}
 		adapter   = &testAdapter{}
 		repo      = repository{adapter: adapter}
-		cbuilders = []Modifier{
+		modifiers = []Modifier{
 			Set("name", "name"),
 			Set("updated_at", now()),
 		}
-		modification = Apply(NewDocument(&user), cbuilders...)
-		queries      = From("users").Where(Eq("id", user.ID))
+		modifies = map[string]Modify{
+			"name":       Set("name", "name"),
+			"updated_at": Set("updated_at", now()),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, modification).Return(errors.New("error")).Once()
+	adapter.On("Update", queries, modifies).Return(errors.New("error")).Once()
 
-	assert.NotNil(t, repo.Update(&user, cbuilders...))
-	assert.Panics(t, func() { repo.MustUpdate(&user, cbuilders...) })
+	assert.NotNil(t, repo.Update(&user, modifiers...))
+	assert.Panics(t, func() { repo.MustUpdate(&user, modifiers...) })
 	adapter.AssertExpectations(t)
 }
 
@@ -631,11 +648,15 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 				},
 			},
 		)
-		q        = Build("users", Eq("id", 1))
-		buyer, _ = modification.GetAssoc("buyer")
+		modifies = map[string]Modify{
+			"name":       Set("name", "buyer1"),
+			"age":        Set("age", 20),
+			"updated_at": Set("updated_at", now()),
+		}
+		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, buyer.modifications[0]).Return(nil).Once()
+	adapter.On("Update", q, modifies).Return(nil).Once()
 
 	assert.Nil(t, repo.saveBelongsTo(doc, &modification))
 	assert.Equal(t, Transaction{
@@ -666,11 +687,15 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 				},
 			},
 		)
-		q        = Build("users", Eq("id", 1))
-		buyer, _ = modification.GetAssoc("buyer")
+		modifies = map[string]Modify{
+			"name":       Set("name", "buyer1"),
+			"age":        Set("age", 20),
+			"updated_at": Set("updated_at", now()),
+		}
+		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, buyer.modifications[0]).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, modifies).Return(errors.New("update error")).Once()
 
 	err := repo.saveBelongsTo(doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
@@ -718,19 +743,17 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 				},
 			},
 		)
-		q        = Build("users")
-		buyer, _ = modification.GetAssoc("buyer")
+		modifies = map[string]Modify{
+			"name": Set("name", "buyer1"),
+			"age":  Set("age", 20),
+		}
+		q = Build("users")
 	)
 
-	adapter.On("Insert", q, buyer.modifications[0]).Return(1, nil).Once()
+	adapter.On("Insert", q, modifies).Return(1, nil).Once()
 
-	err := repo.saveBelongsTo(doc, &modification)
-	assert.Nil(t, err)
-
-	ref, ok := modification.Get("user_id")
-	assert.True(t, ok)
-	assert.Equal(t, Set("user_id", 1), ref)
-
+	assert.Nil(t, repo.saveBelongsTo(doc, &modification))
+	assert.Equal(t, Set("user_id", 1), modification.Modifies["user_id"])
 	assert.Equal(t, Transaction{
 		Buyer: User{
 			ID:   1,
@@ -759,17 +782,19 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 				},
 			},
 		)
-		q        = Build("users")
-		buyer, _ = modification.GetAssoc("buyer")
+		modifies = map[string]Modify{
+			"name":       Set("name", "buyer1"),
+			"age":        Set("age", 20),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
+		q = Build("users")
 	)
 
-	adapter.On("Insert", q, buyer.modifications[0]).Return(0, errors.New("insert error")).Once()
+	adapter.On("Insert", q, modifies).Return(0, errors.New("insert error")).Once()
 
-	err := repo.saveBelongsTo(doc, &modification)
-	assert.Equal(t, errors.New("insert error"), err)
-
-	_, ok := modification.Get("user_id")
-	assert.False(t, ok)
+	assert.Equal(t, errors.New("insert error"), repo.saveBelongsTo(doc, &modification))
+	assert.Zero(t, modification.Modifies["user_id"])
 
 	adapter.AssertExpectations(t)
 }
@@ -802,11 +827,13 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 				},
 			},
 		)
-		q            = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
-		addresses, _ = modification.GetAssoc("address")
+		modifies = map[string]Modify{
+			"street": Set("street", "street1"),
+		}
+		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
 	)
 
-	adapter.On("Update", q, addresses.modifications[0]).Return(nil).Once()
+	adapter.On("Update", q, modifies).Return(nil).Once()
 
 	assert.Nil(t, repo.saveHasOne(doc, &modification))
 	adapter.AssertExpectations(t)
@@ -826,11 +853,13 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 				},
 			},
 		)
-		q            = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
-		addresses, _ = modification.GetAssoc("address")
+		modifies = map[string]Modify{
+			"street": Set("street", "street1"),
+		}
+		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
 	)
 
-	adapter.On("Update", q, addresses.modifications[0]).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, modifies).Return(errors.New("update error")).Once()
 
 	err := repo.saveHasOne(doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
@@ -865,11 +894,10 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 
 func TestRepository_saveHasOne_insertNew(t *testing.T) {
 	var (
-		user         User
+		user         = User{ID: 1}
 		adapter      = &testAdapter{}
 		repo         = repository{adapter: adapter}
 		doc          = NewDocument(&user)
-		addrDoc, _   = doc.Association("address").Document()
 		modification = Apply(doc,
 			Map{
 				"address": Map{
@@ -877,19 +905,16 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 				},
 			},
 		)
-		q          = Build("addresses")
-		addressMod = Apply(addrDoc, Set("street", "street1"))
+		modifies = map[string]Modify{
+			"street":  Set("street", "street1"),
+			"user_id": Set("user_id", 1),
+		}
+		q = Build("addresses")
 	)
 
-	// foreign value set after associations inferred
-	user.ID = 1
-	addressMod.SetValue("user_id", user.ID)
+	adapter.On("Insert", q, modifies).Return(2, nil).Once()
 
-	adapter.On("Insert", q, addressMod).Return(2, nil).Once()
-
-	err := repo.saveHasOne(doc, &modification)
-	assert.Nil(t, err)
-
+	assert.Nil(t, repo.saveHasOne(doc, &modification))
 	assert.Equal(t, User{
 		ID: 1,
 		Address: Address{
@@ -906,9 +931,8 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
 		repo         = repository{adapter: adapter}
-		user         = User{}
+		user         = User{ID: 1}
 		doc          = NewDocument(&user)
-		addrDoc, _   = doc.Association("address").Document()
 		modification = Apply(doc,
 			Map{
 				"address": Map{
@@ -916,18 +940,16 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 				},
 			},
 		)
-		q       = Build("addresses")
-		address = Apply(addrDoc, Set("street", "street1"))
+		modifies = map[string]Modify{
+			"street":  Set("street", "street1"),
+			"user_id": Set("user_id", 1),
+		}
+		q = Build("addresses")
 	)
 
-	// foreign value set after associations inferred
-	user.ID = 1
-	address.SetValue("user_id", user.ID)
+	adapter.On("Insert", q, modifies).Return(nil, errors.New("insert error")).Once()
 
-	adapter.On("Insert", q, address).Return(nil, errors.New("insert error")).Once()
-
-	err := repo.saveHasOne(doc, &modification)
-	assert.Equal(t, errors.New("insert error"), err)
+	assert.Equal(t, errors.New("insert error"), repo.saveHasOne(doc, &modification))
 
 	adapter.AssertExpectations(t)
 }
@@ -946,11 +968,15 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 				},
 			},
 		)
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
+		modifies = []map[string]Modify{
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item1")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item2")},
+		}
+		q = Build("transactions")
 	)
 
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.modifications).Return(nil).Return([]interface{}{2, 3}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, true))
 	assert.Equal(t, User{
@@ -960,12 +986,6 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 			{ID: 3, BuyerID: 1, Item: "item2"},
 		},
 	}, user)
-
-	for _, mod := range transactions.modifications {
-		id, ok := mod.GetValue("user_id")
-		assert.True(t, ok)
-		assert.Equal(t, user.ID, id)
-	}
 
 	adapter.AssertExpectations(t)
 }
@@ -984,15 +1004,18 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 				},
 			},
 		)
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
-		rerr            = errors.New("insert all error")
+		modifies = []map[string]Modify{
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item1")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item2")},
+		}
+		q   = Build("transactions")
+		err = errors.New("insert all error")
 	)
 
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.modifications).Return(nil).Return([]interface{}{}, rerr).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{}, err).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{}, err).Maybe()
 
-	err := repo.saveHasMany(doc, &modification, true)
-	assert.Equal(t, rerr, err)
+	assert.Equal(t, err, repo.saveHasMany(doc, &modification, true))
 
 	adapter.AssertExpectations(t)
 }
@@ -1018,15 +1041,18 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 				},
 			},
 		)
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
+		modifies = []map[string]Modify{
+			{"item": Set("item", "item1 updated")},
+			{"item": Set("item", "item2 updated")},
+		}
+		q = Build("transactions")
 	)
 
-	modification.assocModification[0].deletedIDs = []interface{}{3}
+	modification.SetDeletedIDs("transactions", []interface{}{3})
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), transactions.modifications[0]).Return(nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), transactions.modifications[1]).Return(nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), modifies[1]).Return(nil).Once()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{
@@ -1036,12 +1062,6 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 			{ID: 2, BuyerID: 1, Item: "item2 updated"},
 		},
 	}, user)
-
-	for _, mod := range transactions.modifications {
-		id, ok := mod.GetValue("user_id")
-		assert.False(t, ok)
-		assert.NotEqual(t, user.ID, id)
-	}
 
 	adapter.AssertExpectations(t)
 }
@@ -1065,13 +1085,16 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 				},
 			},
 		)
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
+		q        = Build("transactions")
+		modifies = []map[string]Modify{
+			{"item": Set("item", "item1 updated")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "new item")},
+		}
 	)
 
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), transactions.modifications[0]).Return(nil).Once()
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.modifications[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "item"}, transactions.modifications[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{
@@ -1085,7 +1108,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_saveHasMany_delete(t *testing.T) {
+func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = repository{adapter: adapter}
@@ -1106,12 +1129,17 @@ func TestRepository_saveHasMany_delete(t *testing.T) {
 				},
 			},
 		)
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
+		modifies = []map[string]Modify{
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item3")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item4")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item5")},
+		}
+		q = Build("transactions")
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).Once()
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.modifications).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{
@@ -1122,12 +1150,6 @@ func TestRepository_saveHasMany_delete(t *testing.T) {
 			{ID: 5, BuyerID: 1, Item: "item5"},
 		},
 	}, user)
-
-	for _, mod := range transactions.modifications {
-		id, ok := mod.GetValue("user_id")
-		assert.True(t, ok)
-		assert.Equal(t, user.ID, id)
-	}
 
 	adapter.AssertExpectations(t)
 }
@@ -1144,14 +1166,19 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 				{Item: "item5"},
 			},
 		}
-		doc             = NewDocument(&user)
-		modification    = Apply(doc, NewStructset(doc))
-		q               = Build("transactions")
-		transactions, _ = modification.GetAssoc("transactions")
+		doc          = NewDocument(&user)
+		modification = Apply(doc, NewStructset(doc))
+		modifies     = []map[string]Modify{
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item3")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item4")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "item5")},
+		}
+		q = Build("transactions")
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, transactions.modifications).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{
@@ -1164,12 +1191,6 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 			{ID: 5, BuyerID: 1, Item: "item5"},
 		},
 	}, user)
-
-	for _, mod := range transactions.modifications {
-		id, ok := mod.GetValue("user_id")
-		assert.True(t, ok)
-		assert.Equal(t, user.ID, id)
-	}
 
 	adapter.AssertExpectations(t)
 }

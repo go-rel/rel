@@ -13,8 +13,8 @@ type Modifier interface {
 // Apply using given modifiers.
 func Apply(doc *Document, modifiers ...Modifier) Modification {
 	modification := Modification{
-		fields: make(map[string]int),
-		assoc:  make(map[string]int),
+		Modifies: make(map[string]Modify),
+		Assoc:    make(map[string]AssocModification),
 	}
 
 	// FIXME: supports db default
@@ -25,108 +25,38 @@ func Apply(doc *Document, modifiers ...Modifier) Modification {
 	return modification
 }
 
+// AssocModification represents modification for association.
 type AssocModification struct {
-	modifications []Modification
-	deletedIDs    []interface{}
+	Modifications []Modification
+	DeletedIDs    []interface{}
 }
 
 // Modification represents value to be inserted or updated to database.
 // It's not safe to be used multiple time. some operation my alter modification data.
 type Modification struct {
-	fields            map[string]int
-	modification      []Modify
-	assoc             map[string]int
-	assocModification []AssocModification
-	reload            bool
+	Modifies map[string]Modify
+	Assoc    map[string]AssocModification
+	Reload   bool
 }
 
-// Empty returns true if modification is empty.
-func (m Modification) Empty() bool {
-	return len(m.modification) == 0
+// Add a modify.
+func (m *Modification) Add(mod Modify) {
+	m.Modifies[mod.Field] = mod
 }
 
-// Count returns count of modification.
-func (m Modification) Count() int {
-	return len(m.modification)
-}
-
-// AssocCount returns count of associations being modification.
-func (m Modification) AssocCount() int {
-	return len(m.assocModification)
-}
-
-// All return array of modify.
-func (m Modification) All() []Modify {
-	return m.modification
-}
-
-// Get a modify by field name.
-func (m Modification) Get(field string) (Modify, bool) {
-	if index, ok := m.fields[field]; ok {
-		return m.modification[index], true
-	}
-
-	return Modify{}, false
-}
-
-// Set a modify op directly, will existing value replace if it's already exists.
-func (m *Modification) Set(mod Modify) {
-	if index, exist := m.fields[mod.Field]; exist {
-		m.modification[index] = mod
-	} else {
-		m.fields[mod.Field] = len(m.modification)
-		m.modification = append(m.modification, mod)
-	}
-}
-
-// GetValue of modify by field name.
-func (m Modification) GetValue(field string) (interface{}, bool) {
-	var (
-		mod, ok = m.Get(field)
-	)
-
-	return mod.Value, ok
-}
-
-// SetValue using field name and changed value.
-func (m *Modification) SetValue(field string, value interface{}) {
-	m.Set(Set(field, value))
-}
-
-// GetAssoc by field name.
-func (m Modification) GetAssoc(field string) (AssocModification, bool) {
-	if index, ok := m.assoc[field]; ok {
-		return m.assocModification[index], true
-	}
-
-	return AssocModification{}, false
-}
-
-// SetAssoc by field name.
+// SetAssoc modification.
 func (m *Modification) SetAssoc(field string, mods ...Modification) {
-	if index, exist := m.assoc[field]; exist {
-		m.assocModification[index].modifications = mods
-	} else {
-		m.appendAssoc(field, AssocModification{
-			modifications: mods,
-		})
-	}
+	assoc := m.Assoc[field]
+	assoc.Modifications = mods
+	m.Assoc[field] = assoc
 }
 
-// SetDeletedIDs by field name.
-func (m *Modification) SetDeletedIDs(field string, pValues []interface{}) {
-	if index, exist := m.assoc[field]; exist {
-		m.assocModification[index].deletedIDs = pValues
-	} else {
-		m.appendAssoc(field, AssocModification{
-			deletedIDs: pValues,
-		})
-	}
-}
-
-func (m *Modification) appendAssoc(field string, assoc AssocModification) {
-	m.assoc[field] = len(m.assocModification)
-	m.assocModification = append(m.assocModification, assoc)
+// SetDeletedIDs modification.
+// nil slice will clear association.
+func (m *Modification) SetDeletedIDs(field string, ids []interface{}) {
+	assoc := m.Assoc[field]
+	assoc.DeletedIDs = ids
+	m.Assoc[field] = assoc
 }
 
 // ChangeOp represents type of modify operation.
@@ -162,7 +92,7 @@ func (m Modify) Apply(doc *Document, modification *Modification) {
 			invalid = true
 		}
 	case ChangeFragmentOp:
-		modification.reload = true
+		modification.Reload = true
 	default:
 		if typ, ok := doc.Type(m.Field); ok {
 			kind := typ.Kind()
@@ -172,14 +102,14 @@ func (m Modify) Apply(doc *Document, modification *Modification) {
 			invalid = true
 		}
 
-		modification.reload = true
+		modification.Reload = true
 	}
 
 	if invalid {
 		panic(fmt.Sprint("rel: cannot assign ", m.Value, " as ", m.Field, " into ", doc.Table()))
 	}
 
-	modification.Set(m)
+	modification.Add(m)
 }
 
 // Set create a modify using set operation.

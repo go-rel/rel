@@ -39,7 +39,7 @@ type Extra struct {
 	ID     uint
 	Slug   *string
 	Score  int
-	UserID int
+	UserID int64
 }
 
 var (

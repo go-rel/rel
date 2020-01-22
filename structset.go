@@ -13,7 +13,8 @@ var (
 // This will save every field in struct and it's association as long as it's loaded.
 // This is the default modifier used by repository.
 type Structset struct {
-	doc *Document
+	doc      *Document
+	skipZero bool
 }
 
 // Apply modification.
@@ -42,6 +43,10 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 		}
 
 		if value, ok := s.doc.Value(field); ok && !isZero(value) {
+			if s.skipZero && isZero(value) {
+				continue
+			}
+
 			s.set(doc, mod, field, value, false)
 		}
 	}
@@ -77,7 +82,7 @@ func (s Structset) buildAssoc(field string, mod *Modification) {
 			doc, _ = assoc.Document()
 		)
 
-		mod.SetAssoc(field, Apply(doc, Structset{doc: doc}))
+		mod.SetAssoc(field, Apply(doc, newStructset(doc, s.skipZero)))
 	}
 }
 
@@ -98,7 +103,7 @@ func (s Structset) buildAssocMany(field string, mod *Modification) {
 				doc = col.Get(i)
 			)
 
-			mods[i] = Apply(doc, newStructset(doc))
+			mods[i] = Apply(doc, newStructset(doc, s.skipZero))
 			doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
 		}
 
@@ -106,13 +111,14 @@ func (s Structset) buildAssocMany(field string, mod *Modification) {
 	}
 }
 
-func newStructset(doc *Document) Structset {
+func newStructset(doc *Document, skipZero bool) Structset {
 	return Structset{
-		doc: doc,
+		doc:      doc,
+		skipZero: skipZero,
 	}
 }
 
 // NewStructset from a struct.
-func NewStructset(record interface{}) Structset {
-	return newStructset(NewDocument(record))
+func NewStructset(record interface{}, skipZero bool) Structset {
+	return newStructset(NewDocument(record), skipZero)
 }

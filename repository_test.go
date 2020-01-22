@@ -357,8 +357,7 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("InsertAll", From("transactions"), []string{"item", "user_id"}, mock.Anything).Return([]interface{}{}, err).Maybe()
-	adapter.On("InsertAll", From("transactions"), []string{"user_id", "item"}, mock.Anything).Return([]interface{}{}, err).Maybe()
+	adapter.On("InsertAll", From("transactions"), mock.Anything, mock.Anything).Return([]interface{}{}, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(&user))
@@ -416,18 +415,20 @@ func TestRepository_InsertAll(t *testing.T) {
 	var (
 		users = []User{
 			{Name: "name1"},
-			{Name: "name2"},
+			{Name: "name2", Age: 12},
 		}
 		adapter  = &testAdapter{}
 		repo     = repository{adapter: adapter}
 		modifies = []map[string]Modify{
 			{
 				"name":       Set("name", "name1"),
+				"age":        Set("age", 0),
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
 			{
 				"name":       Set("name", "name2"),
+				"age":        Set("age", 12),
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
@@ -1167,7 +1168,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 			},
 		}
 		doc          = NewDocument(&user)
-		modification = Apply(doc, NewStructset(doc))
+		modification = Apply(doc, NewStructset(doc, false))
 		modifies     = []map[string]Modify{
 			{"user_id": Set("user_id", user.ID), "item": Set("item", "item3")},
 			{"user_id": Set("user_id", user.ID), "item": Set("item", "item4")},
@@ -1207,7 +1208,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 			},
 		}
 		doc          = NewDocument(&user)
-		modification = Apply(doc, NewStructset(doc))
+		modification = Apply(doc, NewStructset(doc, false))
 		q            = Build("transactions")
 		err          = errors.New("delete all error")
 	)

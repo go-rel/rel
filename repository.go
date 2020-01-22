@@ -149,7 +149,7 @@ func (r repository) Insert(record interface{}, modifiers ...Modifier) error {
 	)
 
 	if len(modifiers) == 0 {
-		modification = Apply(doc, newStructset(doc))
+		modification = Apply(doc, newStructset(doc, false))
 	} else {
 		modification = Apply(doc, modifiers...)
 	}
@@ -217,7 +217,7 @@ func (r repository) InsertAll(records interface{}) error {
 
 	for i := range mods {
 		doc := col.Get(i)
-		mods[i] = Apply(doc, newStructset(doc))
+		mods[i] = Apply(doc, newStructset(doc, false))
 	}
 
 	return r.insertAll(col, mods)
@@ -285,7 +285,7 @@ func (r repository) Update(record interface{}, modifiers ...Modifier) error {
 	)
 
 	if len(modifiers) == 0 {
-		modification = Apply(doc, newStructset(doc))
+		modification = Apply(doc, newStructset(doc, false))
 	} else {
 		modification = Apply(doc, modifiers...)
 	}

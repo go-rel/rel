@@ -234,11 +234,11 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 	}
 
 	var (
-		pField   = col.PrimaryField()
-		queriers = Build(col.Table())
-		fields   = make([]string, 0, len(modification[0].Modifies))
-		fieldMap = make(map[string]struct{}, len(modification[0].Modifies))
-		modifies = make([]map[string]Modify, len(modification))
+		pField       = col.PrimaryField()
+		queriers     = Build(col.Table())
+		fields       = make([]string, 0, len(modification[0].Modifies))
+		fieldMap     = make(map[string]struct{}, len(modification[0].Modifies))
+		bulkModifies = make([]map[string]Modify, len(modification))
 	)
 
 	for i := range modification {
@@ -248,10 +248,10 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 				fields = append(fields, field)
 			}
 		}
-		modifies[i] = modification[i].Modifies
+		bulkModifies[i] = modification[i].Modifies
 	}
 
-	ids, err := r.adapter.InsertAll(queriers, fields, modifies, r.logger...)
+	ids, err := r.adapter.InsertAll(queriers, fields, bulkModifies, r.logger...)
 	if err != nil {
 		return err
 	}

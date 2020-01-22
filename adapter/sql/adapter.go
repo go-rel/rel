@@ -102,9 +102,9 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, modification rel.Modification, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modification)
+		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modifies)
 		id, _, err      = adapter.Exec(statement, args, loggers...)
 	)
 
@@ -112,15 +112,15 @@ func (adapter *Adapter) Insert(query rel.Query, modification rel.Modification, l
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modifications []rel.Modification, loggers ...rel.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, modifications)
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkModifies)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
 	}
 
 	var (
-		ids = make([]interface{}, len(modifications))
+		ids = make([]interface{}, len(bulkModifies))
 		inc = 1
 	)
 
@@ -129,7 +129,7 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modification
 	}
 
 	if inc < 0 {
-		id = id + int64((len(modifications)-1)*inc)
+		id = id + int64((len(bulkModifies)-1)*inc)
 		inc *= -1
 	}
 
@@ -141,9 +141,9 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modification
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query rel.Query, modification rel.Modification, loggers ...rel.Logger) error {
+func (adapter *Adapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) error {
 	var (
-		statement, args = NewBuilder(adapter.Config).Update(query.Table, modification, query.WhereQuery)
+		statement, args = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
 		_, _, err       = adapter.Exec(statement, args, loggers...)
 	)
 

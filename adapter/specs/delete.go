@@ -43,8 +43,7 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, query := range tests {
-		statement, _ := builder.Delete(query.Table, query.WhereQuery)
-		t.Run("Delete|"+statement, func(t *testing.T) {
+		t.Run("Delete", func(t *testing.T) {
 			var result []User
 			assert.Nil(t, repo.FindAll(&result, query))
 			assert.NotEqual(t, 0, len(result))

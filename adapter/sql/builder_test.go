@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -239,16 +240,16 @@ func BenchmarkBuilder_Insert(b *testing.B) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
+		modifies = map[string]rel.Modify{
+			"name":  rel.Set("name", "foo"),
+			"age":   rel.Set("age", 10),
+			"agree": rel.Set("agree", true),
+		}
 		builder = NewBuilder(config)
 	)
 
 	for n := 0; n < b.N; n++ {
-		modification := rel.BuildModification(
-			rel.Set("name", "foo"),
-			rel.Set("age", 10),
-			rel.Set("agree", true),
-		)
-		builder.Insert("users", modification)
+		builder.Insert("users", modifies)
 	}
 }
 
@@ -258,17 +259,20 @@ func TestBuilder_Insert(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder      = NewBuilder(config)
-		modification = rel.BuildModification(
-			rel.Set("name", "foo"),
-			rel.Set("age", 10),
-			rel.Set("agree", true),
-		)
-		qs, args = builder.Insert("users", modification)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{
+			"name":  rel.Set("name", "foo"),
+			"age":   rel.Set("age", 10),
+			"agree": rel.Set("agree", true),
+		}
+		qs, args = builder.Insert("users", modifies)
 	)
 
-	assert.Equal(t, "INSERT INTO `users` (`name`,`age`,`agree`) VALUES (?,?,?);", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true}, args)
+	assert.Regexp(t, fmt.Sprint(`^INSERT INTO `, "`users`", ` \((`, "`", `\w*`, "`", `,?){3}\) VALUES \(\?,\?,\?\);`), qs)
+	assert.Contains(t, qs, "name")
+	assert.Contains(t, qs, "age")
+	assert.Contains(t, qs, "agree")
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, args)
 }
 
 func TestBuilder_Insert_ordinal(t *testing.T) {
@@ -279,17 +283,20 @@ func TestBuilder_Insert_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder      = NewBuilder(config)
-		modification = rel.BuildModification(
-			rel.Set("name", "foo"),
-			rel.Set("age", 10),
-			rel.Set("agree", true),
-		)
-		qs, args = builder.Returning("id").Insert("users", modification)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{
+			"name":  rel.Set("name", "foo"),
+			"age":   rel.Set("age", 10),
+			"agree": rel.Set("agree", true),
+		}
+		qs, args = builder.Returning("id").Insert("users", modifies)
 	)
 
-	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\",\"agree\") VALUES ($1,$2,$3) RETURNING \"id\";", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true}, args)
+	assert.Regexp(t, `^INSERT INTO \"users\" \(("\w*",?){3}\) VALUES \(\$1,\$2,\$3\) RETURNING \"id\";`, qs)
+	assert.Contains(t, qs, "name")
+	assert.Contains(t, qs, "age")
+	assert.Contains(t, qs, "agree")
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, args)
 }
 
 func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
@@ -299,9 +306,9 @@ func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 			EscapeChar:          "`",
 			InsertDefaultValues: false,
 		}
-		builder      = NewBuilder(config)
-		modification = rel.Modification{}
-		qs, args     = builder.Insert("users", modification)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{}
+		qs, args = builder.Insert("users", modifies)
 	)
 
 	assert.Equal(t, "INSERT INTO `users` () VALUES ();", qs)
@@ -315,9 +322,9 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 			InsertDefaultValues: true,
 			EscapeChar:          "`",
 		}
-		builder      = NewBuilder(config)
-		modification = rel.Modification{}
-		qs, args     = builder.Returning("id").Insert("users", modification)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{}
+		qs, args = builder.Returning("id").Insert("users", modifies)
 	)
 
 	assert.Equal(t, "INSERT INTO `users` DEFAULT VALUES RETURNING `id`;", qs)
@@ -330,23 +337,23 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder = NewBuilder(config)
+		builder      = NewBuilder(config)
+		bulkModifies = []map[string]rel.Modify{
+			{
+				"name": rel.Set("name", "foo"),
+			},
+			{
+				"age": rel.Set("age", 10),
+			},
+			{
+				"name": rel.Set("name", "boo"),
+				"age":  rel.Set("age", 20),
+			},
+		}
 	)
 
 	for n := 0; n < b.N; n++ {
-		modifications := []rel.Modification{
-			rel.BuildModification(
-				rel.Set("name", "foo"),
-			),
-			rel.BuildModification(
-				rel.Set("age", 10),
-			),
-			rel.BuildModification(
-				rel.Set("name", "boo"),
-				rel.Set("age", 20),
-			),
-		}
-		builder.InsertAll("users", []string{"name"}, modifications)
+		builder.InsertAll("users", []string{"name"}, bulkModifies)
 	}
 }
 
@@ -356,27 +363,27 @@ func TestBuilder_InsertAll(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder       = NewBuilder(config)
-		modifications = []rel.Modification{
-			rel.BuildModification(
-				rel.Set("name", "foo"),
-			),
-			rel.BuildModification(
-				rel.Set("age", 10),
-			),
-			rel.BuildModification(
-				rel.Set("name", "boo"),
-				rel.Set("age", 20),
-			),
+		builder      = NewBuilder(config)
+		bulkModifies = []map[string]rel.Modify{
+			{
+				"name": rel.Set("name", "foo"),
+			},
+			{
+				"age": rel.Set("age", 10),
+			},
+			{
+				"name": rel.Set("name", "boo"),
+				"age":  rel.Set("age", 20),
+			},
 		}
 	)
 
-	statement, args := builder.InsertAll("users", []string{"name"}, modifications)
+	statement, args := builder.InsertAll("users", []string{"name"}, bulkModifies)
 	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
-	statement, args = builder.InsertAll("users", []string{"name", "age"}, modifications)
+	statement, args = builder.InsertAll("users", []string{"name", "age"}, bulkModifies)
 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,?);", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
 }
@@ -389,28 +396,28 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder       = NewBuilder(config)
-		modifications = []rel.Modification{
-			rel.BuildModification(
-				rel.Set("name", "foo"),
-			),
-			rel.BuildModification(
-				rel.Set("age", 10),
-			),
-			rel.BuildModification(
-				rel.Set("name", "boo"),
-				rel.Set("age", 20),
-			),
+		builder      = NewBuilder(config)
+		bulkModifies = []map[string]rel.Modify{
+			{
+				"name": rel.Set("name", "foo"),
+			},
+			{
+				"age": rel.Set("age", 10),
+			},
+			{
+				"name": rel.Set("name", "boo"),
+				"age":  rel.Set("age", 20),
+			},
 		}
 	)
 
-	statement, args := builder.Returning("id").InsertAll("users", []string{"name"}, modifications)
+	statement, args := builder.Returning("id").InsertAll("users", []string{"name"}, bulkModifies)
 	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
 	builder.count = 0
-	statement, args = builder.Returning("id").InsertAll("users", []string{"name", "age"}, modifications)
+	statement, args = builder.Returning("id").InsertAll("users", []string{"name", "age"}, bulkModifies)
 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,$4) RETURNING \"id\";", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
 }
@@ -421,21 +428,21 @@ func TestBuilder_Update(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder      = NewBuilder(config)
-		modification = rel.BuildModification(
-			rel.Set("name", "foo"),
-			rel.Set("age", 10),
-			rel.Set("agree", true),
-		)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{
+			"name":  rel.Set("name", "foo"),
+			"age":   rel.Set("age", 10),
+			"agree": rel.Set("agree", true),
+		}
 	)
 
-	qs, qargs := builder.Update("users", modification, where.And())
-	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=?;", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true}, qargs)
+	qs, qargs := builder.Update("users", modifies, where.And())
+	assert.Regexp(t, fmt.Sprint("UPDATE `users` SET `", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ";"), qs)
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, qargs)
 
-	qs, qargs = builder.Update("users", modification, where.Eq("id", 1))
-	assert.Equal(t, "UPDATE `users` SET `name`=?,`age`=?,`agree`=? WHERE `id`=?;", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true, 1}, qargs)
+	qs, qargs = builder.Update("users", modifies, where.Eq("id", 1))
+	assert.Regexp(t, fmt.Sprint("UPDATE `users` SET `", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, " WHERE `id`=", `\?`, ";"), qs)
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true, 1}, qargs)
 }
 
 func TestBuilder_Update_ordinal(t *testing.T) {
@@ -446,22 +453,22 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder      = NewBuilder(config)
-		modification = rel.BuildModification(
-			rel.Set("name", "foo"),
-			rel.Set("age", 10),
-			rel.Set("agree", true),
-		)
+		builder  = NewBuilder(config)
+		modifies = map[string]rel.Modify{
+			"name":  rel.Set("name", "foo"),
+			"age":   rel.Set("age", 10),
+			"agree": rel.Set("agree", true),
+		}
 	)
 
-	qs, args := builder.Update("users", modification, where.And())
-	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3;", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true}, args)
+	qs, args := builder.Update("users", modifies, where.And())
+	assert.Regexp(t, `UPDATE "users" SET "\w*"=\$1,"\w*"=\$2,"\w*"=\$3;`, qs)
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, args)
 
 	builder.count = 0
-	qs, args = builder.Update("users", modification, where.Eq("id", 1))
-	assert.Equal(t, "UPDATE \"users\" SET \"name\"=$1,\"age\"=$2,\"agree\"=$3 WHERE \"id\"=$4;", qs)
-	assert.Equal(t, []interface{}{"foo", 10, true, 1}, args)
+	qs, args = builder.Update("users", modifies, where.Eq("id", 1))
+	assert.Regexp(t, `UPDATE "users" SET "\w*"=\$1,"\w*"=\$2,"\w*"=\$3 WHERE "id"=\$4;`, qs)
+	assert.ElementsMatch(t, []interface{}{"foo", 10, true, 1}, args)
 }
 
 func TestBuilder_Delete(t *testing.T) {

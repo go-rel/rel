@@ -79,10 +79,10 @@ func (b *Builder) query(buffer *Buffer, query rel.Query) {
 }
 
 // Insert generates query for insert.
-func (b *Builder) Insert(table string, modification rel.Modification) (string, []interface{}) {
+func (b *Builder) Insert(table string, modifies map[string]rel.Modify) (string, []interface{}) {
 	var (
 		buffer Buffer
-		count  = modification.Count()
+		count  = len(modifies)
 	)
 
 	buffer.WriteString("INSERT INTO ")
@@ -94,10 +94,11 @@ func (b *Builder) Insert(table string, modification rel.Modification) (string, [
 		buffer.Arguments = make([]interface{}, count)
 		buffer.WriteString(" (")
 
-		for i, mod := range modification.All() {
+		i := 0
+		for field, mod := range modifies {
 			if mod.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.config.EscapeChar)
-				buffer.WriteString(mod.Field)
+				buffer.WriteString(field)
 				buffer.WriteString(b.config.EscapeChar)
 				buffer.Arguments[i] = mod.Value
 			}
@@ -105,6 +106,7 @@ func (b *Builder) Insert(table string, modification rel.Modification) (string, [
 			if i < count-1 {
 				buffer.WriteByte(',')
 			}
+			i++
 		}
 
 		buffer.WriteString(") VALUES ")
@@ -133,14 +135,14 @@ func (b *Builder) Insert(table string, modification rel.Modification) (string, [
 }
 
 // InsertAll generates query for multiple insert.
-func (b *Builder) InsertAll(table string, fields []string, modifications []rel.Modification) (string, []interface{}) {
+func (b *Builder) InsertAll(table string, fields []string, bulkModifies []map[string]rel.Modify) (string, []interface{}) {
 	var (
-		buffer            Buffer
-		fieldsCount       = len(fields)
-		modificationCount = len(modifications)
+		buffer        Buffer
+		fieldsCount   = len(fields)
+		modifiesCount = len(bulkModifies)
 	)
 
-	buffer.Arguments = make([]interface{}, 0, fieldsCount*modificationCount)
+	buffer.Arguments = make([]interface{}, 0, fieldsCount*modifiesCount)
 
 	buffer.WriteString("INSERT INTO ")
 
@@ -161,11 +163,11 @@ func (b *Builder) InsertAll(table string, fields []string, modifications []rel.M
 
 	buffer.WriteString(") VALUES ")
 
-	for i, modification := range modifications {
+	for i, modifies := range bulkModifies {
 		buffer.WriteByte('(')
 
 		for j, field := range fields {
-			if mod, ok := modification.Get(field); ok && mod.Type == rel.ChangeSetOp {
+			if mod, ok := modifies[field]; ok && mod.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.ph())
 				buffer.Append(mod.Value)
 			} else {
@@ -177,7 +179,7 @@ func (b *Builder) InsertAll(table string, fields []string, modifications []rel.M
 			}
 		}
 
-		if i < modificationCount-1 {
+		if i < modifiesCount-1 {
 			buffer.WriteString("),")
 		} else {
 			buffer.WriteByte(')')
@@ -197,10 +199,10 @@ func (b *Builder) InsertAll(table string, fields []string, modifications []rel.M
 }
 
 // Update generates query for update.
-func (b *Builder) Update(table string, modification rel.Modification, filter rel.FilterQuery) (string, []interface{}) {
+func (b *Builder) Update(table string, modifies map[string]rel.Modify, filter rel.FilterQuery) (string, []interface{}) {
 	var (
 		buffer Buffer
-		count  = modification.Count()
+		count  = len(modifies)
 	)
 
 	buffer.WriteString("UPDATE ")
@@ -209,35 +211,37 @@ func (b *Builder) Update(table string, modification rel.Modification, filter rel
 	buffer.WriteString(b.config.EscapeChar)
 	buffer.WriteString(" SET ")
 
-	for i, mod := range modification.All() {
+	i := 0
+	for field, mod := range modifies {
 		switch mod.Type {
 		case rel.ChangeSetOp:
-			buffer.WriteString(b.escape(mod.Field))
+			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.ph())
 			buffer.Append(mod.Value)
 		case rel.ChangeIncOp:
-			buffer.WriteString(b.escape(mod.Field))
+			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('=')
-			buffer.WriteString(b.escape(mod.Field))
+			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
 			buffer.Append(mod.Value)
 		case rel.ChangeDecOp:
-			buffer.WriteString(b.escape(mod.Field))
+			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('=')
-			buffer.WriteString(b.escape(mod.Field))
+			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('-')
 			buffer.WriteString(b.ph())
 			buffer.Append(mod.Value)
 		case rel.ChangeFragmentOp:
-			buffer.WriteString(mod.Field)
+			buffer.WriteString(field)
 			buffer.Append(mod.Value.([]interface{})...)
 		}
 
 		if i < count-1 {
 			buffer.WriteByte(',')
 		}
+		i++
 	}
 
 	b.where(&buffer, filter)

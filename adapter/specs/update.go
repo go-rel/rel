@@ -332,13 +332,7 @@ func Updates(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, record := range tests {
-		var (
-			doc          = rel.NewDocument(record)
-			modification = rel.Apply(doc, rel.NewStructset(doc))
-			statement, _ = builder.Update("collection", modification, where.Eq("id", 1))
-		)
-
-		t.Run("Update|"+statement, func(t *testing.T) {
+		t.Run("Update", func(t *testing.T) {
 			assert.Nil(t, repo.Update(record))
 		})
 	}

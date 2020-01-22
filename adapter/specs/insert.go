@@ -159,6 +159,17 @@ func Inserts(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("Insert", func(t *testing.T) {
 			assert.Nil(t, repo.Insert(record))
+
+			switch v := record.(type) {
+			case *User:
+				var found User
+				repo.MustFind(&found, where.Eq("id", v.ID))
+				assert.Equal(t, found, *v)
+			case *Address:
+				var found Address
+				repo.MustFind(&found, where.Eq("id", v.ID))
+				assert.Equal(t, found, *v)
+			}
 		})
 	}
 }
@@ -173,11 +184,11 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(&user)
 
 	tests := []interface{}{
-		// &[]User{{}},
+		&[]User{{}},
 		&[]User{{Name: "insert", Age: 100}},
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
-		// &[]Address{{}},
+		&[]Address{{}},
 		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
 		&[]Address{{Name: "work", UserID: &user.ID}},
@@ -187,6 +198,33 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 		t.Run("InsertAll", func(t *testing.T) {
 			assert.Nil(t, repo.InsertAll(record))
 			assert.Equal(t, 1, reflect.ValueOf(record).Elem().Len())
+
+			switch v := record.(type) {
+			case *[]User:
+				var (
+					found []User
+					ids   = make([]int, len(*v))
+				)
+
+				for i := range *v {
+					ids[i] = int((*v)[i].ID)
+				}
+
+				repo.MustFindAll(&found, where.InInt("id", ids))
+				assert.Equal(t, found, *v)
+			case *[]Address:
+				var (
+					found []Address
+					ids   = make([]int, len(*v))
+				)
+
+				for i := range *v {
+					ids[i] = int((*v)[i].ID)
+				}
+
+				repo.MustFindAll(&found, where.InInt("id", ids))
+				assert.Equal(t, found, *v)
+			}
 		})
 	}
 }

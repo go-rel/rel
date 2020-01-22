@@ -299,7 +299,8 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 // UpdateAtomic tests increment and decerement operation when updating a record.
 func UpdateAtomic(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{Name: "update", Age: 10}
+		result User
+		user   = User{Name: "update", Age: 10}
 	)
 
 	repo.MustInsert(&user)
@@ -307,8 +308,14 @@ func UpdateAtomic(t *testing.T, repo rel.Repository) {
 	assert.Nil(t, repo.Update(&user, rel.Inc("age")))
 	assert.Equal(t, 11, user.Age)
 
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	assert.Equal(t, result, user)
+
 	assert.Nil(t, repo.Update(&user, rel.Dec("age")))
 	assert.Equal(t, 10, user.Age)
+
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	assert.Equal(t, result, user)
 }
 
 // Updates tests update specifications.
@@ -334,6 +341,17 @@ func Updates(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("Update", func(t *testing.T) {
 			assert.Nil(t, repo.Update(record))
+
+			switch v := record.(type) {
+			case *User:
+				var found User
+				repo.MustFind(&found, where.Eq("id", v.ID))
+				assert.Equal(t, found, *v)
+			case *Address:
+				var found Address
+				repo.MustFind(&found, where.Eq("id", v.ID))
+				assert.Equal(t, found, *v)
+			}
 		})
 	}
 }

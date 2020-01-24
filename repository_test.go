@@ -439,8 +439,8 @@ func TestRepository_InsertAll(t *testing.T) {
 
 	assert.Nil(t, repo.InsertAll(&users))
 	assert.Equal(t, []User{
-		{ID: 1, Name: "name1", CreatedAt: now(), UpdatedAt: now()},
-		{ID: 2, Name: "name2", CreatedAt: now(), UpdatedAt: now()},
+		{ID: 1, Name: "name1", Age: 0, CreatedAt: now(), UpdatedAt: now()},
+		{ID: 2, Name: "name2", Age: 12, CreatedAt: now(), UpdatedAt: now()},
 	}, users)
 
 	adapter.AssertExpectations(t)
@@ -1170,16 +1170,15 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 		doc          = NewDocument(&user)
 		modification = Apply(doc, NewStructset(doc, false))
 		modifies     = []map[string]Modify{
-			{"user_id": Set("user_id", user.ID), "item": Set("item", "item3")},
-			{"user_id": Set("user_id", user.ID), "item": Set("item", "item4")},
-			{"user_id": Set("user_id", user.ID), "item": Set("item", "item5")},
+			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item3")},
+			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item4")},
+			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item5")},
 		}
 		q = Build("transactions")
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
-	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
+	adapter.On("InsertAll", q, mock.Anything, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{

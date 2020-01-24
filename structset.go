@@ -42,7 +42,7 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 			}
 		}
 
-		if value, ok := s.doc.Value(field); ok && !isZero(value) {
+		if value, ok := s.doc.Value(field); ok {
 			if s.skipZero && isZero(value) {
 				continue
 			}

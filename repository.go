@@ -241,6 +241,7 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 		bulkModifies = make([]map[string]Modify, len(modification))
 	)
 
+	// TODO: baypassable if it's predictable.
 	for i := range modification {
 		for field := range modification[i].Modifies {
 			if _, exist := fieldMap[field]; !exist {

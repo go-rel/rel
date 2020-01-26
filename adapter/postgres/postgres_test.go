@@ -30,8 +30,8 @@ func init() {
 		gender VARCHAR(10) NOT NULL DEFAULT '',
 		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP,
+		created_at TIMESTAMPTZ,
+		updated_at TIMESTAMPTZ,
 		UNIQUE(slug)
 	);`, nil)
 	paranoid.Panic(err, "failed creating users table")
@@ -40,8 +40,8 @@ func init() {
 		id SERIAL NOT NULL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
 		name VARCHAR(60) NOT NULL DEFAULT '',
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP
+		created_at TIMESTAMPTZ,
+		updated_at TIMESTAMPTZ
 	);`, nil)
 	paranoid.Panic(err, "failed creating addresses table")
 
@@ -59,7 +59,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Local"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable"
 }
 
 func TestAdapter_specs(t *testing.T) {

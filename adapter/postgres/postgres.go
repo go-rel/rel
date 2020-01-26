@@ -48,10 +48,10 @@ func Open(dsn string) (*Adapter, error) {
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, modification rel.Modification, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		id              int64
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, modification)
+		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, modifies)
 		rows, err       = adapter.query(statement, args, loggers)
 	)
 
@@ -64,10 +64,10 @@ func (adapter *Adapter) Insert(query rel.Query, modification rel.Modification, l
 }
 
 // InsertAll inserts multiple records to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, modifications []rel.Modification, loggers ...rel.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
 	var (
 		ids             []interface{}
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Table, fields, modifications)
+		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Table, fields, bulkModifies)
 		rows, err       = adapter.query(statement, args, loggers)
 	)
 

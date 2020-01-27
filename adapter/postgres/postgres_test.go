@@ -3,6 +3,7 @@ package postgres
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/rel"
@@ -52,6 +53,9 @@ func init() {
 		score INTEGER DEFAULT 0 CHECK (score>=0 AND score<=100)
 	);`, nil)
 	paranoid.Panic(err, "failed creating extras table")
+
+	// hack to make sure location it has the same location object as returned by pq driver.
+	time.Local, _ = time.LoadLocation("Etc/UTC")
 }
 
 func dsn() string {
@@ -59,7 +63,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Etc/UTC"
 }
 
 func TestAdapter_specs(t *testing.T) {

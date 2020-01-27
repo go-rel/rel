@@ -257,7 +257,6 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 		return err
 	}
 
-	// TODO: reload
 	// apply ids
 	for i, id := range ids {
 		col.Get(i).SetValue(pField, id)

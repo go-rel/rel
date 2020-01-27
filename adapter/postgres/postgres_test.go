@@ -55,7 +55,8 @@ func init() {
 	paranoid.Panic(err, "failed creating extras table")
 
 	// hack to make sure location it has the same location object as returned by pq driver.
-	time.Local, _ = time.LoadLocation("Etc/UTC")
+	time.Local, err = time.LoadLocation("Asia/Jakarta")
+	paranoid.Panic(err, "failed loading time location")
 }
 
 func dsn() string {
@@ -63,7 +64,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE")
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Etc/UTC"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Asia/Jakarta"
 }
 
 func TestAdapter_specs(t *testing.T) {

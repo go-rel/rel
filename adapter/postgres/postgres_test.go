@@ -61,7 +61,7 @@ func init() {
 
 func dsn() string {
 	if os.Getenv("POSTGRESQL_DATABASE") != "" {
-		return os.Getenv("POSTGRESQL_DATABASE") + "?timezone=Asia/Jakarta"
+		return os.Getenv("POSTGRESQL_DATABASE") + "?sslmode=disable&timezone=Asia/Jakarta"
 	}
 
 	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Asia/Jakarta"

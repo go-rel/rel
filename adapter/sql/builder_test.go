@@ -471,6 +471,28 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 	assert.ElementsMatch(t, []interface{}{"foo", 10, true, 1}, args)
 }
 
+func TestBuilder_Update_incDecAndFragment(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+		builder = NewBuilder(config)
+	)
+
+	qs, qargs := builder.Update("users", map[string]rel.Modify{"age": rel.Inc("age")}, where.And())
+	assert.Equal(t, "UPDATE `users` SET `age`=`age`+?;", qs)
+	assert.Equal(t, []interface{}{1}, qargs)
+
+	qs, qargs = builder.Update("users", map[string]rel.Modify{"age": rel.Dec("age")}, where.And())
+	assert.Equal(t, "UPDATE `users` SET `age`=`age`-?;", qs)
+	assert.Equal(t, []interface{}{1}, qargs)
+
+	qs, qargs = builder.Update("users", map[string]rel.Modify{"age=?": rel.SetFragment("age=?", 10)}, where.And())
+	assert.Equal(t, "UPDATE `users` SET age=?;", qs)
+	assert.Equal(t, []interface{}{10}, qargs)
+}
+
 func TestBuilder_Delete(t *testing.T) {
 	var (
 		config = &Config{

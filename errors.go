@@ -5,7 +5,7 @@ type NotFoundError struct{}
 
 // Error message.
 func (nfe NotFoundError) Error() string {
-	return "Record Not Found"
+	return "Record not found"
 }
 
 // ConstraintType defines the type of constraint error.

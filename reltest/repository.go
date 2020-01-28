@@ -34,6 +34,7 @@ func (r *Repository) SetLogger(logger ...rel.Logger) {
 
 // Aggregate provides a mock function with given fields: query, aggregate, field
 func (r *Repository) Aggregate(query rel.Query, aggregate string, field string) (int, error) {
+	r.repo.Aggregate(query, aggregate, field)
 	ret := r.mock.Called(query, aggregate, field)
 	return ret.Int(0), ret.Error(1)
 }
@@ -52,6 +53,7 @@ func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field st
 
 // Count provides a mock function with given fields: collection, queriers
 func (r *Repository) Count(collection string, queriers ...rel.Querier) (int, error) {
+	r.repo.Count(collection, queriers...)
 	ret := r.mock.Called(collection, queriers)
 	return ret.Int(0), ret.Error(1)
 }
@@ -70,6 +72,7 @@ func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *Ag
 
 // Find provides a mock function with given fields: record, queriers
 func (r *Repository) Find(record interface{}, queriers ...rel.Querier) error {
+	r.repo.Find(record, queriers...)
 	return r.mock.Called(record, queriers).Error(0)
 }
 
@@ -85,6 +88,7 @@ func (r *Repository) ExpectFind(queriers ...rel.Querier) *Find {
 
 // FindAll provides a mock function with given fields: records, queriers
 func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error {
+	r.repo.FindAll(records, queriers...)
 	return r.mock.Called(records, queriers).Error(0)
 }
 
@@ -102,10 +106,7 @@ func (r *Repository) MustFindAll(records interface{}, queriers ...rel.Querier) {
 func (r *Repository) Insert(record interface{}, modifiers ...rel.Modifier) error {
 	ret := r.mock.Called(record, modifiers)
 
-	if err := r.repo.Insert(record, modifiers...); err != nil {
-		return err
-	}
-
+	r.repo.Insert(record, modifiers...)
 	return ret.Error(0)
 }
 
@@ -123,10 +124,7 @@ func (r *Repository) ExpectInsert(modifiers ...rel.Modifier) *Modify {
 func (r *Repository) InsertAll(records interface{}) error {
 	ret := r.mock.Called(records)
 
-	if err := r.repo.InsertAll(records); err != nil {
-		return err
-	}
-
+	r.repo.InsertAll(records)
 	return ret.Error(0)
 }
 

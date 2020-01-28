@@ -72,6 +72,7 @@ func (nc *nopCursor) Next() bool {
 }
 
 func (nc *nopCursor) Scan(...interface{}) error {
+	nc.NopScanner()
 	return nil
 }
 

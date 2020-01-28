@@ -41,14 +41,14 @@ func (ta *testAdapter) InsertAll(query Query, fields []string, modifies []map[st
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(query Query, modifies map[string]Modify, logger ...Logger) error {
+func (ta *testAdapter) Update(query Query, modifies map[string]Modify, logger ...Logger) (int, error) {
 	args := ta.Called(query, modifies)
-	return args.Error(0)
+	return args.Int(0), args.Error(1)
 }
 
-func (ta *testAdapter) Delete(query Query, logger ...Logger) error {
+func (ta *testAdapter) Delete(query Query, logger ...Logger) (int, error) {
 	args := ta.Called(query)
-	return args.Error(0)
+	return args.Int(0), args.Error(1)
 }
 
 func (ta *testAdapter) Begin() (Adapter, error) {

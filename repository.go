@@ -306,11 +306,16 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 
 	if len(modification.Modifies) != 0 {
 		var (
-			queriers = Build(doc.Table(), filter)
+			queriers          = Build(doc.Table(), filter)
+			updatedCount, err = r.adapter.Update(queriers, modification.Modifies, r.logger...)
 		)
 
-		if err := r.adapter.Update(queriers, modification.Modifies, r.logger...); err != nil {
+		if err != nil {
 			return err
+		}
+
+		if updatedCount == 0 {
+			return NoResultError{}
 		}
 
 		if modification.Reload {
@@ -540,14 +545,23 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 // Delete single entry.
 func (r repository) Delete(record interface{}) error {
 	var (
-		doc    = NewDocument(record)
-		table  = doc.Table()
-		pField = doc.PrimaryField()
-		pValue = doc.PrimaryValue()
-		q      = Build(table, Eq(pField, pValue))
+		doc               = NewDocument(record)
+		table             = doc.Table()
+		pField            = doc.PrimaryField()
+		pValue            = doc.PrimaryValue()
+		q                 = Build(table, Eq(pField, pValue))
+		deletedCount, err = r.adapter.Delete(q, r.logger...)
 	)
 
-	return r.adapter.Delete(q, r.logger...)
+	if err != nil {
+		return err
+	}
+
+	if deletedCount == 0 {
+		return NoResultError{}
+	}
+
+	return nil
 }
 
 // MustDelete single entry.
@@ -569,7 +583,11 @@ func (r repository) MustDeleteAll(queriers ...Querier) {
 }
 
 func (r repository) deleteAll(q Query) error {
-	return r.adapter.Delete(q, r.logger...)
+	var (
+		_, err = r.adapter.Delete(q, r.logger...)
+	)
+
+	return err
 }
 
 // Preload loads association with given query.

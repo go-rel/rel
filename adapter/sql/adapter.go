@@ -141,23 +141,23 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) error {
+func (adapter *Adapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
-		_, _, err       = adapter.Exec(statement, args, loggers...)
+		statement, args      = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
+		_, updatedCount, err = adapter.Exec(statement, args, loggers...)
 	)
 
-	return err
+	return int(updatedCount), err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) error {
+func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) (int, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
-		_, _, err       = adapter.Exec(statement, args, loggers...)
+		statement, args      = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
+		_, deletedCount, err = adapter.Exec(statement, args, loggers...)
 	)
 
-	return err
+	return int(deletedCount), err
 }
 
 // Begin begins a new transaction.

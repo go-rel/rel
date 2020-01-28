@@ -22,8 +22,8 @@ func (na *nopAdapter) Commit() error {
 	return nil
 }
 
-func (na *nopAdapter) Delete(query rel.Query, loggers ...rel.Logger) error {
-	return nil
+func (na *nopAdapter) Delete(query rel.Query, loggers ...rel.Logger) (int, error) {
+	return 1, nil
 }
 
 func (na *nopAdapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
@@ -50,8 +50,8 @@ func (na *nopAdapter) Rollback() error {
 	return nil
 }
 
-func (na *nopAdapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) error {
-	return nil
+func (na *nopAdapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
+	return 1, nil
 }
 
 type nopCursor struct {

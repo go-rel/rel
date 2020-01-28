@@ -486,7 +486,7 @@ func TestRepository_Update(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, modifies).Return(nil).Once()
+	adapter.On("Update", queries, modifies).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(&user, modifiers...))
 	assert.Equal(t, User{
@@ -494,6 +494,29 @@ func TestRepository_Update(t *testing.T) {
 		Name:      "name",
 		UpdatedAt: now(),
 	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_notFound(t *testing.T) {
+	var (
+		user      = User{ID: 1}
+		adapter   = &testAdapter{}
+		repo      = repository{adapter: adapter}
+		modifiers = []Modifier{
+			Set("name", "name"),
+			Set("updated_at", now()),
+		}
+		modifies = map[string]Modify{
+			"name":       Set("name", "name"),
+			"updated_at": Set("updated_at", now()),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
+	)
+
+	adapter.On("Update", queries, modifies).Return(0, nil).Once()
+
+	assert.Equal(t, NoResultError{}, repo.Update(&user, modifiers...))
 
 	adapter.AssertExpectations(t)
 }
@@ -513,7 +536,7 @@ func TestRepository_Update_reload(t *testing.T) {
 		cur     = createCursor(1)
 	)
 
-	adapter.On("Update", queries, modifies).Return(nil).Once()
+	adapter.On("Update", queries, modifies).Return(1, nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Update(&user, modifiers...))
@@ -541,7 +564,7 @@ func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", queries, mock.Anything).Return(err).Once()
+	adapter.On("Update", queries, mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(&address))
@@ -566,8 +589,8 @@ func TestRepository_Update_saveHasOneError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), mock.Anything).Return(err).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), mock.Anything).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(&user))
@@ -591,8 +614,8 @@ func TestRepository_Update_saveHasManyError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(nil).Once()
-	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10))).Return(err).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10))).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(&user))
@@ -627,7 +650,7 @@ func TestRepository_Update_error(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, modifies).Return(errors.New("error")).Once()
+	adapter.On("Update", queries, modifies).Return(0, errors.New("error")).Once()
 
 	assert.NotNil(t, repo.Update(&user, modifiers...))
 	assert.Panics(t, func() { repo.MustUpdate(&user, modifiers...) })
@@ -657,7 +680,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, modifies).Return(nil).Once()
+	adapter.On("Update", q, modifies).Return(1, nil).Once()
 
 	assert.Nil(t, repo.saveBelongsTo(doc, &modification))
 	assert.Equal(t, Transaction{
@@ -696,7 +719,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, modifies).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, modifies).Return(0, errors.New("update error")).Once()
 
 	err := repo.saveBelongsTo(doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
@@ -834,7 +857,7 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
 	)
 
-	adapter.On("Update", q, modifies).Return(nil).Once()
+	adapter.On("Update", q, modifies).Return(1, nil).Once()
 
 	assert.Nil(t, repo.saveHasOne(doc, &modification))
 	adapter.AssertExpectations(t)
@@ -860,7 +883,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1))
 	)
 
-	adapter.On("Update", q, modifies).Return(errors.New("update error")).Once()
+	adapter.On("Update", q, modifies).Return(0, errors.New("update error")).Once()
 
 	err := repo.saveHasOne(doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
@@ -1051,9 +1074,9 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 
 	modification.SetDeletedIDs("transactions", []interface{}{3})
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), modifies[1]).Return(nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), modifies[1]).Return(1, nil).Once()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
 	assert.Equal(t, User{
@@ -1093,7 +1116,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		}
 	)
 
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(1, nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 
@@ -1138,7 +1161,7 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 		q = Build("transactions")
 	)
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(1, nil).Once()
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
@@ -1177,7 +1200,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 		q = Build("transactions")
 	)
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(1, nil).Once()
 	adapter.On("InsertAll", q, mock.Anything, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 
 	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
@@ -1212,7 +1235,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 		err          = errors.New("delete all error")
 	)
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(err).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(0, err).Once()
 
 	assert.Equal(t, err, repo.saveHasMany(doc, &modification, false))
 
@@ -1248,7 +1271,7 @@ func TestRepository_Delete(t *testing.T) {
 		user    = User{ID: 1}
 	)
 
-	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Delete(&user))
 
@@ -1262,7 +1285,7 @@ func TestRepository_MustDelete(t *testing.T) {
 		user    = User{ID: 1}
 	)
 
-	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
 		repo.MustDelete(&user)
@@ -1278,7 +1301,7 @@ func TestRepository_DeleteAll(t *testing.T) {
 		queries = From("logs").Where(Eq("user_id", 1))
 	)
 
-	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(nil).Once()
+	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.Nil(t, repo.DeleteAll(queries))
 
@@ -1292,7 +1315,7 @@ func TestRepository_MustDeleteAll(t *testing.T) {
 		queries = From("logs").Where(Eq("user_id", 1))
 	)
 
-	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(nil).Once()
+	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
 		repo.MustDeleteAll(queries)

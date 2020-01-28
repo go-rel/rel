@@ -138,6 +138,8 @@ func TestAdapter_Delete(t *testing.T) {
 
 	defer adapter.Close()
 
+	repo.MustInsert(&name)
+
 	assert.Nil(t, repo.Delete(&name))
 }
 

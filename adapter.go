@@ -6,8 +6,8 @@ type Adapter interface {
 	Query(query Query, loggers ...Logger) (Cursor, error)
 	Insert(query Query, modifies map[string]Modify, loggers ...Logger) (interface{}, error)
 	InsertAll(query Query, fields []string, bulkModifies []map[string]Modify, loggers ...Logger) ([]interface{}, error)
-	Update(query Query, modifies map[string]Modify, loggers ...Logger) error
-	Delete(query Query, loggers ...Logger) error
+	Update(query Query, modifies map[string]Modify, loggers ...Logger) (int, error)
+	Delete(query Query, loggers ...Logger) (int, error)
 
 	Begin() (Adapter, error)
 	Commit() error

@@ -23,7 +23,7 @@ func scanOne(cur Cursor, doc *Document) error {
 	}
 
 	if !cur.Next() {
-		return NoResultError{}
+		return NotFoundError{}
 	}
 
 	var (

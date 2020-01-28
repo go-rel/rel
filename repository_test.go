@@ -172,7 +172,7 @@ func TestRepository_Find_notFound(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	err := repo.Find(&user, query)
-	assert.Equal(t, NoResultError{}, err)
+	assert.Equal(t, NotFoundError{}, err)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -516,7 +516,7 @@ func TestRepository_Update_notFound(t *testing.T) {
 
 	adapter.On("Update", queries, modifies).Return(0, nil).Once()
 
-	assert.Equal(t, NoResultError{}, repo.Update(&user, modifiers...))
+	assert.Equal(t, NotFoundError{}, repo.Update(&user, modifiers...))
 
 	adapter.AssertExpectations(t)
 }

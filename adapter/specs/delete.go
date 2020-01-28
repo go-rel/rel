@@ -18,7 +18,7 @@ func Delete(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, user.ID)
 
 	assert.Nil(t, repo.Delete(&user))
-	assert.Equal(t, rel.NoResultError{}, repo.Find(&user, where.Eq("id", user.ID)))
+	assert.Equal(t, rel.NotFoundError{}, repo.Find(&user, where.Eq("id", user.ID)))
 }
 
 // DeleteAll tests delete specifications.

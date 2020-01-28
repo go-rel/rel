@@ -89,7 +89,7 @@ func QueryNotFound(t *testing.T, repo rel.Repository) {
 		)
 
 		// find user error not found
-		assert.Equal(t, rel.NoResultError{}, err)
+		assert.Equal(t, rel.NotFoundError{}, err)
 	})
 }
 

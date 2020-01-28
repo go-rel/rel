@@ -8,7 +8,7 @@ import (
 )
 
 func TestNoResultError(t *testing.T) {
-	assert.Equal(t, "No result found", NoResultError{}.Error())
+	assert.Equal(t, "No result found", NotFoundError{}.Error())
 }
 
 func TestConstraintType(t *testing.T) {

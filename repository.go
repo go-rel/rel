@@ -315,7 +315,7 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 		}
 
 		if updatedCount == 0 {
-			return NoResultError{}
+			return NotFoundError{}
 		}
 
 		if modification.Reload {
@@ -558,7 +558,7 @@ func (r repository) Delete(record interface{}) error {
 	}
 
 	if deletedCount == 0 {
-		return NoResultError{}
+		return NotFoundError{}
 	}
 
 	return nil

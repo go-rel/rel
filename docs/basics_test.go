@@ -38,10 +38,10 @@ func TestExample_findNoResult(t *testing.T) {
 	var repo = reltest.New()
 
 	// mock find and return other result
-	repo.ExpectFind(where.Eq("id", 1)).NoResult()
+	repo.ExpectFind(where.Eq("id", 1)).NotFound()
 
 	// run and asserts
-	assert.Equal(t, rel.NoResultError{}, Example(repo))
+	assert.Equal(t, rel.NotFoundError{}, Example(repo))
 	repo.AssertExpectations(t)
 }
 

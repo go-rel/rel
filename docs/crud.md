@@ -144,8 +144,8 @@ repo.Find(&book, where.Eq("id", 1))
 // Expect a find query and mock the result.
 repo.ExpectFind(rel.Eq("id", 1)).Result(book)
 
-// OR: Expect a find query and returns rel.NoResultError
-repo.ExpectFind(where.Eq("id", 1)).NoResult()
+// OR: Expect a find query and returns rel.NotFoundError
+repo.ExpectFind(where.Eq("id", 1)).NotFound()
 ```
 
 <!-- tabs:end -->

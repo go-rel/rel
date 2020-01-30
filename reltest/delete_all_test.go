@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -15,12 +16,12 @@ func TestDeleteAll(t *testing.T) {
 	)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
-	assert.Nil(t, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+	assert.Nil(t, repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1))))
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+		repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	})
 	repo.AssertExpectations(t)
 }
@@ -31,12 +32,12 @@ func TestDeleteAll_error(t *testing.T) {
 	)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1))))
+	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1))))
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+		repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	})
 	repo.AssertExpectations(t)
 }
@@ -48,7 +49,7 @@ func TestDeleteAll_noTable(t *testing.T) {
 
 	repo.ExpectDeleteAll()
 	assert.Panics(t, func() {
-		repo.MustDeleteAll()
+		repo.MustDeleteAll(context.TODO())
 	})
 	repo.AssertExpectations(t)
 }
@@ -60,13 +61,13 @@ func TestDeleteAll_unsafe(t *testing.T) {
 
 	repo.ExpectDeleteAll(rel.From("books"))
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(rel.From("books"))
+		repo.MustDeleteAll(context.TODO(), rel.From("books"))
 	})
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books")).Unsafe()
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(rel.From("books"))
+		repo.MustDeleteAll(context.TODO(), rel.From("books"))
 	})
 	repo.AssertExpectations(t)
 }

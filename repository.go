@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"runtime"
@@ -12,27 +13,27 @@ import (
 type Repository interface {
 	Adapter() Adapter
 	SetLogger(logger ...Logger)
-	Aggregate(query Query, aggregate string, field string) (int, error)
-	MustAggregate(query Query, aggregate string, field string) int
-	Count(collection string, queriers ...Querier) (int, error)
-	MustCount(collection string, queriers ...Querier) int
-	Find(record interface{}, queriers ...Querier) error
-	MustFind(record interface{}, queriers ...Querier)
-	FindAll(records interface{}, queriers ...Querier) error
-	MustFindAll(records interface{}, queriers ...Querier)
-	Insert(record interface{}, modifiers ...Modifier) error
-	MustInsert(record interface{}, modifiers ...Modifier)
-	InsertAll(records interface{}) error
-	MustInsertAll(records interface{})
-	Update(record interface{}, modifiers ...Modifier) error
-	MustUpdate(record interface{}, modifiers ...Modifier)
-	Delete(record interface{}) error
-	MustDelete(record interface{})
-	DeleteAll(queriers ...Querier) error
-	MustDeleteAll(queriers ...Querier)
-	Preload(records interface{}, field string, queriers ...Querier) error
-	MustPreload(records interface{}, field string, queriers ...Querier)
-	Transaction(fn func(Repository) error) error
+	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
+	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
+	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
+	MustCount(ctx context.Context, collection string, queriers ...Querier) int
+	Find(ctx context.Context, record interface{}, queriers ...Querier) error
+	MustFind(ctx context.Context, record interface{}, queriers ...Querier)
+	FindAll(ctx context.Context, records interface{}, queriers ...Querier) error
+	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
+	Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error
+	MustInsert(ctx context.Context, record interface{}, modifiers ...Modifier)
+	InsertAll(ctx context.Context, records interface{}) error
+	MustInsertAll(ctx context.Context, records interface{})
+	Update(ctx context.Context, record interface{}, modifiers ...Modifier) error
+	MustUpdate(ctx context.Context, record interface{}, modifiers ...Modifier)
+	Delete(ctx context.Context, record interface{}) error
+	MustDelete(ctx context.Context, record interface{})
+	DeleteAll(ctx context.Context, queriers ...Querier) error
+	MustDeleteAll(ctx context.Context, queriers ...Querier)
+	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
+	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
+	Transaction(ctx context.Context, fn func(Repository) error) error
 }
 
 type repository struct {
@@ -53,55 +54,55 @@ func (r *repository) SetLogger(logger ...Logger) {
 // Supported aggregate: count, sum, avg, max, min.
 // Any select, group, offset, limit and sort query will be ignored automatically.
 // If complex aggregation is needed, consider using All instead,
-func (r repository) Aggregate(query Query, aggregate string, field string) (int, error) {
+func (r repository) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
 	query.GroupQuery = GroupQuery{}
 	query.LimitQuery = 0
 	query.OffsetQuery = 0
 	query.SortQuery = nil
 
-	return r.adapter.Aggregate(query, aggregate, field, r.logger...)
+	return r.adapter.Aggregate(ctx, query, aggregate, field, r.logger...)
 }
 
 // MustAggregate calculate aggregate over the given field.
 // It'll panic if any error eccured.
-func (r repository) MustAggregate(query Query, aggregate string, field string) int {
-	result, err := r.Aggregate(query, aggregate, field)
+func (r repository) MustAggregate(ctx context.Context, query Query, aggregate string, field string) int {
+	result, err := r.Aggregate(ctx, query, aggregate, field)
 	must(err)
 	return result
 }
 
 // Count retrieves count of results that match the query.
-func (r repository) Count(collection string, queriers ...Querier) (int, error) {
-	return r.Aggregate(Build(collection, queriers...), "count", "*")
+func (r repository) Count(ctx context.Context, collection string, queriers ...Querier) (int, error) {
+	return r.Aggregate(ctx, Build(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
 // It'll panic if any error eccured.
-func (r repository) MustCount(collection string, queriers ...Querier) int {
-	count, err := r.Count(collection, queriers...)
+func (r repository) MustCount(ctx context.Context, collection string, queriers ...Querier) int {
+	count, err := r.Count(ctx, collection, queriers...)
 	must(err)
 	return count
 }
 
 // Find a record that match the query.
 // If no result found, it'll return not found error.
-func (r repository) Find(record interface{}, queriers ...Querier) error {
+func (r repository) Find(ctx context.Context, record interface{}, queriers ...Querier) error {
 	var (
 		doc   = NewDocument(record)
 		query = Build(doc.Table(), queriers...)
 	)
 
-	return r.find(doc, query)
+	return r.find(ctx, doc, query)
 }
 
 // MustFind a record that match the query.
 // If no result found, it'll panic.
-func (r repository) MustFind(record interface{}, queriers ...Querier) {
-	must(r.Find(record, queriers...))
+func (r repository) MustFind(ctx context.Context, record interface{}, queriers ...Querier) {
+	must(r.Find(ctx, record, queriers...))
 }
 
-func (r repository) find(doc *Document, query Query) error {
-	cur, err := r.adapter.Query(query.Limit(1), r.logger...)
+func (r repository) find(ctx context.Context, doc *Document, query Query) error {
+	cur, err := r.adapter.Query(ctx, query.Limit(1), r.logger...)
 	if err != nil {
 		return err
 	}
@@ -110,7 +111,7 @@ func (r repository) find(doc *Document, query Query) error {
 }
 
 // FindAll records that match the query.
-func (r repository) FindAll(records interface{}, queriers ...Querier) error {
+func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
 	var (
 		col   = NewCollection(records)
 		query = Build(col.Table(), queriers...)
@@ -118,17 +119,17 @@ func (r repository) FindAll(records interface{}, queriers ...Querier) error {
 
 	col.Reset()
 
-	return r.findAll(col, query)
+	return r.findAll(ctx, col, query)
 }
 
 // MustFindAll records that match the query.
 // It'll panic if any error eccured.
-func (r repository) MustFindAll(records interface{}, queriers ...Querier) {
-	must(r.FindAll(records, queriers...))
+func (r repository) MustFindAll(ctx context.Context, records interface{}, queriers ...Querier) {
+	must(r.FindAll(ctx, records, queriers...))
 }
 
-func (r repository) findAll(col *Collection, query Query) error {
-	cur, err := r.adapter.Query(query, r.logger...)
+func (r repository) findAll(ctx context.Context, col *Collection, query Query) error {
+	cur, err := r.adapter.Query(ctx, query, r.logger...)
 	if err != nil {
 		return err
 	}
@@ -137,7 +138,7 @@ func (r repository) findAll(col *Collection, query Query) error {
 }
 
 // Insert an record to database.
-func (r repository) Insert(record interface{}, modifiers ...Modifier) error {
+func (r repository) Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	if record == nil {
 		return nil
@@ -155,32 +156,32 @@ func (r repository) Insert(record interface{}, modifiers ...Modifier) error {
 	}
 
 	if len(modification.Assoc) > 0 {
-		return r.Transaction(func(r Repository) error {
-			return r.(*repository).insert(doc, modification)
+		return r.Transaction(ctx, func(r Repository) error {
+			return r.(*repository).insert(ctx, doc, modification)
 		})
 	}
 
-	return r.insert(doc, modification)
+	return r.insert(ctx, doc, modification)
 }
 
-func (r repository) insert(doc *Document, modification Modification) error {
+func (r repository) insert(ctx context.Context, doc *Document, modification Modification) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = Build(doc.Table())
 	)
 
-	if err := r.saveBelongsTo(doc, &modification); err != nil {
+	if err := r.saveBelongsTo(ctx, doc, &modification); err != nil {
 		return err
 	}
 
-	pValue, err := r.Adapter().Insert(queriers, modification.Modifies, r.logger...)
+	pValue, err := r.Adapter().Insert(ctx, queriers, modification.Modifies, r.logger...)
 	if err != nil {
 		return err
 	}
 
 	if modification.Reload {
 		// fetch record
-		if err := r.find(doc, queriers.Where(Eq(pField, pValue))); err != nil {
+		if err := r.find(ctx, doc, queriers.Where(Eq(pField, pValue))); err != nil {
 			return err
 		}
 	} else {
@@ -188,11 +189,11 @@ func (r repository) insert(doc *Document, modification Modification) error {
 		doc.SetValue(pField, pValue)
 	}
 
-	if err := r.saveHasOne(doc, &modification); err != nil {
+	if err := r.saveHasOne(ctx, doc, &modification); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(doc, &modification, true); err != nil {
+	if err := r.saveHasMany(ctx, doc, &modification, true); err != nil {
 		return err
 	}
 
@@ -201,11 +202,11 @@ func (r repository) insert(doc *Document, modification Modification) error {
 
 // MustInsert an record to database.
 // It'll panic if any error occurred.
-func (r repository) MustInsert(record interface{}, modifiers ...Modifier) {
-	must(r.Insert(record, modifiers...))
+func (r repository) MustInsert(ctx context.Context, record interface{}, modifiers ...Modifier) {
+	must(r.Insert(ctx, record, modifiers...))
 }
 
-func (r repository) InsertAll(records interface{}) error {
+func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 	if records == nil {
 		return nil
 	}
@@ -220,15 +221,15 @@ func (r repository) InsertAll(records interface{}) error {
 		mods[i] = Apply(doc, newStructset(doc, false))
 	}
 
-	return r.insertAll(col, mods)
+	return r.insertAll(ctx, col, mods)
 }
 
-func (r repository) MustInsertAll(records interface{}) {
-	must(r.InsertAll(records))
+func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
+	must(r.InsertAll(ctx, records))
 }
 
 // TODO: support assocs
-func (r repository) insertAll(col *Collection, modification []Modification) error {
+func (r repository) insertAll(ctx context.Context, col *Collection, modification []Modification) error {
 	if len(modification) == 0 {
 		return nil
 	}
@@ -252,7 +253,7 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 		bulkModifies[i] = modification[i].Modifies
 	}
 
-	ids, err := r.adapter.InsertAll(queriers, fields, bulkModifies, r.logger...)
+	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkModifies, r.logger...)
 	if err != nil {
 		return err
 	}
@@ -270,7 +271,7 @@ func (r repository) insertAll(col *Collection, modification []Modification) erro
 // not supported:
 // - update has many (will be replaced by default)
 // - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
-func (r repository) Update(record interface{}, modifiers ...Modifier) error {
+func (r repository) Update(ctx context.Context, record interface{}, modifiers ...Modifier) error {
 	// TODO: perform reference check on library level for record instead of adapter level
 	// TODO: make sure primary id not changed
 	if record == nil {
@@ -291,23 +292,23 @@ func (r repository) Update(record interface{}, modifiers ...Modifier) error {
 	}
 
 	if len(modification.Assoc) > 0 {
-		return r.Transaction(func(r Repository) error {
-			return r.(*repository).update(doc, modification, Eq(pField, pValue))
+		return r.Transaction(ctx, func(r Repository) error {
+			return r.(*repository).update(ctx, doc, modification, Eq(pField, pValue))
 		})
 	}
 
-	return r.update(doc, modification, Eq(pField, pValue))
+	return r.update(ctx, doc, modification, Eq(pField, pValue))
 }
 
-func (r repository) update(doc *Document, modification Modification, filter FilterQuery) error {
-	if err := r.saveBelongsTo(doc, &modification); err != nil {
+func (r repository) update(ctx context.Context, doc *Document, modification Modification, filter FilterQuery) error {
+	if err := r.saveBelongsTo(ctx, doc, &modification); err != nil {
 		return err
 	}
 
 	if len(modification.Modifies) != 0 {
 		var (
 			queriers          = Build(doc.Table(), filter)
-			updatedCount, err = r.adapter.Update(queriers, modification.Modifies, r.logger...)
+			updatedCount, err = r.adapter.Update(ctx, queriers, modification.Modifies, r.logger...)
 		)
 
 		if err != nil {
@@ -319,17 +320,17 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 		}
 
 		if modification.Reload {
-			if err := r.find(doc, queriers); err != nil {
+			if err := r.find(ctx, doc, queriers); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := r.saveHasOne(doc, &modification); err != nil {
+	if err := r.saveHasOne(ctx, doc, &modification); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(doc, &modification, false); err != nil {
+	if err := r.saveHasMany(ctx, doc, &modification, false); err != nil {
 		return err
 	}
 
@@ -338,12 +339,12 @@ func (r repository) update(doc *Document, modification Modification, filter Filt
 
 // MustUpdate an record in database.
 // It'll panic if any error occurred.
-func (r repository) MustUpdate(record interface{}, modifiers ...Modifier) {
-	must(r.Update(record, modifiers...))
+func (r repository) MustUpdate(ctx context.Context, record interface{}, modifiers ...Modifier) {
+	must(r.Update(ctx, record, modifiers...))
 }
 
 // TODO: support deletion
-func (r repository) saveBelongsTo(doc *Document, modification *Modification) error {
+func (r repository) saveBelongsTo(ctx context.Context, doc *Document, modification *Modification) error {
 	for _, field := range doc.BelongsTo() {
 		assocMods, changed := modification.Assoc[field]
 		if !changed || len(assocMods.Modifications) == 0 {
@@ -373,11 +374,11 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if err := r.update(assocDoc, assocMod, filter); err != nil {
+			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(assocDoc, assocMod); err != nil {
+			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
 				return err
 			}
 
@@ -395,7 +396,7 @@ func (r repository) saveBelongsTo(doc *Document, modification *Modification) err
 }
 
 // TODO: suppprt deletion
-func (r repository) saveHasOne(doc *Document, modification *Modification) error {
+func (r repository) saveHasOne(ctx context.Context, doc *Document, modification *Modification) error {
 	for _, field := range doc.HasOne() {
 		assocMods, changed := modification.Assoc[field]
 		if !changed || len(assocMods.Modifications) == 0 {
@@ -425,13 +426,13 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 				filter = Eq(pField, pValue).AndEq(fField, rValue)
 			)
 
-			if err := r.update(assocDoc, assocMod, filter); err != nil {
+			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
 			assocMod.Add(Set(fField, rValue))
 
-			if err := r.insert(assocDoc, assocMod); err != nil {
+			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
 				return err
 			}
 		}
@@ -443,7 +444,7 @@ func (r repository) saveHasOne(doc *Document, modification *Modification) error 
 }
 
 // saveHasMany expects has many modification to be ordered the same as the recrods in collection.
-func (r repository) saveHasMany(doc *Document, modification *Modification, insertion bool) error {
+func (r repository) saveHasMany(ctx context.Context, doc *Document, modification *Modification, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		assocMods, changed := modification.Assoc[field]
 		if !changed {
@@ -473,11 +474,11 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 
 			if deletedIDs == nil {
 				// if it's nil, then clear old association (used by structset).
-				if err := r.deleteAll(Build(table, filter)); err != nil {
+				if err := r.deleteAll(ctx, Build(table, filter)); err != nil {
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
-				if err := r.deleteAll(Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+				if err := r.deleteAll(ctx, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
 					return err
 				}
 			}
@@ -510,7 +511,7 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 					mods[i], mods[updateCount] = mods[updateCount], mods[i]
 				}
 
-				if err := r.update(assocDoc, mods[i], filter); err != nil {
+				if err := r.update(ctx, assocDoc, mods[i], filter); err != nil {
 					return err
 				}
 
@@ -532,7 +533,7 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 				insertCol = col.Slice(updateCount, len(mods))
 			}
 
-			if err := r.insertAll(insertCol, insertMods); err != nil {
+			if err := r.insertAll(ctx, insertCol, insertMods); err != nil {
 				return err
 			}
 		}
@@ -543,14 +544,14 @@ func (r repository) saveHasMany(doc *Document, modification *Modification, inser
 }
 
 // Delete single entry.
-func (r repository) Delete(record interface{}) error {
+func (r repository) Delete(ctx context.Context, record interface{}) error {
 	var (
 		doc               = NewDocument(record)
 		table             = doc.Table()
 		pField            = doc.PrimaryField()
 		pValue            = doc.PrimaryValue()
 		q                 = Build(table, Eq(pField, pValue))
-		deletedCount, err = r.adapter.Delete(q, r.logger...)
+		deletedCount, err = r.adapter.Delete(ctx, q, r.logger...)
 	)
 
 	if err != nil {
@@ -566,32 +567,32 @@ func (r repository) Delete(record interface{}) error {
 
 // MustDelete single entry.
 // It'll panic if any error eccured.
-func (r repository) MustDelete(record interface{}) {
-	must(r.Delete(record))
+func (r repository) MustDelete(ctx context.Context, record interface{}) {
+	must(r.Delete(ctx, record))
 }
 
-func (r repository) DeleteAll(queriers ...Querier) error {
+func (r repository) DeleteAll(ctx context.Context, queriers ...Querier) error {
 	var (
 		q = Build("", queriers...)
 	)
 
-	return r.deleteAll(q)
+	return r.deleteAll(ctx, q)
 }
 
-func (r repository) MustDeleteAll(queriers ...Querier) {
-	must(r.DeleteAll(queriers...))
+func (r repository) MustDeleteAll(ctx context.Context, queriers ...Querier) {
+	must(r.DeleteAll(ctx, queriers...))
 }
 
-func (r repository) deleteAll(q Query) error {
+func (r repository) deleteAll(ctx context.Context, q Query) error {
 	var (
-		_, err = r.adapter.Delete(q, r.logger...)
+		_, err = r.adapter.Delete(ctx, q, r.logger...)
 	)
 
 	return err
 }
 
 // Preload loads association with given query.
-func (r repository) Preload(records interface{}, field string, queriers ...Querier) error {
+func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
 	var (
 		sl   slice
 		path = strings.Split(field, ".")
@@ -629,7 +630,7 @@ func (r repository) Preload(records interface{}, field string, queriers ...Queri
 
 	var (
 		query    = Build(table, append(queriers, In(keyField, ids...))...)
-		cur, err = r.adapter.Query(query, r.logger...)
+		cur, err = r.adapter.Query(ctx, query, r.logger...)
 	)
 
 	if err != nil {
@@ -641,8 +642,8 @@ func (r repository) Preload(records interface{}, field string, queriers ...Queri
 
 // MustPreload loads association with given query.
 // It'll panic if any error occurred.
-func (r repository) MustPreload(records interface{}, field string, queriers ...Querier) {
-	must(r.Preload(records, field, queriers...))
+func (r repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier) {
+	must(r.Preload(ctx, records, field, queriers...))
 }
 
 func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
@@ -730,8 +731,8 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 }
 
 // Transaction performs transaction with given function argument.
-func (r repository) Transaction(fn func(Repository) error) error {
-	adp, err := r.adapter.Begin()
+func (r repository) Transaction(ctx context.Context, fn func(Repository) error) error {
+	adp, err := r.adapter.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -745,7 +746,7 @@ func (r repository) Transaction(fn func(Repository) error) error {
 	func() {
 		defer func() {
 			if p := recover(); p != nil {
-				_ = txRepo.adapter.Rollback()
+				_ = txRepo.adapter.Rollback(ctx)
 
 				switch e := p.(type) {
 				case runtime.Error:
@@ -756,9 +757,9 @@ func (r repository) Transaction(fn func(Repository) error) error {
 					panic(e)
 				}
 			} else if err != nil {
-				_ = txRepo.adapter.Rollback()
+				_ = txRepo.adapter.Rollback(ctx)
 			} else {
-				err = txRepo.adapter.Commit()
+				err = txRepo.adapter.Commit(ctx)
 			}
 		}()
 

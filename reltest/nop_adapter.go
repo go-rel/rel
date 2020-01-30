@@ -1,6 +1,8 @@
 package reltest
 
 import (
+	"context"
+
 	"github.com/Fs02/rel"
 	"github.com/stretchr/testify/mock"
 )
@@ -10,27 +12,27 @@ type nopAdapter struct {
 	count int
 }
 
-func (na *nopAdapter) Aggregate(query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
+func (na *nopAdapter) Aggregate(ctx context.Context, query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
 	return 0, nil
 }
 
-func (na *nopAdapter) Begin() (rel.Adapter, error) {
+func (na *nopAdapter) Begin(ctx context.Context) (rel.Adapter, error) {
 	return na, nil
 }
 
-func (na *nopAdapter) Commit() error {
+func (na *nopAdapter) Commit(ctx context.Context) error {
 	return nil
 }
 
-func (na *nopAdapter) Delete(query rel.Query, loggers ...rel.Logger) (int, error) {
+func (na *nopAdapter) Delete(ctx context.Context, query rel.Query, loggers ...rel.Logger) (int, error) {
 	return 1, nil
 }
 
-func (na *nopAdapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
+func (na *nopAdapter) Insert(ctx context.Context, query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	return 1, nil
 }
 
-func (na *nopAdapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
+func (na *nopAdapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
 	var (
 		ids = make([]interface{}, len(bulkModifies))
 	)
@@ -42,15 +44,15 @@ func (na *nopAdapter) InsertAll(query rel.Query, fields []string, bulkModifies [
 	return ids, nil
 }
 
-func (na *nopAdapter) Query(query rel.Query, loggers ...rel.Logger) (rel.Cursor, error) {
+func (na *nopAdapter) Query(ctx context.Context, query rel.Query, loggers ...rel.Logger) (rel.Cursor, error) {
 	return &nopCursor{count: 1}, nil
 }
 
-func (na *nopAdapter) Rollback() error {
+func (na *nopAdapter) Rollback(ctx context.Context) error {
 	return nil
 }
 
-func (na *nopAdapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
+func (na *nopAdapter) Update(ctx context.Context, query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
 	return 1, nil
 }
 

@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -52,8 +53,8 @@ func TestRepository_Transaction(t *testing.T) {
 		repo.ExpectInsert()
 	})
 
-	assert.Nil(t, repo.Transaction(func(repo rel.Repository) error {
-		return repo.Insert(&result)
+	assert.Nil(t, repo.Transaction(context.TODO(), func(repo rel.Repository) error {
+		return repo.Insert(context.TODO(), &result)
 	}))
 
 	assert.Equal(t, book, result)
@@ -71,8 +72,8 @@ func TestRepository_Transaction_error(t *testing.T) {
 		repo.ExpectInsert().ConnectionClosed()
 	})
 
-	assert.Equal(t, sql.ErrConnDone, repo.Transaction(func(repo rel.Repository) error {
-		repo.MustInsert(&result)
+	assert.Equal(t, sql.ErrConnDone, repo.Transaction(context.TODO(), func(repo rel.Repository) error {
+		repo.MustInsert(context.TODO(), &result)
 		return nil
 	}))
 
@@ -89,7 +90,7 @@ func TestRepository_Transaction_panic(t *testing.T) {
 	})
 
 	assert.Panics(t, func() {
-		_ = repo.Transaction(func(repo rel.Repository) error {
+		_ = repo.Transaction(context.TODO(), func(repo rel.Repository) error {
 			panic("error")
 		})
 	})
@@ -107,7 +108,7 @@ func TestRepository_Transaction_runtimerError(t *testing.T) {
 	})
 
 	assert.Panics(t, func() {
-		_ = repo.Transaction(func(repo rel.Repository) error {
+		_ = repo.Transaction(context.TODO(), func(repo rel.Repository) error {
 			_ = book.ID
 			return nil
 		})

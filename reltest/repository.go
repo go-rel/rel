@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"runtime"
 	"testing"
 
@@ -33,15 +34,15 @@ func (r *Repository) SetLogger(logger ...rel.Logger) {
 }
 
 // Aggregate provides a mock function with given fields: query, aggregate, field
-func (r *Repository) Aggregate(query rel.Query, aggregate string, field string) (int, error) {
-	r.repo.Aggregate(query, aggregate, field)
+func (r *Repository) Aggregate(ctx context.Context, query rel.Query, aggregate string, field string) (int, error) {
+	r.repo.Aggregate(ctx, query, aggregate, field)
 	ret := r.mock.Called(query, aggregate, field)
 	return ret.Int(0), ret.Error(1)
 }
 
 // MustAggregate provides a mock function with given fields: query, aggregate, field
-func (r *Repository) MustAggregate(query rel.Query, aggregate string, field string) int {
-	result, err := r.Aggregate(query, aggregate, field)
+func (r *Repository) MustAggregate(ctx context.Context, query rel.Query, aggregate string, field string) int {
+	result, err := r.Aggregate(ctx, query, aggregate, field)
 	must(err)
 	return result
 }
@@ -52,15 +53,15 @@ func (r *Repository) ExpectAggregate(query rel.Query, aggregate string, field st
 }
 
 // Count provides a mock function with given fields: collection, queriers
-func (r *Repository) Count(collection string, queriers ...rel.Querier) (int, error) {
-	r.repo.Count(collection, queriers...)
+func (r *Repository) Count(ctx context.Context, collection string, queriers ...rel.Querier) (int, error) {
+	r.repo.Count(ctx, collection, queriers...)
 	ret := r.mock.Called(collection, queriers)
 	return ret.Int(0), ret.Error(1)
 }
 
 // MustCount provides a mock function with given fields: collection, queriers
-func (r *Repository) MustCount(collection string, queriers ...rel.Querier) int {
-	count, err := r.Count(collection, queriers...)
+func (r *Repository) MustCount(ctx context.Context, collection string, queriers ...rel.Querier) int {
+	count, err := r.Count(ctx, collection, queriers...)
 	must(err)
 	return count
 }
@@ -71,14 +72,14 @@ func (r *Repository) ExpectCount(collection string, queriers ...rel.Querier) *Ag
 }
 
 // Find provides a mock function with given fields: record, queriers
-func (r *Repository) Find(record interface{}, queriers ...rel.Querier) error {
-	r.repo.Find(record, queriers...)
+func (r *Repository) Find(ctx context.Context, record interface{}, queriers ...rel.Querier) error {
+	r.repo.Find(ctx, record, queriers...)
 	return r.mock.Called(record, queriers).Error(0)
 }
 
 // MustFind provides a mock function with given fields: record, queriers
-func (r *Repository) MustFind(record interface{}, queriers ...rel.Querier) {
-	must(r.Find(record, queriers...))
+func (r *Repository) MustFind(ctx context.Context, record interface{}, queriers ...rel.Querier) {
+	must(r.Find(ctx, record, queriers...))
 }
 
 // ExpectFind apply mocks and expectations for Find
@@ -87,8 +88,8 @@ func (r *Repository) ExpectFind(queriers ...rel.Querier) *Find {
 }
 
 // FindAll provides a mock function with given fields: records, queriers
-func (r *Repository) FindAll(records interface{}, queriers ...rel.Querier) error {
-	r.repo.FindAll(records, queriers...)
+func (r *Repository) FindAll(ctx context.Context, records interface{}, queriers ...rel.Querier) error {
+	r.repo.FindAll(ctx, records, queriers...)
 	return r.mock.Called(records, queriers).Error(0)
 }
 
@@ -98,21 +99,21 @@ func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *FindAll {
 }
 
 // MustFindAll provides a mock function with given fields: records, queriers
-func (r *Repository) MustFindAll(records interface{}, queriers ...rel.Querier) {
-	must(r.FindAll(records, queriers...))
+func (r *Repository) MustFindAll(ctx context.Context, records interface{}, queriers ...rel.Querier) {
+	must(r.FindAll(ctx, records, queriers...))
 }
 
 // Insert provides a mock function with given fields: record, modifiers
-func (r *Repository) Insert(record interface{}, modifiers ...rel.Modifier) error {
+func (r *Repository) Insert(ctx context.Context, record interface{}, modifiers ...rel.Modifier) error {
 	ret := r.mock.Called(record, modifiers)
 
-	r.repo.Insert(record, modifiers...)
+	r.repo.Insert(ctx, record, modifiers...)
 	return ret.Error(0)
 }
 
 // MustInsert provides a mock function with given fields: record, modifiers
-func (r *Repository) MustInsert(record interface{}, modifiers ...rel.Modifier) {
-	must(r.Insert(record, modifiers...))
+func (r *Repository) MustInsert(ctx context.Context, record interface{}, modifiers ...rel.Modifier) {
+	must(r.Insert(ctx, record, modifiers...))
 }
 
 // ExpectInsert apply mocks and expectations for Insert
@@ -121,16 +122,16 @@ func (r *Repository) ExpectInsert(modifiers ...rel.Modifier) *Modify {
 }
 
 // InsertAll records.
-func (r *Repository) InsertAll(records interface{}) error {
+func (r *Repository) InsertAll(ctx context.Context, records interface{}) error {
 	ret := r.mock.Called(records)
 
-	r.repo.InsertAll(records)
+	r.repo.InsertAll(ctx, records)
 	return ret.Error(0)
 }
 
 // MustInsertAll records.
-func (r *Repository) MustInsertAll(records interface{}) {
-	must(r.InsertAll(records))
+func (r *Repository) MustInsertAll(ctx context.Context, records interface{}) {
+	must(r.InsertAll(ctx, records))
 }
 
 // ExpectInsertAll records.
@@ -139,10 +140,10 @@ func (r *Repository) ExpectInsertAll() *Modify {
 }
 
 // Update provides a mock function with given fields: record, modifiers
-func (r *Repository) Update(record interface{}, modifiers ...rel.Modifier) error {
+func (r *Repository) Update(ctx context.Context, record interface{}, modifiers ...rel.Modifier) error {
 	ret := r.mock.Called(record, modifiers)
 
-	if err := r.repo.Update(record, modifiers...); err != nil {
+	if err := r.repo.Update(ctx, record, modifiers...); err != nil {
 		return err
 	}
 
@@ -150,8 +151,8 @@ func (r *Repository) Update(record interface{}, modifiers ...rel.Modifier) error
 }
 
 // MustUpdate provides a mock function with given fields: record, modifiers
-func (r *Repository) MustUpdate(record interface{}, modifiers ...rel.Modifier) {
-	must(r.Update(record, modifiers...))
+func (r *Repository) MustUpdate(ctx context.Context, record interface{}, modifiers ...rel.Modifier) {
+	must(r.Update(ctx, record, modifiers...))
 }
 
 // ExpectUpdate apply mocks and expectations for Update
@@ -160,13 +161,13 @@ func (r *Repository) ExpectUpdate(modifiers ...rel.Modifier) *Modify {
 }
 
 // Delete provides a mock function with given fields: record
-func (r *Repository) Delete(record interface{}) error {
+func (r *Repository) Delete(ctx context.Context, record interface{}) error {
 	return r.mock.Called(record).Error(0)
 }
 
 // MustDelete provides a mock function with given fields: record
-func (r *Repository) MustDelete(record interface{}) {
-	must(r.Delete(record))
+func (r *Repository) MustDelete(ctx context.Context, record interface{}) {
+	must(r.Delete(ctx, record))
 }
 
 // ExpectDelete apply mocks and expectations for Delete
@@ -175,13 +176,13 @@ func (r *Repository) ExpectDelete() *Delete {
 }
 
 // DeleteAll provides a mock function with given fields: queriers
-func (r *Repository) DeleteAll(queriers ...rel.Querier) error {
+func (r *Repository) DeleteAll(ctx context.Context, queriers ...rel.Querier) error {
 	return r.mock.Called(queriers).Error(0)
 }
 
 // MustDeleteAll provides a mock function with given fields: queriers
-func (r *Repository) MustDeleteAll(queriers ...rel.Querier) {
-	must(r.DeleteAll(queriers...))
+func (r *Repository) MustDeleteAll(ctx context.Context, queriers ...rel.Querier) {
+	must(r.DeleteAll(ctx, queriers...))
 }
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
@@ -190,13 +191,13 @@ func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *DeleteAll {
 }
 
 // Preload provides a mock function with given fields: records, field, queriers
-func (r *Repository) Preload(records interface{}, field string, queriers ...rel.Querier) error {
+func (r *Repository) Preload(ctx context.Context, records interface{}, field string, queriers ...rel.Querier) error {
 	return r.mock.Called(records, field, queriers).Error(0)
 }
 
 // MustPreload provides a mock function with given fields: records, field, queriers
-func (r *Repository) MustPreload(records interface{}, field string, queriers ...rel.Querier) {
-	must(r.Preload(records, field, queriers...))
+func (r *Repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...rel.Querier) {
+	must(r.Preload(ctx, records, field, queriers...))
 }
 
 // ExpectPreload apply mocks and expectations for Preload
@@ -205,7 +206,7 @@ func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *Prelo
 }
 
 // Transaction provides a mock function with given fields: fn
-func (r *Repository) Transaction(fn func(rel.Repository) error) error {
+func (r *Repository) Transaction(ctx context.Context, fn func(rel.Repository) error) error {
 	r.mock.Called()
 
 	var err error

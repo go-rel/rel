@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -15,13 +16,13 @@ func TestPreload(t *testing.T) {
 	)
 
 	repo.ExpectPreload("author").Result(author)
-	assert.Nil(t, repo.Preload(&result, "author"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "author"))
 	assert.Equal(t, author, result.Author)
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").Result(author)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "author")
+		repo.MustPreload(context.TODO(), &result, "author")
 	})
 	assert.Equal(t, author, result.Author)
 	repo.AssertExpectations(t)
@@ -37,13 +38,13 @@ func TestPreload_nested(t *testing.T) {
 	)
 
 	repo.ExpectPreload("book.author").Result(author)
-	assert.Nil(t, repo.Preload(&result, "book.author"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "book.author"))
 	assert.Equal(t, author, result.Book.Author)
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("book.author").Result(author)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "book.author")
+		repo.MustPreload(context.TODO(), &result, "book.author")
 	})
 	assert.Equal(t, author, result.Book.Author)
 	repo.AssertExpectations(t)
@@ -64,7 +65,7 @@ func TestPreload_slice(t *testing.T) {
 	)
 
 	repo.ExpectPreload("ratings").Result(ratings)
-	assert.Nil(t, repo.Preload(&result, "ratings"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "ratings"))
 	assert.Len(t, result[0].Ratings, 2)
 	assert.Equal(t, ratings[:2], result[0].Ratings)
 	assert.Len(t, result[1].Ratings, 1)
@@ -73,7 +74,7 @@ func TestPreload_slice(t *testing.T) {
 
 	repo.ExpectPreload("ratings").Result(ratings)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "ratings")
+		repo.MustPreload(context.TODO(), &result, "ratings")
 	})
 	assert.Len(t, result[0].Ratings, 2)
 	assert.Equal(t, ratings[:2], result[0].Ratings)
@@ -104,7 +105,7 @@ func TestPreload_sliceNested(t *testing.T) {
 	)
 
 	repo.ExpectPreload("books.ratings").Result(ratings)
-	assert.Nil(t, repo.Preload(&result, "books.ratings"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "books.ratings"))
 	assert.Len(t, result[0].Books[0].Ratings, 2)
 	assert.Equal(t, ratings[:2], result[0].Books[0].Ratings)
 	assert.Len(t, result[0].Books[1].Ratings, 1)
@@ -113,7 +114,7 @@ func TestPreload_sliceNested(t *testing.T) {
 
 	repo.ExpectPreload("books.ratings").Result(ratings)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "books.ratings")
+		repo.MustPreload(context.TODO(), &result, "books.ratings")
 	})
 	assert.Len(t, result[0].Books[0].Ratings, 2)
 	assert.Equal(t, ratings[:2], result[0].Books[0].Ratings)
@@ -136,13 +137,13 @@ func TestPreload_nilReferenceValue(t *testing.T) {
 	)
 
 	repo.ExpectPreload("author").Result(author)
-	assert.Nil(t, repo.Preload(&result, "author"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "author"))
 	assert.Nil(t, result.Author)
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").Result(author)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "author")
+		repo.MustPreload(context.TODO(), &result, "author")
 	})
 	assert.Nil(t, result.Author)
 	repo.AssertExpectations(t)
@@ -155,12 +156,12 @@ func TestPreload_For(t *testing.T) {
 	)
 
 	repo.ExpectPreload("author").For(&result)
-	assert.Nil(t, repo.Preload(&result, "author"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "author"))
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").For(&result)
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "author")
+		repo.MustPreload(context.TODO(), &result, "author")
 	})
 	repo.AssertExpectations(t)
 }
@@ -172,12 +173,12 @@ func TestPreload_ForType(t *testing.T) {
 	)
 
 	repo.ExpectPreload("author").ForType("reltest.Book")
-	assert.Nil(t, repo.Preload(&result, "author"))
+	assert.Nil(t, repo.Preload(context.TODO(), &result, "author"))
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").ForType("reltest.Book")
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&result, "author")
+		repo.MustPreload(context.TODO(), &result, "author")
 	})
 	repo.AssertExpectations(t)
 }
@@ -189,12 +190,12 @@ func TestPreload_error(t *testing.T) {
 	)
 
 	repo.ExpectPreload("author").ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.Preload(&result, "author"))
+	assert.Equal(t, sql.ErrConnDone, repo.Preload(context.TODO(), &result, "author"))
 	repo.AssertExpectations(t)
 
 	repo.ExpectPreload("author").ConnectionClosed()
 	assert.Panics(t, func() {
-		repo.MustPreload(&result, "author")
+		repo.MustPreload(context.TODO(), &result, "author")
 	})
 	repo.AssertExpectations(t)
 }

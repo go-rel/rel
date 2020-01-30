@@ -1,7 +1,6 @@
 package specs
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -191,16 +190,17 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 		&[]User{{Name: "insert", Age: 100}},
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
+		&[]User{{Name: "insert", Age: 100}, {Name: "insert too"}},
 		&[]Address{{}},
 		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
 		&[]Address{{Name: "work", UserID: &user.ID}},
+		&[]Address{{Name: "work"}, {Name: "home"}},
 	}
 
 	for _, record := range tests {
 		t.Run("InsertAll", func(t *testing.T) {
 			assert.Nil(t, repo.InsertAll(record))
-			assert.Equal(t, 1, reflect.ValueOf(record).Elem().Len())
 
 			switch v := record.(type) {
 			case *[]User:

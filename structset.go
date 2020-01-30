@@ -42,13 +42,7 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 			}
 		}
 
-		if value, ok := s.doc.Value(field); ok {
-			if s.skipZero && isZero(value) {
-				continue
-			}
-
-			s.set(doc, mod, field, value, false)
-		}
+		s.applyValue(doc, mod, field)
 	}
 
 	s.applyAssoc(mod)
@@ -60,6 +54,16 @@ func (s Structset) set(doc *Document, mod *Modification, field string, value int
 	}
 
 	mod.Add(Set(field, value))
+}
+
+func (s Structset) applyValue(doc *Document, mod *Modification, field string) {
+	if value, ok := s.doc.Value(field); ok {
+		if s.skipZero && isZero(value) {
+			return
+		}
+
+		s.set(doc, mod, field, value, false)
+	}
 }
 
 func (s Structset) applyAssoc(mod *Modification) {

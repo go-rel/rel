@@ -161,3 +161,11 @@ func SetFragment(raw string, args ...interface{}) Modify {
 
 // Setf is an alias for SetFragment
 var Setf = SetFragment
+
+// Reload force reload after insert/update.
+type Reload bool
+
+// Apply modification.
+func (r Reload) Apply(doc *Document, modification *Modification) {
+	modification.Reload = bool(r)
+}

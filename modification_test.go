@@ -50,6 +50,27 @@ func TestApplyModification(t *testing.T) {
 	assert.Equal(t, 0, record.Field5)
 }
 
+func TestApplyModification_Reload(t *testing.T) {
+	var (
+		record    = TestRecord{}
+		doc       = NewDocument(&record)
+		modifiers = []Modifier{
+			Set("field1", "string"),
+			Reload(true),
+		}
+		modification = Modification{
+			Modifies: map[string]Modify{
+				"field1": Set("field1", "string"),
+			},
+			Assoc:  map[string]AssocModification{},
+			Reload: true,
+		}
+	)
+
+	assert.Equal(t, modification, Apply(doc, modifiers...))
+	assert.Equal(t, "string", record.Field1)
+}
+
 func TestApplyModification_setValueError(t *testing.T) {
 	var (
 		record = TestRecord{}

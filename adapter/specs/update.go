@@ -341,17 +341,6 @@ func Updates(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("Update", func(t *testing.T) {
 			assert.Nil(t, repo.Update(record))
-
-			switch v := record.(type) {
-			case *User:
-				var found User
-				repo.MustFind(&found, where.Eq("id", v.ID))
-				assert.Equal(t, found, *v)
-			case *Address:
-				var found Address
-				repo.MustFind(&found, where.Eq("id", v.ID))
-				assert.Equal(t, found, *v)
-			}
 		})
 	}
 }

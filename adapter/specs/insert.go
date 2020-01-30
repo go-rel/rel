@@ -159,18 +159,21 @@ func Inserts(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("Insert", func(t *testing.T) {
 			assert.Nil(t, repo.Insert(record))
-
-			switch v := record.(type) {
-			case *User:
-				var found User
-				repo.MustFind(&found, where.Eq("id", v.ID))
-				assert.Equal(t, found, *v)
-			case *Address:
-				var found Address
-				repo.MustFind(&found, where.Eq("id", v.ID))
-				assert.Equal(t, found, *v)
-			}
+			assertRecord(t, repo, record)
 		})
+	}
+}
+
+func assertRecord(t *testing.T, repo rel.Repository, record interface{}) {
+	switch v := record.(type) {
+	case *User:
+		var found User
+		repo.MustFind(&found, where.Eq("id", v.ID))
+		assert.Equal(t, found, *v)
+	case *Address:
+		var found Address
+		repo.MustFind(&found, where.Eq("id", v.ID))
+		assert.Equal(t, found, *v)
 	}
 }
 

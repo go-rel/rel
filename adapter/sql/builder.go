@@ -226,13 +226,6 @@ func (b *Builder) Update(table string, modifies map[string]rel.Modify, filter re
 			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
 			buffer.Append(mod.Value)
-		case rel.ChangeDecOp:
-			buffer.WriteString(b.escape(field))
-			buffer.WriteByte('=')
-			buffer.WriteString(b.escape(field))
-			buffer.WriteByte('-')
-			buffer.WriteString(b.ph())
-			buffer.Append(mod.Value)
 		case rel.ChangeFragmentOp:
 			buffer.WriteString(field)
 			buffer.Append(mod.Value.([]interface{})...)

@@ -69,8 +69,6 @@ const (
 	ChangeSetOp
 	// ChangeIncOp operation.
 	ChangeIncOp
-	// ChangeDecOp operation.
-	ChangeDecOp
 	// ChangeFragmentOp operation.
 	ChangeFragmentOp
 )
@@ -96,8 +94,7 @@ func (m Modify) Apply(doc *Document, modification *Modification) {
 	default:
 		if typ, ok := doc.Type(m.Field); ok {
 			kind := typ.Kind()
-			invalid = (m.Type == ChangeIncOp || m.Type == ChangeDecOp) &&
-				(kind < reflect.Int || kind > reflect.Uint64)
+			invalid = m.Type == ChangeIncOp && (kind < reflect.Int || kind > reflect.Uint64)
 		} else {
 			invalid = true
 		}
@@ -143,9 +140,9 @@ func Dec(field string) Modify {
 // DecBy create a modify using decrement operation with custom decrement value.
 func DecBy(field string, n int) Modify {
 	return Modify{
-		Type:  ChangeDecOp,
+		Type:  ChangeIncOp,
 		Field: field,
-		Value: n,
+		Value: -n,
 	}
 }
 

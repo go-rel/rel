@@ -484,10 +484,6 @@ func TestBuilder_Update_incDecAndFragment(t *testing.T) {
 	assert.Equal(t, "UPDATE `users` SET `age`=`age`+?;", qs)
 	assert.Equal(t, []interface{}{1}, qargs)
 
-	qs, qargs = builder.Update("users", map[string]rel.Modify{"age": rel.Dec("age")}, where.And())
-	assert.Equal(t, "UPDATE `users` SET `age`=`age`-?;", qs)
-	assert.Equal(t, []interface{}{1}, qargs)
-
 	qs, qargs = builder.Update("users", map[string]rel.Modify{"age=?": rel.SetFragment("age=?", 10)}, where.And())
 	assert.Equal(t, "UPDATE `users` SET age=?;", qs)
 	assert.Equal(t, []interface{}{10}, qargs)

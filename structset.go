@@ -51,6 +51,18 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 		}
 	}
 
+	s.applyAssoc(mod)
+}
+
+func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}, force bool) {
+	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
+		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
+	}
+
+	mod.Add(Set(field, value))
+}
+
+func (s Structset) applyAssoc(mod *Modification) {
 	for _, field := range s.doc.BelongsTo() {
 		s.buildAssoc(field, mod)
 	}
@@ -62,14 +74,6 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 	for _, field := range s.doc.HasMany() {
 		s.buildAssocMany(field, mod)
 	}
-}
-
-func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}, force bool) {
-	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
-		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
-	}
-
-	mod.Add(Set(field, value))
 }
 
 func (s Structset) buildAssoc(field string, mod *Modification) {

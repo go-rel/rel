@@ -178,35 +178,43 @@ func (d Document) SetValue(field string, value interface{}) bool {
 		}
 
 		if rt.ConvertibleTo(ft) {
-			var (
-				rk = rt.Kind()
-				fk = ft.Kind()
-			)
-
-			// prevents unintentional convertion
-			if (rk >= reflect.Int || rk <= reflect.Uint64) && fk == reflect.String {
-				return false
-			}
-
-			fv.Set(rv.Convert(ft))
-			return true
+			return d.setConvertValue(ft, fv, rt, rv)
 		}
 
 		if ft.Kind() == reflect.Ptr {
-			if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
-				return false
-			}
-
-			if fv.IsNil() {
-				fv.Set(reflect.New(ft.Elem()))
-			}
-			fv.Elem().Set(rv)
-
-			return true
+			return d.setPointerValue(ft, fv, rt, rv)
 		}
 	}
 
 	return false
+}
+
+func (d Document) setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+	if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
+		return false
+	}
+
+	if fv.IsNil() {
+		fv.Set(reflect.New(ft.Elem()))
+	}
+	fv.Elem().Set(rv)
+
+	return true
+}
+
+func (d Document) setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+	var (
+		rk = rt.Kind()
+		fk = ft.Kind()
+	)
+
+	// prevents unintentional convertion
+	if (rk >= reflect.Int || rk <= reflect.Uint64) && fk == reflect.String {
+		return false
+	}
+
+	fv.Set(rv.Convert(ft))
+	return true
 }
 
 // Scanners returns slice of sql.Scanner for given fields.

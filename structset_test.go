@@ -7,32 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func assertChanges(t *testing.T, ch1 Changes, ch2 Changes) {
-	assert.Equal(t, len(ch1.fields), len(ch2.fields))
-	assert.Equal(t, len(ch1.changes), len(ch2.changes))
-	assert.Equal(t, len(ch1.assoc), len(ch2.assoc))
-	assert.Equal(t, len(ch1.assocChanges), len(ch2.assocChanges))
-
-	for field := range ch1.fields {
-		assert.Equal(t, ch1.changes[ch1.fields[field]], ch2.changes[ch2.fields[field]])
-	}
-
-	for assoc := range ch1.assoc {
-		var (
-			ac1 = ch1.assocChanges[ch1.assoc[assoc]].Changes
-			ac2 = ch2.assocChanges[ch2.assoc[assoc]].Changes
-		)
-		assert.Equal(t, len(ac1), len(ac2))
-
-		for i := range ac1 {
-			assertChanges(t, ac1[i], ac2[i])
-		}
-	}
-}
-
 func BenchmarkStructset(b *testing.B) {
 	var (
-		user = &User{
+		user = User{
 			ID:   1,
 			Name: "Luffy",
 			Age:  20,
@@ -46,49 +23,59 @@ func BenchmarkStructset(b *testing.B) {
 			},
 			CreatedAt: time.Now(),
 		}
+		doc = NewDocument(&user)
 	)
 
 	for n := 0; n < b.N; n++ {
-		BuildChanges(NewStructset(user, false))
+		Apply(doc, NewStructset(&user, false))
 	}
 }
 
 func TestStructset(t *testing.T) {
 	var (
-		user = &User{
+		user = User{
 			ID:   1,
 			Name: "Luffy",
 		}
-		changes = BuildChanges(
-			Set("name", "Luffy"),
-			Set("age", 0),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		)
+		doc          = NewDocument(&user)
+		modification = Modification{
+			Modifies: map[string]Modify{
+				"name":       Set("name", "Luffy"),
+				"age":        Set("age", 0),
+				"created_at": Set("created_at", now()),
+				"updated_at": Set("updated_at", now()),
+			},
+			Assoc: make(map[string]AssocModification),
+		}
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user, false)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(&user, false)))
 }
 
 func TestStructset_skipZero(t *testing.T) {
 	var (
-		user = &User{
+		user = User{
 			ID:   1,
 			Name: "Luffy",
 		}
-		changes = BuildChanges(
-			Set("name", "Luffy"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		)
+		doc          = NewDocument(&user)
+		modification = Modification{
+			Modifies: map[string]Modify{
+				"name":       Set("name", "Luffy"),
+				"created_at": Set("created_at", now()),
+				"updated_at": Set("updated_at", now()),
+			},
+			Assoc: make(map[string]AssocModification),
+		}
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user, true)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(&user, true)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
 	var (
-		user = &User{
+		createdAt = time.Now().Add(-time.Hour) // should retains
+		user      = User{
 			ID:   1,
 			Name: "Luffy",
 			Age:  20,
@@ -100,33 +87,35 @@ func TestStructset_withAssoc(t *testing.T) {
 				ID:     1,
 				Street: "Grove Street",
 			},
-			CreatedAt: time.Now(),
+			CreatedAt: createdAt,
 		}
-		userChanges = BuildChanges(
+		doc     = NewDocument(&user)
+		userMod = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
+			Set("created_at", createdAt),
 			Set("updated_at", now()),
 		)
-		transaction1Changes = BuildChanges(
+		trx1Mod = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 			Set("status", Status("")),
 			Set("user_id", 0),
 		)
-		transaction2Changes = BuildChanges(
+		trx2Mod = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 			Set("status", Status("")),
 			Set("user_id", 0),
 		)
-		addressChanges = BuildChanges(
+		addrMod = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 			Set("user_id", nil),
 		)
 	)
 
-	userChanges.SetAssoc("transactions", transaction1Changes, transaction2Changes)
-	userChanges.SetAssoc("address", addressChanges)
+	userMod.SetAssoc("transactions", trx1Mod, trx2Mod)
+	userMod.SetAssoc("address", addrMod)
 
-	assertChanges(t, userChanges, BuildChanges(NewStructset(user, false)))
+	assert.Equal(t, userMod, Apply(doc, NewStructset(&user, false)))
 }
 
 func TestStructset_invalidCreatedAtType(t *testing.T) {
@@ -137,15 +126,63 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 	}
 
 	var (
-		user = &tmp{
+		user = tmp{
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
-		changes = BuildChanges(
+		doc          = NewDocument(&user)
+		modification = Apply(NewDocument(&user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)
 	)
 
-	assertChanges(t, changes, BuildChanges(NewStructset(user, false)))
+	assert.Equal(t, modification, Apply(doc, NewStructset(&user, false)))
+}
+
+func TestStructset_differentStruct(t *testing.T) {
+	type UserTmp struct {
+		ID   int
+		Name string
+		Age  int
+	}
+
+	var (
+		usertmp UserTmp
+		user    = User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+		}
+		doc          = NewDocument(&usertmp)
+		modification = Apply(NewDocument(&user),
+			Set("name", "Luffy"),
+			Set("age", 20),
+		)
+	)
+
+	assert.Equal(t, modification, Apply(doc, NewStructset(&user, true)))
+	assert.Equal(t, user.Name, usertmp.Name)
+	assert.Equal(t, user.Age, usertmp.Age)
+}
+
+func TestStructset_differentStructMissingField(t *testing.T) {
+	// missing age field.
+	type UserTmp struct {
+		ID   int
+		Name string
+	}
+
+	var (
+		user = User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+		}
+		doc = NewDocument(&UserTmp{})
+	)
+
+	assert.Panics(t, func() {
+		Apply(doc, NewStructset(&user, true))
+	})
 }

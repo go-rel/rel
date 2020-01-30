@@ -1,11 +1,11 @@
 package rel
 
-// NoResultError returned whenever Find returns no result.
-type NoResultError struct{}
+// NotFoundError returned whenever Find returns no result.
+type NotFoundError struct{}
 
 // Error message.
-func (nre NoResultError) Error() string {
-	return "No result found"
+func (nfe NotFoundError) Error() string {
+	return "Record not found"
 }
 
 // ConstraintType defines the type of constraint error.

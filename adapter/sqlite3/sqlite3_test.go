@@ -27,7 +27,7 @@ func init() {
 		id INTEGER PRIMARY KEY,
 		slug VARCHAR(30) DEFAULT NULL,
 		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		gender VARCHAR(10) NOT NULL DEFAULT '',
 		age INTEGER NOT NULL DEFAULT 0,
 		note varchar(50),
 		created_at DATETIME,
@@ -59,10 +59,10 @@ func init() {
 
 func dsn() string {
 	if os.Getenv("SQLITE3_DATABASE") != "" {
-		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1"
+		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1&_loc=Local"
 	}
 
-	return "./rel_test.db?_foreign_keys=1"
+	return "./rel_test.db?_foreign_keys=1&_loc=Local"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -127,12 +127,12 @@ func TestAdapter_specs(t *testing.T) {
 // 	defer adapter.Close()
 
 // 	fields := []string{"notexist"}
-// 	allchanges := []map[string]interface{}{
+// 	modifications := []map[string]interface{}{
 // 		{"notexist": "12"},
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, modifications)
 
 // 	assert.NotNil(t, err)
 // }

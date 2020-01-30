@@ -1,7 +1,6 @@
 package specs
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -157,14 +156,23 @@ func Inserts(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, record := range tests {
-		var (
-			changes      = rel.BuildChanges(rel.NewStructset(record, false))
-			statement, _ = builder.Insert("collection", changes)
-		)
-
-		t.Run("Insert|"+statement, func(t *testing.T) {
+		t.Run("Insert", func(t *testing.T) {
 			assert.Nil(t, repo.Insert(record))
+			assertRecord(t, repo, record)
 		})
+	}
+}
+
+func assertRecord(t *testing.T, repo rel.Repository, record interface{}) {
+	switch v := record.(type) {
+	case *User:
+		var found User
+		repo.MustFind(&found, where.Eq("id", v.ID))
+		assert.Equal(t, found, *v)
+	case *Address:
+		var found Address
+		repo.MustFind(&found, where.Eq("id", v.ID))
+		assert.Equal(t, found, *v)
 	}
 }
 
@@ -178,26 +186,48 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(&user)
 
 	tests := []interface{}{
-		// &[]User{{}},
+		&[]User{{}},
 		&[]User{{Name: "insert", Age: 100}},
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
-		// &[]Address{{}},
+		&[]User{{Name: "insert", Age: 100}, {Name: "insert too"}},
+		&[]Address{{}},
 		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
 		&[]Address{{Name: "work", UserID: &user.ID}},
+		&[]Address{{Name: "work"}, {Name: "home"}},
 	}
 
 	for _, record := range tests {
-		// var (
-		// 	changes      = rel.BuildChanges(rel.Struct(record))
-		// 	statement, _ = builder.Insert("collection", changes)
-		// )
-
 		t.Run("InsertAll", func(t *testing.T) {
-			// multiple insert
 			assert.Nil(t, repo.InsertAll(record))
-			assert.Equal(t, 1, reflect.ValueOf(record).Elem().Len())
+
+			switch v := record.(type) {
+			case *[]User:
+				var (
+					found []User
+					ids   = make([]int, len(*v))
+				)
+
+				for i := range *v {
+					ids[i] = int((*v)[i].ID)
+				}
+
+				repo.MustFindAll(&found, where.InInt("id", ids))
+				assert.Equal(t, found, *v)
+			case *[]Address:
+				var (
+					found []Address
+					ids   = make([]int, len(*v))
+				)
+
+				for i := range *v {
+					ids[i] = int((*v)[i].ID)
+				}
+
+				repo.MustFindAll(&found, where.InInt("id", ids))
+				assert.Equal(t, found, *v)
+			}
 		})
 	}
 }

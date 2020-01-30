@@ -31,24 +31,24 @@ func (ta *testAdapter) Query(query Query, logger ...Logger) (Cursor, error) {
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(query Query, changes Changes, logger ...Logger) (interface{}, error) {
-	args := ta.Called(query, changes)
+func (ta *testAdapter) Insert(query Query, modifies map[string]Modify, logger ...Logger) (interface{}, error) {
+	args := ta.Called(query, modifies)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(query Query, fields []string, changess []Changes, logger ...Logger) ([]interface{}, error) {
-	args := ta.Called(query, fields, changess)
+func (ta *testAdapter) InsertAll(query Query, fields []string, modifies []map[string]Modify, logger ...Logger) ([]interface{}, error) {
+	args := ta.Called(query, fields, modifies)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(query Query, changes Changes, logger ...Logger) error {
-	args := ta.Called(query, changes)
-	return args.Error(0)
+func (ta *testAdapter) Update(query Query, modifies map[string]Modify, logger ...Logger) (int, error) {
+	args := ta.Called(query, modifies)
+	return args.Int(0), args.Error(1)
 }
 
-func (ta *testAdapter) Delete(query Query, logger ...Logger) error {
+func (ta *testAdapter) Delete(query Query, logger ...Logger) (int, error) {
 	args := ta.Called(query)
-	return args.Error(0)
+	return args.Int(0), args.Error(1)
 }
 
 func (ta *testAdapter) Begin() (Adapter, error) {

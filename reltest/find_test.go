@@ -35,13 +35,13 @@ func TestFind_noResult(t *testing.T) {
 		book   = Book{ID: 2, Title: "Rel for dummies"}
 	)
 
-	repo.ExpectFind(where.Eq("id", 2)).NoResult()
+	repo.ExpectFind(where.Eq("id", 2)).NotFound()
 
-	assert.Equal(t, rel.NoResultError{}, repo.Find(&result, where.Eq("id", 2)))
+	assert.Equal(t, rel.NotFoundError{}, repo.Find(&result, where.Eq("id", 2)))
 	assert.NotEqual(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectFind(where.Eq("id", 2)).NoResult()
+	repo.ExpectFind(where.Eq("id", 2)).NotFound()
 	assert.Panics(t, func() {
 		repo.MustFind(&result, where.Eq("id", 2))
 		assert.NotEqual(t, book, result)

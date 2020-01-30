@@ -3,79 +3,103 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:36cf6bea956351026b25720e840d94662e19b96f3d35b7c3bb0cd2d777e17535"
   name = "github.com/Fs02/go-paranoid"
   packages = ["."]
+  pruneopts = "UT"
   revision = "ab50069def7d4ec973f1ebd67541b3e311ea66df"
 
 [[projects]]
   branch = "master"
+  digest = "1:6d030baec6dd4a8fbc671920e1b84103439c57ca28f83356d9bce4b8fa4b0ea0"
   name = "github.com/azer/snakecase"
   packages = ["."]
+  pruneopts = "UT"
   revision = "c818dddafb5c91bd13275f49b08e38a489cbef5f"
 
 [[projects]]
+  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
+  pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:850c49ca338a10fec2cb9e78f793043ed23965489d09e30bcc19fe29719da313"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
+  pruneopts = "UT"
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
   version = "v1.3"
 
 [[projects]]
-  branch = "master"
+  digest = "1:01ed62f8f4f574d8aff1d88caee113700a2b44c42351943fa73cc1808f736a50"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f5c5f50e6090ae76a29240b61ae2a90dd810112e"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:9ff22c26414baf7deaf74f2a788fe7b97666048bcbe346c52cfe823442abbdfb"
   name = "github.com/lib/pq"
   packages = [
     ".",
-    "oid"
+    "oid",
+    "scram",
   ]
-  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+  pruneopts = "UT"
+  revision = "99274577be97ac9b1d95a2d61d566dc9b7cc6a54"
+  version = "v1.3.0"
 
 [[projects]]
+  digest = "1:ee0845ea64262e3d1a6e2eab768fcb2008a0c8e571b7a3bebea554a1c031aeeb"
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
+  pruneopts = "UT"
   revision = "6c771bb9887719704b210e87e934f08be014bdb1"
   version = "v1.6.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:1bc4a5bd879ce6b44fdaa2e8e1144921c145604764e92220009b951c1f2439f5"
   name = "github.com/stretchr/objx"
   packages = ["."]
+  pruneopts = "UT"
   revision = "facf9a85c22f48d2f52f2380e4efce1768749a89"
   version = "v0.1"
 
 [[projects]]
+  digest = "1:eca8319bce847b7208ed5ae89ef2efb28586a7095657217241641e1da78a3c13"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "mock"
+    "mock",
   ]
+  pruneopts = "UT"
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
-
-[[projects]]
-  name = "github.com/tidwall/gjson"
-  packages = ["."]
-  revision = "1e3f6aeaa5bad08d777ea7807b279a07885dd8b2"
-  version = "v1.1.3"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tidwall/match"
-  packages = ["."]
-  revision = "1731857f09b1f38450e2c12409748407822dc6be"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "aef5be0dc0b02abbe6b9faaae405ef79386f9a0164b750de6096ade9bb14d76e"
+  input-imports = [
+    "github.com/Fs02/go-paranoid",
+    "github.com/azer/snakecase",
+    "github.com/go-sql-driver/mysql",
+    "github.com/jinzhu/inflection",
+    "github.com/lib/pq",
+    "github.com/mattn/go-sqlite3",
+    "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/mock",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

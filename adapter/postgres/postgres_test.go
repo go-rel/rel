@@ -3,6 +3,7 @@ package postgres
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Fs02/go-paranoid"
 	"github.com/Fs02/rel"
@@ -27,11 +28,11 @@ func init() {
 		id SERIAL NOT NULL PRIMARY KEY,
 		slug VARCHAR(30) DEFAULT NULL,
 		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT 'male',
+		gender VARCHAR(10) NOT NULL DEFAULT '',
 		age INT NOT NULL DEFAULT 0,
 		note varchar(50),
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP,
+		created_at TIMESTAMPTZ,
+		updated_at TIMESTAMPTZ,
 		UNIQUE(slug)
 	);`, nil)
 	paranoid.Panic(err, "failed creating users table")
@@ -40,8 +41,8 @@ func init() {
 		id SERIAL NOT NULL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
 		name VARCHAR(60) NOT NULL DEFAULT '',
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP
+		created_at TIMESTAMPTZ,
+		updated_at TIMESTAMPTZ
 	);`, nil)
 	paranoid.Panic(err, "failed creating addresses table")
 
@@ -52,14 +53,18 @@ func init() {
 		score INTEGER DEFAULT 0 CHECK (score>=0 AND score<=100)
 	);`, nil)
 	paranoid.Panic(err, "failed creating extras table")
+
+	// hack to make sure location it has the same location object as returned by pq driver.
+	time.Local, err = time.LoadLocation("Asia/Jakarta")
+	paranoid.Panic(err, "failed loading time location")
 }
 
 func dsn() string {
 	if os.Getenv("POSTGRESQL_DATABASE") != "" {
-		return os.Getenv("POSTGRESQL_DATABASE")
+		return os.Getenv("POSTGRESQL_DATABASE") + "?sslmode=disable&timezone=Asia/Jakarta"
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable"
+	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Asia/Jakarta"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -127,12 +132,12 @@ func TestAdapter_specs(t *testing.T) {
 // 	defer adapter.Close()
 
 // 	fields := []string{"notexist"}
-// 	allchanges := []map[string]interface{}{
+// 	modifications := []map[string]interface{}{
 // 		{"notexist": "12"},
 // 		{"notexist": "13"},
 // 	}
 
-// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, allchanges)
+// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, modifications)
 
 // 	assert.NotNil(t, err)
 // }

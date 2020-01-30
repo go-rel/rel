@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -8,19 +9,19 @@ var (
 	now = time.Now
 )
 
-// Structset can be used as changes for repository insert or update operation.
+// Structset can be used as modification for repository insert or update operation.
 // This will save every field in struct and it's association as long as it's loaded.
-// This is the default changer used by repository.
+// This is the default modifier used by repository.
 type Structset struct {
 	doc      *Document
 	skipZero bool
 }
 
-// Build changes from structset.
-func (s Structset) Build(changes *Changes) {
+// Apply modification.
+func (s Structset) Apply(doc *Document, mod *Modification) {
 	var (
 		pField = s.doc.PrimaryField()
-		t      = now()
+		t      = now().Truncate(time.Second)
 	)
 
 	for _, field := range s.doc.Fields() {
@@ -28,42 +29,58 @@ func (s Structset) Build(changes *Changes) {
 		case pField:
 			continue
 		case "created_at", "inserted_at":
-			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
-				if value, ok := s.doc.Value(field); ok && value.(time.Time).IsZero() {
-					changes.SetValue(field, t)
+			if typ, ok := doc.Type(field); ok && typ == rtTime {
+				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
+					s.set(doc, mod, field, t, true)
+					continue
 				}
-				continue
 			}
 		case "updated_at":
-			if typ, ok := s.doc.Type(field); ok && typ == rtTime {
-				changes.SetValue(field, t)
+			if typ, ok := doc.Type(field); ok && typ == rtTime {
+				s.set(doc, mod, field, t, true)
 				continue
 			}
 		}
 
-		if value, ok := s.doc.Value(field); ok {
-			if s.skipZero && isZero(value) {
-				continue
-			}
+		s.applyValue(doc, mod, field)
+	}
 
-			changes.SetValue(field, value)
+	s.applyAssoc(mod)
+}
+
+func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}, force bool) {
+	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
+		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
+	}
+
+	mod.Add(Set(field, value))
+}
+
+func (s Structset) applyValue(doc *Document, mod *Modification, field string) {
+	if value, ok := s.doc.Value(field); ok {
+		if s.skipZero && isZero(value) {
+			return
 		}
-	}
 
-	for _, field := range s.doc.BelongsTo() {
-		s.buildAssoc(field, changes)
-	}
-
-	for _, field := range s.doc.HasOne() {
-		s.buildAssoc(field, changes)
-	}
-
-	for _, field := range s.doc.HasMany() {
-		s.buildAssocMany(field, changes)
+		s.set(doc, mod, field, value, false)
 	}
 }
 
-func (s Structset) buildAssoc(field string, changes *Changes) {
+func (s Structset) applyAssoc(mod *Modification) {
+	for _, field := range s.doc.BelongsTo() {
+		s.buildAssoc(field, mod)
+	}
+
+	for _, field := range s.doc.HasOne() {
+		s.buildAssoc(field, mod)
+	}
+
+	for _, field := range s.doc.HasMany() {
+		s.buildAssocMany(field, mod)
+	}
+}
+
+func (s Structset) buildAssoc(field string, mod *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -71,14 +88,13 @@ func (s Structset) buildAssoc(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			doc, _ = assoc.Document()
-			ch     = BuildChanges(newStructset(doc, s.skipZero))
 		)
 
-		changes.SetAssoc(field, ch)
+		mod.SetAssoc(field, Apply(doc, newStructset(doc, s.skipZero)))
 	}
 }
 
-func (s Structset) buildAssocMany(field string, changes *Changes) {
+func (s Structset) buildAssocMany(field string, mod *Modification) {
 	var (
 		assoc = s.doc.Association(field)
 	)
@@ -86,14 +102,20 @@ func (s Structset) buildAssocMany(field string, changes *Changes) {
 	if !assoc.IsZero() {
 		var (
 			col, _ = assoc.Collection()
-			chs    = make([]Changes, col.Len())
+			pField = col.PrimaryField()
+			mods   = make([]Modification, col.Len())
 		)
 
-		for i := range chs {
-			chs[i] = BuildChanges(newStructset(col.Get(i), s.skipZero))
+		for i := range mods {
+			var (
+				doc = col.Get(i)
+			)
+
+			mods[i] = Apply(doc, newStructset(doc, s.skipZero))
+			doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
 		}
 
-		changes.SetAssoc(field, chs...)
+		mod.SetAssoc(field, mods...)
 	}
 }
 

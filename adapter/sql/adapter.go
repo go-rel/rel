@@ -102,9 +102,9 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Table, changes)
+		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modifies)
 		id, _, err      = adapter.Exec(statement, args, loggers...)
 	)
 
@@ -112,15 +112,15 @@ func (adapter *Adapter) Insert(query rel.Query, changes rel.Changes, loggers ...
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges []rel.Changes, loggers ...rel.Logger) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, allchanges)
+func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkModifies)
 	id, _, err := adapter.Exec(statement, args, loggers...)
 	if err != nil {
 		return nil, err
 	}
 
 	var (
-		ids = []interface{}{id}
+		ids = make([]interface{}, len(bulkModifies))
 		inc = 1
 	)
 
@@ -128,31 +128,36 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, allchanges [
 		inc = adapter.Config.IncrementFunc(*adapter)
 	}
 
-	for i := 1; i < len(allchanges); i++ {
-		ids = append(ids, id+int64(inc*i))
+	if inc < 0 {
+		id = id + int64((len(bulkModifies)-1)*inc)
+		inc *= -1
+	}
+
+	for i := range ids {
+		ids[i] = id + int64(i*inc)
 	}
 
 	return ids, nil
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query rel.Query, changes rel.Changes, loggers ...rel.Logger) error {
+func (adapter *Adapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Update(query.Table, changes, query.WhereQuery)
-		_, _, err       = adapter.Exec(statement, args, loggers...)
+		statement, args      = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
+		_, updatedCount, err = adapter.Exec(statement, args, loggers...)
 	)
 
-	return err
+	return int(updatedCount), err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) error {
+func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) (int, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
-		_, _, err       = adapter.Exec(statement, args, loggers...)
+		statement, args      = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
+		_, deletedCount, err = adapter.Exec(statement, args, loggers...)
 	)
 
-	return err
+	return int(deletedCount), err
 }
 
 // Begin begins a new transaction.

@@ -164,6 +164,11 @@ func (c Collection) Truncate(i, j int) {
 	c.rv.Set(c.rv.Slice(i, j))
 }
 
+// Slice returns a new collection that is a slice of the original collection.s
+func (c Collection) Slice(i, j int) *Collection {
+	return NewCollection(c.rv.Slice(i, j), true)
+}
+
 // Swap element in the collection.
 func (c Collection) Swap(i, j int) {
 	if c.swapper == nil {

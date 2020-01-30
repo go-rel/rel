@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -46,7 +47,7 @@ func TestModify_Insert_nested(t *testing.T) {
 			AuthorID: 1,
 			Ratings: []Rating{
 				{ID: 1, Score: 9, BookID: 1},
-				{ID: 1, Score: 10, BookID: 1},
+				{ID: 2, Score: 10, BookID: 1},
 			},
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
@@ -105,34 +106,6 @@ func TestModify_Insert_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_inc(t *testing.T) {
-	var (
-		repo   = New()
-		result Book
-	)
-
-	repo.ExpectInsert(rel.Inc("views"))
-	assert.Panics(t, func() {
-		assert.Nil(t, repo.Insert(&result, rel.Inc("views")))
-	})
-
-	repo.AssertExpectations(t)
-}
-
-func TestModify_Insert_dec(t *testing.T) {
-	var (
-		repo   = New()
-		result Book
-	)
-
-	repo.ExpectInsert(rel.Dec("views"))
-	assert.Panics(t, func() {
-		assert.Nil(t, repo.Insert(&result, rel.Dec("views")))
-	})
-
-	repo.AssertExpectations(t)
-}
-
 func TestModify_Insert_map(t *testing.T) {
 	var (
 		repo   = New()
@@ -140,18 +113,17 @@ func TestModify_Insert_map(t *testing.T) {
 		book   = Book{
 			ID:       1,
 			Title:    "Rel for dummies",
-			Author:   Author{ID: 2, Name: "Kia"},
-			AuthorID: 2,
+			Author:   Author{ID: 1, Name: "Kia"},
+			AuthorID: 1,
 			Ratings: []Rating{
 				{ID: 1, Score: 9, BookID: 1},
-				{ID: 1, Score: 10, BookID: 1},
+				{ID: 2, Score: 10, BookID: 1},
 			},
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"title": "Rel for dummies",
 			"author": rel.Map{
-				"id":   2,
 				"name": "Kia",
 			},
 			"ratings": []rel.Map{
@@ -164,14 +136,14 @@ func TestModify_Insert_map(t *testing.T) {
 		}
 	)
 
-	repo.ExpectInsert(ch)
-	assert.Nil(t, repo.Insert(&result, ch))
+	repo.ExpectInsert(mod)
+	assert.Nil(t, repo.Insert(&result, mod))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectInsert(ch)
+	repo.ExpectInsert(mod)
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result, ch)
+		repo.MustInsert(&result, mod)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -206,14 +178,14 @@ func TestModify_Insert_notUnique(t *testing.T) {
 
 func TestModify_InsertAll(t *testing.T) {
 	var (
-		repo    Repository
+		repo    = New()
 		results = []Book{
 			{Title: "Golang for dummies"},
 			{Title: "Rel for dummies"},
 		}
 		books = []Book{
 			{ID: 1, Title: "Golang for dummies"},
-			{ID: 1, Title: "Rel for dummies"},
+			{ID: 2, Title: "Rel for dummies"},
 		}
 	)
 
@@ -227,28 +199,6 @@ func TestModify_InsertAll(t *testing.T) {
 		repo.MustInsertAll(&results)
 		assert.Equal(t, books, results)
 	})
-	repo.AssertExpectations(t)
-}
-
-func TestModify_InsertAll_map(t *testing.T) {
-	var (
-		repo    Repository
-		results []Book
-		books   = []Book{
-			{ID: 1, Title: "Golang for dummies"},
-			{ID: 1, Title: "Rel for dummies"},
-		}
-	)
-
-	repo.ExpectInsertAll(
-		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
-		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
-	)
-	assert.Nil(t, repo.InsertAll(&results,
-		rel.BuildChanges(rel.Map{"title": "Golang for dummies"}),
-		rel.BuildChanges(rel.Map{"title": "Rel for dummies"}),
-	))
-	assert.Equal(t, books, results)
 	repo.AssertExpectations(t)
 }
 
@@ -279,7 +229,7 @@ func TestModify_Update_nested(t *testing.T) {
 			AuthorID: 2,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
-				{ID: 1, BookID: 2, Score: 10},
+				{ID: 2, BookID: 2, Score: 10},
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
@@ -290,7 +240,7 @@ func TestModify_Update_nested(t *testing.T) {
 			AuthorID: 2,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
-				{ID: 1, BookID: 2, Score: 10},
+				{ID: 2, BookID: 2, Score: 10},
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
@@ -329,7 +279,7 @@ func TestModify_Update_nestedInsert(t *testing.T) {
 			AuthorID: 1,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
-				{ID: 1, BookID: 2, Score: 10},
+				{ID: 2, BookID: 2, Score: 10},
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
@@ -365,18 +315,18 @@ func TestModify_Update_record(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_withoutPrimaryValue(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{Title: "Golang for dummies"}
-	)
+// func TestModify_Update_withoutPrimaryValue(t *testing.T) {
+// 	var (
+// 		repo   = New()
+// 		result = Book{Title: "Golang for dummies"}
+// 	)
 
-	repo.ExpectUpdate().For(&result)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result)
-	})
-	repo.AssertExpectations(t)
-}
+// 	repo.ExpectUpdate().For(&result)
+// 	assert.Panics(t, func() {
+// 		_ = repo.Update(&result)
+// 	})
+// 	repo.AssertExpectations(t)
+// }
 
 func TestModify_Update_set(t *testing.T) {
 	var (
@@ -398,31 +348,31 @@ func TestModify_Update_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_inc(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{ID: 2, Views: 10}
-		book   = Book{ID: 2, Views: 11}
-	)
+// func TestModify_Update_inc(t *testing.T) {
+// 	var (
+// 		repo   = New()
+// 		result = Book{ID: 2, Views: 10}
+// 		book   = Book{ID: 2, Views: 11}
+// 	)
 
-	repo.ExpectUpdate(rel.Inc("views"))
-	assert.Nil(t, repo.Update(&result, rel.Inc("views")))
-	assert.Equal(t, book, result)
-	repo.AssertExpectations(t)
-}
+// 	repo.ExpectUpdate(rel.Inc("views"))
+// 	assert.Nil(t, repo.Update(&result, rel.Inc("views")))
+// 	assert.Equal(t, book, result)
+// 	repo.AssertExpectations(t)
+// }
 
-func TestModify_Update_dec(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{ID: 2, Views: 10}
-		book   = Book{ID: 2, Views: 9}
-	)
+// func TestModify_Update_dec(t *testing.T) {
+// 	var (
+// 		repo   = New()
+// 		result = Book{ID: 2, Views: 10}
+// 		book   = Book{ID: 2, Views: 9}
+// 	)
 
-	repo.ExpectUpdate(rel.Dec("views"))
-	assert.Nil(t, repo.Update(&result, rel.Dec("views")))
-	assert.Equal(t, book, result)
-	repo.AssertExpectations(t)
-}
+// 	repo.ExpectUpdate(rel.Dec("views"))
+// 	assert.Nil(t, repo.Update(&result, rel.Dec("views")))
+// 	assert.Equal(t, book, result)
+// 	repo.AssertExpectations(t)
+// }
 
 func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
 	var (
@@ -469,8 +419,10 @@ func TestModify_Update_map(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{
-			ID:    2,
-			Title: "Golang for dummies",
+			ID:       2,
+			Title:    "Golang for dummies",
+			Author:   Author{ID: 2, Name: "unknown"},
+			AuthorID: 2,
 			Ratings: []Rating{
 				{ID: 4, BookID: 2, Score: 15},
 				{ID: 2, BookID: 2, Score: 5},
@@ -488,7 +440,7 @@ func TestModify_Update_map(t *testing.T) {
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"title": "Rel for dummies",
 			"author": rel.Map{
 				"id":   2,
@@ -504,39 +456,15 @@ func TestModify_Update_map(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(ch)
-	assert.Nil(t, repo.Update(&result, ch))
+	repo.ExpectUpdate(mod)
+	assert.Nil(t, repo.Update(&result, mod))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectUpdate(ch)
+	repo.ExpectUpdate(mod)
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result, ch)
+		repo.MustUpdate(&result, mod)
 		assert.Equal(t, book, result)
-	})
-	repo.AssertExpectations(t)
-}
-
-func TestModify_Update_belongsToInconsistentPk(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{
-			ID:       2,
-			Title:    "Golang for dummies",
-			AuthorID: 2,
-			Author:   Author{ID: 2, Name: "Kia"},
-		}
-		ch = rel.Map{
-			"author": rel.Map{
-				"id":   1,
-				"name": "Koa",
-			},
-		}
-	)
-
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
 	})
 	repo.AssertExpectations(t)
 }
@@ -550,7 +478,7 @@ func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 			AuthorID: 1,
 			Author:   Author{ID: 2, Name: "Kia"},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"author": rel.Map{
 				"id":   2,
 				"name": "Koa",
@@ -558,10 +486,12 @@ func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
-	})
+	repo.ExpectUpdate(mod)
+	assert.Equal(t, rel.ConstraintError{
+		Key:  "author_id",
+		Type: rel.ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+	}, repo.Update(&result, mod))
 	repo.AssertExpectations(t)
 }
 
@@ -573,7 +503,7 @@ func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 			Title:  "Golang for dummies",
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"poster": rel.Map{
 				"id":    2,
 				"image": "http://image.url/other",
@@ -581,9 +511,9 @@ func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(ch)
+	repo.ExpectUpdate(mod)
 	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
+		_ = repo.Update(&result, mod)
 	})
 	repo.AssertExpectations(t)
 }
@@ -596,7 +526,7 @@ func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 			Title:  "Golang for dummies",
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"poster": rel.Map{
 				"id":    1,
 				"image": "http://image.url/other",
@@ -604,55 +534,12 @@ func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
-	})
-	repo.AssertExpectations(t)
-}
-
-func TestModify_Update_hasManyNotLoaded(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{
-			ID:    2,
-			Title: "Golang for dummies",
-		}
-		ch = rel.Map{
-			"ratings": []rel.Map{
-				{"id": 2, "score": 9},
-			},
-		}
-	)
-
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
-	})
-	repo.AssertExpectations(t)
-}
-
-func TestModify_Update_hasManyInconsistentPk(t *testing.T) {
-	var (
-		repo   = New()
-		result = Book{
-			ID:    2,
-			Title: "Golang for dummies",
-			Ratings: []Rating{
-				{ID: 2, BookID: 2, Score: 5},
-			},
-		}
-		ch = rel.Map{
-			"ratings": []rel.Map{
-				{"id": 1, "score": 9},
-			},
-		}
-	)
-
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
-	})
+	repo.ExpectUpdate(mod)
+	assert.Equal(t, rel.ConstraintError{
+		Key:  "book_id",
+		Type: rel.ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent has one ref and fk"),
+	}, repo.Update(&result, mod))
 	repo.AssertExpectations(t)
 }
 
@@ -666,17 +553,19 @@ func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
 				{ID: 2, BookID: 1, Score: 5},
 			},
 		}
-		ch = rel.Map{
+		mod = rel.Map{
 			"ratings": []rel.Map{
 				{"id": 2, "score": 9},
 			},
 		}
 	)
 
-	repo.ExpectUpdate(ch)
-	assert.Panics(t, func() {
-		_ = repo.Update(&result, ch)
-	})
+	repo.ExpectUpdate(mod)
+	assert.Equal(t, rel.ConstraintError{
+		Key:  "book_id",
+		Type: rel.ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent has many ref and fk"),
+	}, repo.Update(&result, mod))
 	repo.AssertExpectations(t)
 }
 

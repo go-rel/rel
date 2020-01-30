@@ -265,7 +265,6 @@ func TestDocument_SetValue(t *testing.T) {
 	assert.False(t, doc.SetValue("id", "a"))
 	assert.False(t, doc.SetValue("skip", true))
 	assert.False(t, doc.SetValue("address", []byte("a")))
-	assert.False(t, doc.SetValue("number", reflect.ValueOf(0)))
 
 	assert.Equal(t, 1, record.ID)
 	assert.Equal(t, "name", record.Name)
@@ -286,6 +285,12 @@ func TestDocument_SetValue(t *testing.T) {
 	assert.Equal(t, float64(0), record.Number)
 	assert.Equal(t, (*string)(nil), record.Address)
 	assert.Equal(t, []byte(nil), record.Data)
+
+	// test convert
+	assert.True(t, doc.SetValue("id", uint(2)))
+	assert.True(t, doc.SetValue("number", 10))
+	assert.Equal(t, 2, record.ID)
+	assert.Equal(t, float64(10), record.Number)
 }
 
 func TestDocument_Scanners(t *testing.T) {

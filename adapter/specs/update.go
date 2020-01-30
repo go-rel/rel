@@ -96,8 +96,7 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	user.Name = "update insert has many"
 	user.Addresses[0].Name = "new address"
 
-	err := repo.Update(&user)
-	assert.Nil(t, err)
+	assert.Nil(t, repo.Update(&user))
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 
@@ -300,7 +299,8 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 // UpdateAtomic tests increment and decerement operation when updating a record.
 func UpdateAtomic(t *testing.T, repo rel.Repository) {
 	var (
-		user = User{Name: "update", Age: 10}
+		result User
+		user   = User{Name: "update", Age: 10}
 	)
 
 	repo.MustInsert(&user)
@@ -308,8 +308,14 @@ func UpdateAtomic(t *testing.T, repo rel.Repository) {
 	assert.Nil(t, repo.Update(&user, rel.Inc("age")))
 	assert.Equal(t, 11, user.Age)
 
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	assert.Equal(t, result, user)
+
 	assert.Nil(t, repo.Update(&user, rel.Dec("age")))
 	assert.Equal(t, 10, user.Age)
+
+	repo.MustFind(&result, where.Eq("id", user.ID))
+	assert.Equal(t, result, user)
 }
 
 // Updates tests update specifications.
@@ -333,12 +339,7 @@ func Updates(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, record := range tests {
-		var (
-			changes      = rel.BuildChanges(rel.NewStructset(record, false))
-			statement, _ = builder.Update("collection", changes, where.Eq("id", 1))
-		)
-
-		t.Run("Update|"+statement, func(t *testing.T) {
+		t.Run("Update", func(t *testing.T) {
 			assert.Nil(t, repo.Update(record))
 		})
 	}

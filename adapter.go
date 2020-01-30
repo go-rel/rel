@@ -4,10 +4,10 @@ package rel
 type Adapter interface {
 	Aggregate(query Query, mode string, field string, loggers ...Logger) (int, error)
 	Query(query Query, loggers ...Logger) (Cursor, error)
-	Insert(query Query, changes Changes, loggers ...Logger) (interface{}, error)
-	InsertAll(query Query, fields []string, changes []Changes, loggers ...Logger) ([]interface{}, error)
-	Update(query Query, changes Changes, loggers ...Logger) error
-	Delete(query Query, loggers ...Logger) error
+	Insert(query Query, modifies map[string]Modify, loggers ...Logger) (interface{}, error)
+	InsertAll(query Query, fields []string, bulkModifies []map[string]Modify, loggers ...Logger) ([]interface{}, error)
+	Update(query Query, modifies map[string]Modify, loggers ...Logger) (int, error)
+	Delete(query Query, loggers ...Logger) (int, error)
 
 	Begin() (Adapter, error)
 	Commit() error

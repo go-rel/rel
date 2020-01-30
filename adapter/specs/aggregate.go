@@ -48,9 +48,7 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, query := range tests {
-		statement, _ := builder.Find(query.Select("count(id) AS count"))
-
-		t.Run("Aggregate|"+statement, func(t *testing.T) {
+		t.Run("Aggregate", func(t *testing.T) {
 			count, err := repo.Aggregate(query, "count", "id")
 			assert.Nil(t, err)
 			assert.True(t, count >= 0)

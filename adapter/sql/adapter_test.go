@@ -75,6 +75,40 @@ func TestAdapter_Aggregate_transaction(t *testing.T) {
 	})
 }
 
+func TestAdapter_FindAll(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = rel.New(adapter)
+	)
+
+	defer adapter.Close()
+
+	assert.Nil(t, repo.FindAll(&[]struct{}{}, rel.From("names")))
+}
+
+func TestAdapter_FindAll_transaction(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = rel.New(adapter)
+	)
+
+	defer adapter.Close()
+
+	assert.Nil(t, repo.Transaction(func(repo rel.Repository) error {
+		return repo.FindAll(&[]struct{}{}, rel.From("names"))
+	}))
+}
+
+func TestAdapter_Query_error(t *testing.T) {
+	var (
+		adapter = open(t)
+	)
+	defer adapter.Close()
+
+	_, err := adapter.Query(rel.Query{})
+	assert.NotNil(t, err)
+}
+
 func TestAdapter_Insert(t *testing.T) {
 	var (
 		adapter = open(t)
@@ -137,6 +171,8 @@ func TestAdapter_Delete(t *testing.T) {
 	)
 
 	defer adapter.Close()
+
+	repo.MustInsert(&name)
 
 	assert.Nil(t, repo.Delete(&name))
 }
@@ -209,21 +245,22 @@ func TestAdapter_Transaction_nestedRollback(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-// func TestAdapter_InsertAll_error(t *testing.T) {
-// 	adapter, err := open()
-// 	paranoid.Panic(err, "failed to open database connection")
-// 	defer adapter.Close()
+func TestAdapter_InsertAll_error(t *testing.T) {
+	var (
+		adapter = open(t)
+	)
+	defer adapter.Close()
 
-// 	fields := []string{"notexist"}
-// 	allchanges := []map[string]interface{}{
-// 		{"notexist": "12"},
-// 		{"notexist": "13"},
-// 	}
+	fields := []string{"notexist"}
+	modifications := []map[string]rel.Modify{
+		{"notexist": rel.Set("notexist", "13")},
+		{"notexist": rel.Set("notexist", "12")},
+	}
 
-// 	_, err = adapter.InsertAll(query.Query{}, fields, allchanges)
-
-// 	assert.NotNil(t, err)
-// }
+	ids, err := adapter.InsertAll(rel.Query{}, fields, modifications)
+	assert.NotNil(t, err)
+	assert.Nil(t, ids)
+}
 
 func TestAdapter_Transaction_commitError(t *testing.T) {
 	var (
@@ -244,17 +281,6 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 
 	assert.NotNil(t, adapter.Rollback())
 }
-
-// func TestAdapter_Query_error(t *testing.T) {
-// 	adapter, err := open()
-// 	paranoid.Panic(err, "failed to open database connection")
-// 	defer adapter.Close()
-
-// 	out := struct{}{}
-
-// 	_, err = adapter.Query(&out, "error", nil)
-// 	assert.NotNil(t, err)
-// }
 
 func TestAdapter_Exec_error(t *testing.T) {
 	var (

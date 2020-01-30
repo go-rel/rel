@@ -26,7 +26,7 @@ func ExpectDeleteAll(r *Repository, queriers []rel.Querier) *DeleteAll {
 
 	// validation
 	eda.Run(func(args mock.Arguments) {
-		query := rel.BuildQuery("", args[0].([]rel.Querier)...)
+		query := rel.Build("", args[0].([]rel.Querier)...)
 
 		if query.Table == "" {
 			panic("reltest: cannot call DeleteAll without specifying table name. use rel.From(tableName)")

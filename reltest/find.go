@@ -10,9 +10,9 @@ type Find struct {
 	*FindAll
 }
 
-// NoResult sets NoResultError to be returned.
-func (f *Find) NoResult() {
-	f.Error(rel.NoResultError{})
+// NotFound sets NotFoundError to be returned.
+func (f *Find) NotFound() {
+	f.Error(rel.NotFoundError{})
 }
 
 // ExpectFind to be called with given field and queries.

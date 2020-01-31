@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/Fs02/rel"
@@ -29,20 +30,20 @@ func main() {
 	repo := rel.New(adapter)
 
 	// run
-	Example(repo)
+	Example(context.Background(), repo)
 }
 
 // Example is an actual service function that run a complex business package.
 // beware: it's actually doing nonsense here.
-func Example(repo rel.Repository) error {
+func Example(ctx context.Context, repo rel.Repository) error {
 	var book Book
 
 	// Querying Books.
 	// Find a book with id 1.
-	if err := repo.Find(&book, where.Eq("id", 1)); err != nil {
+	if err := repo.Find(ctx, &book, where.Eq("id", 1)); err != nil {
 		return err
 	}
 
 	book.Title = "rel for dummies"
-	return repo.Update(&book)
+	return repo.Update(ctx, &book)
 }

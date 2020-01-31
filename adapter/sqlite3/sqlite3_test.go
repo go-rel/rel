@@ -1,6 +1,7 @@
 package sqlite3
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -11,19 +12,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var ctx = context.TODO()
+
 func init() {
 	adapter, err := Open(dsn())
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS extras;`, nil)
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS extras;`, nil)
 	paranoid.Panic(err, "failed when dropping extras table")
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS addresses;`, nil)
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS addresses;`, nil)
 	paranoid.Panic(err, "failed when dropping addresses table")
-	_, _, err = adapter.Exec(`DROP TABLE IF EXISTS users;`, nil)
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err, "failed when dropping users table")
 
-	_, _, err = adapter.Exec(`CREATE TABLE users (
+	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
 		id INTEGER PRIMARY KEY,
 		slug VARCHAR(30) DEFAULT NULL,
 		name VARCHAR(30) NOT NULL DEFAULT '',
@@ -36,7 +39,7 @@ func init() {
 	);`, nil)
 	paranoid.Panic(err, "failed when creating users table")
 
-	_, _, err = adapter.Exec(`CREATE TABLE addresses (
+	_, _, err = adapter.Exec(ctx, `CREATE TABLE addresses (
 		id INTEGER PRIMARY KEY,
 		user_id INTEGER,
 		name VARCHAR(60) NOT NULL DEFAULT '',
@@ -46,7 +49,7 @@ func init() {
 	);`, nil)
 	paranoid.Panic(err, "failed when creating addresses table")
 
-	_, _, err = adapter.Exec(`CREATE TABLE extras (
+	_, _, err = adapter.Exec(ctx, `CREATE TABLE extras (
 		id INTEGER PRIMARY KEY,
 		slug VARCHAR(30) DEFAULT NULL UNIQUE,
 		user_id INTEGER,
@@ -142,7 +145,7 @@ func TestAdapter_Transaction_commitError(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	assert.NotNil(t, adapter.Commit())
+	assert.NotNil(t, adapter.Commit(ctx))
 }
 
 func TestAdapter_Transaction_rollbackError(t *testing.T) {
@@ -150,7 +153,7 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	assert.NotNil(t, adapter.Rollback())
+	assert.NotNil(t, adapter.Rollback(ctx))
 }
 
 // func TestAdapter_Query_error(t *testing.T) {
@@ -169,6 +172,6 @@ func TestAdapter_Exec_error(t *testing.T) {
 	paranoid.Panic(err, "failed to open database connection")
 	defer adapter.Close()
 
-	_, _, err = adapter.Exec("error", nil)
+	_, _, err = adapter.Exec(ctx, "error", nil)
 	assert.NotNil(t, err)
 }

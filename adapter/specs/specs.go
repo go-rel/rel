@@ -2,6 +2,7 @@
 package specs
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -10,6 +11,8 @@ import (
 	"github.com/Fs02/rel/adapter/sql"
 	"github.com/stretchr/testify/assert"
 )
+
+var ctx = context.TODO()
 
 // User defines users schema.
 type User struct {

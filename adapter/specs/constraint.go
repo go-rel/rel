@@ -8,10 +8,10 @@ import (
 
 func createExtra(repo rel.Repository, slug string) Extra {
 	var user User
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	extra := Extra{Slug: &slug, UserID: user.ID}
-	repo.MustInsert(&extra)
+	repo.MustInsert(ctx, &extra)
 	return extra
 }
 
@@ -24,11 +24,11 @@ func UniqueConstraint(t *testing.T, repo rel.Repository) {
 
 	t.Run("UniqueConstraint", func(t *testing.T) {
 		// inserting
-		err := repo.Insert(&Extra{Slug: extra1.Slug})
+		err := repo.Insert(ctx, &Extra{Slug: extra1.Slug})
 		assertConstraint(t, err, rel.UniqueConstraint, "slug")
 
 		// updating
-		err = repo.Update(&Extra{ID: extra2.ID, Slug: extra1.Slug})
+		err = repo.Update(ctx, &Extra{ID: extra2.ID, Slug: extra1.Slug})
 		assertConstraint(t, err, rel.UniqueConstraint, "slug")
 	})
 }
@@ -41,12 +41,12 @@ func ForeignKeyConstraint(t *testing.T, repo rel.Repository) {
 
 	t.Run("ForeignKeyConstraint", func(t *testing.T) {
 		// inserting
-		err := repo.Insert(&Extra{UserID: 1000})
+		err := repo.Insert(ctx, &Extra{UserID: 1000})
 		assertConstraint(t, err, rel.ForeignKeyConstraint, "user_id")
 
 		// updating
 		extra.UserID = 1000
-		err = repo.Update(&extra)
+		err = repo.Update(ctx, &extra)
 		assertConstraint(t, err, rel.ForeignKeyConstraint, "user_id")
 	})
 }
@@ -59,12 +59,12 @@ func CheckConstraint(t *testing.T, repo rel.Repository) {
 
 	t.Run("CheckConstraint", func(t *testing.T) {
 		// inserting
-		err := repo.Insert(&Extra{Score: 150})
+		err := repo.Insert(ctx, &Extra{Score: 150})
 		assertConstraint(t, err, rel.CheckConstraint, "score")
 
 		// updating
 		extra.Score = 150
-		err = repo.Update(&extra)
+		err = repo.Update(ctx, &extra)
 		assertConstraint(t, err, rel.CheckConstraint, "score")
 	})
 }

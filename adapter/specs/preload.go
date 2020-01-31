@@ -22,7 +22,7 @@ func createPreloadUser(repo rel.Repository) User {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	return user
 }
@@ -34,10 +34,10 @@ func PreloadHasMany(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "addresses")
+	err = repo.Preload(ctx, &result, "addresses")
 	assert.Nil(t, err)
 	assert.Equal(t, user, result)
 }
@@ -49,10 +49,10 @@ func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "addresses", where.Eq("name", "primary"))
+	err = repo.Preload(ctx, &result, "addresses", where.Eq("name", "primary"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result.Addresses))
 	assert.Equal(t, user.Addresses[0], result.Addresses[0])
@@ -68,10 +68,10 @@ func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.FindAll(&result, where.In("id", users[0].ID, users[1].ID))
+	err := repo.FindAll(ctx, &result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "addresses")
+	err = repo.Preload(ctx, &result, "addresses")
 	assert.Nil(t, err)
 	assert.Equal(t, users, result)
 }
@@ -83,10 +83,10 @@ func PreloadHasOne(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "primary_address")
+	err = repo.Preload(ctx, &result, "primary_address")
 	assert.Nil(t, err)
 	assert.NotNil(t, result.PrimaryAddress)
 }
@@ -98,10 +98,10 @@ func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "primary_address", where.Eq("name", "primary"))
+	err = repo.Preload(ctx, &result, "primary_address", where.Eq("name", "primary"))
 	assert.Nil(t, err)
 	assert.Equal(t, user.Addresses[0], *result.PrimaryAddress)
 }
@@ -116,10 +116,10 @@ func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.FindAll(&result, where.In("id", users[0].ID, users[1].ID))
+	err := repo.FindAll(ctx, &result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
 
-	err = repo.Preload(&result, "primary_address")
+	err = repo.Preload(ctx, &result, "primary_address")
 	assert.Nil(t, err)
 	assert.NotNil(t, result[0].PrimaryAddress)
 	assert.NotNil(t, result[1].PrimaryAddress)
@@ -132,12 +132,12 @@ func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.Addresses[0].ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
 
 	user.Addresses = nil
 
-	err = repo.Preload(&result, "user")
+	err = repo.Preload(ctx, &result, "user")
 	assert.Nil(t, err)
 	assert.Equal(t, user, result.User)
 }
@@ -149,12 +149,12 @@ func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	err := repo.Find(&result, where.Eq("id", user.Addresses[0].ID))
+	err := repo.Find(ctx, &result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
 
 	user.Addresses = nil
 
-	err = repo.Preload(&result, "user", where.Eq("name", "not exists"))
+	err = repo.Preload(ctx, &result, "user", where.Eq("name", "not exists"))
 	assert.Nil(t, err)
 	assert.Zero(t, result.User)
 }
@@ -169,7 +169,7 @@ func PreloadBelongsToSlice(t *testing.T, repo rel.Repository) {
 
 	user.Addresses = nil
 
-	err := repo.Preload(&result, "user")
+	err := repo.Preload(ctx, &result, "user")
 	assert.Nil(t, err)
 	assert.Len(t, result, resultLen)
 

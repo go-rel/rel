@@ -2,6 +2,7 @@
 package sql
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"strconv"
@@ -36,7 +37,7 @@ func (adapter *Adapter) Close() error {
 }
 
 // Aggregate record using given query.
-func (adapter *Adapter) Aggregate(query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
+func (adapter *Adapter) Aggregate(ctx context.Context, query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
 	var (
 		err             error
 		out             sql.NullInt64
@@ -45,9 +46,9 @@ func (adapter *Adapter) Aggregate(query rel.Query, mode string, field string, lo
 
 	start := time.Now()
 	if adapter.Tx != nil {
-		err = adapter.Tx.QueryRow(statement, args...).Scan(&out)
+		err = adapter.Tx.QueryRowContext(ctx, statement, args...).Scan(&out)
 	} else {
-		err = adapter.DB.QueryRow(statement, args...).Scan(&out)
+		err = adapter.DB.QueryRowContext(ctx, statement, args...).Scan(&out)
 	}
 
 	go rel.Log(loggers, statement, time.Since(start), err)
@@ -56,7 +57,7 @@ func (adapter *Adapter) Aggregate(query rel.Query, mode string, field string, lo
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(query rel.Query, loggers ...rel.Logger) (rel.Cursor, error) {
+func (adapter *Adapter) Query(ctx context.Context, query rel.Query, loggers ...rel.Logger) (rel.Cursor, error) {
 	var (
 		rows            *sql.Rows
 		err             error
@@ -65,9 +66,9 @@ func (adapter *Adapter) Query(query rel.Query, loggers ...rel.Logger) (rel.Curso
 
 	start := time.Now()
 	if adapter.Tx != nil {
-		rows, err = adapter.Tx.Query(statement, args...)
+		rows, err = adapter.Tx.QueryContext(ctx, statement, args...)
 	} else {
-		rows, err = adapter.DB.Query(statement, args...)
+		rows, err = adapter.DB.QueryContext(ctx, statement, args...)
 	}
 
 	go rel.Log(loggers, statement, time.Since(start), err)
@@ -76,7 +77,7 @@ func (adapter *Adapter) Query(query rel.Query, loggers ...rel.Logger) (rel.Curso
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...rel.Logger) (int64, int64, error) {
+func (adapter *Adapter) Exec(ctx context.Context, statement string, args []interface{}, loggers ...rel.Logger) (int64, int64, error) {
 	var (
 		res sql.Result
 		err error
@@ -84,9 +85,9 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 
 	start := time.Now()
 	if adapter.Tx != nil {
-		res, err = adapter.Tx.Exec(statement, args...)
+		res, err = adapter.Tx.ExecContext(ctx, statement, args...)
 	} else {
-		res, err = adapter.DB.Exec(statement, args...)
+		res, err = adapter.DB.ExecContext(ctx, statement, args...)
 	}
 
 	go rel.Log(loggers, statement, time.Since(start), err)
@@ -102,19 +103,19 @@ func (adapter *Adapter) Exec(statement string, args []interface{}, loggers ...re
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modifies)
-		id, _, err      = adapter.Exec(statement, args, loggers...)
+		id, _, err      = adapter.Exec(ctx, statement, args, loggers...)
 	)
 
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
 	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkModifies)
-	id, _, err := adapter.Exec(statement, args, loggers...)
+	id, _, err := adapter.Exec(ctx, statement, args, loggers...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,27 +142,27 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
+func (adapter *Adapter) Update(ctx context.Context, query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (int, error) {
 	var (
 		statement, args      = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
-		_, updatedCount, err = adapter.Exec(statement, args, loggers...)
+		_, updatedCount, err = adapter.Exec(ctx, statement, args, loggers...)
 	)
 
 	return int(updatedCount), err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(query rel.Query, loggers ...rel.Logger) (int, error) {
+func (adapter *Adapter) Delete(ctx context.Context, query rel.Query, loggers ...rel.Logger) (int, error) {
 	var (
 		statement, args      = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
-		_, deletedCount, err = adapter.Exec(statement, args, loggers...)
+		_, deletedCount, err = adapter.Exec(ctx, statement, args, loggers...)
 	)
 
 	return int(deletedCount), err
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin() (rel.Adapter, error) {
+func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 	var (
 		tx        *sql.Tx
 		savepoint int
@@ -171,9 +172,9 @@ func (adapter *Adapter) Begin() (rel.Adapter, error) {
 	if adapter.Tx != nil {
 		tx = adapter.Tx
 		savepoint = adapter.savepoint + 1
-		_, _, err = adapter.Exec("SAVEPOINT s"+strconv.Itoa(savepoint)+";", []interface{}{})
+		_, _, err = adapter.Exec(ctx, "SAVEPOINT s"+strconv.Itoa(savepoint)+";", []interface{}{})
 	} else {
-		tx, err = adapter.DB.Begin()
+		tx, err = adapter.DB.BeginTx(ctx, nil)
 	}
 
 	return &Adapter{
@@ -184,13 +185,13 @@ func (adapter *Adapter) Begin() (rel.Adapter, error) {
 }
 
 // Commit commits current transaction.
-func (adapter *Adapter) Commit() error {
+func (adapter *Adapter) Commit(ctx context.Context) error {
 	var err error
 
 	if adapter.Tx == nil {
 		err = errors.New("unable to commit outside transaction")
 	} else if adapter.savepoint > 0 {
-		_, _, err = adapter.Exec("RELEASE SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+		_, _, err = adapter.Exec(ctx, "RELEASE SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
 	} else {
 		err = adapter.Tx.Commit()
 	}
@@ -199,13 +200,13 @@ func (adapter *Adapter) Commit() error {
 }
 
 // Rollback revert current transaction.
-func (adapter *Adapter) Rollback() error {
+func (adapter *Adapter) Rollback(ctx context.Context) error {
 	var err error
 
 	if adapter.Tx == nil {
 		err = errors.New("unable to rollback outside transaction")
 	} else if adapter.savepoint > 0 {
-		_, _, err = adapter.Exec("ROLLBACK TO SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+		_, _, err = adapter.Exec(ctx, "ROLLBACK TO SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
 	} else {
 		err = adapter.Tx.Rollback()
 	}

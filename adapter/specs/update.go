@@ -17,14 +17,14 @@ func Update(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update"
 	user.Gender = "male"
 	user.Age = 23
 	user.Note = &note
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update", user.Name)
@@ -37,7 +37,7 @@ func Update(t *testing.T, repo rel.Repository) {
 	)
 
 	user.Addresses = nil
-	err = repo.Find(&queried, where.Eq("id", user.ID))
+	err = repo.Find(ctx, &queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 	assert.Equal(t, user, queried)
 }
@@ -51,7 +51,7 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update insert has many"
 	user.Addresses = []Address{
@@ -59,7 +59,7 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 		{Name: "work"},
 	}
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
@@ -72,8 +72,8 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "addresses")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "addresses")
 
 	assert.Equal(t, result, user)
 }
@@ -90,13 +90,13 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 		result User
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 	assert.NotEqual(t, 0, user.Addresses[0].ID)
 
 	user.Name = "update insert has many"
 	user.Addresses[0].Name = "new address"
 
-	assert.Nil(t, repo.Update(&user))
+	assert.Nil(t, repo.Update(ctx, &user))
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 
@@ -105,8 +105,8 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, "new address", user.Addresses[0].Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "addresses")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "addresses")
 
 	assert.Equal(t, result, user)
 }
@@ -123,7 +123,7 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update insert has many"
 	user.Addresses = []Address{
@@ -131,7 +131,7 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 		{Name: "work"},
 	}
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
@@ -144,8 +144,8 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "addresses")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "addresses")
 
 	assert.Equal(t, result, user)
 }
@@ -159,12 +159,12 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update insert has one"
 	user.PrimaryAddress = &Address{Name: "primary"}
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update insert has one", user.Name)
@@ -173,8 +173,8 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "primary_address")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "primary_address")
 
 	assert.Equal(t, result, user)
 }
@@ -189,12 +189,12 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update update has one"
 	user.PrimaryAddress.Name = "updated primary"
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update update has one", user.Name)
@@ -203,8 +203,8 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "updated primary", user.PrimaryAddress.Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "primary_address")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "primary_address")
 
 	assert.Equal(t, result, user)
 }
@@ -219,12 +219,12 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	user.Name = "update replace has one"
 	user.PrimaryAddress = &Address{Name: "replaced primary"}
 
-	err := repo.Update(&user)
+	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "update replace has one", user.Name)
@@ -233,8 +233,8 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "replaced primary", user.PrimaryAddress.Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "primary_address")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "primary_address")
 
 	assert.Equal(t, result, user)
 }
@@ -246,12 +246,12 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 		address = Address{Name: "address init"}
 	)
 
-	repo.MustInsert(&address)
+	repo.MustInsert(ctx, &address)
 
 	address.Name = "update address belongs to"
 	address.User = User{Name: "inserted user"}
 
-	err := repo.Update(&address)
+	err := repo.Update(ctx, &address)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, address.ID)
 	assert.Equal(t, "update address belongs to", address.Name)
@@ -260,8 +260,8 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "inserted user", address.User.Name)
 
-	repo.MustFind(&result, where.Eq("id", address.ID))
-	repo.MustPreload(&result, "user")
+	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
+	repo.MustPreload(ctx, &result, "user")
 
 	assert.Equal(t, result, address)
 }
@@ -276,12 +276,12 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	repo.MustInsert(&address)
+	repo.MustInsert(ctx, &address)
 
 	address.Name = "update address belongs to"
 	address.User.Name = "updated user"
 
-	err := repo.Update(&address)
+	err := repo.Update(ctx, &address)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, address.ID)
 	assert.Equal(t, "update address belongs to", address.Name)
@@ -290,8 +290,8 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "updated user", address.User.Name)
 
-	repo.MustFind(&result, where.Eq("id", address.ID))
-	repo.MustPreload(&result, "user")
+	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
+	repo.MustPreload(ctx, &result, "user")
 
 	assert.Equal(t, result, address)
 }
@@ -303,18 +303,18 @@ func UpdateAtomic(t *testing.T, repo rel.Repository) {
 		user   = User{Name: "update", Age: 10}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
-	assert.Nil(t, repo.Update(&user, rel.Inc("age")))
+	assert.Nil(t, repo.Update(ctx, &user, rel.Inc("age")))
 	assert.Equal(t, 11, user.Age)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	assert.Equal(t, result, user)
 
-	assert.Nil(t, repo.Update(&user, rel.Dec("age")))
+	assert.Nil(t, repo.Update(ctx, &user, rel.Dec("age")))
 	assert.Equal(t, 10, user.Age)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	assert.Equal(t, result, user)
 }
 
@@ -326,8 +326,8 @@ func Updates(t *testing.T, repo rel.Repository) {
 		address = Address{Name: "update"}
 	)
 
-	repo.MustInsert(&user)
-	repo.MustInsert(&address)
+	repo.MustInsert(ctx, &user)
+	repo.MustInsert(ctx, &address)
 
 	tests := []interface{}{
 		&User{ID: user.ID, Name: "changed", Age: 100},
@@ -340,7 +340,7 @@ func Updates(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		t.Run("Update", func(t *testing.T) {
-			assert.Nil(t, repo.Update(record))
+			assert.Nil(t, repo.Update(ctx, record))
 		})
 	}
 }

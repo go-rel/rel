@@ -20,7 +20,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.Insert(&user)
+	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "insert", user.Name)
@@ -33,7 +33,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 	)
 
 	user.Addresses = nil
-	err = repo.Find(&queried, where.Eq("id", user.ID))
+	err = repo.Find(ctx, &queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 	assert.Equal(t, user, queried)
 }
@@ -53,7 +53,7 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.Insert(&user)
+	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "insert has many", user.Name)
@@ -68,8 +68,8 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "addresses")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "addresses")
 
 	assert.Equal(t, result, user)
 }
@@ -86,7 +86,7 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.Insert(&user)
+	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, user.ID)
 	assert.Equal(t, "insert has one", user.Name)
@@ -97,8 +97,8 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 
-	repo.MustFind(&result, where.Eq("id", user.ID))
-	repo.MustPreload(&result, "primary_address")
+	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
+	repo.MustPreload(ctx, &result, "primary_address")
 
 	assert.Equal(t, result, user)
 }
@@ -117,7 +117,7 @@ func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	err := repo.Insert(&address)
+	err := repo.Insert(ctx, &address)
 	assert.Nil(t, err)
 
 	assert.NotEqual(t, 0, address.ID)
@@ -129,8 +129,8 @@ func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "male", address.User.Gender)
 	assert.Equal(t, 23, address.User.Age)
 
-	repo.MustFind(&result, where.Eq("id", address.ID))
-	repo.MustPreload(&result, "user")
+	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
+	repo.MustPreload(ctx, &result, "user")
 
 	assert.Equal(t, result, address)
 }
@@ -142,7 +142,7 @@ func Inserts(t *testing.T, repo rel.Repository) {
 		note = "note"
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	tests := []interface{}{
 		&User{},
@@ -157,7 +157,7 @@ func Inserts(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		t.Run("Insert", func(t *testing.T) {
-			assert.Nil(t, repo.Insert(record))
+			assert.Nil(t, repo.Insert(ctx, record))
 			assertRecord(t, repo, record)
 		})
 	}
@@ -167,11 +167,11 @@ func assertRecord(t *testing.T, repo rel.Repository, record interface{}) {
 	switch v := record.(type) {
 	case *User:
 		var found User
-		repo.MustFind(&found, where.Eq("id", v.ID))
+		repo.MustFind(ctx, &found, where.Eq("id", v.ID))
 		assert.Equal(t, found, *v)
 	case *Address:
 		var found Address
-		repo.MustFind(&found, where.Eq("id", v.ID))
+		repo.MustFind(ctx, &found, where.Eq("id", v.ID))
 		assert.Equal(t, found, *v)
 	}
 }
@@ -183,7 +183,7 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 		note = "note"
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	tests := []interface{}{
 		&[]User{{}},
@@ -200,7 +200,7 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 
 	for _, record := range tests {
 		t.Run("InsertAll", func(t *testing.T) {
-			assert.Nil(t, repo.InsertAll(record))
+			assert.Nil(t, repo.InsertAll(ctx, record))
 
 			switch v := record.(type) {
 			case *[]User:
@@ -213,7 +213,7 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 					ids[i] = int((*v)[i].ID)
 				}
 
-				repo.MustFindAll(&found, where.InInt("id", ids))
+				repo.MustFindAll(ctx, &found, where.InInt("id", ids))
 				assert.Equal(t, found, *v)
 			case *[]Address:
 				var (
@@ -225,7 +225,7 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 					ids[i] = int((*v)[i].ID)
 				}
 
-				repo.MustFindAll(&found, where.InInt("id", ids))
+				repo.MustFindAll(ctx, &found, where.InInt("id", ids))
 				assert.Equal(t, found, *v)
 			}
 		})

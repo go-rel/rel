@@ -11,6 +11,20 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+// DocumentFlag stores information about document as a flag.
+type DocumentFlag int8
+
+const (
+	// Invalid flag.
+	Invalid DocumentFlag = 1 << iota
+	// HasCreatedAt flag.
+	HasCreatedAt
+	// HasUpdatedAt flag.
+	HasUpdatedAt
+	// HasDeletedAt flag.
+	HasDeletedAt
+)
+
 var (
 	tablesCache       sync.Map
 	primariesCache    sync.Map
@@ -40,6 +54,7 @@ type documentData struct {
 	belongsTo []string
 	hasOne    []string
 	hasMany   []string
+	flag      DocumentFlag
 }
 
 // Document provides an abstraction over reflect to easily works with struct for database purpose.
@@ -287,6 +302,11 @@ func (d *Document) Len() int {
 	return 1
 }
 
+// Flag returns true if documents contains specified flag.
+func (d Document) Flag(flag DocumentFlag) bool {
+	return (d.data.flag & flag) == flag
+}
+
 // NewDocument used to create abstraction to work with struct.
 // Document can be created using interface or reflect.Value.
 func NewDocument(record interface{}, readonly ...bool) *Document {
@@ -359,8 +379,22 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() != reflect.Struct || typ == rtTime {
+		if typ.Kind() != reflect.Struct {
 			data.fields = append(data.fields, name)
+			continue
+		}
+
+		if typ == rtTime {
+			data.fields = append(data.fields, name)
+
+			switch name {
+			case "created_at", "inserted_at":
+				data.flag |= HasCreatedAt
+			case "updated_at":
+				data.flag |= HasUpdatedAt
+			case "deleted_at":
+				data.flag |= HasDeletedAt
+			}
 			continue
 		}
 

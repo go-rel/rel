@@ -14,6 +14,11 @@ import (
 // DocumentFlag stores information about document as a flag.
 type DocumentFlag int8
 
+// Is returns true if it's defined.
+func (df DocumentFlag) Is(flag DocumentFlag) bool {
+	return (df & flag) == flag
+}
+
 const (
 	// Invalid flag.
 	Invalid DocumentFlag = 1 << iota
@@ -302,9 +307,9 @@ func (d *Document) Len() int {
 	return 1
 }
 
-// Flag returns true if documents contains specified flag.
+// Flag returns true if struct contains specified flag.
 func (d Document) Flag(flag DocumentFlag) bool {
-	return (d.data.flag & flag) == flag
+	return d.data.flag.Is(flag)
 }
 
 // NewDocument used to create abstraction to work with struct.

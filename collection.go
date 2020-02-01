@@ -22,6 +22,7 @@ type Collection struct {
 	v       interface{}
 	rv      reflect.Value
 	rt      reflect.Type
+	data    documentData
 	index   map[interface{}]int
 	swapper func(i, j int)
 }
@@ -214,8 +215,9 @@ func newCollection(v interface{}, rv reflect.Value, readonly bool) *Collection {
 	}
 
 	return &Collection{
-		v:  v,
-		rv: rv,
-		rt: rt,
+		v:    v,
+		rv:   rv,
+		rt:   rt,
+		data: extractDocumentData(rt.Elem(), false),
 	}
 }

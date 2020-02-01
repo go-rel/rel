@@ -538,7 +538,7 @@ func TestRepository_Update_reload(t *testing.T) {
 	)
 
 	adapter.On("Update", queries, modifies).Return(1, nil).Once()
-	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
+	adapter.On("Query", queries.Limit(1).Unscoped()).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, modifiers...))
 	assert.False(t, cur.Next())

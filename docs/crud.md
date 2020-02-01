@@ -15,7 +15,7 @@ book := Book{
 }
 
 // Insert directly using struct.
-if err := repo.Insert(&book); err != nil {
+if err := repo.Insert(ctx, &book); err != nil {
     // handle error
 }
 ```
@@ -60,7 +60,7 @@ data := rel.Map{
 }
 
 // Insert using map.
-repo.Insert(&book, data)
+repo.Insert(ctx, &book, data)
 ```
 
 ### **main_test.go**
@@ -85,7 +85,7 @@ It's also possible to insert a new record manually using `rel.Set`, which is a v
 
 ```go
 // Insert using set.
-repo.Insert(&book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
+repo.Insert(ctx, &book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
 ```
 
 ### **main_test.go**
@@ -109,7 +109,7 @@ To inserts multiple records at once, use `InsertAll`.
 
 ```go
 // InsertAll books.
-repo.InsertAll(&books)
+repo.InsertAll(ctx, &books)
 ```
 
 ### **main_test.go**
@@ -132,10 +132,10 @@ rel provides a powerful API for querying record from database. To query a single
 ### **main.go**
 
 ```go
-repo.Find(&book, rel.Eq("id", 1))
+repo.Find(ctx, &book, rel.Eq("id", 1))
 
 // OR: with sugar alias
-repo.Find(&book, where.Eq("id", 1))
+repo.Find(ctx, &book, where.Eq("id", 1))
 ```
 
 ### **main_test.go**
@@ -158,7 +158,7 @@ To query multiple records, use `FindAll` method.
 ### **main.go**
 
 ```go
-repo.FindAll(&books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
+repo.FindAll(ctx, &books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
 ```
 
 ### **main_test.go**
@@ -179,7 +179,7 @@ rel also support chainable query api for a more complex query use case.
 
 ```go
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
-repo.FindAll(&books, query)
+repo.FindAll(ctx, &books, query)
 ```
 
 ### **main_test.go**
@@ -204,7 +204,7 @@ Similar to create, updating a record in rel can also be done using struct, map o
 
 ```go
 // Update directly using struct.
-repo.Update(&book)
+repo.Update(ctx, &book)
 ```
 
 ### **main_test.go**
@@ -224,7 +224,7 @@ Besides struct, map and set function. There's also increment and decrement modif
 
 ```go
 // Update directly using struct.
-repo.Update(&book, rel.Inc("views"))
+repo.Update(ctx, &book, rel.Inc("views"))
 ```
 
 ### **main_test.go**
@@ -246,7 +246,7 @@ To delete a record in rel, simply pass the record to be deleted.
 
 ```go
 // Delete a record.
-repo.Delete(&book)
+repo.Delete(ctx, &book)
 ```
 
 ### **main_test.go**
@@ -267,7 +267,7 @@ Deleting multiple records is possible using `DeleteAll`.
 
 ```go
 // We have manually define the table here.
-repo.DeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+repo.DeleteAll(ctx, rel.From("books").Where(where.Eq("id", 1)))
 ```
 
 ### **main_test.go**

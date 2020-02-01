@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -19,13 +20,13 @@ func TestFindAll(t *testing.T) {
 	)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).Result(books)
-	assert.Nil(t, repo.FindAll(&result, where.Like("title", "%dummies%")))
+	assert.Nil(t, repo.FindAll(context.TODO(), &result, where.Like("title", "%dummies%")))
 	assert.Equal(t, books, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).Result(books)
 	assert.NotPanics(t, func() {
-		repo.MustFindAll(&result, where.Like("title", "%dummies%"))
+		repo.MustFindAll(context.TODO(), &result, where.Like("title", "%dummies%"))
 		assert.Equal(t, books, result)
 	})
 	repo.AssertExpectations(t)
@@ -42,13 +43,13 @@ func TestFindAll_error(t *testing.T) {
 	)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.FindAll(&result, where.Like("title", "%dummies%")))
+	assert.Equal(t, sql.ErrConnDone, repo.FindAll(context.TODO(), &result, where.Like("title", "%dummies%")))
 	assert.NotEqual(t, books, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectFindAll(where.Like("title", "%dummies%")).ConnectionClosed()
 	assert.Panics(t, func() {
-		repo.MustFindAll(&result, where.Like("title", "%dummies%"))
+		repo.MustFindAll(context.TODO(), &result, where.Like("title", "%dummies%"))
 		assert.NotEqual(t, books, result)
 	})
 	repo.AssertExpectations(t)

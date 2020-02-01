@@ -1,15 +1,19 @@
 package rel
 
+import (
+	"context"
+)
+
 // Adapter interface
 type Adapter interface {
-	Aggregate(query Query, mode string, field string, loggers ...Logger) (int, error)
-	Query(query Query, loggers ...Logger) (Cursor, error)
-	Insert(query Query, modifies map[string]Modify, loggers ...Logger) (interface{}, error)
-	InsertAll(query Query, fields []string, bulkModifies []map[string]Modify, loggers ...Logger) ([]interface{}, error)
-	Update(query Query, modifies map[string]Modify, loggers ...Logger) (int, error)
-	Delete(query Query, loggers ...Logger) (int, error)
+	Aggregate(ctx context.Context, query Query, mode string, field string, loggers ...Logger) (int, error)
+	Query(ctx context.Context, query Query, loggers ...Logger) (Cursor, error)
+	Insert(ctx context.Context, query Query, modifies map[string]Modify, loggers ...Logger) (interface{}, error)
+	InsertAll(ctx context.Context, query Query, fields []string, bulkModifies []map[string]Modify, loggers ...Logger) ([]interface{}, error)
+	Update(ctx context.Context, query Query, modifies map[string]Modify, loggers ...Logger) (int, error)
+	Delete(ctx context.Context, query Query, loggers ...Logger) (int, error)
 
-	Begin() (Adapter, error)
-	Commit() error
-	Rollback() error
+	Begin(ctx context.Context) (Adapter, error)
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
 }

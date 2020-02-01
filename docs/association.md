@@ -57,20 +57,20 @@ Preload will load association to structs. To preload association, use `Preload`.
 
 ```go
 // preload transaction `belongs to` buyer association.
-repo.Preload(&transaction, "buyer")
+repo.Preload(ctx, &transaction, "buyer")
 
 // preload user `has one` address association
-repo.Preload(&user, "address")
+repo.Preload(ctx, &user, "address")
 
 // preload user `has many` transactions association
-repo.Preload(&user, "transactions")
+repo.Preload(ctx, &user, "transactions")
 
 // preload paid transactions from user.
-repo.Preload(&user, "transactions", where.Eq("paid", true))
+repo.Preload(ctx, &user, "transactions", where.Eq("paid", true))
 
 // preload every buyer's address in transactions.
 // note: buyer needs to be preloaded before preloading buyer's address.
-repo.Preload(&transactions, "buyer.address")
+repo.Preload(ctx, &transactions, "buyer.address")
 ```
 
 ### **main_test.go**
@@ -115,7 +115,7 @@ user := User{
 
 // Inserts a new record to users and address table.
 // Result: User{ID: 1, Name: "rel", Address: Address{ID: 1, City: "Bandung", UserID: 1}}
-repo.Insert(&user)
+repo.Insert(ctx, &user)
 ```
 
 ### **main_tesst.go**
@@ -147,7 +147,7 @@ user := User{
 
 // Update user record with id 1.
 // Update address record with id 1.
-repo.Update(&user)
+repo.Update(ctx, &user)
 ```
 
 ### **main_tesst.go**
@@ -172,7 +172,7 @@ modification := rel.Map{
 }
 
 // Update address record with id 1, only set city to bandung.
-repo.Update(&user, modification)
+repo.Update(ctx, &user, modification)
 ```
 
 ### **main_test.go**

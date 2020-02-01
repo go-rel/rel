@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -65,7 +66,7 @@ func TestRepository_Aggregate(t *testing.T) {
 
 	adapter.On("Aggregate", query, aggregate, field).Return(1, nil).Once()
 
-	count, err := repo.Aggregate(query, "count", "*")
+	count, err := repo.Aggregate(context.TODO(), query, "count", "*")
 	assert.Equal(t, 1, count)
 	assert.Nil(t, err)
 
@@ -84,7 +85,7 @@ func TestRepository_MustAggregate(t *testing.T) {
 	adapter.On("Aggregate", query, aggregate, field).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		count := repo.MustAggregate(query, "count", "*")
+		count := repo.MustAggregate(context.TODO(), query, "count", "*")
 		assert.Equal(t, 1, count)
 	})
 
@@ -100,7 +101,7 @@ func TestRepository_Count(t *testing.T) {
 
 	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
 
-	count, err := repo.Count("users")
+	count, err := repo.Count(context.TODO(), "users")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, count)
 
@@ -117,7 +118,7 @@ func TestRepository_MustCount(t *testing.T) {
 	adapter.On("Aggregate", query, "count", "*").Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		count := repo.MustCount("users")
+		count := repo.MustCount(context.TODO(), "users")
 		assert.Equal(t, 1, count)
 	})
 
@@ -135,7 +136,7 @@ func TestRepository_Find(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.Find(&user, query))
+	assert.Nil(t, repo.Find(context.TODO(), &user, query))
 	assert.Equal(t, 10, user.ID)
 	assert.False(t, cur.Next())
 
@@ -154,7 +155,7 @@ func TestRepository_Find_queryError(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
 
-	assert.NotNil(t, repo.Find(&user, query))
+	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -171,7 +172,7 @@ func TestRepository_Find_notFound(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	err := repo.Find(&user, query)
+	err := repo.Find(context.TODO(), &user, query)
 	assert.Equal(t, NotFoundError{}, err)
 
 	adapter.AssertExpectations(t)
@@ -190,7 +191,7 @@ func TestRepository_MustFind(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustFind(&user, query)
+		repo.MustFind(context.TODO(), &user, query)
 	})
 
 	assert.Equal(t, 10, user.ID)
@@ -211,7 +212,7 @@ func TestRepository_FindAll(t *testing.T) {
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.FindAll(&users, query))
+	assert.Nil(t, repo.FindAll(context.TODO(), &users, query))
 	assert.Len(t, users, 2)
 	assert.Equal(t, 10, users[0].ID)
 	assert.Equal(t, 10, users[1].ID)
@@ -231,7 +232,7 @@ func TestRepository_FindAll_error(t *testing.T) {
 
 	adapter.On("Query", query).Return(&testCursor{}, err).Once()
 
-	assert.Equal(t, err, repo.FindAll(&users, query))
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &users, query))
 
 	adapter.AssertExpectations(t)
 }
@@ -248,7 +249,7 @@ func TestRepository_MustFindAll(t *testing.T) {
 	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustFindAll(&users, query)
+		repo.MustFindAll(context.TODO(), &users, query)
 	})
 
 	assert.Len(t, users, 2)
@@ -278,7 +279,7 @@ func TestRepository_Insert(t *testing.T) {
 
 	adapter.On("Insert", From("users"), modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.Insert(&user, modifiers...))
+	assert.Nil(t, repo.Insert(context.TODO(), &user, modifiers...))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -304,7 +305,7 @@ func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 	adapter.On("Insert", From("users"), mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Insert(&address))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &address))
 
 	adapter.AssertExpectations(t)
 }
@@ -328,7 +329,7 @@ func TestRepository_Insert_saveHasOneError(t *testing.T) {
 	adapter.On("Insert", From("addresses"), mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Insert(&user))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -360,7 +361,7 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 	adapter.On("InsertAll", From("transactions"), mock.Anything, mock.Anything).Return([]interface{}{}, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Insert(&user))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -393,8 +394,8 @@ func TestRepository_Insert_error(t *testing.T) {
 
 	adapter.On("Insert", From("users"), modifies).Return(0, errors.New("error")).Once()
 
-	assert.NotNil(t, repo.Insert(&user, modifiers...))
-	assert.Panics(t, func() { repo.MustInsert(&user, modifiers...) })
+	assert.NotNil(t, repo.Insert(context.TODO(), &user, modifiers...))
+	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, modifiers...) })
 
 	adapter.AssertExpectations(t)
 }
@@ -405,8 +406,8 @@ func TestRepository_Insert_nothing(t *testing.T) {
 		repo    = repository{adapter: adapter}
 	)
 
-	assert.Nil(t, repo.Insert(nil))
-	assert.NotPanics(t, func() { repo.MustInsert(nil) })
+	assert.Nil(t, repo.Insert(context.TODO(), nil))
+	assert.NotPanics(t, func() { repo.MustInsert(context.TODO(), nil) })
 
 	adapter.AssertExpectations(t)
 }
@@ -437,7 +438,7 @@ func TestRepository_InsertAll(t *testing.T) {
 
 	adapter.On("InsertAll", From("users"), mock.Anything, modifies).Return([]interface{}{1, 2}, nil).Once()
 
-	assert.Nil(t, repo.InsertAll(&users))
+	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
 	assert.Equal(t, []User{
 		{ID: 1, Name: "name1", Age: 0, CreatedAt: now(), UpdatedAt: now()},
 		{ID: 2, Name: "name2", Age: 12, CreatedAt: now(), UpdatedAt: now()},
@@ -453,7 +454,7 @@ func TestRepository_InsertAll_empty(t *testing.T) {
 		repo    = repository{adapter: adapter}
 	)
 
-	assert.Nil(t, repo.InsertAll(&users))
+	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
 
 	adapter.AssertExpectations(t)
 }
@@ -464,8 +465,8 @@ func TestRepository_InsertAll_nothing(t *testing.T) {
 		repo    = repository{adapter: adapter}
 	)
 
-	assert.Nil(t, repo.InsertAll(nil))
-	assert.NotPanics(t, func() { repo.MustInsertAll(nil) })
+	assert.Nil(t, repo.InsertAll(context.TODO(), nil))
+	assert.NotPanics(t, func() { repo.MustInsertAll(context.TODO(), nil) })
 
 	adapter.AssertExpectations(t)
 }
@@ -488,7 +489,7 @@ func TestRepository_Update(t *testing.T) {
 
 	adapter.On("Update", queries, modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.Update(&user, modifiers...))
+	assert.Nil(t, repo.Update(context.TODO(), &user, modifiers...))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
@@ -516,7 +517,7 @@ func TestRepository_Update_notFound(t *testing.T) {
 
 	adapter.On("Update", queries, modifies).Return(0, nil).Once()
 
-	assert.Equal(t, NotFoundError{}, repo.Update(&user, modifiers...))
+	assert.Equal(t, NotFoundError{}, repo.Update(context.TODO(), &user, modifiers...))
 
 	adapter.AssertExpectations(t)
 }
@@ -539,7 +540,7 @@ func TestRepository_Update_reload(t *testing.T) {
 	adapter.On("Update", queries, modifies).Return(1, nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
-	assert.Nil(t, repo.Update(&user, modifiers...))
+	assert.Nil(t, repo.Update(context.TODO(), &user, modifiers...))
 	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
@@ -567,7 +568,7 @@ func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	adapter.On("Update", queries, mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Update(&address))
+	assert.Equal(t, err, repo.Update(context.TODO(), &address))
 
 	adapter.AssertExpectations(t)
 }
@@ -593,7 +594,7 @@ func TestRepository_Update_saveHasOneError(t *testing.T) {
 	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), mock.Anything).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Update(&user))
+	assert.Equal(t, err, repo.Update(context.TODO(), &user))
 	adapter.AssertExpectations(t)
 }
 
@@ -618,7 +619,7 @@ func TestRepository_Update_saveHasManyError(t *testing.T) {
 	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10))).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	assert.Equal(t, err, repo.Update(&user))
+	assert.Equal(t, err, repo.Update(context.TODO(), &user))
 	adapter.AssertExpectations(t)
 }
 
@@ -628,8 +629,8 @@ func TestRepository_Update_nothing(t *testing.T) {
 		repo    = repository{adapter: adapter}
 	)
 
-	assert.Nil(t, repo.Update(nil))
-	assert.NotPanics(t, func() { repo.MustUpdate(nil) })
+	assert.Nil(t, repo.Update(context.TODO(), nil))
+	assert.NotPanics(t, func() { repo.MustUpdate(context.TODO(), nil) })
 
 	adapter.AssertExpectations(t)
 }
@@ -652,8 +653,8 @@ func TestRepository_Update_error(t *testing.T) {
 
 	adapter.On("Update", queries, modifies).Return(0, errors.New("error")).Once()
 
-	assert.NotNil(t, repo.Update(&user, modifiers...))
-	assert.Panics(t, func() { repo.MustUpdate(&user, modifiers...) })
+	assert.NotNil(t, repo.Update(context.TODO(), &user, modifiers...))
+	assert.Panics(t, func() { repo.MustUpdate(context.TODO(), &user, modifiers...) })
 	adapter.AssertExpectations(t)
 }
 
@@ -682,7 +683,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 
 	adapter.On("Update", q, modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.saveBelongsTo(doc, &modification))
+	assert.Nil(t, repo.saveBelongsTo(context.TODO(), doc, &modification))
 	assert.Equal(t, Transaction{
 		BuyerID: 1,
 		Buyer: User{
@@ -721,7 +722,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 
 	adapter.On("Update", q, modifies).Return(0, errors.New("update error")).Once()
 
-	err := repo.saveBelongsTo(doc, &modification)
+	err := repo.saveBelongsTo(context.TODO(), doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -748,7 +749,7 @@ func TestRepository_saveBelongsTo_updateInconsistentAssoc(t *testing.T) {
 		Key:  "user_id",
 		Type: ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-	}, repo.saveBelongsTo(doc, &modification))
+	}, repo.saveBelongsTo(context.TODO(), doc, &modification))
 
 	adapter.AssertExpectations(t)
 }
@@ -776,7 +777,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 
 	adapter.On("Insert", q, modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.saveBelongsTo(doc, &modification))
+	assert.Nil(t, repo.saveBelongsTo(context.TODO(), doc, &modification))
 	assert.Equal(t, Set("user_id", 1), modification.Modifies["user_id"])
 	assert.Equal(t, Transaction{
 		Buyer: User{
@@ -817,7 +818,7 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, modifies).Return(0, errors.New("insert error")).Once()
 
-	assert.Equal(t, errors.New("insert error"), repo.saveBelongsTo(doc, &modification))
+	assert.Equal(t, errors.New("insert error"), repo.saveBelongsTo(context.TODO(), doc, &modification))
 	assert.Zero(t, modification.Modifies["user_id"])
 
 	adapter.AssertExpectations(t)
@@ -832,7 +833,7 @@ func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 		modification = Apply(doc)
 	)
 
-	err := repo.saveBelongsTo(doc, &modification)
+	err := repo.saveBelongsTo(context.TODO(), doc, &modification)
 	assert.Nil(t, err)
 	adapter.AssertExpectations(t)
 }
@@ -859,7 +860,7 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 
 	adapter.On("Update", q, modifies).Return(1, nil).Once()
 
-	assert.Nil(t, repo.saveHasOne(doc, &modification))
+	assert.Nil(t, repo.saveHasOne(context.TODO(), doc, &modification))
 	adapter.AssertExpectations(t)
 }
 
@@ -885,7 +886,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 
 	adapter.On("Update", q, modifies).Return(0, errors.New("update error")).Once()
 
-	err := repo.saveHasOne(doc, &modification)
+	err := repo.saveHasOne(context.TODO(), doc, &modification)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -911,7 +912,7 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 		Key:  "user_id",
 		Type: ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has one ref and fk"),
-	}, repo.saveHasOne(doc, &modification))
+	}, repo.saveHasOne(context.TODO(), doc, &modification))
 
 	adapter.AssertExpectations(t)
 }
@@ -938,7 +939,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 
 	adapter.On("Insert", q, modifies).Return(2, nil).Once()
 
-	assert.Nil(t, repo.saveHasOne(doc, &modification))
+	assert.Nil(t, repo.saveHasOne(context.TODO(), doc, &modification))
 	assert.Equal(t, User{
 		ID: 1,
 		Address: Address{
@@ -973,7 +974,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, modifies).Return(nil, errors.New("insert error")).Once()
 
-	assert.Equal(t, errors.New("insert error"), repo.saveHasOne(doc, &modification))
+	assert.Equal(t, errors.New("insert error"), repo.saveHasOne(context.TODO(), doc, &modification))
 
 	adapter.AssertExpectations(t)
 }
@@ -1002,7 +1003,7 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
 
-	assert.Nil(t, repo.saveHasMany(doc, &modification, true))
+	assert.Nil(t, repo.saveHasMany(context.TODO(), doc, &modification, true))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1039,7 +1040,7 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{}, err).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{}, err).Maybe()
 
-	assert.Equal(t, err, repo.saveHasMany(doc, &modification, true))
+	assert.Equal(t, err, repo.saveHasMany(context.TODO(), doc, &modification, true))
 
 	adapter.AssertExpectations(t)
 }
@@ -1078,7 +1079,7 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), modifies[0]).Return(1, nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), modifies[1]).Return(1, nil).Once()
 
-	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
+	assert.Nil(t, repo.saveHasMany(context.TODO(), doc, &modification, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1120,7 +1121,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 
-	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
+	assert.Nil(t, repo.saveHasMany(context.TODO(), doc, &modification, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1165,7 +1166,7 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
-	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
+	assert.Nil(t, repo.saveHasMany(context.TODO(), doc, &modification, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1203,7 +1204,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(1, nil).Once()
 	adapter.On("InsertAll", q, mock.Anything, modifies).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 
-	assert.Nil(t, repo.saveHasMany(doc, &modification, false))
+	assert.Nil(t, repo.saveHasMany(context.TODO(), doc, &modification, false))
 	assert.Equal(t, User{
 		ID:        1,
 		CreatedAt: now(),
@@ -1237,7 +1238,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(0, err).Once()
 
-	assert.Equal(t, err, repo.saveHasMany(doc, &modification, false))
+	assert.Equal(t, err, repo.saveHasMany(context.TODO(), doc, &modification, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -1258,7 +1259,7 @@ func TestRepository_saveHasMany_invalidModifier(t *testing.T) {
 	)
 
 	assert.PanicsWithValue(t, "rel: invalid modifier", func() {
-		repo.saveHasMany(doc, &modification, false)
+		repo.saveHasMany(context.TODO(), doc, &modification, false)
 	})
 
 	adapter.AssertExpectations(t)
@@ -1273,7 +1274,7 @@ func TestRepository_Delete(t *testing.T) {
 
 	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(1, nil).Once()
 
-	assert.Nil(t, repo.Delete(&user))
+	assert.Nil(t, repo.Delete(context.TODO(), &user))
 
 	adapter.AssertExpectations(t)
 }
@@ -1288,7 +1289,7 @@ func TestRepository_MustDelete(t *testing.T) {
 	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustDelete(&user)
+		repo.MustDelete(context.TODO(), &user)
 	})
 
 	adapter.AssertExpectations(t)
@@ -1303,7 +1304,7 @@ func TestRepository_DeleteAll(t *testing.T) {
 
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
-	assert.Nil(t, repo.DeleteAll(queries))
+	assert.Nil(t, repo.DeleteAll(context.TODO(), queries))
 
 	adapter.AssertExpectations(t)
 }
@@ -1318,7 +1319,7 @@ func TestRepository_MustDeleteAll(t *testing.T) {
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(queries)
+		repo.MustDeleteAll(context.TODO(), queries)
 	})
 
 	adapter.AssertExpectations(t)
@@ -1341,7 +1342,7 @@ func TestRepository_Preload_hasOne(t *testing.T) {
 	cur.MockScan(address.ID, *address.UserID).Times(2)
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&user, "address"))
+	assert.Nil(t, repo.Preload(context.TODO(), &user, "address"))
 	assert.Equal(t, address, user.Address)
 
 	adapter.AssertExpectations(t)
@@ -1371,7 +1372,7 @@ func TestRepository_Preload_sliceHasOne(t *testing.T) {
 	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&users, "address"))
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "address"))
 	assert.Equal(t, addresses[0], users[0].Address)
 	assert.Equal(t, addresses[1], users[1].Address)
 
@@ -1398,7 +1399,7 @@ func TestRepository_Preload_nestedHasOne(t *testing.T) {
 	cur.MockScan(address.ID, *address.UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transaction, "buyer.address"))
+	assert.Nil(t, repo.Preload(context.TODO(), &transaction, "buyer.address"))
 	assert.Equal(t, address, transaction.Buyer.Address)
 
 	adapter.AssertExpectations(t)
@@ -1431,7 +1432,7 @@ func TestRepository_Preload_sliceNestedHasOne(t *testing.T) {
 	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transactions, "buyer.address"))
+	assert.Nil(t, repo.Preload(context.TODO(), &transactions, "buyer.address"))
 	assert.Equal(t, addresses[0], transactions[0].Buyer.Address)
 	assert.Equal(t, addresses[1], transactions[1].Buyer.Address)
 
@@ -1460,7 +1461,7 @@ func TestRepository_Preload_hasMany(t *testing.T) {
 	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&user, "transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &user, "transactions"))
 	assert.Equal(t, transactions, user.Transactions)
 
 	adapter.AssertExpectations(t)
@@ -1493,7 +1494,7 @@ func TestRepository_Preload_sliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&users, "transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "transactions"))
 	assert.Equal(t, transactions[:2], users[0].Transactions)
 	assert.Equal(t, transactions[2:], users[1].Transactions)
 
@@ -1523,7 +1524,7 @@ func TestRepository_Preload_nestedHasMany(t *testing.T) {
 	cur.MockScan(transactions[1].ID, transactions[1].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&address, "user.transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user.transactions"))
 	assert.Equal(t, transactions, address.User.Transactions)
 
 	adapter.AssertExpectations(t)
@@ -1537,7 +1538,7 @@ func TestRepository_Preload_nestedNullHasMany(t *testing.T) {
 		address = Address{User: nil}
 	)
 
-	assert.Nil(t, repo.Preload(&address, "user.transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user.transactions"))
 
 	adapter.AssertExpectations(t)
 }
@@ -1571,7 +1572,7 @@ func TestRepository_Preload_nestedSliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[3].ID, transactions[3].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user.transactions"))
 	assert.Equal(t, transactions[:2], addresses[0].User.Transactions)
 	assert.Equal(t, transactions[2:], addresses[1].User.Transactions)
 
@@ -1607,7 +1608,7 @@ func TestRepository_Preload_nestedNullSliceHasMany(t *testing.T) {
 	cur.MockScan(transactions[2].ID, transactions[2].BuyerID).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user.transactions"))
 	assert.Equal(t, transactions[:2], addresses[0].User.Transactions)
 	assert.Equal(t, []Transaction(nil), addresses[1].User.Transactions)
 	assert.Equal(t, transactions[2:], addresses[2].User.Transactions)
@@ -1633,7 +1634,7 @@ func TestRepository_Preload_belongsTo(t *testing.T) {
 	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transaction, "buyer"))
+	assert.Nil(t, repo.Preload(context.TODO(), &transaction, "buyer"))
 	assert.Equal(t, user, transaction.Buyer)
 
 	adapter.AssertExpectations(t)
@@ -1657,7 +1658,7 @@ func TestRepository_Preload_ptrBelongsTo(t *testing.T) {
 	cur.MockScan(user.ID, user.Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&address, "user"))
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user"))
 	assert.Equal(t, user, *address.User)
 
 	adapter.AssertExpectations(t)
@@ -1671,7 +1672,7 @@ func TestRepository_Preload_nullBelongsTo(t *testing.T) {
 		address = Address{}
 	)
 
-	assert.Nil(t, repo.Preload(&address, "user"))
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user"))
 	assert.Nil(t, address.User)
 
 	adapter.AssertExpectations(t)
@@ -1702,7 +1703,7 @@ func TestRepository_Preload_sliceBelongsTo(t *testing.T) {
 	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&transactions, "buyer"))
+	assert.Nil(t, repo.Preload(context.TODO(), &transactions, "buyer"))
 	assert.Equal(t, users[0], transactions[0].Buyer)
 	assert.Equal(t, users[1], transactions[1].Buyer)
 
@@ -1735,7 +1736,7 @@ func TestRepository_Preload_ptrSliceBelongsTo(t *testing.T) {
 	cur.MockScan(users[1].ID, users[1].Name).Twice()
 	cur.On("Next").Return(false).Once()
 
-	assert.Nil(t, repo.Preload(&addresses, "user"))
+	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user"))
 	assert.Equal(t, users[0], *addresses[0].User)
 	assert.Equal(t, users[1], *addresses[1].User)
 
@@ -1749,7 +1750,7 @@ func TestRepository_Preload_emptySlice(t *testing.T) {
 		addresses = []Address{}
 	)
 
-	assert.Nil(t, repo.Preload(&addresses, "user.transactions"))
+	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user.transactions"))
 }
 
 func TestQuery_Preload_notPointerPanic(t *testing.T) {
@@ -1758,7 +1759,7 @@ func TestQuery_Preload_notPointerPanic(t *testing.T) {
 		transaction = Transaction{}
 	)
 
-	assert.Panics(t, func() { repo.Preload(transaction, "User") })
+	assert.Panics(t, func() { repo.Preload(context.TODO(), transaction, "User") })
 }
 
 func TestRepository_Preload_queryError(t *testing.T) {
@@ -1772,7 +1773,7 @@ func TestRepository_Preload_queryError(t *testing.T) {
 
 	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, err).Once()
 
-	assert.Equal(t, err, repo.Preload(&transaction, "buyer"))
+	assert.Equal(t, err, repo.Preload(context.TODO(), &transaction, "buyer"))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -1789,7 +1790,7 @@ func TestRepository_MustPreload(t *testing.T) {
 	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustPreload(&transaction, "buyer")
+		repo.MustPreload(context.TODO(), &transaction, "buyer")
 	})
 
 	adapter.AssertExpectations(t)
@@ -1802,7 +1803,7 @@ func TestRepository_Transaction(t *testing.T) {
 
 	repo := repository{adapter: adapter}
 
-	err := repo.Transaction(func(repo Repository) error {
+	err := repo.Transaction(context.TODO(), func(repo Repository) error {
 		assert.True(t, repo.(*repository).inTransaction)
 		return nil
 	})
@@ -1817,7 +1818,7 @@ func TestRepository_Transaction_beginError(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(errors.New("error")).Once()
 
-	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
+	err := repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 		// doing good things
 		return nil
 	})
@@ -1831,7 +1832,7 @@ func TestRepository_Transaction_commitError(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Commit").Return(errors.New("error")).Once()
 
-	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
+	err := repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 		// doing good things
 		return nil
 	})
@@ -1845,7 +1846,7 @@ func TestRepository_Transaction_returnErrorAndRollback(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
+	err := repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 		// doing good things
 		return errors.New("error")
 	})
@@ -1859,7 +1860,7 @@ func TestRepository_Transaction_panicWithErrorAndRollback(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := repository{adapter: adapter}.Transaction(func(r Repository) error {
+	err := repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 		// doing good things
 		panic(errors.New("error"))
 	})
@@ -1874,7 +1875,7 @@ func TestRepository_Transaction_panicWithStringAndRollback(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Panics(t, func() {
-		_ = repository{adapter: adapter}.Transaction(func(r Repository) error {
+		_ = repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 			// doing good things
 			panic("error")
 		})
@@ -1890,7 +1891,7 @@ func TestRepository_Transaction_runtimeError(t *testing.T) {
 
 	var user *User
 	assert.Panics(t, func() {
-		_ = repository{adapter: adapter}.Transaction(func(r Repository) error {
+		_ = repository{adapter: adapter}.Transaction(context.TODO(), func(r Repository) error {
 			_ = user.ID
 			return nil
 		})

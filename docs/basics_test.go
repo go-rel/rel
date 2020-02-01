@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Fs02/rel"
@@ -29,7 +30,7 @@ func TestExample(t *testing.T) {
 	repo.ExpectUpdate().For(&book)
 
 	// run and asserts
-	assert.Nil(t, Example(repo))
+	assert.Nil(t, Example(context.Background(), repo))
 	repo.AssertExpectations(t)
 }
 
@@ -41,7 +42,7 @@ func TestExample_findNoResult(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 1)).NotFound()
 
 	// run and asserts
-	assert.Equal(t, rel.NotFoundError{}, Example(repo))
+	assert.Equal(t, rel.NotFoundError{}, Example(context.Background(), repo))
 	repo.AssertExpectations(t)
 }
 
@@ -56,7 +57,7 @@ func TestExample_updateError(t *testing.T) {
 	repo.ExpectUpdate().ForType("main.Book").ConnectionClosed()
 
 	// run and asserts
-	assert.Equal(t, reltest.ErrConnectionClosed, Example(repo))
+	assert.Equal(t, reltest.ErrConnectionClosed, Example(context.Background(), repo))
 	repo.AssertExpectations(t)
 }
 

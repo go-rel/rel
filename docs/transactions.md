@@ -11,9 +11,9 @@ If the error is a runtime error or `panic` with string argument, it'll panic aft
 ### **main.go**
 
 ```go
-if err := repo.Transaction(func(repo rel.Repository) error {
-    repo.Update(&books, rel.Dec("stock"))
-    return repo.Update(&transaction, rel.Set("paid", true))
+if err := repo.Transaction(ctx, func(repo rel.Repository) error {
+    repo.Update(ctx, &books, rel.Dec("stock"))
+    return repo.Update(ctx, &transaction, rel.Set("paid", true))
 }); err != nil {
     // handle error
 }

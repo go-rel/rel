@@ -15,7 +15,7 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 		user = User{Name: "name1", Gender: "male", Age: 10}
 	)
 
-	repo.MustInsert(&user)
+	repo.MustInsert(ctx, &user)
 
 	tests := []rel.Query{
 		rel.From("users").Where(where.Eq("id", user.ID)),
@@ -49,11 +49,11 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 
 	for _, query := range tests {
 		t.Run("Aggregate", func(t *testing.T) {
-			count, err := repo.Aggregate(query, "count", "id")
+			count, err := repo.Aggregate(ctx, query, "count", "id")
 			assert.Nil(t, err)
 			assert.True(t, count >= 0)
 
-			sum, err := repo.Aggregate(query, "sum", "id")
+			sum, err := repo.Aggregate(ctx, query, "sum", "id")
 			assert.Nil(t, err)
 			assert.True(t, sum >= 0)
 		})

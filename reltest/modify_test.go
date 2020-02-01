@@ -1,6 +1,7 @@
 package reltest
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -16,13 +17,13 @@ func TestModify_Insert(t *testing.T) {
 	)
 
 	repo.ExpectInsert()
-	assert.Nil(t, repo.Insert(&result))
+	assert.Nil(t, repo.Insert(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsert()
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result)
+		repo.MustInsert(context.TODO(), &result)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -54,13 +55,13 @@ func TestModify_Insert_nested(t *testing.T) {
 	)
 
 	repo.ExpectInsert()
-	assert.Nil(t, repo.Insert(&result))
+	assert.Nil(t, repo.Insert(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsert()
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result)
+		repo.MustInsert(context.TODO(), &result)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -74,13 +75,13 @@ func TestModify_Insert_record(t *testing.T) {
 	)
 
 	repo.ExpectInsert().ForType("reltest.Book")
-	assert.Nil(t, repo.Insert(&result))
+	assert.Nil(t, repo.Insert(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsert().ForType("reltest.Book")
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result)
+		repo.MustInsert(context.TODO(), &result)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -94,13 +95,13 @@ func TestModify_Insert_set(t *testing.T) {
 	)
 
 	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
-	assert.Nil(t, repo.Insert(&result, rel.Set("title", "Rel for dummies")))
+	assert.Nil(t, repo.Insert(context.TODO(), &result, rel.Set("title", "Rel for dummies")))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsert(rel.Set("title", "Rel for dummies"))
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result, rel.Set("title", "Rel for dummies"))
+		repo.MustInsert(context.TODO(), &result, rel.Set("title", "Rel for dummies"))
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -137,13 +138,13 @@ func TestModify_Insert_map(t *testing.T) {
 	)
 
 	repo.ExpectInsert(mod)
-	assert.Nil(t, repo.Insert(&result, mod))
+	assert.Nil(t, repo.Insert(context.TODO(), &result, mod))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsert(mod)
 	assert.NotPanics(t, func() {
-		repo.MustInsert(&result, mod)
+		repo.MustInsert(context.TODO(), &result, mod)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -157,7 +158,7 @@ func TestModify_Insert_unknownField(t *testing.T) {
 
 	repo.ExpectInsert(rel.Set("titles", "Rel for dummies"))
 	assert.Panics(t, func() {
-		_ = repo.Insert(&result, rel.Set("titles", "Rel for dummies"))
+		_ = repo.Insert(context.TODO(), &result, rel.Set("titles", "Rel for dummies"))
 	})
 	repo.AssertExpectations(t)
 }
@@ -171,7 +172,7 @@ func TestModify_Insert_notUnique(t *testing.T) {
 	repo.ExpectInsert(rel.Set("title", "Rel for dummies")).NotUnique("title")
 	assert.Equal(t,
 		rel.ConstraintError{Key: "title", Type: rel.UniqueConstraint},
-		repo.Insert(&result, rel.Set("title", "Rel for dummies")),
+		repo.Insert(context.TODO(), &result, rel.Set("title", "Rel for dummies")),
 	)
 	repo.AssertExpectations(t)
 }
@@ -190,13 +191,13 @@ func TestModify_InsertAll(t *testing.T) {
 	)
 
 	repo.ExpectInsertAll()
-	assert.Nil(t, repo.InsertAll(&results))
+	assert.Nil(t, repo.InsertAll(context.TODO(), &results))
 	assert.Equal(t, books, results)
 	repo.AssertExpectations(t)
 
 	repo.ExpectInsertAll()
 	assert.NotPanics(t, func() {
-		repo.MustInsertAll(&results)
+		repo.MustInsertAll(context.TODO(), &results)
 		assert.Equal(t, books, results)
 	})
 	repo.AssertExpectations(t)
@@ -209,12 +210,12 @@ func TestModify_Update(t *testing.T) {
 	)
 
 	repo.ExpectUpdate()
-	assert.Nil(t, repo.Update(&result))
+	assert.Nil(t, repo.Update(context.TODO(), &result))
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate()
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result)
+		repo.MustUpdate(context.TODO(), &result)
 	})
 	repo.AssertExpectations(t)
 }
@@ -247,13 +248,13 @@ func TestModify_Update_nested(t *testing.T) {
 	)
 
 	repo.ExpectUpdate()
-	assert.Nil(t, repo.Update(&result))
+	assert.Nil(t, repo.Update(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate()
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result)
+		repo.MustUpdate(context.TODO(), &result)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -286,13 +287,13 @@ func TestModify_Update_nestedInsert(t *testing.T) {
 	)
 
 	repo.ExpectUpdate()
-	assert.Nil(t, repo.Update(&result))
+	assert.Nil(t, repo.Update(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate()
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result)
+		repo.MustUpdate(context.TODO(), &result)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -305,12 +306,12 @@ func TestModify_Update_record(t *testing.T) {
 	)
 
 	repo.ExpectUpdate().For(&result)
-	assert.Nil(t, repo.Update(&result))
+	assert.Nil(t, repo.Update(context.TODO(), &result))
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate().For(&result)
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result)
+		repo.MustUpdate(context.TODO(), &result)
 	})
 	repo.AssertExpectations(t)
 }
@@ -323,7 +324,7 @@ func TestModify_Update_record(t *testing.T) {
 
 // 	repo.ExpectUpdate().For(&result)
 // 	assert.Panics(t, func() {
-// 		_ = repo.Update(&result)
+// 		_ = repo.Update(context.TODO(),&result)
 // 	})
 // 	repo.AssertExpectations(t)
 // }
@@ -336,13 +337,13 @@ func TestModify_Update_set(t *testing.T) {
 	)
 
 	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
-	assert.Nil(t, repo.Update(&result, rel.Set("title", "Rel for dummies")))
+	assert.Nil(t, repo.Update(context.TODO(), &result, rel.Set("title", "Rel for dummies")))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate(rel.Set("title", "Rel for dummies"))
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result, rel.Set("title", "Rel for dummies"))
+		repo.MustUpdate(context.TODO(), &result, rel.Set("title", "Rel for dummies"))
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -356,7 +357,7 @@ func TestModify_Update_set(t *testing.T) {
 // 	)
 
 // 	repo.ExpectUpdate(rel.Inc("views"))
-// 	assert.Nil(t, repo.Update(&result, rel.Inc("views")))
+// 	assert.Nil(t, repo.Update(context.TODO(),&result, rel.Inc("views")))
 // 	assert.Equal(t, book, result)
 // 	repo.AssertExpectations(t)
 // }
@@ -369,7 +370,7 @@ func TestModify_Update_set(t *testing.T) {
 // 	)
 
 // 	repo.ExpectUpdate(rel.Dec("views"))
-// 	assert.Nil(t, repo.Update(&result, rel.Dec("views")))
+// 	assert.Nil(t, repo.Update(context.TODO(),&result, rel.Dec("views")))
 // 	assert.Equal(t, book, result)
 // 	repo.AssertExpectations(t)
 // }
@@ -382,7 +383,7 @@ func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
 
 	repo.ExpectUpdate(rel.Inc("watistis"))
 	assert.Panics(t, func() {
-		assert.Nil(t, repo.Update(&result, rel.Inc("watistis")))
+		assert.Nil(t, repo.Update(context.TODO(), &result, rel.Inc("watistis")))
 	})
 
 	repo.AssertExpectations(t)
@@ -396,7 +397,7 @@ func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
 
 	repo.ExpectUpdate(rel.Inc("title"))
 	assert.Panics(t, func() {
-		assert.Nil(t, repo.Update(&result, rel.Inc("title")))
+		assert.Nil(t, repo.Update(context.TODO(), &result, rel.Inc("title")))
 	})
 
 	repo.AssertExpectations(t)
@@ -410,7 +411,7 @@ func TestModify_Update_setNil(t *testing.T) {
 	)
 
 	repo.ExpectUpdate(rel.Set("title", nil))
-	assert.Nil(t, repo.Update(&result, rel.Set("title", nil)))
+	assert.Nil(t, repo.Update(context.TODO(), &result, rel.Set("title", nil)))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 }
@@ -457,13 +458,13 @@ func TestModify_Update_map(t *testing.T) {
 	)
 
 	repo.ExpectUpdate(mod)
-	assert.Nil(t, repo.Update(&result, mod))
+	assert.Nil(t, repo.Update(context.TODO(), &result, mod))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
 	repo.ExpectUpdate(mod)
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(&result, mod)
+		repo.MustUpdate(context.TODO(), &result, mod)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -491,7 +492,7 @@ func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 		Key:  "author_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-	}, repo.Update(&result, mod))
+	}, repo.Update(context.TODO(), &result, mod))
 	repo.AssertExpectations(t)
 }
 
@@ -513,7 +514,7 @@ func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 
 	repo.ExpectUpdate(mod)
 	assert.Panics(t, func() {
-		_ = repo.Update(&result, mod)
+		_ = repo.Update(context.TODO(), &result, mod)
 	})
 	repo.AssertExpectations(t)
 }
@@ -539,7 +540,7 @@ func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has one ref and fk"),
-	}, repo.Update(&result, mod))
+	}, repo.Update(context.TODO(), &result, mod))
 	repo.AssertExpectations(t)
 }
 
@@ -565,7 +566,7 @@ func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has many ref and fk"),
-	}, repo.Update(&result, mod))
+	}, repo.Update(context.TODO(), &result, mod))
 	repo.AssertExpectations(t)
 }
 
@@ -577,7 +578,7 @@ func TestModify_Update_unknownField(t *testing.T) {
 
 	repo.ExpectUpdate(rel.Set("titles", "Rel for dummies"))
 	assert.Panics(t, func() {
-		_ = repo.Update(&result, rel.Set("titles", "Rel for dummies"))
+		_ = repo.Update(context.TODO(), &result, rel.Set("titles", "Rel for dummies"))
 	})
 	repo.AssertExpectations(t)
 }
@@ -591,7 +592,7 @@ func TestModify_Update_notUnique(t *testing.T) {
 	repo.ExpectUpdate(rel.Set("title", "Rel for dummies")).NotUnique("title")
 	assert.Equal(t,
 		rel.ConstraintError{Key: "title", Type: rel.UniqueConstraint},
-		repo.Update(&result, rel.Set("title", "Rel for dummies")),
+		repo.Update(context.TODO(), &result, rel.Set("title", "Rel for dummies")),
 	)
 	repo.AssertExpectations(t)
 }

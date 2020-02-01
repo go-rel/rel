@@ -16,16 +16,16 @@ func Query(t *testing.T, repo rel.Repository) {
 		user = User{Name: "name1", Gender: "male", Age: 10}
 	)
 
-	repo.MustInsert(&user)
-	repo.MustInsert(&User{Name: "name2", Gender: "male", Age: 20})
-	repo.MustInsert(&User{Name: "name3", Gender: "male", Age: 30})
-	repo.MustInsert(&User{Name: "name4", Gender: "female", Age: 40})
-	repo.MustInsert(&User{Name: "name5", Gender: "female", Age: 50})
-	repo.MustInsert(&User{Name: "name6", Gender: "female", Age: 60})
+	repo.MustInsert(ctx, &user)
+	repo.MustInsert(ctx, &User{Name: "name2", Gender: "male", Age: 20})
+	repo.MustInsert(ctx, &User{Name: "name3", Gender: "male", Age: 30})
+	repo.MustInsert(ctx, &User{Name: "name4", Gender: "female", Age: 40})
+	repo.MustInsert(ctx, &User{Name: "name5", Gender: "female", Age: 50})
+	repo.MustInsert(ctx, &User{Name: "name6", Gender: "female", Age: 60})
 
-	repo.MustInsert(&Address{Name: "address1", UserID: &user.ID})
-	repo.MustInsert(&Address{Name: "address2", UserID: &user.ID})
-	repo.MustInsert(&Address{Name: "address3", UserID: &user.ID})
+	repo.MustInsert(ctx, &Address{Name: "address1", UserID: &user.ID})
+	repo.MustInsert(ctx, &Address{Name: "address2", UserID: &user.ID})
+	repo.MustInsert(ctx, &Address{Name: "address3", UserID: &user.ID})
 
 	tests := []rel.Querier{
 		where.Eq("id", user.ID),
@@ -85,7 +85,7 @@ func QueryNotFound(t *testing.T, repo rel.Repository) {
 	t.Run("NotFound", func(t *testing.T) {
 		var (
 			user User
-			err  = repo.Find(&user, where.Eq("id", 0))
+			err  = repo.Find(ctx, &user, where.Eq("id", 0))
 		)
 
 		// find user error not found
@@ -98,7 +98,7 @@ func run(t *testing.T, repo rel.Repository, queriers []rel.Querier) {
 		t.Run("FindAll", func(t *testing.T) {
 			var (
 				users []User
-				err   = repo.FindAll(&users, query)
+				err   = repo.FindAll(ctx, &users, query)
 			)
 
 			assert.Nil(t, err)
@@ -110,7 +110,7 @@ func run(t *testing.T, repo rel.Repository, queriers []rel.Querier) {
 		t.Run("Find", func(t *testing.T) {
 			var (
 				user User
-				err  = repo.Find(&user, query)
+				err  = repo.Find(ctx, &user, query)
 			)
 
 			assert.Nil(t, err)

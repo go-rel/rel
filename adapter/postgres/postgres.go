@@ -13,6 +13,7 @@
 package postgres
 
 import (
+	"context"
 	db "database/sql"
 	"time"
 
@@ -48,11 +49,11 @@ func Open(dsn string) (*Adapter, error) {
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
+func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, modifies map[string]rel.Modify, loggers ...rel.Logger) (interface{}, error) {
 	var (
 		id              int64
 		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, modifies)
-		rows, err       = adapter.query(statement, args, loggers)
+		rows, err       = adapter.query(ctx, statement, args, loggers)
 	)
 
 	if err == nil && rows.Next() {
@@ -64,11 +65,11 @@ func (adapter *Adapter) Insert(query rel.Query, modifies map[string]rel.Modify, 
 }
 
 // InsertAll inserts multiple records to database and returns its ids.
-func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkModifies []map[string]rel.Modify, loggers ...rel.Logger) ([]interface{}, error) {
 	var (
 		ids             []interface{}
 		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Table, fields, bulkModifies)
-		rows, err       = adapter.query(statement, args, loggers)
+		rows, err       = adapter.query(ctx, statement, args, loggers)
 	)
 
 	if err == nil {
@@ -83,7 +84,7 @@ func (adapter *Adapter) InsertAll(query rel.Query, fields []string, bulkModifies
 	return ids, err
 }
 
-func (adapter *Adapter) query(statement string, args []interface{}, loggers []rel.Logger) (*db.Rows, error) {
+func (adapter *Adapter) query(ctx context.Context, statement string, args []interface{}, loggers []rel.Logger) (*db.Rows, error) {
 	var (
 		err   error
 		rows  *db.Rows
@@ -91,9 +92,9 @@ func (adapter *Adapter) query(statement string, args []interface{}, loggers []re
 	)
 
 	if adapter.Tx != nil {
-		rows, err = adapter.Tx.Query(statement, args...)
+		rows, err = adapter.Tx.QueryContext(ctx, statement, args...)
 	} else {
-		rows, err = adapter.DB.Query(statement, args...)
+		rows, err = adapter.DB.QueryContext(ctx, statement, args...)
 	}
 
 	go rel.Log(loggers, statement, time.Since(start), err)
@@ -102,8 +103,8 @@ func (adapter *Adapter) query(statement string, args []interface{}, loggers []re
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin() (rel.Adapter, error) {
-	newAdapter, err := adapter.Adapter.Begin()
+func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
+	newAdapter, err := adapter.Adapter.Begin(ctx)
 
 	return &Adapter{
 		Adapter: newAdapter.(*sql.Adapter),

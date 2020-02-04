@@ -555,7 +555,7 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 	)
 
 	if doc.Flag(HasDeletedAt) {
-		modifies := map[string]Modify{"deleted_at": Set("deleted_at", nil)}
+		modifies := map[string]Modify{"deleted_at": Set("deleted_at", now())}
 		deletedCount, err = r.adapter.Update(ctx, query, modifies, r.logger...)
 	} else {
 		deletedCount, err = r.adapter.Delete(ctx, query, r.logger...)

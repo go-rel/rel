@@ -25,10 +25,11 @@ type Transaction struct {
 }
 
 type Address struct {
-	ID     int
-	UserID *int
-	User   *User
-	Street string
+	ID        int
+	UserID    *int
+	User      *User
+	Street    string
+	DeletedAt *time.Time
 }
 
 type Owner struct {

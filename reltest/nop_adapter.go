@@ -12,6 +12,10 @@ type nopAdapter struct {
 	count int
 }
 
+func (na *nopAdapter) Ping(ctx context.Context) error {
+	return nil
+}
+
 func (na *nopAdapter) Aggregate(ctx context.Context, query rel.Query, mode string, field string, loggers ...rel.Logger) (int, error) {
 	return 0, nil
 }

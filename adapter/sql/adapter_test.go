@@ -46,6 +46,17 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, New(nil))
 }
 
+func TestAdapter_Ping(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = rel.New(adapter)
+	)
+
+	defer adapter.Close()
+
+	assert.Nil(t, repo.Ping(context.TODO()))
+}
+
 func TestAdapter_Aggregate(t *testing.T) {
 	var (
 		adapter = open(t)

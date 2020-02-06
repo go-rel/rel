@@ -23,6 +23,11 @@ func (ta *testAdapter) Close() error {
 	return args.Error(0)
 }
 
+func (ta *testAdapter) Ping(ctx context.Context) error {
+	args := ta.Called()
+	return args.Error(0)
+}
+
 func (ta *testAdapter) Aggregate(ctx context.Context, query Query, aggregate string, field string, logger ...Logger) (int, error) {
 	args := ta.Called(query, aggregate, field)
 	return args.Int(0), args.Error(1)

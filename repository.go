@@ -13,6 +13,7 @@ import (
 type Repository interface {
 	Adapter() Adapter
 	SetLogger(logger ...Logger)
+	Ping(ctx context.Context) error
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
@@ -48,6 +49,11 @@ func (r repository) Adapter() Adapter {
 
 func (r *repository) SetLogger(logger ...Logger) {
 	r.logger = logger
+}
+
+// Ping database.
+func (r *repository) Ping(ctx context.Context) error {
+	return r.adapter.Ping(ctx)
 }
 
 // Aggregate calculate aggregate over the given field.

@@ -21,7 +21,7 @@ type Config struct {
 	IncrementFunc       func(Adapter) int
 }
 
-// Adapter definition for mysql database.
+// Adapter definition for database database.
 type Adapter struct {
 	Config    *Config
 	DB        *sql.DB
@@ -31,9 +31,14 @@ type Adapter struct {
 
 var _ rel.Adapter = (*Adapter)(nil)
 
-// Close mysql connection.
+// Close database connection.
 func (adapter *Adapter) Close() error {
 	return adapter.DB.Close()
+}
+
+// Ping database.
+func (adapter *Adapter) Ping(ctx context.Context) error {
+	return adapter.DB.PingContext(ctx)
 }
 
 // Aggregate record using given query.

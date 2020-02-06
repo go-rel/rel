@@ -55,6 +55,18 @@ func TestRepository_SetLogger(t *testing.T) {
 	assert.NotNil(t, repo.logger)
 }
 
+func TestRepository_Ping(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = repository{adapter: adapter}
+	)
+
+	adapter.On("Ping").Return(nil).Once()
+
+	assert.Nil(t, repo.Ping(context.TODO()))
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Aggregate(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}

@@ -6,6 +6,7 @@ import (
 
 // Adapter interface
 type Adapter interface {
+	Ping(ctx context.Context) error
 	Aggregate(ctx context.Context, query Query, mode string, field string, loggers ...Logger) (int, error)
 	Query(ctx context.Context, query Query, loggers ...Logger) (Cursor, error)
 	Insert(ctx context.Context, query Query, modifies map[string]Modify, loggers ...Logger) (interface{}, error)

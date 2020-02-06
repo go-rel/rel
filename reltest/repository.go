@@ -33,6 +33,11 @@ func (r *Repository) Adapter() rel.Adapter {
 func (r *Repository) SetLogger(logger ...rel.Logger) {
 }
 
+// Ping database.
+func (r *Repository) Ping(ctx context.Context) error {
+	return r.repo.Ping(ctx)
+}
+
 // Aggregate provides a mock function with given fields: query, aggregate, field
 func (r *Repository) Aggregate(ctx context.Context, query rel.Query, aggregate string, field string) (int, error) {
 	r.repo.Aggregate(ctx, query, aggregate, field)

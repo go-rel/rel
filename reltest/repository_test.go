@@ -42,6 +42,10 @@ func TestRepository_Adapter(t *testing.T) {
 	assert.Nil(t, (&Repository{}).Adapter())
 }
 
+func TestRepository_Ping(t *testing.T) {
+	assert.Nil(t, New().Ping(context.TODO()))
+}
+
 func TestRepository_Transaction(t *testing.T) {
 	var (
 		repo   = New()

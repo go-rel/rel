@@ -198,18 +198,18 @@ func (d Document) SetValue(field string, value interface{}) bool {
 		}
 
 		if rt.ConvertibleTo(ft) {
-			return d.setConvertValue(ft, fv, rt, rv)
+			return setConvertValue(ft, fv, rt, rv)
 		}
 
 		if ft.Kind() == reflect.Ptr {
-			return d.setPointerValue(ft, fv, rt, rv)
+			return setPointerValue(ft, fv, rt, rv)
 		}
 	}
 
 	return false
 }
 
-func (d Document) setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+func setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
 	if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
 		return false
 	}
@@ -222,7 +222,7 @@ func (d Document) setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.
 	return true
 }
 
-func (d Document) setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
 	var (
 		rk = rt.Kind()
 		fk = ft.Kind()

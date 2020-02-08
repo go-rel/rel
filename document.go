@@ -389,17 +389,9 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			continue
 		}
 
-		if typ == rtTime {
+		if flag := extractFlag(typ, name); flag != Invalid {
 			data.fields = append(data.fields, name)
-
-			switch name {
-			case "created_at", "inserted_at":
-				data.flag |= HasCreatedAt
-			case "updated_at":
-				data.flag |= HasUpdatedAt
-			case "deleted_at":
-				data.flag |= HasDeletedAt
-			}
+			data.flag |= flag
 			continue
 		}
 
@@ -427,6 +419,24 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 	}
 
 	return data
+}
+
+func extractFlag(rt reflect.Type, name string) DocumentFlag {
+	flag := Invalid
+	if rt != rtTime {
+		return flag
+	}
+
+	switch name {
+	case "created_at", "inserted_at":
+		flag = HasCreatedAt
+	case "updated_at":
+		flag = HasUpdatedAt
+	case "deleted_at":
+		flag = HasDeletedAt
+	}
+
+	return flag
 }
 
 func fieldName(sf reflect.StructField) string {

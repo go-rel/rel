@@ -29,14 +29,14 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 		case pField:
 			continue
 		case "created_at", "inserted_at":
-			if typ, ok := doc.Type(field); ok && typ == rtTime {
+			if doc.Flag(HasCreatedAt) {
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
 					s.set(doc, mod, field, t, true)
 					continue
 				}
 			}
 		case "updated_at":
-			if typ, ok := doc.Type(field); ok && typ == rtTime {
+			if doc.Flag(HasUpdatedAt) {
 				s.set(doc, mod, field, t, true)
 				continue
 			}

@@ -1,4 +1,4 @@
-// Package postgres wraps postgres (pq) driver as an adapter for rel.
+// Package postgres wraps postgres (pq) driver as an adapter for REL.
 //
 // Usage:
 //	// open postgres connection.
@@ -8,7 +8,7 @@
 //	}
 //	defer adapter.Close()
 //
-//	// initialize rel's repo.
+//	// initialize REL's repo.
 //	repo := rel.New(adapter)
 package postgres
 

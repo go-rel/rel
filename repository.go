@@ -108,6 +108,7 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 }
 
 func (r repository) find(ctx context.Context, doc *Document, query Query) error {
+	query = r.withDefaultScope(doc.data, query)
 	cur, err := r.adapter.Query(ctx, query.Limit(1), r.logger...)
 	if err != nil {
 		return err
@@ -135,6 +136,7 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 }
 
 func (r repository) findAll(ctx context.Context, col *Collection, query Query) error {
+	query = r.withDefaultScope(col.data, query)
 	cur, err := r.adapter.Query(ctx, query, r.logger...)
 	if err != nil {
 		return err
@@ -145,7 +147,6 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 
 // Insert an record to database.
 func (r repository) Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error {
-	// TODO: perform reference check on library level for record instead of adapter level
 	if record == nil {
 		return nil
 	}
@@ -278,8 +279,6 @@ func (r repository) insertAll(ctx context.Context, col *Collection, modification
 // - update has many (will be replaced by default)
 // - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
 func (r repository) Update(ctx context.Context, record interface{}, modifiers ...Modifier) error {
-	// TODO: perform reference check on library level for record instead of adapter level
-	// TODO: make sure primary id not changed
 	if record == nil {
 		return nil
 	}
@@ -313,8 +312,8 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 
 	if len(modification.Modifies) != 0 {
 		var (
-			queriers          = Build(doc.Table(), filter)
-			updatedCount, err = r.adapter.Update(ctx, queriers, modification.Modifies, r.logger...)
+			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter))
+			updatedCount, err = r.adapter.Update(ctx, query, modification.Modifies, r.logger...)
 		)
 
 		if err != nil {
@@ -326,7 +325,7 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 		}
 
 		if modification.Reload {
-			if err := r.find(ctx, doc, queriers); err != nil {
+			if err := r.find(ctx, doc, query.Unscoped()); err != nil {
 				return err
 			}
 		}
@@ -480,11 +479,11 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, modification
 
 			if deletedIDs == nil {
 				// if it's nil, then clear old association (used by structset).
-				if err := r.deleteAll(ctx, Build(table, filter)); err != nil {
+				if err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
-				if err := r.deleteAll(ctx, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+				if err := r.deleteAll(ctx, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
 					return err
 				}
 			}
@@ -552,23 +551,27 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, modification
 // Delete single entry.
 func (r repository) Delete(ctx context.Context, record interface{}) error {
 	var (
-		doc               = NewDocument(record)
-		table             = doc.Table()
-		pField            = doc.PrimaryField()
-		pValue            = doc.PrimaryValue()
-		q                 = Build(table, Eq(pField, pValue))
-		deletedCount, err = r.adapter.Delete(ctx, q, r.logger...)
+		err          error
+		deletedCount int
+		doc          = NewDocument(record)
+		table        = doc.Table()
+		pField       = doc.PrimaryField()
+		pValue       = doc.PrimaryValue()
+		query        = Build(table, Eq(pField, pValue))
 	)
 
-	if err != nil {
-		return err
+	if doc.Flag(HasDeletedAt) {
+		modifies := map[string]Modify{"deleted_at": Set("deleted_at", now())}
+		deletedCount, err = r.adapter.Update(ctx, query, modifies, r.logger...)
+	} else {
+		deletedCount, err = r.adapter.Delete(ctx, query, r.logger...)
 	}
 
-	if deletedCount == 0 {
+	if err == nil && deletedCount == 0 {
 		return NotFoundError{}
 	}
 
-	return nil
+	return err
 }
 
 // MustDelete single entry.
@@ -582,17 +585,24 @@ func (r repository) DeleteAll(ctx context.Context, queriers ...Querier) error {
 		q = Build("", queriers...)
 	)
 
-	return r.deleteAll(ctx, q)
+	return r.deleteAll(ctx, Invalid, q)
 }
 
 func (r repository) MustDeleteAll(ctx context.Context, queriers ...Querier) {
 	must(r.DeleteAll(ctx, queriers...))
 }
 
-func (r repository) deleteAll(ctx context.Context, q Query) error {
+func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Query) error {
 	var (
-		_, err = r.adapter.Delete(ctx, q, r.logger...)
+		err error
 	)
+
+	if flag.Is(HasDeletedAt) {
+		modifies := map[string]Modify{"deleted_at": Set("deleted_at", nil)}
+		_, err = r.adapter.Update(ctx, query, modifies, r.logger...)
+	} else {
+		_, err = r.adapter.Delete(ctx, query, r.logger...)
+	}
 
 	return err
 }
@@ -617,7 +627,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	var (
-		targets, table, keyField, keyType = r.mapPreloadTargets(sl, path)
+		targets, table, keyField, keyType, ddata = r.mapPreloadTargets(sl, path)
 	)
 
 	if len(targets) == 0 {
@@ -636,7 +646,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		query    = Build(table, append(queriers, In(keyField, ids...))...)
-		cur, err = r.adapter.Query(ctx, query, r.logger...)
+		cur, err = r.adapter.Query(ctx, r.withDefaultScope(ddata, query), r.logger...)
 	)
 
 	if err != nil {
@@ -652,7 +662,7 @@ func (r repository) MustPreload(ctx context.Context, records interface{}, field 
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData) {
 	type frame struct {
 		index int
 		doc   *Document
@@ -662,6 +672,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		table     string
 		keyField  string
 		keyType   reflect.Type
+		ddata     documentData
 		mapTarget = make(map[interface{}][]slice)
 		stack     = make([]frame, sl.Len())
 	)
@@ -703,6 +714,14 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 				table = target.Table()
 				keyField = assocs.ForeignField()
 				keyType = reflect.TypeOf(ref)
+
+				if doc, ok := target.(*Document); ok {
+					ddata = doc.data
+				}
+
+				if col, ok := target.(*Collection); ok {
+					ddata = col.data
+				}
 			}
 		} else {
 			if assocs.Type() == HasMany {
@@ -733,7 +752,19 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	}
 
-	return mapTarget, table, keyField, keyType
+	return mapTarget, table, keyField, keyType, ddata
+}
+
+func (r repository) withDefaultScope(ddata documentData, query Query) Query {
+	if query.UnscopedQuery {
+		return query
+	}
+
+	if ddata.flag.Is(HasDeletedAt) {
+		query = query.Where(Nil("deleted_at"))
+	}
+
+	return query
 }
 
 // Transaction performs transaction with given function argument.

@@ -11,6 +11,25 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
+// DocumentFlag stores information about document as a flag.
+type DocumentFlag int8
+
+// Is returns true if it's defined.
+func (df DocumentFlag) Is(flag DocumentFlag) bool {
+	return (df & flag) == flag
+}
+
+const (
+	// Invalid flag.
+	Invalid DocumentFlag = 1 << iota
+	// HasCreatedAt flag.
+	HasCreatedAt
+	// HasUpdatedAt flag.
+	HasUpdatedAt
+	// HasDeletedAt flag.
+	HasDeletedAt
+)
+
 var (
 	tablesCache       sync.Map
 	primariesCache    sync.Map
@@ -40,6 +59,7 @@ type documentData struct {
 	belongsTo []string
 	hasOne    []string
 	hasMany   []string
+	flag      DocumentFlag
 }
 
 // Document provides an abstraction over reflect to easily works with struct for database purpose.
@@ -178,18 +198,18 @@ func (d Document) SetValue(field string, value interface{}) bool {
 		}
 
 		if rt.ConvertibleTo(ft) {
-			return d.setConvertValue(ft, fv, rt, rv)
+			return setConvertValue(ft, fv, rt, rv)
 		}
 
 		if ft.Kind() == reflect.Ptr {
-			return d.setPointerValue(ft, fv, rt, rv)
+			return setPointerValue(ft, fv, rt, rv)
 		}
 	}
 
 	return false
 }
 
-func (d Document) setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+func setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
 	if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
 		return false
 	}
@@ -202,7 +222,7 @@ func (d Document) setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.
 	return true
 }
 
-func (d Document) setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
+func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
 	var (
 		rk = rt.Kind()
 		fk = ft.Kind()
@@ -287,6 +307,11 @@ func (d *Document) Len() int {
 	return 1
 }
 
+// Flag returns true if struct contains specified flag.
+func (d Document) Flag(flag DocumentFlag) bool {
+	return d.data.flag.Is(flag)
+}
+
 // NewDocument used to create abstraction to work with struct.
 // Document can be created using interface or reflect.Value.
 func NewDocument(record interface{}, readonly ...bool) *Document {
@@ -359,8 +384,14 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() != reflect.Struct || typ == rtTime {
+		if typ.Kind() != reflect.Struct {
 			data.fields = append(data.fields, name)
+			continue
+		}
+
+		if flag := extractFlag(typ, name); flag != Invalid {
+			data.fields = append(data.fields, name)
+			data.flag |= flag
 			continue
 		}
 
@@ -388,6 +419,24 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 	}
 
 	return data
+}
+
+func extractFlag(rt reflect.Type, name string) DocumentFlag {
+	flag := Invalid
+	if rt != rtTime {
+		return flag
+	}
+
+	switch name {
+	case "created_at", "inserted_at":
+		flag = HasCreatedAt
+	case "updated_at":
+		flag = HasUpdatedAt
+	case "deleted_at":
+		flag = HasDeletedAt
+	}
+
+	return flag
 }
 
 func fieldName(sf reflect.StructField) string {

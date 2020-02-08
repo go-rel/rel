@@ -109,6 +109,7 @@ func TestStructset_withAssoc(t *testing.T) {
 		addrMod = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 			Set("user_id", nil),
+			Set("deleted_at", nil),
 		)
 	)
 

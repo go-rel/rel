@@ -26,7 +26,7 @@ func TestExample(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 1)).Result(book)
 
 	// mocks update
-	book.Title = "rel for dummies"
+	book.Title = "REL for dummies"
 	repo.ExpectUpdate().For(&book)
 
 	// run and asserts

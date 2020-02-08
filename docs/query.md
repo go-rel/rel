@@ -2,7 +2,7 @@
 
 ## Retrieving Data
 
-rel provides two basic finders method, `Find` for retrieving single record, and `FindAll` for retrieving multiple record.
+REL provides two basic finders method, `Find` for retrieving single record, and `FindAll` for retrieving multiple record.
 
 `Find` only accepts struct as the first argument, and always return the first result from the query.
 
@@ -173,7 +173,7 @@ repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
 
 ## Using Specific Table
 
-By default, rel will use pluralized-snakecase struct name as the table name. To select from specific table, you can use `From` method.
+By default, REL will use pluralized-snakecase struct name as the table name. To select from specific table, you can use `From` method.
 
 <!-- tabs:start -->
 
@@ -290,7 +290,7 @@ repo.ExpectFindAll(rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`
 
 ## Pessimistic Locking
 
-rel supports pessimistic locking by using mechanism provided by the underlying database. `Lock` can be only used only inside transaction.
+REL supports pessimistic locking by using mechanism provided by the underlying database. `Lock` can be only used only inside transaction.
 
 <!-- tabs:start -->
 
@@ -318,7 +318,7 @@ repo.ExpectFind(query.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
 
 ## Aggregation
 
-rel provides a very basic `Aggregate` method which can be used to count, sum, max etc.
+REL provides a very basic `Aggregate` method which can be used to count, sum, max etc.
 
 <!-- tabs:start -->
 

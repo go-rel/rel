@@ -2,10 +2,10 @@
 
 ## Defining Association
 
-Association in rel can be declared by ensuring that each association have an association field, reference id field and foreign id field.
+Association in REL can be declared by ensuring that each association have an association field, reference id field and foreign id field.
 Association field is a field with the type of another struct.
 Reference id is an id field that can be mapped to the foreign id field in another struct.
-By following that convention, rel currently supports `belongs to`, `has one` and `has many` association.
+By following that convention, REL currently supports `belongs to`, `has one` and `has many` association.
 
 ```go
 type User struct {
@@ -23,7 +23,7 @@ type User struct {
 
 	// has one address.
 	// doesn't contains primary key of other struct.
-	// rel can guess the reference and foreign field if it's not specified.
+	// REL can guess the reference and foreign field if it's not specified.
 	Address Address
 }
 
@@ -97,9 +97,9 @@ repo.ExpectPreload("buyer.address").Result(addresses)
 
 ## Modifying Association
 
-rel will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, rel will try to update the association, else it'll create a new association.
+REL will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, REL will try to update the association, else it'll create a new association.
 
-rel will try to create a new record for association if `ID` is a zero value.
+REL will try to create a new record for association if `ID` is a zero value.
 
 <!-- tabs:start -->
 
@@ -126,7 +126,7 @@ repo.ExpectInsert().For(&user)
 
 <!-- tabs:end -->
 
-rel will try to update a new record for association if `ID` is a zero value. To update association, it first needs to be preloaded.
+REL will try to update a new record for association if `ID` is a zero value. To update association, it first needs to be preloaded.
 
 <!-- tabs:start -->
 

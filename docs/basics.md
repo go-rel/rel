@@ -2,8 +2,8 @@
 
 ## Example
 
-Below is a very basic example on how to utilize rel using mysql adapter.
-Testing database query using rel can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.
+Below is a very basic example on how to utilize REL using mysql adapter.
+Testing database query using REL can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.
 
 <!-- tabs:start -->
 
@@ -21,7 +21,7 @@ Testing database query using rel can be done using [reltest](https://godoc.org/g
 
 ### Schema Definition
 
-rel uses a struct as the schema to infer `table name`, `columns` and `primary field`.
+REL uses a struct as the schema to infer `table name`, `columns` and `primary field`.
 
 ```go
 // Table name: books
@@ -62,7 +62,7 @@ type Book struct {
 
 ### Primary Key
 
-rel requires every struct to have at least `primary` key. by default field named `id` will be used as primary key. to use other field as primary key. you may define it as `primary` using `db` tag.
+REL requires every struct to have at least `primary` key. by default field named `id` will be used as primary key. to use other field as primary key. you may define it as `primary` using `db` tag.
 
 
 ```go
@@ -73,6 +73,6 @@ type Book struct {
 
 ### Timestamp
 
-rel automatically track created and updated time of each struct if `CreatedAt` or `UpdatedAt` field exists.
+REL automatically track created and updated time of each struct if `CreatedAt` or `UpdatedAt` field exists.
 
 **Next: [Reading and Writing Record](crud.md)**

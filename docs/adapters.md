@@ -1,6 +1,6 @@
 # Adapters
 
-Rel uses adapter in order to generate and execute query to a database, below is the list of available adapters supported by rel out of the box.
+Rel uses adapter in order to generate and execute query to a database, below is the list of available adapters supported by REL out of the box.
 
 | Adapter    | Package                              | Godoc                                                                                                                                 |
 |------------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|

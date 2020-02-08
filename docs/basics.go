@@ -44,6 +44,6 @@ func Example(ctx context.Context, repo rel.Repository) error {
 		return err
 	}
 
-	book.Title = "rel for dummies"
+	book.Title = "REL for dummies"
 	return repo.Update(ctx, &book)
 }

@@ -1,8 +1,8 @@
-# rel
+# REL
 
-> Golang SQL Repository Layer for Layered Architecture.
+> Golang SQL Database Layer for Layered Architecture.
 
-rel is orm-ish library for golang that aims to be the repository layer of layered architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
+REL is golang orm-ish database layer for layered architecture. It's testable and comes with it's own test library. REL also features extendable query builder that allows you to write query using builder or plain sql.
 
 ## Features
 
@@ -45,6 +45,6 @@ func (ur userRepository) Find(user *User, int id) error {
 }
 ```
 
-Compared to other orm, rel api is built with testability in mind. rel uses interface to define contract of every database query or execution, all while making a chainable query possible. The ultimate **goal of rel is to be your repository package** without the needs of making your own wrapper.
+Compared to other orm, REL api is built with testability in mind. REL uses interface to define contract of every database query or execution, all while making a chainable query possible. The ultimate **goal of REL is to be your database package** without the needs of making your own wrapper.
 
 **Learn More: [Basics](basics.md)**

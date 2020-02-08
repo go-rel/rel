@@ -124,7 +124,7 @@ repo.ExpectInsertAll()
 
 ## Read
 
-rel provides a powerful API for querying record from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
+REL provides a powerful API for querying record from database. To query a single record, simply use the Find method, it's accept the returned result as the first argument, and the conditions for the rest arguments.
 
 
 <!-- tabs:start -->
@@ -170,7 +170,7 @@ repo.ExpectFindAll(where.Like("title", "%dummies%").AndEq("category", "education
 
 <!-- tabs:end -->
 
-rel also support chainable query api for a more complex query use case.
+REL also support chainable query api for a more complex query use case.
 
 
 <!-- tabs:start -->
@@ -194,7 +194,7 @@ repo.ExpectFindAll(query).Result(books)
 
 ## Update
 
-Similar to create, updating a record in rel can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
+Similar to create, updating a record in REL can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
 
 > An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map`, `rel.Set` or `rel.Structset` to update only specified fields.
 
@@ -240,7 +240,7 @@ repo.ExpectUpdate(rel.Inc("views"))
 
 To delete a record in rel, simply pass the record to be deleted.
 
-> rel will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, append `rel.Unscoped(true)` when querying.
+> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, append `rel.Unscoped(true)` when querying.
 
 <!-- tabs:start -->
 

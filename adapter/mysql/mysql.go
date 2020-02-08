@@ -1,4 +1,4 @@
-// Package mysql wraps mysql driver as an adapter for rel.
+// Package mysql wraps mysql driver as an adapter for REL.
 //
 // Usage:
 //	// open mysql connection.
@@ -8,7 +8,7 @@
 //	}
 //	defer adapter.Close()
 //
-//	// initialize rel's repo.
+//	// initialize REL's repo.
 //	repo := rel.New(adapter)
 package mysql
 

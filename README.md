@@ -1,9 +1,9 @@
-# rel
+# REL
 [![GoDoc](https://godoc.org/github.com/Fs02/rel?status.svg)](https://godoc.org/github.com/Fs02/rel) [![Build Status](https://travis-ci.com/Fs02/rel.svg?branch=master)](https://travis-ci.com/Fs02/rel) [![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/rel)](https://goreportcard.com/report/github.com/Fs02/rel) [![Maintainability](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/maintainability)](https://codeclimate.com/github/Fs02/rel/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d487e2be0ed7b0b1fed1/test_coverage)](https://codeclimate.com/github/Fs02/rel/test_coverage)
 
-> Golang SQL Repository Layer for Layered Architecture.
+> Golang SQL Database Layer for Layered Architecture.
 
-rel is orm-ish library for golang that aims to be the repository layer of layered architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
+REL is golang orm-ish database layer for layered architecture. It's testable and comes with its own test library. REL also features extendable query builder that allows you to write query using builder or plain sql.
 
 ## Features
 

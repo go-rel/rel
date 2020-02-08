@@ -240,6 +240,8 @@ repo.ExpectUpdate(rel.Inc("views"))
 
 To delete a record in rel, simply pass the record to be deleted.
 
+> rel will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, append `rel.Unscoped(true)` when querying.
+
 <!-- tabs:start -->
 
 ### **main.go**

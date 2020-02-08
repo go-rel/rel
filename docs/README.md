@@ -1,8 +1,8 @@
 # rel
 
-> Golang SQL Repository Layer for Clean (Onion) Architecture.
+> Golang SQL Repository Layer for Layered Architecture.
 
-rel is orm-ish library for golang that aims to be the repository layer of onion architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
+rel is orm-ish library for golang that aims to be the repository layer of layered architecture. It's testable and comes with it's own test library. rel also features extendable query builder that allows you to write query using builder or plain sql.
 
 ## Features
 
@@ -10,6 +10,7 @@ rel is orm-ish library for golang that aims to be the repository layer of onion 
 - Elegant, yet extendable query builder.
 - Supports Eager loading.
 - Multi adapter.
+- Soft Deletion.
 
 ## Install
 

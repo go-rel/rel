@@ -34,6 +34,8 @@ func Build(table string, queriers ...Querier) Query {
 			q.Build(&query)
 		case Lock:
 			q.Build(&query)
+		case Unscoped:
+			q.Build(&query)
 		}
 	}
 
@@ -350,4 +352,9 @@ type Unscoped bool
 // Build query.
 func (u Unscoped) Build(query *Query) {
 	query.UnscopedQuery = u
+}
+
+// Apply modification.
+func (u Unscoped) Apply(doc *Document, modification *Modification) {
+	modification.Unscoped = u
 }

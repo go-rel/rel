@@ -231,6 +231,7 @@ func TestCollection_Slice(t *testing.T) {
 		col.Reset()
 		assert.Len(t, users, 0)
 		assert.Equal(t, 0, col.Len())
+		assert.Equal(t, &[]User{}, col.v)
 	})
 }
 

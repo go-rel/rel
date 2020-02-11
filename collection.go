@@ -144,7 +144,7 @@ func (c Collection) Len() int {
 
 // Reset underlying slice to be zero length.
 func (c Collection) Reset() {
-	c.rv.Set(reflect.Zero(c.rt))
+	c.rv.Set(reflect.MakeSlice(c.rt, 0, 0))
 }
 
 // Add new document into collection.

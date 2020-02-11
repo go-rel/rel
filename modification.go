@@ -36,6 +36,7 @@ type AssocModification struct {
 type Modification struct {
 	Modifies map[string]Modify
 	Assoc    map[string]AssocModification
+	Unscoped Unscoped
 	Reload   bool
 }
 

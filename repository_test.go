@@ -175,6 +175,25 @@ func TestRepository_Find_softDelete(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
+	var (
+		address Address
+		adapter = &testAdapter{}
+		repo    = repository{adapter: adapter}
+		query   = From("addresses").Limit(1).Unscoped()
+		cur     = createCursor(1)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &address, query))
+	assert.Equal(t, 10, address.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Find_queryError(t *testing.T) {
 	var (
 		user    User
@@ -262,6 +281,26 @@ func TestRepository_FindAll_softDelete(t *testing.T) {
 	)
 
 	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 2)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 10, addresses[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_softDeleteUnscoped(t *testing.T) {
+	var (
+		addresses []Address
+		adapter   = &testAdapter{}
+		repo      = repository{adapter: adapter}
+		query     = From("addresses").Limit(1).Unscoped()
+		cur       = createCursor(2)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
 	assert.Len(t, addresses, 2)
@@ -574,6 +613,33 @@ func TestRepository_Update_softDelete(t *testing.T) {
 
 	adapter.AssertExpectations(t)
 }
+
+func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
+	var (
+		address   = Address{ID: 1}
+		adapter   = &testAdapter{}
+		repo      = repository{adapter: adapter}
+		modifiers = []Modifier{
+			Unscoped(true),
+			Set("street", "street"),
+		}
+		modifies = map[string]Modify{
+			"street": Set("street", "street"),
+		}
+		queries = From("addresses").Where(Eq("id", address.ID)).Unscoped()
+	)
+
+	adapter.On("Update", queries, modifies).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &address, modifiers...))
+	assert.Equal(t, Address{
+		ID:     1,
+		Street: "street",
+	}, address)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Update_notFound(t *testing.T) {
 	var (
 		user      = User{ID: 1}
@@ -613,7 +679,7 @@ func TestRepository_Update_reload(t *testing.T) {
 	)
 
 	adapter.On("Update", queries, modifies).Return(1, nil).Once()
-	adapter.On("Query", queries.Limit(1).Unscoped()).Return(cur, nil).Once()
+	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, modifiers...))
 	assert.False(t, cur.Next())

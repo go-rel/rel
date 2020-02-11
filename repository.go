@@ -312,7 +312,7 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 
 	if len(modification.Modifies) != 0 {
 		var (
-			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter))
+			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter, modification.Unscoped))
 			updatedCount, err = r.adapter.Update(ctx, query, modification.Modifies, r.logger...)
 		)
 
@@ -325,7 +325,7 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 		}
 
 		if modification.Reload {
-			if err := r.find(ctx, doc, query.Unscoped()); err != nil {
+			if err := r.find(ctx, doc, query); err != nil {
 				return err
 			}
 		}

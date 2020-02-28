@@ -122,6 +122,20 @@ func TestAdapter_specs(t *testing.T) {
 	specs.ForeignKeyConstraint(t, repo)
 }
 
+func TestAdapter_Open(t *testing.T) {
+	// with parameter
+	assert.NotPanics(t, func() {
+		adapter, _ := Open("root@tcp(localhost:3306)/rel_test?charset=utf8")
+		defer adapter.Close()
+	})
+
+	// without paremeter
+	assert.NotPanics(t, func() {
+		adapter, _ := Open("root@tcp(localhost:3306)/rel_test")
+		defer adapter.Close()
+	})
+}
+
 // func TestAdapter_InsertAll_error(t *testing.T) {
 // 	adapter, err := Open(dsn())
 // 	paranoid.Panic(err, "failed to open database connection")

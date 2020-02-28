@@ -32,6 +32,9 @@ func Update(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, 23, user.Age)
 	assert.Equal(t, &note, user.Note)
 
+	// update unchanged
+	assert.Nil(t, repo.Update(ctx, &user))
+
 	var (
 		queried User
 	)
@@ -40,6 +43,19 @@ func Update(t *testing.T, repo rel.Repository) {
 	err = repo.Find(ctx, &queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
 	assert.Equal(t, user, queried)
+}
+
+// UpdateNotFound tests specification for updating a not found record.
+func UpdateNotFound(t *testing.T, repo rel.Repository) {
+	var (
+		user = User{
+			ID:   0,
+			Name: "update",
+		}
+	)
+
+	// update unchanged
+	assert.Equal(t, rel.NotFoundError{}, repo.Update(ctx, &user))
 }
 
 // UpdateHasManyInsert tests specification for updating a record and inserting has many association.

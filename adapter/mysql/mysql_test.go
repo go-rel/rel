@@ -101,6 +101,7 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Update Specs
 	specs.Update(t, repo)
+	specs.UpdateNotFound(t, repo)
 	specs.UpdateHasManyInsert(t, repo)
 	specs.UpdateHasManyUpdate(t, repo)
 	specs.UpdateHasManyReplace(t, repo)
@@ -119,6 +120,20 @@ func TestAdapter_specs(t *testing.T) {
 	// - Check constraint is not supported by mysql
 	specs.UniqueConstraint(t, repo)
 	specs.ForeignKeyConstraint(t, repo)
+}
+
+func TestAdapter_Open(t *testing.T) {
+	// with parameter
+	assert.NotPanics(t, func() {
+		adapter, _ := Open("root@tcp(localhost:3306)/rel_test?charset=utf8")
+		defer adapter.Close()
+	})
+
+	// without paremeter
+	assert.NotPanics(t, func() {
+		adapter, _ := Open("root@tcp(localhost:3306)/rel_test")
+		defer adapter.Close()
+	})
 }
 
 // func TestAdapter_InsertAll_error(t *testing.T) {

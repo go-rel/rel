@@ -31,6 +31,14 @@ var _ rel.Adapter = (*Adapter)(nil)
 func Open(dsn string) (*Adapter, error) {
 	var err error
 
+	// force clientFoundRows=true
+	// this allows not found record check when updating a record.
+	if strings.ContainsRune(dsn, '?') {
+		dsn += "&clientFoundRows=true"
+	} else {
+		dsn += "?clientFoundRows=true"
+	}
+
 	adapter := &Adapter{
 		Adapter: &sql.Adapter{
 			Config: &sql.Config{

@@ -29,8 +29,8 @@ func (r *Repository) Adapter() rel.Adapter {
 	return nil
 }
 
-// SetLogger provides a mock function with given fields: logger
-func (r *Repository) SetLogger(logger ...rel.Logger) {
+// Instrumentation provides a mock function with given fields: instrumenter
+func (r *Repository) Instrumentation(instrumenter rel.Instrumenter) {
 }
 
 // Ping database.

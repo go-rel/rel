@@ -109,7 +109,7 @@ func TestScanMany(t *testing.T) {
 	cur.MockScan(11, "Nedved", 46, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
-	err := scanMany(cur, col)
+	err := scanAll(cur, col)
 	assert.Nil(t, err)
 	assert.Len(t, users, 2)
 

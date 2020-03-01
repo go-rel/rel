@@ -23,37 +23,40 @@ func (ta *testAdapter) Close() error {
 	return args.Error(0)
 }
 
+func (ta *testAdapter) Instrumentation(instrumenter Instrumenter) {
+}
+
 func (ta *testAdapter) Ping(ctx context.Context) error {
 	args := ta.Called()
 	return args.Error(0)
 }
 
-func (ta *testAdapter) Aggregate(ctx context.Context, query Query, aggregate string, field string, logger ...Logger) (int, error) {
+func (ta *testAdapter) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
 	args := ta.Called(query, aggregate, field)
 	return args.Int(0), args.Error(1)
 }
 
-func (ta *testAdapter) Query(ctx context.Context, query Query, logger ...Logger) (Cursor, error) {
+func (ta *testAdapter) Query(ctx context.Context, query Query) (Cursor, error) {
 	args := ta.Called(query)
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(ctx context.Context, query Query, modifies map[string]Modify, logger ...Logger) (interface{}, error) {
+func (ta *testAdapter) Insert(ctx context.Context, query Query, modifies map[string]Modify) (interface{}, error) {
 	args := ta.Called(query, modifies)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(ctx context.Context, query Query, fields []string, modifies []map[string]Modify, logger ...Logger) ([]interface{}, error) {
+func (ta *testAdapter) InsertAll(ctx context.Context, query Query, fields []string, modifies []map[string]Modify) ([]interface{}, error) {
 	args := ta.Called(query, fields, modifies)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(ctx context.Context, query Query, modifies map[string]Modify, logger ...Logger) (int, error) {
+func (ta *testAdapter) Update(ctx context.Context, query Query, modifies map[string]Modify) (int, error) {
 	args := ta.Called(query, modifies)
 	return args.Int(0), args.Error(1)
 }
 
-func (ta *testAdapter) Delete(ctx context.Context, query Query, logger ...Logger) (int, error) {
+func (ta *testAdapter) Delete(ctx context.Context, query Query) (int, error) {
 	args := ta.Called(query)
 	return args.Int(0), args.Error(1)
 }

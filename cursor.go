@@ -33,7 +33,7 @@ func scanOne(cur Cursor, doc *Document) error {
 	return cur.Scan(scanners...)
 }
 
-func scanMany(cur Cursor, col *Collection) error {
+func scanAll(cur Cursor, col *Collection) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -81,7 +81,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 	}
 
 	if !found {
-		panic("rel: TODO")
+		panic("rel: primary key row does not exists")
 	}
 
 	// scan the result

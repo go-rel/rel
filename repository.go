@@ -12,7 +12,7 @@ import (
 // TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
-	SetLogger(logger ...Logger)
+	Instrumentation(instrumenter Instrumenter)
 	Ping(ctx context.Context) error
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
@@ -39,7 +39,7 @@ type Repository interface {
 
 type repository struct {
 	adapter       Adapter
-	logger        []Logger
+	instrumenter  Instrumenter
 	inTransaction bool
 }
 
@@ -47,8 +47,9 @@ func (r repository) Adapter() Adapter {
 	return r.adapter
 }
 
-func (r *repository) SetLogger(logger ...Logger) {
-	r.logger = logger
+func (r *repository) Instrumentation(instrumenter Instrumenter) {
+	r.instrumenter = instrumenter
+	r.adapter.Instrumentation(instrumenter)
 }
 
 // Ping database.
@@ -61,12 +62,15 @@ func (r *repository) Ping(ctx context.Context) error {
 // Any select, group, offset, limit and sort query will be ignored automatically.
 // If complex aggregation is needed, consider using All instead,
 func (r repository) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
+	finish := r.instrumenter(ctx, "aggregate", "aggregating records")
+	defer finish(nil)
+
 	query.GroupQuery = GroupQuery{}
 	query.LimitQuery = 0
 	query.OffsetQuery = 0
 	query.SortQuery = nil
 
-	return r.adapter.Aggregate(ctx, query, aggregate, field, r.logger...)
+	return r.adapter.Aggregate(ctx, query, aggregate, field)
 }
 
 // MustAggregate calculate aggregate over the given field.
@@ -93,6 +97,9 @@ func (r repository) MustCount(ctx context.Context, collection string, queriers .
 // Find a record that match the query.
 // If no result found, it'll return not found error.
 func (r repository) Find(ctx context.Context, record interface{}, queriers ...Querier) error {
+	finish := r.instrumenter(ctx, "find", "finding a record")
+	defer finish(nil)
+
 	var (
 		doc   = NewDocument(record)
 		query = Build(doc.Table(), queriers...)
@@ -109,16 +116,22 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 
 func (r repository) find(ctx context.Context, doc *Document, query Query) error {
 	query = r.withDefaultScope(doc.data, query)
-	cur, err := r.adapter.Query(ctx, query.Limit(1), r.logger...)
+	cur, err := r.adapter.Query(ctx, query.Limit(1))
 	if err != nil {
 		return err
 	}
+
+	finish := r.instrumenter(ctx, "scan-one", "scanning a record")
+	defer finish(nil)
 
 	return scanOne(cur, doc)
 }
 
 // FindAll records that match the query.
 func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
+	finish := r.instrumenter(ctx, "find-all", "finding all records")
+	defer finish(nil)
+
 	var (
 		col   = NewCollection(records)
 		query = Build(col.Table(), queriers...)
@@ -137,16 +150,22 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 
 func (r repository) findAll(ctx context.Context, col *Collection, query Query) error {
 	query = r.withDefaultScope(col.data, query)
-	cur, err := r.adapter.Query(ctx, query, r.logger...)
+	cur, err := r.adapter.Query(ctx, query)
 	if err != nil {
 		return err
 	}
 
-	return scanMany(cur, col)
+	finish := r.instrumenter(ctx, "scan-all", "scanning all records")
+	defer finish(nil)
+
+	return scanAll(cur, col)
 }
 
 // Insert an record to database.
 func (r repository) Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error {
+	finish := r.instrumenter(ctx, "insert", "inserting a record")
+	defer finish(nil)
+
 	if record == nil {
 		return nil
 	}
@@ -181,7 +200,7 @@ func (r repository) insert(ctx context.Context, doc *Document, modification Modi
 		return err
 	}
 
-	pValue, err := r.Adapter().Insert(ctx, queriers, modification.Modifies, r.logger...)
+	pValue, err := r.Adapter().Insert(ctx, queriers, modification.Modifies)
 	if err != nil {
 		return err
 	}
@@ -214,6 +233,9 @@ func (r repository) MustInsert(ctx context.Context, record interface{}, modifier
 }
 
 func (r repository) InsertAll(ctx context.Context, records interface{}) error {
+	finish := r.instrumenter(ctx, "insert-all", "inserting multiple records")
+	defer finish(nil)
+
 	if records == nil {
 		return nil
 	}
@@ -260,7 +282,7 @@ func (r repository) insertAll(ctx context.Context, col *Collection, modification
 		bulkModifies[i] = modification[i].Modifies
 	}
 
-	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkModifies, r.logger...)
+	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkModifies)
 	if err != nil {
 		return err
 	}
@@ -279,6 +301,9 @@ func (r repository) insertAll(ctx context.Context, col *Collection, modification
 // - update has many (will be replaced by default)
 // - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
 func (r repository) Update(ctx context.Context, record interface{}, modifiers ...Modifier) error {
+	finish := r.instrumenter(ctx, "update", "updating a record")
+	defer finish(nil)
+
 	if record == nil {
 		return nil
 	}
@@ -313,7 +338,7 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 	if len(modification.Modifies) != 0 {
 		var (
 			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter, modification.Unscoped))
-			updatedCount, err = r.adapter.Update(ctx, query, modification.Modifies, r.logger...)
+			updatedCount, err = r.adapter.Update(ctx, query, modification.Modifies)
 		)
 
 		if err != nil {
@@ -550,6 +575,9 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, modification
 
 // Delete single entry.
 func (r repository) Delete(ctx context.Context, record interface{}) error {
+	finish := r.instrumenter(ctx, "delete", "deleting a record")
+	defer finish(nil)
+
 	var (
 		err          error
 		deletedCount int
@@ -562,9 +590,9 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 
 	if doc.Flag(HasDeletedAt) {
 		modifies := map[string]Modify{"deleted_at": Set("deleted_at", now())}
-		deletedCount, err = r.adapter.Update(ctx, query, modifies, r.logger...)
+		deletedCount, err = r.adapter.Update(ctx, query, modifies)
 	} else {
-		deletedCount, err = r.adapter.Delete(ctx, query, r.logger...)
+		deletedCount, err = r.adapter.Delete(ctx, query)
 	}
 
 	if err == nil && deletedCount == 0 {
@@ -581,6 +609,9 @@ func (r repository) MustDelete(ctx context.Context, record interface{}) {
 }
 
 func (r repository) DeleteAll(ctx context.Context, queriers ...Querier) error {
+	finish := r.instrumenter(ctx, "delete-all", "deleting multiple records")
+	defer finish(nil)
+
 	var (
 		q = Build("", queriers...)
 	)
@@ -599,9 +630,9 @@ func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Quer
 
 	if flag.Is(HasDeletedAt) {
 		modifies := map[string]Modify{"deleted_at": Set("deleted_at", nil)}
-		_, err = r.adapter.Update(ctx, query, modifies, r.logger...)
+		_, err = r.adapter.Update(ctx, query, modifies)
 	} else {
-		_, err = r.adapter.Delete(ctx, query, r.logger...)
+		_, err = r.adapter.Delete(ctx, query)
 	}
 
 	return err
@@ -609,6 +640,9 @@ func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Quer
 
 // Preload loads association with given query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
+	finish := r.instrumenter(ctx, "preload", "preloading associations")
+	defer finish(nil)
+
 	var (
 		sl   slice
 		path = strings.Split(field, ".")
@@ -646,12 +680,15 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		query    = Build(table, append(queriers, In(keyField, ids...))...)
-		cur, err = r.adapter.Query(ctx, r.withDefaultScope(ddata, query), r.logger...)
+		cur, err = r.adapter.Query(ctx, r.withDefaultScope(ddata, query))
 	)
 
 	if err != nil {
 		return err
 	}
+
+	scanFinish := r.instrumenter(ctx, "scan-multi", "scanning all records to multiple targets")
+	defer scanFinish(nil)
 
 	return scanMulti(cur, keyField, keyType, targets)
 }
@@ -769,6 +806,9 @@ func (r repository) withDefaultScope(ddata documentData, query Query) Query {
 
 // Transaction performs transaction with given function argument.
 func (r repository) Transaction(ctx context.Context, fn func(Repository) error) error {
+	finish := r.instrumenter(ctx, "transaction", "transaction")
+	defer finish(nil)
+
 	adp, err := r.adapter.Begin(ctx)
 	if err != nil {
 		return err
@@ -776,7 +816,7 @@ func (r repository) Transaction(ctx context.Context, fn func(Repository) error) 
 
 	txRepo := &repository{
 		adapter:       adp,
-		logger:        []Logger{DefaultLogger},
+		instrumenter:  r.instrumenter,
 		inTransaction: true,
 	}
 
@@ -809,7 +849,7 @@ func (r repository) Transaction(ctx context.Context, fn func(Repository) error) 
 // New create new repo using adapter.
 func New(adapter Adapter) Repository {
 	return &repository{
-		adapter: adapter,
-		logger:  []Logger{DefaultLogger},
+		adapter:      adapter,
+		instrumenter: DefaultLogger,
 	}
 }

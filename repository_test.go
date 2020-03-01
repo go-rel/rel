@@ -51,8 +51,15 @@ func TestRepository_Instrumentation(t *testing.T) {
 	)
 
 	assert.Nil(t, repo.instrumenter)
+	assert.NotPanics(t, func() {
+		repo.instrument(context.TODO(), "test", "test")(nil)
+	})
+
 	repo.Instrumentation(DefaultLogger)
 	assert.NotNil(t, repo.instrumenter)
+	assert.NotPanics(t, func() {
+		repo.instrument(context.TODO(), "test", "test")(nil)
+	})
 }
 
 func TestRepository_Ping(t *testing.T) {

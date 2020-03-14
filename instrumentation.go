@@ -10,7 +10,7 @@ import (
 // This function should return a function with no argument as a callback for finished execution.
 type Instrumenter func(ctx context.Context, op string, message string) func(err error)
 
-// DefaultLogger log query suing standard log library.
+// DefaultLogger instrumentation to log queries and rel operation.
 func DefaultLogger(ctx context.Context, op string, message string) func(err error) {
 	t := time.Now()
 

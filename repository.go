@@ -76,6 +76,10 @@ func (r repository) Aggregate(ctx context.Context, query Query, aggregate string
 	finish := r.instrument(ctx, "aggregate", "aggregating records")
 	defer finish(nil)
 
+	return r.aggregate(ctx, query, aggregate, field)
+}
+
+func (r repository) aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
 	query.GroupQuery = GroupQuery{}
 	query.LimitQuery = 0
 	query.OffsetQuery = 0
@@ -94,7 +98,10 @@ func (r repository) MustAggregate(ctx context.Context, query Query, aggregate st
 
 // Count retrieves count of results that match the query.
 func (r repository) Count(ctx context.Context, collection string, queriers ...Querier) (int, error) {
-	return r.Aggregate(ctx, Build(collection, queriers...), "count", "*")
+	finish := r.instrument(ctx, "count", "aggregating records")
+	defer finish(nil)
+
+	return r.aggregate(ctx, Build(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
@@ -189,7 +196,7 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 		return 0, err
 	}
 
-	return r.Aggregate(ctx, query, "count", "*")
+	return r.aggregate(ctx, query, "count", "*")
 }
 
 // MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.

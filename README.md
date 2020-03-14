@@ -12,6 +12,7 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 - Supports Eager loading.
 - Multi adapter.
 - Soft Deletion.
+- Pagination.
 
 ## Install
 

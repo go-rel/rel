@@ -172,7 +172,7 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 	return scanAll(cur, col)
 }
 
-// FindAndCountAll is convinient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+// FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 // Limit and Offset property will be ignored when performing count query.
 func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
 	finish := r.instrument(ctx, "find-and-count-all", "finding all records")
@@ -192,7 +192,7 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 	return r.Aggregate(ctx, query, "count", "*")
 }
 
-// MustFindAndCountAll is convinient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+// MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 // Limit and Offset property will be ignored when performing count query.
 // It'll panic if any error eccured.
 func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {

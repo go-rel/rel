@@ -22,6 +22,7 @@
     * [Joining Tables](query.md#joining-tables)
     * [Pessimistic Locking](query.md#pessimistic-locking)
     * [Aggregation](query.md#aggregation)
+    * [Pagination](query.md#pagination)
 
 * [Association](association.md)
 

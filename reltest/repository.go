@@ -98,14 +98,33 @@ func (r *Repository) FindAll(ctx context.Context, records interface{}, queriers 
 	return r.mock.Called(records, queriers).Error(0)
 }
 
+// MustFindAll provides a mock function with given fields: records, queriers
+func (r *Repository) MustFindAll(ctx context.Context, records interface{}, queriers ...rel.Querier) {
+	must(r.FindAll(ctx, records, queriers...))
+}
+
 // ExpectFindAll apply mocks and expectations for FindAll
 func (r *Repository) ExpectFindAll(queriers ...rel.Querier) *FindAll {
 	return ExpectFindAll(r, queriers)
 }
 
-// MustFindAll provides a mock function with given fields: records, queriers
-func (r *Repository) MustFindAll(ctx context.Context, records interface{}, queriers ...rel.Querier) {
-	must(r.FindAll(ctx, records, queriers...))
+// FindAndCountAll provides a mock function with given fields: records, queriers
+func (r *Repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...rel.Querier) (int, error) {
+	r.repo.FindAndCountAll(ctx, records, queriers...)
+	ret := r.mock.Called(records, queriers)
+	return ret.Int(0), ret.Error(1)
+}
+
+// MustFindAndCountAll provides a mock function with given fields: records, queriers
+func (r *Repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...rel.Querier) int {
+	count, err := r.FindAndCountAll(ctx, records, queriers...)
+	must(err)
+	return count
+}
+
+// ExpectFindAndCountAll apply mocks and expectations for FindAndCountAll
+func (r *Repository) ExpectFindAndCountAll(queriers ...rel.Querier) *FindAndCountAll {
+	return ExpectFindAndCountAll(r, queriers)
 }
 
 // Insert provides a mock function with given fields: record, modifiers

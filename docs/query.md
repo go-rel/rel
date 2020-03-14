@@ -344,4 +344,27 @@ repo.ExpectCount("books").Result(7)
 
 <!-- tabs:end -->
 
+## Pagination
+
+REL provides a convenient `FindAndCountAll` methods that is useful for pagination, It's a combination of `FindAll` and `Count` method.
+FindAndCountAll returns count of records (ignoring limit and offset query) and an error.
+
+<!-- tabs:start -->
+
+### **main.go**
+
+```go
+// Find and count total books in database.
+count, err = repo.FindAndCountAll(ctx, &books, rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10))
+```
+
+### **main_test.go**
+
+```go
+// Expect count to returns books and with total count of 12.
+repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10)).Result(books, 12)
+```
+
+<!-- tabs:end -->
+
 **Next: [Association](association.md)**

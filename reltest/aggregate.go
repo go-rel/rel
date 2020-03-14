@@ -13,7 +13,7 @@ func (a *Aggregate) Result(count int) {
 }
 
 // Error sets error to be returned.
-func (a Aggregate) Error(err error) {
+func (a *Aggregate) Error(err error) {
 	a.Return(0, err)
 }
 

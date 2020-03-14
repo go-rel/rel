@@ -357,6 +357,72 @@ func TestRepository_MustFindAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAndCountAll(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(10)
+		cur     = createCursor(2)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Aggregate", query.Limit(0), "count", "*").Return(2, nil).Once()
+
+	count, err := repo.FindAndCountAll(context.TODO(), &users, query)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, count)
+	assert.Len(t, users, 2)
+	assert.Equal(t, 10, users[0].ID)
+	assert.Equal(t, 10, users[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_FindAndCountAll_queryError(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(10)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Query", query).Return(&testCursor{}, err).Once()
+
+	count, ferr := repo.FindAndCountAll(context.TODO(), &users, query)
+	assert.Equal(t, err, ferr)
+	assert.Equal(t, 0, count)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_MustFindAndCountAll(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(10)
+		cur     = createCursor(2)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Aggregate", query.Limit(0), "count", "*").Return(2, nil).Once()
+
+	assert.NotPanics(t, func() {
+		count := repo.MustFindAndCountAll(context.TODO(), &users, query)
+		assert.Equal(t, 2, count)
+	})
+
+	assert.Len(t, users, 2)
+	assert.Equal(t, 10, users[0].ID)
+	assert.Equal(t, 10, users[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Insert(t *testing.T) {
 	var (
 		user      User

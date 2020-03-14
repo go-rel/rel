@@ -22,6 +22,8 @@ type Repository interface {
 	MustFind(ctx context.Context, record interface{}, queriers ...Querier)
 	FindAll(ctx context.Context, records interface{}, queriers ...Querier) error
 	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
+	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
+	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
 	Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error
 	MustInsert(ctx context.Context, record interface{}, modifiers ...Modifier)
 	InsertAll(ctx context.Context, records interface{}) error
@@ -168,6 +170,36 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 	defer finish(nil)
 
 	return scanAll(cur, col)
+}
+
+// FindAndCountAll is convinient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+// Limit and Offset property will be ignored when performing count query.
+func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
+	finish := r.instrument(ctx, "find-and-count-all", "finding all records")
+	defer finish(nil)
+
+	var (
+		col   = NewCollection(records)
+		query = Build(col.Table(), queriers...)
+	)
+
+	col.Reset()
+
+	if err := r.findAll(ctx, col, query); err != nil {
+		return 0, err
+	}
+
+	return r.Aggregate(ctx, query, "count", "*")
+}
+
+// MustFindAndCountAll is convinient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+// Limit and Offset property will be ignored when performing count query.
+// It'll panic if any error eccured.
+func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {
+	count, err := r.FindAndCountAll(ctx, records, queriers...)
+	must(err)
+
+	return count
 }
 
 // Insert an record to database.

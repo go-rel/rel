@@ -14,6 +14,7 @@ type Repository interface {
 	Adapter() Adapter
 	Instrumentation(instrumenter Instrumenter)
 	Ping(ctx context.Context) error
+	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
@@ -66,6 +67,24 @@ func (r *repository) instrument(ctx context.Context, op string, message string) 
 // Ping database.
 func (r *repository) Ping(ctx context.Context) error {
 	return r.adapter.Ping(ctx)
+}
+
+// Iterate through a colection of records from database in batches.
+// This methos returns iterator that can be used to loop all records.
+// Limit, Offset and Sort query is automatically ignored.
+func (r repository) Iterate(ctx context.Context, query Query, options ...IteratorOption) Iterator {
+	it := &iterator{
+		ctx:       ctx,
+		batchSize: 1000,
+		query:     query,
+		adapter:   r.adapter,
+	}
+
+	for i := range options {
+		options[i](it)
+	}
+
+	return it
 }
 
 // Aggregate calculate aggregate over the given field.

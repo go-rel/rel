@@ -11,22 +11,49 @@ type Iterator interface {
 	Next(record interface{}) error
 }
 
+// IteratorOption is used to configure iteration behaviour, such as batch size, start id and finish id.
+type IteratorOption func(*iterator)
+
+// BatchSize specifies the size of iterator batch. Defaults to 1000.
+func BatchSize(size int) IteratorOption {
+	return func(i *iterator) {
+		i.batchSize = size
+	}
+}
+
+// Start specfies the primary value to start from (inclusive).
+func Start(start int) IteratorOption {
+	return func(i *iterator) {
+		i.start = start
+	}
+}
+
+// Finish specfies the primary value to finish at (inclusive).
+func Finish(finish int) IteratorOption {
+	return func(i *iterator) {
+		i.finish = finish
+	}
+}
+
 type iterator struct {
-	batch   int
-	current int
-	query   Query
-	adapter Adapter
-	cursor  Cursor
-	fields  []string
+	ctx       context.Context
+	start     interface{}
+	finish    interface{}
+	batchSize int
+	current   int
+	query     Query
+	adapter   Adapter
+	cursor    Cursor
+	fields    []string
 }
 
 func (i iterator) Close() error {
 	return i.cursor.Close()
 }
 
-func (i *iterator) Next(ctx context.Context, record interface{}) error {
-	if i.current%i.batch == 0 {
-		if err := i.fetch(ctx); err != nil {
+func (i *iterator) Next(record interface{}) error {
+	if i.current%i.batchSize == 0 {
+		if err := i.fetch(i.ctx, record); err != nil {
 			return err
 		}
 	}
@@ -43,12 +70,14 @@ func (i *iterator) Next(ctx context.Context, record interface{}) error {
 	return i.cursor.Scan(scanners...)
 }
 
-func (i *iterator) fetch(ctx context.Context) error {
-	var (
-		query = i.query.Limit(i.batch).Offset(i.current)
-	)
+func (i *iterator) fetch(ctx context.Context, record interface{}) error {
+	if i.current == 0 {
+		i.init(record)
+	}
 
-	cursor, err := i.adapter.Query(ctx, query)
+	i.query = i.query.Limit(i.batchSize).Offset(i.current)
+
+	cursor, err := i.adapter.Query(ctx, i.query)
 	if err != nil {
 		return err
 	}
@@ -62,4 +91,24 @@ func (i *iterator) fetch(ctx context.Context) error {
 	i.fields = fields
 
 	return nil
+}
+
+func (i *iterator) init(record interface{}) {
+	var (
+		doc = NewDocument(record)
+	)
+
+	if i.query.Table == "" {
+		i.query.Table = doc.Table()
+	}
+
+	if i.start != nil {
+		i.query = i.query.Where(Gte(doc.PrimaryField(), i.start))
+	}
+
+	if i.finish != nil {
+		i.query = i.query.Where(Lte(doc.PrimaryField(), i.finish))
+	}
+
+	i.query = i.query.SortAsc(doc.PrimaryField())
 }

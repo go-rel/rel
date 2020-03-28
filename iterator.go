@@ -48,7 +48,11 @@ type iterator struct {
 }
 
 func (i iterator) Close() error {
-	return i.cursor.Close()
+	if i.cursor != nil {
+		return i.cursor.Close()
+	}
+
+	return nil
 }
 
 func (i *iterator) Next(record interface{}) error {
@@ -67,12 +71,15 @@ func (i *iterator) Next(record interface{}) error {
 		scanners = doc.Scanners(i.fields)
 	)
 
+	i.current++
 	return i.cursor.Scan(scanners...)
 }
 
 func (i *iterator) fetch(ctx context.Context, record interface{}) error {
 	if i.current == 0 {
 		i.init(record)
+	} else {
+		i.cursor.Close()
 	}
 
 	i.query = i.query.Limit(i.batchSize).Offset(i.current)
@@ -111,4 +118,19 @@ func (i *iterator) init(record interface{}) {
 	}
 
 	i.query = i.query.SortAsc(doc.PrimaryField())
+}
+
+func newIterator(ctx context.Context, adapter Adapter, query Query, options []IteratorOption) Iterator {
+	it := &iterator{
+		ctx:       ctx,
+		batchSize: 1000,
+		query:     query,
+		adapter:   adapter,
+	}
+
+	for i := range options {
+		options[i](it)
+	}
+
+	return it
 }

@@ -3,6 +3,7 @@ package rel
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -71,6 +72,32 @@ func TestRepository_Ping(t *testing.T) {
 	adapter.On("Ping").Return(nil).Once()
 
 	assert.Nil(t, repo.Ping(context.TODO()))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Iterate(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users")
+		cur     = createCursor(1)
+	)
+
+	adapter.On("Query", query.SortAsc("id").Limit(1000)).Return(cur, nil).Once()
+
+	it := repo.Iterate(context.TODO(), query)
+	defer it.Close()
+	for {
+		if err := it.Next(&user); err == io.EOF {
+			break
+		} else {
+			assert.Nil(t, err)
+		}
+
+		assert.NotEqual(t, 0, user)
+	}
+
 	adapter.AssertExpectations(t)
 }
 

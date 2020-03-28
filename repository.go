@@ -73,18 +73,7 @@ func (r *repository) Ping(ctx context.Context) error {
 // This methos returns iterator that can be used to loop all records.
 // Limit, Offset and Sort query is automatically ignored.
 func (r repository) Iterate(ctx context.Context, query Query, options ...IteratorOption) Iterator {
-	it := &iterator{
-		ctx:       ctx,
-		batchSize: 1000,
-		query:     query,
-		adapter:   r.adapter,
-	}
-
-	for i := range options {
-		options[i](it)
-	}
-
-	return it
+	return newIterator(ctx, r.adapter, query, options)
 }
 
 // Aggregate calculate aggregate over the given field.

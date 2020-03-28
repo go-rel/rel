@@ -38,6 +38,13 @@ func (r *Repository) Ping(ctx context.Context) error {
 	return r.repo.Ping(ctx)
 }
 
+// Iterate through a colection of records from database in batches.
+// This methos returns iterator that can be used to loop all records.
+// Limit, Offset and Sort query is automatically ignored.
+func (r *Repository) Iterate(ctx context.Context, query rel.Query, options ...rel.IteratorOption) rel.Iterator {
+	return nil // TODO
+}
+
 // Aggregate provides a mock function with given fields: query, aggregate, field
 func (r *Repository) Aggregate(ctx context.Context, query rel.Query, aggregate string, field string) (int, error) {
 	r.repo.Aggregate(ctx, query, aggregate, field)

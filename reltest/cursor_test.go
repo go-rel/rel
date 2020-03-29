@@ -26,12 +26,12 @@ func (msv mockScannerValuer) Value() (driver.Value, error) {
 	return msv.value, msv.valueErr
 }
 
-type rowsTestRecord struct {
+type cursorTestRecord struct {
 	ID    int
 	Value mockScannerValuer
 }
 
-func TestRows_Scan(t *testing.T) {
+func TestCursor_Scan(t *testing.T) {
 	id := 1
 	tests := []struct {
 		src interface{}
@@ -58,25 +58,25 @@ func TestRows_Scan(t *testing.T) {
 	for i := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var (
-				rows      = newRows(tests[i].src)
-				fields, _ = rows.Fields()
+				cursor    = newCursor(tests[i].src)
+				fields, _ = cursor.Fields()
 				scanners  = rel.NewDocument(tests[i].dst).Scanners(fields)
 			)
 
 			assert.NotNil(t, fields)
-			assert.True(t, rows.Next())
-			assert.Nil(t, rows.NopScanner())
-			assert.Nil(t, rows.Scan(scanners...))
+			assert.True(t, cursor.Next())
+			assert.Nil(t, cursor.NopScanner())
+			assert.Nil(t, cursor.Scan(scanners...))
 
 			assert.Equal(t, tests[i].src, tests[i].dst)
 
-			assert.False(t, rows.Next())
-			assert.Nil(t, rows.Close())
+			assert.False(t, cursor.Next())
+			assert.Nil(t, cursor.Close())
 		})
 	}
 }
 
-func TestRows_Scan_collectiion(t *testing.T) {
+func TestCursor_Scan_collectiion(t *testing.T) {
 	id := 1
 	tests := []struct {
 		src interface{}
@@ -103,113 +103,113 @@ func TestRows_Scan_collectiion(t *testing.T) {
 	for i := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var (
-				rows      = newRows(tests[i].src)
-				fields, _ = rows.Fields()
+				cursor    = newCursor(tests[i].src)
+				fields, _ = cursor.Fields()
 				scanners  = rel.NewCollection(tests[i].dst).Add().Scanners(fields)
 			)
 
 			assert.NotNil(t, fields)
-			assert.True(t, rows.Next())
-			assert.Nil(t, rows.NopScanner())
-			assert.Nil(t, rows.Scan(scanners...))
+			assert.True(t, cursor.Next())
+			assert.Nil(t, cursor.NopScanner())
+			assert.Nil(t, cursor.Scan(scanners...))
 
 			assert.Equal(t, tests[i].src, tests[i].dst)
 
-			assert.False(t, rows.Next())
-			assert.Nil(t, rows.Close())
+			assert.False(t, cursor.Next())
+			assert.Nil(t, cursor.Close())
 		})
 	}
 }
 
-func TestRows_Scan_scanner(t *testing.T) {
+func TestCursor_Scan_scanner(t *testing.T) {
 	var (
 		src       = struct{ Value int }{Value: 1}
-		dst       = rowsTestRecord{}
-		rows      = newRows(src)
-		fields, _ = rows.Fields()
+		dst       = cursorTestRecord{}
+		cursor    = newCursor(src)
+		fields, _ = cursor.Fields()
 		scanners  = rel.NewDocument(&dst).Scanners(fields)
 	)
 
 	assert.NotNil(t, fields)
-	assert.True(t, rows.Next())
-	assert.Nil(t, rows.NopScanner())
-	assert.Nil(t, rows.Scan(scanners...))
+	assert.True(t, cursor.Next())
+	assert.Nil(t, cursor.NopScanner())
+	assert.Nil(t, cursor.Scan(scanners...))
 
 	assert.Equal(t, src.Value, dst.Value.value)
-	assert.Nil(t, rows.Close())
+	assert.Nil(t, cursor.Close())
 }
 
-func TestRows_Scan_scannerError(t *testing.T) {
+func TestCursor_Scan_scannerError(t *testing.T) {
 	var (
 		src       = struct{ Value int }{Value: 1}
-		dst       = rowsTestRecord{Value: mockScannerValuer{scanErr: errors.New("scan error")}}
-		rows      = newRows(src)
-		fields, _ = rows.Fields()
+		dst       = cursorTestRecord{Value: mockScannerValuer{scanErr: errors.New("scan error")}}
+		cursor    = newCursor(src)
+		fields, _ = cursor.Fields()
 		scanners  = rel.NewDocument(&dst).Scanners(fields)
 	)
 
 	assert.NotNil(t, fields)
-	assert.True(t, rows.Next())
-	assert.Nil(t, rows.NopScanner())
-	assert.Equal(t, errors.New("scan error"), rows.Scan(scanners...))
-	assert.Nil(t, rows.Close())
+	assert.True(t, cursor.Next())
+	assert.Nil(t, cursor.NopScanner())
+	assert.Equal(t, errors.New("scan error"), cursor.Scan(scanners...))
+	assert.Nil(t, cursor.Close())
 }
 
-func TestRows_Scan_scannerValuer(t *testing.T) {
+func TestCursor_Scan_scannerValuer(t *testing.T) {
 	var (
-		src       = rowsTestRecord{ID: 1, Value: mockScannerValuer{value: 2}}
-		dst       = rowsTestRecord{}
-		rows      = newRows(src)
-		fields, _ = rows.Fields()
+		src       = cursorTestRecord{ID: 1, Value: mockScannerValuer{value: 2}}
+		dst       = cursorTestRecord{}
+		cursor    = newCursor(src)
+		fields, _ = cursor.Fields()
 		scanners  = rel.NewDocument(&dst).Scanners(fields)
 	)
 
 	assert.NotNil(t, fields)
-	assert.True(t, rows.Next())
-	assert.Nil(t, rows.NopScanner())
-	assert.Nil(t, rows.Scan(scanners...))
+	assert.True(t, cursor.Next())
+	assert.Nil(t, cursor.NopScanner())
+	assert.Nil(t, cursor.Scan(scanners...))
 
 	assert.Equal(t, src, dst)
-	assert.Nil(t, rows.Close())
+	assert.Nil(t, cursor.Close())
 }
 
-func TestRows_Scan_scannerValuerError(t *testing.T) {
+func TestCursor_Scan_scannerValuerError(t *testing.T) {
 	var (
-		src       = rowsTestRecord{ID: 1, Value: mockScannerValuer{value: 2, valueErr: errors.New("value error")}}
-		dst       = rowsTestRecord{}
-		rows      = newRows(src)
-		fields, _ = rows.Fields()
+		src       = cursorTestRecord{ID: 1, Value: mockScannerValuer{value: 2, valueErr: errors.New("value error")}}
+		dst       = cursorTestRecord{}
+		cursor    = newCursor(src)
+		fields, _ = cursor.Fields()
 		scanners  = rel.NewDocument(&dst).Scanners(fields)
 	)
 
 	assert.NotNil(t, fields)
-	assert.True(t, rows.Next())
-	assert.Nil(t, rows.NopScanner())
-	assert.Equal(t, errors.New("value error"), rows.Scan(scanners...))
-	assert.Nil(t, rows.Close())
+	assert.True(t, cursor.Next())
+	assert.Nil(t, cursor.NopScanner())
+	assert.Equal(t, errors.New("value error"), cursor.Scan(scanners...))
+	assert.Nil(t, cursor.Close())
 }
 
-func TestRows_Scan_notAssignable(t *testing.T) {
+func TestCursor_Scan_notAssignable(t *testing.T) {
 	var (
 		src       = struct{ Value int }{Value: 1}
 		dst       = struct{ Value *string }{}
-		rows      = newRows(src)
-		fields, _ = rows.Fields()
+		cursor    = newCursor(src)
+		fields, _ = cursor.Fields()
 		scanners  = rel.NewDocument(&dst).Scanners(fields)
 	)
 
 	assert.NotNil(t, fields)
-	assert.True(t, rows.Next())
-	assert.Nil(t, rows.NopScanner())
-	assert.Equal(t, errors.New("reltest: cannot assign value from type *int to *string"), rows.Scan(scanners...))
-	assert.Nil(t, rows.Close())
+	assert.True(t, cursor.Next())
+	assert.Nil(t, cursor.NopScanner())
+	assert.Equal(t, errors.New("reltest: cannot assign value from type *int to *string"), cursor.Scan(scanners...))
+	assert.Nil(t, cursor.Close())
 }
 
-func TestRows_Fields_emptyRows(t *testing.T) {
+func TestCursor_Fields_emptyRows(t *testing.T) {
 	var (
 		src         = []struct{}{}
-		rows        = newRows(src)
-		fields, err = rows.Fields()
+		cursor      = newCursor(src)
+		fields, err = cursor.Fields()
 	)
 
 	assert.Nil(t, fields)

@@ -14,31 +14,31 @@ type data interface {
 	Get(index int) *rel.Document
 }
 
-type rows struct {
+type cursor struct {
 	data    data
 	current int
 }
 
-func (r *rows) Close() error {
+func (c *cursor) Close() error {
 	return nil
 }
 
-func (r *rows) Fields() ([]string, error) {
-	if r.data.Len() > 0 {
-		return r.data.Get(0).Fields(), nil
+func (c *cursor) Fields() ([]string, error) {
+	if c.data.Len() > 0 {
+		return c.data.Get(0).Fields(), nil
 	}
 
 	return nil, nil
 }
 
-func (r *rows) Next() bool {
-	r.current++
-	return r.current <= r.data.Len()
+func (c *cursor) Next() bool {
+	c.current++
+	return c.current <= c.data.Len()
 }
 
-func (r *rows) Scan(dsts ...interface{}) error {
+func (c *cursor) Scan(dsts ...interface{}) error {
 	var (
-		doc    = r.data.Get(r.current - 1)
+		doc    = c.data.Get(c.current - 1)
 		fields = doc.Fields()
 	)
 
@@ -49,7 +49,7 @@ func (r *rows) Scan(dsts ...interface{}) error {
 		)
 
 		if scanner, ok := dst.(sql.Scanner); ok {
-			// TODO: convert value to basic type before passing to scanner when it's not coming from valuer.
+			// TODO: convert value to basic type before passing to scanner when it's not coming from valuec.
 			if valuer, ok := src.(driver.Valuer); ok {
 				value, err := valuer.Value()
 				if err != nil {
@@ -86,11 +86,11 @@ func (r *rows) Scan(dsts ...interface{}) error {
 	return nil
 }
 
-func (r *rows) NopScanner() interface{} {
+func (c *cursor) NopScanner() interface{} {
 	return nil
 }
 
-func newRows(records interface{}) rel.Cursor {
+func newCursor(records interface{}) rel.Cursor {
 	var (
 		data data
 		rt   = reflect.TypeOf(records)
@@ -106,7 +106,7 @@ func newRows(records interface{}) rel.Cursor {
 		data = rel.NewDocument(records, true)
 	}
 
-	return &rows{
+	return &cursor{
 		data: data,
 	}
 }

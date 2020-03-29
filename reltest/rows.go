@@ -64,23 +64,22 @@ func (r *rows) Scan(dsts ...interface{}) error {
 			}
 		} else {
 			var (
-				dv = reflect.ValueOf(dst)
 				sv = reflect.ValueOf(src)
+				dv = reflect.ValueOf(dst).Elem()
 			)
 
-			if dv.Kind() != reflect.Ptr {
-				return errors.New("reltest: cannot scan to non pointer destination, field: " + fields[i])
+			if dv.Kind() == reflect.Ptr && sv.Kind() != reflect.Ptr {
+				nsv := reflect.New(sv.Type())
+				nsv.Elem().Set(sv)
+				sv = nsv
 			}
 
-			dv = dv.Elem()
-
-			if sv.Type().AssignableTo(dv.Type()) {
-				dv.Set(sv)
-			} else if dv.Kind() == sv.Kind() && sv.Type().ConvertibleTo(dv.Type()) {
-				dv.Set(sv.Convert(dv.Type()))
-			} else {
-				return errors.New("reltest: cannot assign " + fields[i] + " from type " + sv.Type().String() + " to " + dv.Type().String() + ".")
+			// TODO: convert value.
+			if !sv.Type().AssignableTo(dv.Type()) {
+				return errors.New("reltest: cannot assign " + fields[i] + " from type " + sv.Type().String() + " to " + dv.Type().String())
 			}
+
+			dv.Set(sv)
 		}
 	}
 

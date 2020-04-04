@@ -32,8 +32,7 @@ func (m *Modify) NotUnique(key string) {
 	})
 }
 
-// ExpectModify to be called with given field and queries.
-func ExpectModify(r *Repository, methodName string, modifiers []rel.Modifier, insertion bool) *Modify {
+func expectModify(r *Repository, methodName string, modifiers []rel.Modifier) *Modify {
 	em := &Modify{
 		Expect: newExpect(r, methodName,
 			[]interface{}{mock.Anything, modifiers},
@@ -42,6 +41,16 @@ func ExpectModify(r *Repository, methodName string, modifiers []rel.Modifier, in
 	}
 
 	return em
+}
+
+// ExpectInsert to be called with given field and queries.
+func ExpectInsert(r *Repository, modifiers []rel.Modifier) *Modify {
+	return expectModify(r, "Insert", modifiers)
+}
+
+// ExpectUpdate to be called with given field and queries.
+func ExpectUpdate(r *Repository, modifiers []rel.Modifier) *Modify {
+	return expectModify(r, "Update", modifiers)
 }
 
 // ExpectInsertAll to be called.

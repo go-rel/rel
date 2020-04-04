@@ -4,11 +4,9 @@ import (
 	"context"
 
 	"github.com/Fs02/rel"
-	"github.com/stretchr/testify/mock"
 )
 
 type nopAdapter struct {
-	mock  mock.Mock
 	count int
 }
 

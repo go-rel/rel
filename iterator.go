@@ -45,10 +45,12 @@ type iterator struct {
 	adapter   Adapter
 	cursor    Cursor
 	fields    []string
+	closed    bool
 }
 
-func (i iterator) Close() error {
-	if i.cursor != nil {
+func (i *iterator) Close() error {
+	if !i.closed && i.cursor != nil {
+		i.closed = true
 		return i.cursor.Close()
 	}
 

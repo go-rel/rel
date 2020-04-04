@@ -69,8 +69,8 @@ func (r *repository) Ping(ctx context.Context) error {
 	return r.adapter.Ping(ctx)
 }
 
-// Iterate through a colection of records from database in batches.
-// This methos returns iterator that can be used to loop all records.
+// Iterate through a collection of records from database in batches.
+// This function returns iterator that can be used to loop all records.
 // Limit, Offset and Sort query is automatically ignored.
 func (r repository) Iterate(ctx context.Context, query Query, options ...IteratorOption) Iterator {
 	return newIterator(ctx, r.adapter, query, options)

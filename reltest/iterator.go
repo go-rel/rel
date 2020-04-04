@@ -7,10 +7,10 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// type data interface {
-// 	Len() int
-// 	Get(index int) *rel.Document
-// }
+type data interface {
+	Len() int
+	Get(index int) *rel.Document
+}
 
 type iterator struct {
 	current int
@@ -23,6 +23,10 @@ func (i iterator) Close() error {
 }
 
 func (i *iterator) Next(record interface{}) error {
+	if i.err != nil {
+		return i.err
+	}
+
 	if i.data == nil || i.current == i.data.Len() {
 		return io.EOF
 	}
@@ -34,7 +38,7 @@ func (i *iterator) Next(record interface{}) error {
 	reflect.ValueOf(record).Elem().Set(doc.ReflectValue())
 
 	i.current++
-	return i.err
+	return nil
 }
 
 // Iterate asserts and simulate iterate function for test.

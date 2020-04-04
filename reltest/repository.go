@@ -42,7 +42,8 @@ func (r *Repository) Ping(ctx context.Context) error {
 // This methos returns iterator that can be used to loop all records.
 // Limit, Offset and Sort query is automatically ignored.
 func (r *Repository) Iterate(ctx context.Context, query rel.Query, options ...rel.IteratorOption) rel.Iterator {
-	return r.mock.Called(query, options).Get(0).(rel.Iterator)
+	ret := r.mock.Called(query, options).Get(0)
+	return (*iterator)(ret.(*Iterate))
 }
 
 // ExpectIterate apply mocks and expectations for Iterate

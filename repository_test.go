@@ -95,7 +95,7 @@ func TestRepository_Iterate(t *testing.T) {
 			assert.Nil(t, err)
 		}
 
-		assert.NotEqual(t, 0, user)
+		assert.NotEqual(t, 0, user.ID)
 	}
 
 	adapter.AssertExpectations(t)

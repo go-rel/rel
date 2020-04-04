@@ -3,6 +3,7 @@ package rel
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -12,6 +13,11 @@ type Instrumenter func(ctx context.Context, op string, message string) func(err 
 
 // DefaultLogger instrumentation to log queries and rel operation.
 func DefaultLogger(ctx context.Context, op string, message string) func(err error) {
+	// no op for rel functions.
+	if strings.HasPrefix(op, "rel-") {
+		return func(error) {}
+	}
+
 	t := time.Now()
 
 	return func(err error) {

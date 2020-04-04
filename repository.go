@@ -73,7 +73,7 @@ func (r *repository) Ping(ctx context.Context) error {
 // Any select, group, offset, limit and sort query will be ignored automatically.
 // If complex aggregation is needed, consider using All instead,
 func (r repository) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
-	finish := r.instrument(ctx, "aggregate", "aggregating records")
+	finish := r.instrument(ctx, "rel-aggregate", "aggregating records")
 	defer finish(nil)
 
 	return r.aggregate(ctx, query, aggregate, field)
@@ -98,7 +98,7 @@ func (r repository) MustAggregate(ctx context.Context, query Query, aggregate st
 
 // Count retrieves count of results that match the query.
 func (r repository) Count(ctx context.Context, collection string, queriers ...Querier) (int, error) {
-	finish := r.instrument(ctx, "count", "aggregating records")
+	finish := r.instrument(ctx, "rel-count", "aggregating records")
 	defer finish(nil)
 
 	return r.aggregate(ctx, Build(collection, queriers...), "count", "*")
@@ -115,7 +115,7 @@ func (r repository) MustCount(ctx context.Context, collection string, queriers .
 // Find a record that match the query.
 // If no result found, it'll return not found error.
 func (r repository) Find(ctx context.Context, record interface{}, queriers ...Querier) error {
-	finish := r.instrument(ctx, "find", "finding a record")
+	finish := r.instrument(ctx, "rel-find", "finding a record")
 	defer finish(nil)
 
 	var (
@@ -139,7 +139,7 @@ func (r repository) find(ctx context.Context, doc *Document, query Query) error 
 		return err
 	}
 
-	finish := r.instrument(ctx, "scan-one", "scanning a record")
+	finish := r.instrument(ctx, "rel-scan-one", "scanning a record")
 	defer finish(nil)
 
 	return scanOne(cur, doc)
@@ -147,7 +147,7 @@ func (r repository) find(ctx context.Context, doc *Document, query Query) error 
 
 // FindAll records that match the query.
 func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
-	finish := r.instrument(ctx, "find-all", "finding all records")
+	finish := r.instrument(ctx, "rel-find-all", "finding all records")
 	defer finish(nil)
 
 	var (
@@ -173,7 +173,7 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 		return err
 	}
 
-	finish := r.instrument(ctx, "scan-all", "scanning all records")
+	finish := r.instrument(ctx, "rel-scan-all", "scanning all records")
 	defer finish(nil)
 
 	return scanAll(cur, col)
@@ -182,7 +182,7 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 // FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 // Limit and Offset property will be ignored when performing count query.
 func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
-	finish := r.instrument(ctx, "find-and-count-all", "finding all records")
+	finish := r.instrument(ctx, "rel-find-and-count-all", "finding all records")
 	defer finish(nil)
 
 	var (
@@ -211,7 +211,7 @@ func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}
 
 // Insert an record to database.
 func (r repository) Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error {
-	finish := r.instrument(ctx, "insert", "inserting a record")
+	finish := r.instrument(ctx, "rel-insert", "inserting a record")
 	defer finish(nil)
 
 	if record == nil {
@@ -281,7 +281,7 @@ func (r repository) MustInsert(ctx context.Context, record interface{}, modifier
 }
 
 func (r repository) InsertAll(ctx context.Context, records interface{}) error {
-	finish := r.instrument(ctx, "insert-all", "inserting multiple records")
+	finish := r.instrument(ctx, "rel-insert-all", "inserting multiple records")
 	defer finish(nil)
 
 	if records == nil {
@@ -349,7 +349,7 @@ func (r repository) insertAll(ctx context.Context, col *Collection, modification
 // - update has many (will be replaced by default)
 // - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
 func (r repository) Update(ctx context.Context, record interface{}, modifiers ...Modifier) error {
-	finish := r.instrument(ctx, "update", "updating a record")
+	finish := r.instrument(ctx, "rel-update", "updating a record")
 	defer finish(nil)
 
 	if record == nil {
@@ -623,7 +623,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, modification
 
 // Delete single entry.
 func (r repository) Delete(ctx context.Context, record interface{}) error {
-	finish := r.instrument(ctx, "delete", "deleting a record")
+	finish := r.instrument(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
 
 	var (
@@ -657,7 +657,7 @@ func (r repository) MustDelete(ctx context.Context, record interface{}) {
 }
 
 func (r repository) DeleteAll(ctx context.Context, queriers ...Querier) error {
-	finish := r.instrument(ctx, "delete-all", "deleting multiple records")
+	finish := r.instrument(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
 
 	var (
@@ -688,7 +688,7 @@ func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Quer
 
 // Preload loads association with given query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
-	finish := r.instrument(ctx, "preload", "preloading associations")
+	finish := r.instrument(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
 
 	var (
@@ -735,7 +735,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		return err
 	}
 
-	scanFinish := r.instrument(ctx, "scan-multi", "scanning all records to multiple targets")
+	scanFinish := r.instrument(ctx, "rel-scan-multi", "scanning all records to multiple targets")
 	defer scanFinish(nil)
 
 	return scanMulti(cur, keyField, keyType, targets)
@@ -854,7 +854,7 @@ func (r repository) withDefaultScope(ddata documentData, query Query) Query {
 
 // Transaction performs transaction with given function argument.
 func (r repository) Transaction(ctx context.Context, fn func(Repository) error) error {
-	finish := r.instrument(ctx, "transaction", "transaction")
+	finish := r.instrument(ctx, "rel-transaction", "transaction")
 	defer finish(nil)
 
 	adp, err := r.adapter.Begin(ctx)

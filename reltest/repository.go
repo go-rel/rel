@@ -142,7 +142,7 @@ func (r *Repository) MustInsert(ctx context.Context, record interface{}, modifie
 
 // ExpectInsert apply mocks and expectations for Insert
 func (r *Repository) ExpectInsert(modifiers ...rel.Modifier) *Modify {
-	return ExpectModify(r, "Insert", modifiers, true)
+	return ExpectInsert(r, modifiers)
 }
 
 // InsertAll records.
@@ -181,7 +181,7 @@ func (r *Repository) MustUpdate(ctx context.Context, record interface{}, modifie
 
 // ExpectUpdate apply mocks and expectations for Update
 func (r *Repository) ExpectUpdate(modifiers ...rel.Modifier) *Modify {
-	return ExpectModify(r, "Update", modifiers, false)
+	return ExpectUpdate(r, modifiers)
 }
 
 // Delete provides a mock function with given fields: record

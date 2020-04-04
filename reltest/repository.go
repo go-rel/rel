@@ -42,7 +42,12 @@ func (r *Repository) Ping(ctx context.Context) error {
 // This methos returns iterator that can be used to loop all records.
 // Limit, Offset and Sort query is automatically ignored.
 func (r *Repository) Iterate(ctx context.Context, query rel.Query, options ...rel.IteratorOption) rel.Iterator {
-	return nil // TODO
+	return r.mock.Called(query, options).Get(0).(rel.Iterator)
+}
+
+// ExpectIterate apply mocks and expectations for Iterate
+func (r *Repository) ExpectIterate(query rel.Query, options ...rel.IteratorOption) *Iterate {
+	return ExpectIterate(r, query, options...)
 }
 
 // Aggregate provides a mock function with given fields: query, aggregate, field

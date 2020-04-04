@@ -23,7 +23,7 @@ func (d *Delete) ForType(typ string) *Delete {
 	return d.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
-// ExpectDelete to be called with given field and queries.
+// ExpectDelete to be called.
 func ExpectDelete(r *Repository) *Delete {
 	return &Delete{
 		Expect: newExpect(r, "Delete", []interface{}{mock.Anything}, []interface{}{nil}),

@@ -32,7 +32,7 @@ type Book struct {
 	ID       int
 	Title    string
 	Author   Author
-	AuthorID int
+	AuthorID *int
 	Ratings  []Rating
 	Poster   Poster
 	Views    int

@@ -31,8 +31,9 @@ func TestModify_Insert(t *testing.T) {
 
 func TestModify_Insert_nested(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{
+		repo     = New()
+		authorID = 1
+		result   = Book{
 			Title:  "Rel for dummies",
 			Author: Author{Name: "Kia"},
 			Ratings: []Rating{
@@ -45,7 +46,7 @@ func TestModify_Insert_nested(t *testing.T) {
 			ID:       1,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 1, Name: "Kia"},
-			AuthorID: 1,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 1, Score: 9, BookID: 1},
 				{ID: 2, Score: 10, BookID: 1},
@@ -109,13 +110,14 @@ func TestModify_Insert_set(t *testing.T) {
 
 func TestModify_Insert_map(t *testing.T) {
 	var (
-		repo   = New()
-		result Book
-		book   = Book{
+		repo     = New()
+		result   Book
+		authorID = 1
+		book     = Book{
 			ID:       1,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 1, Name: "Kia"},
-			AuthorID: 1,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 1, Score: 9, BookID: 1},
 				{ID: 2, Score: 10, BookID: 1},
@@ -222,12 +224,13 @@ func TestModify_Update(t *testing.T) {
 
 func TestModify_Update_nested(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{
+		repo     = New()
+		authorID = 2
+		result   = Book{
 			ID:       2,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 2, Name: "Kia"},
-			AuthorID: 2,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
 				{ID: 2, BookID: 2, Score: 10},
@@ -238,7 +241,7 @@ func TestModify_Update_nested(t *testing.T) {
 			ID:       2,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 2, Name: "Kia"},
-			AuthorID: 2,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
 				{ID: 2, BookID: 2, Score: 10},
@@ -262,8 +265,9 @@ func TestModify_Update_nested(t *testing.T) {
 
 func TestModify_Update_nestedInsert(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{
+		repo     = New()
+		authorID = 1
+		result   = Book{
 			ID:     2,
 			Title:  "Rel for dummies",
 			Author: Author{Name: "Kia"},
@@ -277,7 +281,7 @@ func TestModify_Update_nestedInsert(t *testing.T) {
 			ID:       2,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 1, Name: "Kia"},
-			AuthorID: 1,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 1, BookID: 2, Score: 9},
 				{ID: 2, BookID: 2, Score: 10},
@@ -418,12 +422,13 @@ func TestModify_Update_setNil(t *testing.T) {
 
 func TestModify_Update_map(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{
+		repo     = New()
+		authorID = 2
+		result   = Book{
 			ID:       2,
 			Title:    "Golang for dummies",
 			Author:   Author{ID: 2, Name: "unknown"},
-			AuthorID: 2,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 4, BookID: 2, Score: 15},
 				{ID: 2, BookID: 2, Score: 5},
@@ -434,7 +439,7 @@ func TestModify_Update_map(t *testing.T) {
 			ID:       2,
 			Title:    "Rel for dummies",
 			Author:   Author{ID: 2, Name: "Kia"},
-			AuthorID: 2,
+			AuthorID: &authorID,
 			Ratings: []Rating{
 				{ID: 2, BookID: 2, Score: 9},
 				{ID: 1, BookID: 2, Score: 10},
@@ -472,11 +477,12 @@ func TestModify_Update_map(t *testing.T) {
 
 func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{
+		repo     = New()
+		authorID = 1
+		result   = Book{
 			ID:       2,
 			Title:    "Golang for dummies",
-			AuthorID: 1,
+			AuthorID: &authorID,
 			Author:   Author{ID: 2, Name: "Kia"},
 		}
 		mod = rel.Map{

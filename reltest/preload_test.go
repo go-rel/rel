@@ -10,9 +10,10 @@ import (
 
 func TestPreload(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
-		author = Author{ID: 1, Name: "Kia"}
+		repo     = New()
+		authorID = 1
+		result   = Book{ID: 2, Title: "Rel for dummies", AuthorID: &authorID}
+		author   = Author{ID: 1, Name: "Kia"}
 	)
 
 	repo.ExpectPreload("author").Result(author)
@@ -31,10 +32,10 @@ func TestPreload(t *testing.T) {
 func TestPreload_nested(t *testing.T) {
 	var (
 		repo   = New()
-		result = Rating{
-			Book: &Book{ID: 2, Title: "Rel for dummies", AuthorID: 1},
-		}
 		author = Author{ID: 1, Name: "Kia"}
+		result = Rating{
+			Book: &Book{ID: 2, Title: "Rel for dummies", AuthorID: &author.ID},
+		}
 	)
 
 	repo.ExpectPreload("book.author").Result(author)
@@ -151,8 +152,9 @@ func TestPreload_nilReferenceValue(t *testing.T) {
 
 func TestPreload_For(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
+		repo     = New()
+		authorID = 1
+		result   = Book{ID: 2, Title: "Rel for dummies", AuthorID: &authorID}
 	)
 
 	repo.ExpectPreload("author").For(&result)
@@ -168,8 +170,9 @@ func TestPreload_For(t *testing.T) {
 
 func TestPreload_ForType(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
+		repo     = New()
+		authorID = 1
+		result   = Book{ID: 2, Title: "Rel for dummies", AuthorID: &authorID}
 	)
 
 	repo.ExpectPreload("author").ForType("reltest.Book")
@@ -185,8 +188,9 @@ func TestPreload_ForType(t *testing.T) {
 
 func TestPreload_error(t *testing.T) {
 	var (
-		repo   = New()
-		result = Book{ID: 2, Title: "Rel for dummies", AuthorID: 1}
+		repo     = New()
+		authorID = 1
+		result   = Book{ID: 2, Title: "Rel for dummies", AuthorID: &authorID}
 	)
 
 	repo.ExpectPreload("author").ConnectionClosed()

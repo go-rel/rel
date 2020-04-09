@@ -233,20 +233,20 @@ func (q Query) SortDesc(fields ...string) Query {
 }
 
 // Offset the result returned by database.
-func (q Query) Offset(offset Offset) Query {
-	q.OffsetQuery = offset
+func (q Query) Offset(offset int) Query {
+	q.OffsetQuery = Offset(offset)
 	return q
 }
 
 // Limit result returned by database.
-func (q Query) Limit(limit Limit) Query {
-	q.LimitQuery = limit
+func (q Query) Limit(limit int) Query {
+	q.LimitQuery = Limit(limit)
 	return q
 }
 
 // Lock query expression.
-func (q Query) Lock(lock Lock) Query {
-	q.LockQuery = lock
+func (q Query) Lock(lock string) Query {
+	q.LockQuery = Lock(lock)
 	return q
 }
 

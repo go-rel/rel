@@ -621,5 +621,5 @@ func TestQuery_Lock_outsideTransaction(t *testing.T) {
 	assert.Equal(t, rel.Query{
 		Table:     "users",
 		LockQuery: "FOR UPDATE",
-	}, rel.From("users").Lock(rel.ForUpdate()))
+	}, rel.From("users").Lock("FOR UPDATE"))
 }

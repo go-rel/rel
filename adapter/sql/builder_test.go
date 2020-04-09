@@ -1245,7 +1245,7 @@ func TestBuilder_Lock(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder  = NewBuilder(config)
-		query    = rel.From("users").Lock(rel.ForUpdate())
+		query    = rel.From("users").Lock("FOR UPDATE")
 		qs, args = builder.Find(query)
 	)
 

@@ -367,4 +367,32 @@ repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10)
 
 <!-- tabs:end -->
 
+## Batch Iteration
+
+REL provides records iterator that can be use for perform batch processing of large amounts of records.
+
+Options:
+
+- `BatchSize` - The size of batches (default 1000).
+- `Start` - The primary value (ID) to start from (inclusive).
+- `Finish` - The primary value (ID) to finish at (inclusive).
+
+<!-- tabs:start -->
+
+### **main.go**
+
+[query.go](query.go ':include :fragment=batch-iteration')
+
+### **main_test.go**
+
+##### Success
+
+[query_test.go](query_test.go ':include :fragment=batch-iteration')
+
+##### Error
+
+[query_test.go](query_test.go ':include :fragment=batch-iteration-error')
+
+<!-- tabs:end -->
+
 **Next: [Association](association.md)**

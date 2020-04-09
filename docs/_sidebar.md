@@ -23,6 +23,7 @@
     * [Pessimistic Locking](query.md#pessimistic-locking)
     * [Aggregation](query.md#aggregation)
     * [Pagination](query.md#pagination)
+    * [Batch Iteration](query.md#batch-iteration)
 
 * [Association](association.md)
 

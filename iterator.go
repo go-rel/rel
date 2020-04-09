@@ -12,27 +12,29 @@ type Iterator interface {
 }
 
 // IteratorOption is used to configure iteration behaviour, such as batch size, start id and finish id.
-type IteratorOption func(*iterator)
+type IteratorOption interface {
+	apply(*iterator)
+}
 
 // BatchSize specifies the size of iterator batch. Defaults to 1000.
-func BatchSize(size int) IteratorOption {
-	return func(i *iterator) {
-		i.batchSize = size
-	}
+type BatchSize int
+
+func (bs BatchSize) apply(i *iterator) {
+	i.batchSize = int(bs)
 }
 
 // Start specfies the primary value to start from (inclusive).
-func Start(start int) IteratorOption {
-	return func(i *iterator) {
-		i.start = start
-	}
+type Start int
+
+func (s Start) apply(i *iterator) {
+	i.start = int(s)
 }
 
 // Finish specfies the primary value to finish at (inclusive).
-func Finish(finish int) IteratorOption {
-	return func(i *iterator) {
-		i.finish = finish
-	}
+type Finish int
+
+func (f Finish) apply(i *iterator) {
+	i.finish = int(f)
 }
 
 type iterator struct {
@@ -131,7 +133,7 @@ func newIterator(ctx context.Context, adapter Adapter, query Query, options []It
 	}
 
 	for i := range options {
-		options[i](it)
+		options[i].apply(it)
 	}
 
 	return it

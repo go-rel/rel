@@ -48,7 +48,7 @@ func (r *Repository) Iterate(ctx context.Context, query rel.Query, options ...re
 
 // ExpectIterate apply mocks and expectations for Iterate
 func (r *Repository) ExpectIterate(query rel.Query, options ...rel.IteratorOption) *Iterate {
-	return ExpectIterate(r, query, options...)
+	return ExpectIterate(r, query, options)
 }
 
 // Aggregate provides a mock function with given fields: query, aggregate, field

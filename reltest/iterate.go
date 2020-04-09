@@ -69,7 +69,7 @@ func (i *Iterate) Result(records interface{}) {
 }
 
 // ExpectIterate to be called.
-func ExpectIterate(r *Repository, query rel.Query, options ...rel.IteratorOption) *Iterate {
+func ExpectIterate(r *Repository, query rel.Query, options []rel.IteratorOption) *Iterate {
 	iterate := &Iterate{}
 	r.mock.On("Iterate", query, options).Return(iterate).Once()
 	return iterate

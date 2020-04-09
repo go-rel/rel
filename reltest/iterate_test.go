@@ -45,10 +45,13 @@ func TestIterate(t *testing.T) {
 				query = rel.From("users")
 			)
 
-			repo.ExpectIterate(query).Result(test.result)
+			repo.ExpectIterate(query, rel.BatchSize(500)).Result(test.result)
 
-			count := 0
-			it := repo.Iterate(context.TODO(), query)
+			var (
+				count = 0
+				it    = repo.Iterate(context.TODO(), query, rel.BatchSize(500))
+			)
+
 			defer it.Close()
 			for {
 				if err := it.Next(&book); err == io.EOF {

@@ -22,7 +22,7 @@ _godep_build: &godep_build
 
 _gomod_build: &gomod_build
   script:
-    - dep ensure
+    - go test -race $COVER ./...
 
 _report_coverage: &report_coverage
   env:

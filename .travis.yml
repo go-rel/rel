@@ -37,8 +37,6 @@ _report_coverage: &report_coverage
 
 jobs:
   include:
-    - go: "1.9.x"
-      <<: *godep_build
     - go: "1.10.x"
       <<: *godep_build
     - go: "1.11.x"

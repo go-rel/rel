@@ -4,23 +4,23 @@ var (
 	// ErrNotFound returned when records not found.
 	ErrNotFound = NotFoundError{}
 
-	// ErrCheckConstraint is basic constraint error.
+	// ErrCheckConstraint is an auxiliary variable for error handling.
 	// This is only to be used when checking error with errors.Is(err, ErrCheckConstraint).
 	ErrCheckConstraint = ConstraintError{Type: CheckConstraint}
 
-	// ErrNotNullConstraint is basic constraint error.
+	// ErrNotNullConstraint is an auxiliary variable for error handling.
 	// This is only to be used when checking error with errors.Is(err, ErrNotNullConstraint).
 	ErrNotNullConstraint = ConstraintError{Type: NotNullConstraint}
 
-	// ErrUniqueConstraint is basic constraint error.
+	// ErrUniqueConstraint is an auxiliary variable for error handling.
 	// This is only to be used when checking error with errors.Is(err, ErrUniqueConstraint).
 	ErrUniqueConstraint = ConstraintError{Type: UniqueConstraint}
 
-	// ErrPrimaryKeyConstraint is basic constraint error.
+	// ErrPrimaryKeyConstraint is an auxiliary variable for error handling.
 	// This is only to be used when checking error with errors.Is(err, ErrPrimaryKeyConstraint).
 	ErrPrimaryKeyConstraint = ConstraintError{Type: PrimaryKeyConstraint}
 
-	// ErrForeignKeyConstraint is basic constraint error.
+	// ErrForeignKeyConstraint is an auxiliary variable for error handling.
 	// This is only to be used when checking error with errors.Is(err, ErrForeignKeyConstraint).
 	ErrForeignKeyConstraint = ConstraintError{Type: ForeignKeyConstraint}
 )

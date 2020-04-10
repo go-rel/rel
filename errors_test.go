@@ -1,5 +1,3 @@
-// +build go1.11
-
 package rel
 
 import (
@@ -34,7 +32,7 @@ func TestConstraintError(t *testing.T) {
 
 func TestConstraintError_Is(t *testing.T) {
 	tests := []struct {
-		err    error
+		err    ConstraintError
 		target error
 		equal  bool
 	}{
@@ -67,7 +65,7 @@ func TestConstraintError_Is(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.err.Error(), func(t *testing.T) {
-			assert.Equal(t, test.equal, errors.Is(test.err, test.target))
+			assert.Equal(t, test.equal, test.err.Is(test.target))
 		})
 	}
 }

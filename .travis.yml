@@ -1,18 +1,9 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
     - MYSQL_DATABASE=root@(127.0.0.1:3306)/rel_test
     - POSTGRESQL_DATABASE=postgres://postgres@localhost/rel_test
 
 language: go
-go:
-  # - "1.9.x"
-  - "1.10.x"
-
-matrix:
-  include:
-    - go: "1.11.x"
-      env: COVER=-coverprofile=c.out
 
 services:
   - mysql
@@ -22,17 +13,38 @@ before_install:
   - mysql -e 'CREATE DATABASE rel_test;'
   - psql -c 'create database rel_test;' -U postgres
 
-install:
-  - go get -u github.com/golang/dep/cmd/dep
+_godep_build: &godep_build
+  install:
+    - go get -u github.com/golang/dep/cmd/dep
+  script:
+    - dep ensure
+    - go test ./...
 
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+_gomod_build: &gomod_build
+  script:
+    - go test -race $COVER ./...
 
-script:
-  - dep ensure
-  - go test -race $COVER ./...
+_report_coverage: &report_coverage
+  env:
+    - CC_TEST_REPORTER_ID=045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
+    - COVER=-coverprofile=c.out
+  before_script:
+    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    - chmod +x ./cc-test-reporter
+    - ./cc-test-reporter before-build
+  after_script:
+    - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
-after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+jobs:
+  include:
+    - go: "1.10.x"
+      <<: *godep_build
+    - go: "1.11.x"
+      <<: *godep_build
+    - go: "1.12.x"
+      <<: *gomod_build
+    - go: "1.13.x"
+      <<: *gomod_build
+    - go: "1.14.x"
+      <<: *gomod_build
+      <<: *report_coverage

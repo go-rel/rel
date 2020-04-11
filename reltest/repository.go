@@ -31,6 +31,7 @@ func (r *Repository) Adapter() rel.Adapter {
 
 // Instrumentation provides a mock function with given fields: instrumenter
 func (r *Repository) Instrumentation(instrumenter rel.Instrumenter) {
+	r.repo.Instrumentation(instrumenter)
 }
 
 // Ping database.

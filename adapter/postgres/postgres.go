@@ -89,7 +89,7 @@ func (adapter *Adapter) query(ctx context.Context, statement string, args []inte
 		rows *db.Rows
 	)
 
-	finish := adapter.Instrument(ctx, "query", statement)
+	finish := adapter.Instrument(ctx, "adapter-query", statement)
 	if adapter.Tx != nil {
 		rows, err = adapter.Tx.QueryContext(ctx, statement, args...)
 	} else {

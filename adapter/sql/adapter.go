@@ -63,7 +63,7 @@ func (adapter *Adapter) Aggregate(ctx context.Context, query rel.Query, mode str
 		statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
 	)
 
-	finish := adapter.Instrument(ctx, "aggregate", statement)
+	finish := adapter.Instrument(ctx, "adapter-aggregate", statement)
 	if adapter.Tx != nil {
 		err = adapter.Tx.QueryRowContext(ctx, statement, args...).Scan(&out)
 	} else {
@@ -80,7 +80,7 @@ func (adapter *Adapter) Query(ctx context.Context, query rel.Query) (rel.Cursor,
 		statement, args = NewBuilder(adapter.Config).Find(query)
 	)
 
-	finish := adapter.Instrument(ctx, "query", statement)
+	finish := adapter.Instrument(ctx, "adapter-query", statement)
 	rows, err := adapter.query(ctx, statement, args)
 	finish(err)
 
@@ -97,7 +97,7 @@ func (adapter *Adapter) query(ctx context.Context, statement string, args []inte
 
 // Exec performs exec operation.
 func (adapter *Adapter) Exec(ctx context.Context, statement string, args []interface{}) (int64, int64, error) {
-	finish := adapter.Instrument(ctx, "exec", statement)
+	finish := adapter.Instrument(ctx, "adapter-exec", statement)
 	res, err := adapter.exec(ctx, statement, args)
 	finish(err)
 
@@ -186,7 +186,7 @@ func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 		err       error
 	)
 
-	finish := adapter.Instrument(ctx, "transaction", "begin transaction")
+	finish := adapter.Instrument(ctx, "adapter-begin", "begin transaction")
 
 	if adapter.Tx != nil {
 		tx = adapter.Tx
@@ -209,7 +209,7 @@ func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 func (adapter *Adapter) Commit(ctx context.Context) error {
 	var err error
 
-	finish := adapter.Instrument(ctx, "transaction", "commit transaction")
+	finish := adapter.Instrument(ctx, "adapter-commit", "commit transaction")
 
 	if adapter.Tx == nil {
 		err = errors.New("unable to commit outside transaction")
@@ -228,7 +228,7 @@ func (adapter *Adapter) Commit(ctx context.Context) error {
 func (adapter *Adapter) Rollback(ctx context.Context) error {
 	var err error
 
-	finish := adapter.Instrument(ctx, "transaction", "rollback transaction")
+	finish := adapter.Instrument(ctx, "adapter-rollback", "rollback transaction")
 
 	if adapter.Tx == nil {
 		err = errors.New("unable to rollback outside transaction")

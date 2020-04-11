@@ -31,10 +31,9 @@ func TestIteration_error(t *testing.T) {
 		repo = reltest.New()
 	)
 
-	/// [batch-iteration-error]
-	// return error reltest.ErrConnectionClosed
+	/// [batch-iteration-connection-error]
 	repo.ExpectIterate(rel.From("users"), rel.BatchSize(500)).ConnectionClosed()
-	/// [batch-iteration-error]
+	/// [batch-iteration-connection-error]
 
 	assert.Equal(t, reltest.ErrConnectionClosed, Iteration(ctx, repo))
 	repo.AssertExpectations(t)

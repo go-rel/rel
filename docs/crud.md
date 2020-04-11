@@ -6,7 +6,7 @@ A new record can be inserted to database using a struct, map or set function. To
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 book := Book{
@@ -20,7 +20,7 @@ if err := repo.Insert(ctx, &book); err != nil {
 }
 ```
 
-### **main_test.go**
+### **Mock**
 
 > reltest.Repository will automatically sets any primary key value to be 1.
 
@@ -50,7 +50,7 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 var book Book
@@ -63,7 +63,7 @@ data := rel.Map{
 repo.Insert(ctx, &book, data)
 ```
 
-### **main_test.go**
+### **Mock**
 
 > reltest.Repository will automatically populate record using value provided by map.
 
@@ -81,14 +81,14 @@ It's also possible to insert a new record manually using `rel.Set`, which is a v
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // Insert using set.
 repo.Insert(ctx, &book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect insertion with given modifier.
@@ -105,14 +105,14 @@ To inserts multiple records at once, use `InsertAll`.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // InsertAll books.
 repo.InsertAll(ctx, &books)
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect any insert all.
@@ -129,16 +129,17 @@ REL provides a powerful API for querying record from database. To query a single
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
+// Retrieve a book with id 1
 repo.Find(ctx, &book, rel.Eq("id", 1))
 
 // OR: with sugar alias
 repo.Find(ctx, &book, where.Eq("id", 1))
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect a find query and mock the result.
@@ -155,13 +156,13 @@ To query multiple records, use `FindAll` method.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 repo.FindAll(ctx, &books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect a find all query and mock the result.
@@ -175,14 +176,14 @@ REL also support chainable query api for a more complex query use case.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 repo.FindAll(ctx, &books, query)
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect a find all query and mock the result.
@@ -200,14 +201,14 @@ Similar to create, updating a record in REL can also be done using struct, map o
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // Update directly using struct.
 repo.Update(ctx, &book)
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect any update is called.
@@ -220,14 +221,14 @@ Besides struct, map and set function. There's also increment and decrement modif
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // Update directly using struct.
 repo.Update(ctx, &book, rel.Inc("views"))
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect any update is called.
@@ -244,14 +245,14 @@ To delete a record in rel, simply pass the record to be deleted.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // Delete a record.
 repo.Delete(ctx, &book)
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect book to be deleted.
@@ -265,14 +266,14 @@ Deleting multiple records is possible using `DeleteAll`.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // We have manually define the table here.
 repo.DeleteAll(ctx, rel.From("books").Where(where.Eq("id", 1)))
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // Expect books to be deleted.

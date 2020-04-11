@@ -8,7 +8,7 @@ If the error is a runtime error or `panic` with string argument, it'll panic aft
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 if err := repo.Transaction(ctx, func(repo rel.Repository) error {
@@ -19,7 +19,7 @@ if err := repo.Transaction(ctx, func(repo rel.Repository) error {
 }
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 repo.ExpectTransaction(func(repo *Repository) {
@@ -30,4 +30,4 @@ repo.ExpectTransaction(func(repo *Repository) {
 
 <!-- tabs:end -->
 
-**Next: [Adapters](adapters.md)**
+**Next: [Instrumentation](instrumentation.md)**

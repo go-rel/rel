@@ -29,3 +29,43 @@ func TestConstraintError(t *testing.T) {
 	assert.Nil(t, err.Unwrap())
 	assert.Equal(t, "UniqueConstraintError", err.Error())
 }
+
+func TestConstraintError_Is(t *testing.T) {
+	tests := []struct {
+		err    ConstraintError
+		target error
+		equal  bool
+	}{
+		{
+			err:    ConstraintError{Type: CheckConstraint},
+			target: ErrCheckConstraint,
+			equal:  true,
+		},
+		{
+			err:    ConstraintError{Type: UniqueConstraint, Key: "username"},
+			target: ErrUniqueConstraint,
+			equal:  true,
+		},
+		{
+			err:    ErrUniqueConstraint,
+			target: ConstraintError{Type: UniqueConstraint, Key: "username"},
+			equal:  true,
+		},
+		{
+			err:    ConstraintError{Type: NotNullConstraint, Key: "username"},
+			target: ConstraintError{Type: NotNullConstraint, Key: "email"},
+			equal:  false,
+		},
+		{
+			err:    ConstraintError{Type: ForeignKeyConstraint, Key: "book_id"},
+			target: ErrNotFound,
+			equal:  false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.err.Error(), func(t *testing.T) {
+			assert.Equal(t, test.equal, test.err.Is(test.target))
+		})
+	}
+}

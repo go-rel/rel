@@ -5,9 +5,8 @@ import (
 	"testing"
 
 	"github.com/Fs02/rel"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/Fs02/rel/reltest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIteration(t *testing.T) {

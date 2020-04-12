@@ -53,7 +53,7 @@ Preload will load association to structs. To preload association, use `Preload`.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 // preload transaction `belongs to` buyer association.
@@ -73,7 +73,7 @@ repo.Preload(ctx, &user, "transactions", where.Eq("paid", true))
 repo.Preload(ctx, &transactions, "buyer.address")
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 // preload transaction `belongs to` buyer association.
@@ -103,7 +103,7 @@ REL will try to create a new record for association if `ID` is a zero value.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 user := User{
@@ -118,7 +118,7 @@ user := User{
 repo.Insert(ctx, &user)
 ```
 
-### **main_tesst.go**
+### **Mock**
 
 ```go
 repo.ExpectInsert().For(&user)
@@ -130,7 +130,7 @@ REL will try to update a new record for association if `ID` is a zero value. To 
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 userId := 1
@@ -150,7 +150,7 @@ user := User{
 repo.Update(ctx, &user)
 ```
 
-### **main_tesst.go**
+### **Mock**
 
 ```go
 repo.ExpectUpdate().For(&user)
@@ -162,7 +162,7 @@ To selectively update only specific fields or association, `use rel.Map`.
 
 <!-- tabs:start -->
 
-### **main.go**
+### **Example**
 
 ```go
 modification := rel.Map{
@@ -175,7 +175,7 @@ modification := rel.Map{
 repo.Update(ctx, &user, modification)
 ```
 
-### **main_test.go**
+### **Mock**
 
 ```go
 modification := rel.Map{

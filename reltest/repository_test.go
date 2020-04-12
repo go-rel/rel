@@ -42,6 +42,12 @@ func TestRepository_Adapter(t *testing.T) {
 	assert.Nil(t, (&Repository{}).Adapter())
 }
 
+func TestRepository_Instrumentation(t *testing.T) {
+	assert.NotPanics(t, func() {
+		New().Instrumentation(rel.DefaultLogger)
+	})
+}
+
 func TestRepository_Ping(t *testing.T) {
 	assert.Nil(t, New().Ping(context.TODO()))
 }

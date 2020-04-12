@@ -16,17 +16,17 @@ func (eda *DeleteAll) Unsafe() {
 }
 
 // ExpectDeleteAll to be called with given field and queries.
-func ExpectDeleteAll(r *Repository, queriers []rel.Querier) *DeleteAll {
+func ExpectDeleteAll(r *Repository, query rel.Query) *DeleteAll {
 	eda := &DeleteAll{
 		Expect: newExpect(r, "DeleteAll",
-			[]interface{}{queriers},
+			[]interface{}{query},
 			[]interface{}{nil},
 		),
 	}
 
 	// validation
 	eda.Run(func(args mock.Arguments) {
-		query := rel.Build("", args[0].([]rel.Querier)...)
+		query := args[0].(rel.Query)
 
 		if query.Table == "" {
 			panic("reltest: cannot call DeleteAll without specifying table name. use rel.From(tableName)")

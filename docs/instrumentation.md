@@ -1,6 +1,6 @@
 # Instrumentation
 
-REL provides hooks that can be used to log or instrument your queries. It can be used for the this operations:
+REL provides hooks that can be used to log or instrument your queries. This is the list for available operations:
 
 - `rel-aggregate`
 - `rel-count`

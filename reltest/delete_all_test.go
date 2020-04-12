@@ -44,12 +44,13 @@ func TestDeleteAll_error(t *testing.T) {
 
 func TestDeleteAll_noTable(t *testing.T) {
 	var (
-		repo = New()
+		repo  = New()
+		query = rel.Where(where.Eq("id", 1))
 	)
 
-	repo.ExpectDeleteAll()
+	repo.ExpectDeleteAll(query)
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(context.TODO())
+		repo.MustDeleteAll(context.TODO(), query)
 	})
 	repo.AssertExpectations(t)
 }

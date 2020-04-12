@@ -213,19 +213,19 @@ func (r *Repository) ExpectDelete() *Delete {
 	return ExpectDelete(r)
 }
 
-// DeleteAll provides a mock function with given fields: queriers
-func (r *Repository) DeleteAll(ctx context.Context, queriers ...rel.Querier) error {
-	return r.mock.Called(queriers).Error(0)
+// DeleteAll provides a mock function with given fields: query
+func (r *Repository) DeleteAll(ctx context.Context, query rel.Query) error {
+	return r.mock.Called(query).Error(0)
 }
 
-// MustDeleteAll provides a mock function with given fields: queriers
-func (r *Repository) MustDeleteAll(ctx context.Context, queriers ...rel.Querier) {
-	must(r.DeleteAll(ctx, queriers...))
+// MustDeleteAll provides a mock function with given fields: query
+func (r *Repository) MustDeleteAll(ctx context.Context, query rel.Query) {
+	must(r.DeleteAll(ctx, query))
 }
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
-func (r *Repository) ExpectDeleteAll(queriers ...rel.Querier) *DeleteAll {
-	return ExpectDeleteAll(r, queriers)
+func (r *Repository) ExpectDeleteAll(query rel.Query) *DeleteAll {
+	return ExpectDeleteAll(r, query)
 }
 
 // Preload provides a mock function with given fields: records, field, queriers

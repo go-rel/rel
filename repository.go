@@ -33,8 +33,8 @@ type Repository interface {
 	MustUpdate(ctx context.Context, record interface{}, modifiers ...Modifier)
 	Delete(ctx context.Context, record interface{}) error
 	MustDelete(ctx context.Context, record interface{})
-	DeleteAll(ctx context.Context, queriers ...Querier) error
-	MustDeleteAll(ctx context.Context, queriers ...Querier)
+	DeleteAll(ctx context.Context, query Query) error
+	MustDeleteAll(ctx context.Context, query Query)
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 	Transaction(ctx context.Context, fn func(Repository) error) error
@@ -664,19 +664,15 @@ func (r repository) MustDelete(ctx context.Context, record interface{}) {
 	must(r.Delete(ctx, record))
 }
 
-func (r repository) DeleteAll(ctx context.Context, queriers ...Querier) error {
+func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	finish := r.instrument(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
 
-	var (
-		q = Build("", queriers...)
-	)
-
-	return r.deleteAll(ctx, Invalid, q)
+	return r.deleteAll(ctx, Invalid, query)
 }
 
-func (r repository) MustDeleteAll(ctx context.Context, queriers ...Querier) {
-	must(r.DeleteAll(ctx, queriers...))
+func (r repository) MustDeleteAll(ctx context.Context, query Query) {
+	must(r.DeleteAll(ctx, query))
 }
 
 func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Query) error {

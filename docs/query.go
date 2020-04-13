@@ -34,7 +34,6 @@ func Iteration(ctx context.Context, repo rel.Repository) error {
 			}
 
 			// handle error
-			iter.Close()
 			return err
 		}
 

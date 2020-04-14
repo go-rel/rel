@@ -5,12 +5,93 @@ import (
 	"io"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 )
 
 // User model example.
 type User struct {
 	ID   int
 	Name string
+}
+
+// Find docs example.
+func Find(ctx context.Context, repo rel.Repository) error {
+	/// [find]
+	var book Book
+	err := repo.Find(ctx, &book)
+	/// [find]
+
+	return err
+}
+
+// FindAll docs example.
+func FindAll(ctx context.Context, repo rel.Repository) error {
+	/// [find-all]
+	var books []Book
+	err := repo.FindAll(ctx, &books)
+	/// [find-all]
+
+	return err
+}
+
+// Condition docs example.
+func Condition(ctx context.Context, repo rel.Repository) error {
+	/// [condition]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Eq("available", true))
+	/// [condition]
+
+	return err
+}
+
+// ConditionAlias docs example.
+func ConditionAlias(ctx context.Context, repo rel.Repository) error {
+	/// [condition-alias]
+	var books []Book
+	err := repo.FindAll(ctx, &books, where.Eq("available", true))
+	/// [condition-alias]
+
+	return err
+}
+
+// ConditionFragment docs example.
+func ConditionFragment(ctx context.Context, repo rel.Repository) error {
+	/// [condition-fragment]
+	var books []Book
+	err := repo.FindAll(ctx, &books, where.Fragment("available=?", true))
+	/// [condition-fragment]
+
+	return err
+}
+
+// ConditionAdvanced docs example.
+func ConditionAdvanced(ctx context.Context, repo rel.Repository) error {
+	/// [condition-advanced]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
+	/// [condition-advanced]
+
+	return err
+}
+
+// ConditionAdvancedChain docs example.
+func ConditionAdvancedChain(ctx context.Context, repo rel.Repository) error {
+	/// [condition-advanced-chain]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
+	/// [condition-advanced-chain]
+
+	return err
+}
+
+// ConditionAdvancedAlias docs example.
+func ConditionAdvancedAlias(ctx context.Context, repo rel.Repository) error {
+	/// [condition-advanced-alias]
+	var books []Book
+	err := repo.FindAll(ctx, &books, where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
+	/// [condition-advanced-alias]
+
+	return err
 }
 
 // SendPromotionEmail tp demonstrate Iteration.

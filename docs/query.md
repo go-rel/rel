@@ -10,15 +10,15 @@ REL provides two basic finders method, `Find` for retrieving single record, and 
 
 ### **Example**
 
-```go
-repo.Find(ctx, &book)
-```
+Retrieve a book.
+
+[query.go](query.go ':include :fragment=find')
 
 ### **Mock**
 
-```go
-repo.ExpectFind().Result(book)
-```
+Mock retrieve a book.
+
+[query_test.go](query_test.go ':include :fragment=find')
 
 <!-- tabs:end -->
 
@@ -28,49 +28,51 @@ repo.ExpectFind().Result(book)
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books)
-```
+Retrieve all books.
+
+[query.go](query.go ':include :fragment=find-all')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll().Result(books)
-```
+Mock retrieve all books.
+
+[query_test.go](query_test.go ':include :fragment=find-all')
 
 <!-- tabs:end -->
 
 ## Conditions
 
-To retrieve filtered recods from database, you can use filter api to specify coondition. For example, to filter all books that available, you can use `rel.Eq` in the query builder.
+To retrieve filtered recods from database, you can use filter api to specify [condition](https://pkg.go.dev/github.com/Fs02/rel/where). For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-// Retrieve all available books
-repo.FindAll(ctx, &books, rel.Eq("available", true))
+Retrieve all available books using filter query.
 
-// or use alias: github.com/Fs02/rel/where
-repo.FindAll(ctx, &books, where.Eq("available", true))
+[query.go](query.go ':include :fragment=condition')
 
-// or use raw query
-repo.FindAll(ctx, &books, where.Fragment("available=?", true))
-```
+Using alias: github.com/Fs02/rel/where
+
+[query.go](query.go ':include :fragment=condition-alias')
+
+Using fragment to specify SQL condition.
+
+[query.go](query.go ':include :fragment=condition-fragment')
 
 ### **Mock**
 
-```go
-// mock and returns books
-repo.ExpectFindAll(rel.Eq("available", true)).Result(book)
+Mock retrieve all available books.
 
-// with alias
-repo.ExpectFindAll(where.Eq("available", true)).Result(book)
+[query_test.go](query_test.go ':include :fragment=condition')
 
-// with raw query
-repo.ExpectFindAll(&books, where.Fragment("available=?", true)).Result(book)
-```
+Mock retrieve all using alias: github.com/Fs02/rel/where
+
+[query_test.go](query_test.go ':include :fragment=condition-alias')
+
+Mock retrieve all using fragment to specify SQL condition.
+
+[query_test.go](query_test.go ':include :fragment=condition-fragment')
 
 <!-- tabs:end -->
 
@@ -80,27 +82,33 @@ You can use `rel.And` or `rel.Or` to specify more conditions.
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
+Retrieve all available books where price is at least 100 or in discount using filter query.
 
-// or use filter chain
-repo.FindAll(ctx, rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
+[query.go](query.go ':include :fragment=condition-advanced')
 
-// or use alias: github.com/Fs02/rel/where
-repo.FindAll(ctx, where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
-```
+Retrieve all available books where price is at least 100 or in discount using chained filter query.
+
+[query.go](query.go ':include :fragment=condition-advanced-chain')
+
+Retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
+
+[query.go](query.go ':include :fragment=condition-advanced-alias')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true)))).Result(book)
 
-// or use filter chain
-repo.ExpectFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true))).Result(book)
+Mock retrieve all available books where price is at least 100 or in discount using filter query.
 
-// or use alias: github.com/Fs02/rel/where
-repo.ExpectFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true))).Result(book)
-```
+[query_test.go](query_test.go ':include :fragment=condition-advanced')
+
+Mock retrieve all available books where price is at least 100 or in discount using chained filter query.
+
+[query_test.go](query_test.go ':include :fragment=condition-advanced-chain')
+
+Mock retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
+
+[query_test.go](query_test.go ':include :fragment=condition-advanced-alias')
+
 
 <!-- tabs:end -->
 

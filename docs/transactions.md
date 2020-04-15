@@ -10,23 +10,12 @@ If the error is a runtime error or `panic` with string argument, it'll panic aft
 
 ### **Example**
 
-```go
-if err := repo.Transaction(ctx, func(repo rel.Repository) error {
-    repo.Update(ctx, &books, rel.Dec("stock"))
-    return repo.Update(ctx, &transaction, rel.Set("paid", true))
-}); err != nil {
-    // handle error
-}
-```
+[transactions.go](transactions.go ':include :fragment=transactions')
+
 
 ### **Mock**
 
-```go
-repo.ExpectTransaction(func(repo *Repository) {
-    repo.ExpectUpdate(rel.Dec("stock")).ForType("main.Book")
-    repo.ExpectUpdate(rel.Set("paid", true)).ForType("main.Transaction")
-})
-```
+[transactions_test.go](transactions_test.go ':include :fragment=transactions')
 
 <!-- tabs:end -->
 

@@ -7,12 +7,6 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// User model example.
-type User struct {
-	ID   int
-	Name string
-}
-
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/sort"
 	"github.com/Fs02/rel/where"
 )
 
@@ -84,6 +85,46 @@ func ConditionAdvancedAlias(ctx context.Context, repo rel.Repository) error {
 	var books []Book
 	err := repo.FindAll(ctx, &books, where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
 	/// [condition-advanced-alias]
+
+	return err
+}
+
+// Sorting docs example.
+func Sorting(ctx context.Context, repo rel.Repository) error {
+	/// [sorting]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.NewSortAsc("updated_at"))
+	/// [sorting]
+
+	return err
+}
+
+// SortingAlias docs example.
+func SortingAlias(ctx context.Context, repo rel.Repository) error {
+	/// [sorting-alias]
+	var books []Book
+	err := repo.FindAll(ctx, &books, sort.Asc("updated_at"))
+	/// [sorting-alias]
+
+	return err
+}
+
+// SortingWithCondition docs example.
+func SortingWithCondition(ctx context.Context, repo rel.Repository) error {
+	/// [sorting-with-condition]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Where(where.Eq("available", true)).SortAsc("updated_at"))
+	/// [sorting-with-condition]
+
+	return err
+}
+
+// SortingWithConditionVariadic docs example.
+func SortingWithConditionVariadic(ctx context.Context, repo rel.Repository) error {
+	/// [sorting-with-condition-variadic]
+	var books []Book
+	err := repo.FindAll(ctx, &books, where.Eq("available", true), sort.Asc("updated_at"))
+	/// [sorting-with-condition-variadic]
 
 	return err
 }

@@ -13,7 +13,7 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 ## Features
 
 - Testable repository with builtin reltest package.
-- Elegant, yet extendable query builder.
+- Elegant, yet extendable query builder with mix of syntactic sugar.
 - Supports Eager loading.
 - Multi adapter.
 - Soft Deletion.

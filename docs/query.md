@@ -56,7 +56,7 @@ Using alias: github.com/Fs02/rel/where
 
 [query.go](query.go ':include :fragment=condition-alias')
 
-Using fragment to specify SQL condition.
+Using fragment to using fragment to specify custom SQL query.
 
 [query.go](query.go ':include :fragment=condition-fragment')
 
@@ -70,7 +70,7 @@ Mock retrieve all using alias: github.com/Fs02/rel/where
 
 [query_test.go](query_test.go ':include :fragment=condition-alias')
 
-Mock retrieve all using fragment to specify SQL condition.
+Mock retrieve all using fragment to specify custom SQL query.
 
 [query_test.go](query_test.go ':include :fragment=condition-fragment')
 
@@ -119,45 +119,50 @@ To retrieve records from database in a specific order, you can use the sort api.
 <!-- tabs:start -->
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.NewSortAsc("updated_at"))
+Sort books ascending by updated_at field.
 
-// or use alias: github.com/Fs02/rel/sort
-repo.FindAll(ctx, &books, sort.Asc("updated_at"))
-```
+[query.go](query.go ':include :fragment=sorting')
+
+Using alias if you need more syntactic sugar.
+
+[query.go](query.go ':include :fragment=sorting-alias')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.NewSortAsc("updated_at")).Result(book)
+Mock sort books ascending by updated_at field.
 
-// or use alias: github.com/Fs02/rel/sort
-repo.ExpectFindAll(sort.Asc("updated_at")).Result(book)
-```
+[query_test.go](query_test.go ':include :fragment=sorting')
+
+Mock sort using alias.
+
+[query_test.go](query_test.go ':include :fragment=sorting-alias')
 
 <!-- tabs:end -->
 
-You can also chain sort with other query.
+Combining with other query is fairly easy.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Where(where.Eq("available", true).SortAsc("updated_at")))
+Chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
 
-// which is equal to:
-repo.FindAll(ctx, &books, where.Eq("available", true), sort.Asc("updated_at"))
-```
+[query.go](query.go ':include :fragment=sorting-with-condition')
+
+It's also possible to use variadic arguments to combine multiple queries.
+
+[query.go](query.go ':include :fragment=sorting-with-condition-variadic')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Where(where.Eq("available", true).SortAsc("updated_at"))).Result(books)
+Mock chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
 
-// which is equal to:
-repo.ExpectFindAll(where.Eq("available", true), sort.Asc("updated_at")).Result(books)
-```
+[query.go](query.go ':include :fragment=sorting-with-condition')
+
+Mock query that uses variadic arguments to combine multiple queries.
+
+[query.go](query.go ':include :fragment=sorting-with-condition-variadic')
+
 
 <!-- tabs:end -->
 

@@ -217,6 +217,23 @@ func TestSortingWithConditionVariadic(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestSelect(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [select]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
+	/// [select]
+
+	assert.Nil(t, Select(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

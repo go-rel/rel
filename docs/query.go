@@ -129,6 +129,16 @@ func SortingWithConditionVariadic(ctx context.Context, repo rel.Repository) erro
 	return err
 }
 
+// Select docs example.
+func Select(ctx context.Context, repo rel.Repository) error {
+	/// [select]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Select("id", "title"))
+	/// [select]
+
+	return err
+}
+
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 

@@ -157,11 +157,11 @@ It's also possible to use variadic arguments to combine multiple queries.
 
 Mock chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
 
-[query.go](query.go ':include :fragment=sorting-with-condition')
+[query_test.go](query_test.go ':include :fragment=sorting-with-condition')
 
 Mock query that uses variadic arguments to combine multiple queries.
 
-[query.go](query.go ':include :fragment=sorting-with-condition-variadic')
+[query_test.go](query_test.go ':include :fragment=sorting-with-condition-variadic')
 
 
 <!-- tabs:end -->
@@ -174,15 +174,15 @@ To select specific fields, you can use `Select` method, this way only specificie
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Select("id", "title"))
-```
+Load only id and title.
+
+[query.go](query.go ':include :fragment=select')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
-```
+Mock find all to load only id and title.
+
+[query_test.go](query_test.go ':include :fragment=select')
 
 <!-- tabs:end -->
 

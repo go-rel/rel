@@ -8,12 +8,6 @@ import (
 	"github.com/Fs02/rel/where"
 )
 
-// User model example.
-type User struct {
-	ID   int
-	Name string
-}
-
 // Find docs example.
 func Find(ctx context.Context, repo rel.Repository) error {
 	/// [find]

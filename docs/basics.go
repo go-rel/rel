@@ -17,6 +17,7 @@ type Book struct {
 	Category  string
 	Price     int
 	Discount  bool
+	Stock     int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

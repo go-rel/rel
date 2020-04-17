@@ -234,6 +234,40 @@ func TestSelect(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestTable(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [table]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAll(rel.From("ebooks")).Result(books)
+	/// [table]
+
+	assert.Nil(t, Table(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestTableChained(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [table-chained]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAll(rel.Select("id", "title").From("ebooks")).Result(books)
+	/// [table-chained]
+
+	assert.Nil(t, TableChained(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestLimitOffset(t *testing.T) {
 	var (
 		ctx  = context.TODO()

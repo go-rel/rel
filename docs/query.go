@@ -139,6 +139,26 @@ func Select(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// Table docs example.
+func Table(ctx context.Context, repo rel.Repository) error {
+	/// [table]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.From("ebooks"))
+	/// [table]
+
+	return err
+}
+
+// TableChained docs example.
+func TableChained(ctx context.Context, repo rel.Repository) error {
+	/// [table-chained]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Select("id", "title").From("ebooks"))
+	/// [table-chained]
+
+	return err
+}
+
 // LimitOffset docs example.
 func LimitOffset(ctx context.Context, repo rel.Repository) error {
 	/// [limit-offset]

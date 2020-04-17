@@ -196,21 +196,23 @@ By default, REL will use pluralized-snakecase struct name as the table name. To 
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.From("ebooks"))
+Load from `ebooks` table.
 
-// chain it with select
-repo.FindAll(ctx, &books, rel.Select("id", "title").From("ebooks"))
-```
+[query.go](query.go ':include :fragment=table')
+
+Chain the query with select.
+
+[query.go](query.go ':include :fragment=table-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.From("ebooks")).Result(books)
+Mock load from `ebooks` table.
 
-// chain it with select
-repo.ExpectFindAll(rel.Select("id", "title").From("ebooks")).Result(books)
-```
+[query_test.go](query_test.go ':include :fragment=table')
+
+Mock chain the query with select.
+
+[query_test.go](query_test.go ':include :fragment=table-chained')
 
 <!-- tabs:end -->
 

@@ -1,0 +1,4 @@
+exclude_patterns:
+  - adapter/specs/
+  - vendor/
+  - docs/

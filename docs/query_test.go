@@ -234,6 +234,40 @@ func TestSelect(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestLimitOffset(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [limit-offset]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAll(rel.Limit(10), rel.Offset(20)).Result(books)
+	/// [limit-offset]
+
+	assert.Nil(t, LimitOffset(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestLimitOffsetChained(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [limit-offset-chained]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAll(rel.Select().Limit(10).Offset(20)).Result(books)
+	/// [limit-offset-chained]
+
+	assert.Nil(t, LimitOffsetChained(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

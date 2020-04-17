@@ -139,6 +139,26 @@ func Select(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// LimitOffset docs example.
+func LimitOffset(ctx context.Context, repo rel.Repository) error {
+	/// [limit-offset]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Limit(10), rel.Offset(20))
+	/// [limit-offset]
+
+	return err
+}
+
+// LimitOffsetChained docs example.
+func LimitOffsetChained(ctx context.Context, repo rel.Repository) error {
+	/// [limit-offset-chained]
+	var books []Book
+	err := repo.FindAll(ctx, &books, rel.Select().Limit(10).Offset(20))
+	/// [limit-offset-chained]
+
+	return err
+}
+
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 

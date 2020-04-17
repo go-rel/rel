@@ -170,6 +170,8 @@ Mock query that uses variadic arguments to combine multiple queries.
 
 To select specific fields, you can use `Select` method, this way only specificied field will be mapped to books.
 
+?> Specifying select without argument (`rel.Select()`) will automatically load all fields. This is helpful when used as query builder entry point (compared to using `rel.From`), because you can let REL to infer the table name.
+
 <!-- tabs:start -->
 
 ### **Example**
@@ -220,21 +222,23 @@ To set the limit and offset of query, use `Limit` and `Offset` api. `Offset` wil
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Limit(10), rel.Offset(20))
+Specify limit and offset.
 
-// as chainable query.
-repo.FindAll(ctx, &books, rel.Select().Limit(10).Offset(20))
-```
+[query.go](query.go ':include :fragment=limit-offset')
+
+As a chainable api.
+
+[query.go](query.go ':include :fragment=limit-offset-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Limit(10), rel.Offset(20)).Result(books)
+Mock limit and offset.
 
-// as chainable query.
-repo.ExpectFindAll(rel.Select().Limit(10).Offset(20)).Result(books)
-```
+[query_test.go](query_test.go ':include :fragment=limit-offset')
+
+Mock using chainable api.
+
+[query_test.go](query_test.go ':include :fragment=limit-offset-chained')
 
 <!-- tabs:end -->
 
@@ -269,7 +273,7 @@ repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group
 
 To join tables, you can use `join` api.
 
-> Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
+?> Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
 
 <!-- tabs:start -->
 

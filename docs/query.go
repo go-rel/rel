@@ -179,6 +179,22 @@ func LimitOffsetChained(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// Group docs example.
+func Group(ctx context.Context, repo rel.Repository) error {
+	/// [group]
+	// custom struct to store the result.
+	var results []struct {
+		Category string
+		Total    int
+	}
+
+	// we need to explicitly specify table name since we are using an anonymous struct.
+	err := repo.FindAll(ctx, &results, rel.Select("category", "COUNT(id) as total").From("books").Group("category"))
+	/// [group]
+
+	return err
+}
+
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 

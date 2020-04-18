@@ -252,22 +252,15 @@ To use group by query, you can use `Group` method.
 
 ### **Example**
 
-```go
-// custom struct to store the result.
-var results []struct {
-    Category string
-    Count    int
-}
+Retrieve count of books for every category.
 
-// we need to explicitly specify table name since we are using an anonymous struct. 
-repo.FindAll(ctx, &results, rel.Select("category", "COUNT(id) as id").From("books").Group("category"))
-```
+[query.go](query.go ':include :fragment=group')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group("category")).Result(results)
-```
+Mock retrieve count of books for every category.
+
+[query_test.go](query_test.go ':include :fragment=group')
 
 <!-- tabs:end -->
 

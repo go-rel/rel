@@ -302,6 +302,26 @@ func TestLimitOffsetChained(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestGroup(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [group]
+	results := []struct {
+		Category string
+		Total    int
+	}{
+		{Category: "education", Total: 100},
+	}
+	repo.ExpectFindAll(rel.Select("category", "COUNT(id) as total").From("books").Group("category")).Result(results)
+	/// [group]
+
+	assert.Nil(t, Group(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

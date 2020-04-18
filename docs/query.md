@@ -10,13 +10,13 @@ REL provides two basic finders method, `Find` for retrieving single record, and 
 
 ### **Example**
 
-Retrieve a book.
+Retrieve a book where id=1.
 
 [query.go](query.go ':include :fragment=find')
 
 ### **Mock**
 
-Mock retrieve a book.
+Mock retrieve a book where id=1.
 
 [query_test.go](query_test.go ':include :fragment=find')
 

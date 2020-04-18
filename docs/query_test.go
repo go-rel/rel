@@ -21,7 +21,7 @@ func TestFind(t *testing.T) {
 
 	/// [find]
 	book := Book{ID: 1, Title: "REL for dummies"}
-	repo.ExpectFind().Result(book)
+	repo.ExpectFind(where.Eq("id", 1)).Result(book)
 	/// [find]
 
 	assert.Nil(t, Find(ctx, repo))

@@ -14,7 +14,7 @@ import (
 func Find(ctx context.Context, repo rel.Repository) error {
 	/// [find]
 	var book Book
-	err := repo.Find(ctx, &book)
+	err := repo.Find(ctx, &book, where.Eq("id", 1))
 	/// [find]
 
 	return err

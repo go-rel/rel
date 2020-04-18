@@ -453,6 +453,48 @@ func TestLockChained(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestAggregate(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [aggregate]
+	repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
+	/// [aggregate]
+
+	assert.Nil(t, Aggregate(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestCount(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [count]
+	repo.ExpectCount("books").Result(7)
+	/// [count]
+
+	assert.Nil(t, Count(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestCountWithCondition(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [count-with-condition]
+	repo.ExpectCount("books", where.Eq("available", true)).Result(5)
+	/// [count-with-condition]
+
+	assert.Nil(t, CountWithCondition(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

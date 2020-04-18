@@ -236,6 +236,16 @@ func JoinWith(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// JoinFragment docs example.
+func JoinFragment(ctx context.Context, repo rel.Repository) error {
+	/// [join-fragment]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`"))
+	/// [join-fragment]
+
+	return err
+}
+
 // Lock docs example.
 func Lock(ctx context.Context, repo rel.Repository) error {
 	/// [lock]
@@ -266,13 +276,33 @@ func LockChained(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// JoinFragment docs example.
-func JoinFragment(ctx context.Context, repo rel.Repository) error {
-	/// [join-fragment]
-	var transactions []Transaction
-	err := repo.FindAll(ctx, &transactions, rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`"))
-	/// [join-fragment]
+// Aggregate docs example.
+func Aggregate(ctx context.Context, repo rel.Repository) error {
+	/// [aggregate]
+	count, err := repo.Aggregate(ctx, rel.From("books").Where(where.Eq("available", true)), "count", "id")
+	/// [aggregate]
 
+	_ = count
+	return err
+}
+
+// Count docs example.
+func Count(ctx context.Context, repo rel.Repository) error {
+	/// [count]
+	count, err := repo.Count(ctx, "books")
+	/// [count]
+
+	_ = count
+	return err
+}
+
+// CountWithCondition docs example.
+func CountWithCondition(ctx context.Context, repo rel.Repository) error {
+	/// [count-with-condition]
+	count, err := repo.Count(ctx, "books", where.Eq("available", true))
+	/// [count-with-condition]
+
+	_ = count
 	return err
 }
 

@@ -362,23 +362,31 @@ REL provides a very basic `Aggregate` method which can be used to count, sum, ma
 
 ### **Example**
 
-```go
-count, err = repo.Aggregate(ctx, rel.From("books").Where(where.Eq("available", true)), "count", "id")
-// or
-count, err = repo.Count(ctx, "books", where.Eq("available", true))
-// or just count all books.
-count, err = repo.Count(ctx, "books")
-```
+Count all available books using aggregate.
+
+[query.go](query.go ':include :fragment=aggregate')
+
+Count all available books using count.
+
+[query.go](query.go ':include :fragment=count')
+
+Count all available books using count.
+
+[query.go](query.go ':include :fragment=count-with-condition')
 
 ### **Mock**
 
-```go
-repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
-// or
-repo.ExpectCount("books", where.Eq("available", true)).Result(5)
-// or just count all books.
-repo.ExpectCount("books").Result(7)
-```
+Mock count all available books using aggregate.
+
+[query_test.go](query_test.go ':include :fragment=aggregate')
+
+Mock count all available books using count.
+
+[query_test.go](query_test.go ':include :fragment=count')
+
+Mock count all available books using count.
+
+[query_test.go](query_test.go ':include :fragment=count-with-condition')
 
 <!-- tabs:end -->
 

@@ -52,11 +52,11 @@ Retrieve all available books using filter query.
 
 [query.go](query.go ':include :fragment=condition')
 
-Using alias: github.com/Fs02/rel/where
+Alias can be used to boost readability when dealing with short query.
 
 [query.go](query.go ':include :fragment=condition-alias')
 
-Using fragment to using fragment to specify custom SQL query.
+Use fragment to specify custom SQL query.
 
 [query.go](query.go ':include :fragment=condition-fragment')
 
@@ -66,7 +66,7 @@ Mock retrieve all available books.
 
 [query_test.go](query_test.go ':include :fragment=condition')
 
-Mock retrieve all using alias: github.com/Fs02/rel/where
+Mock retrieve all using alias.
 
 [query_test.go](query_test.go ':include :fragment=condition-alias')
 

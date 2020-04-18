@@ -21,6 +21,11 @@ func TestJoinFragment(t *testing.T) {
 		Mode:      "JOIN transactions ON id=?",
 		Arguments: []interface{}{1},
 	}, rel.NewJoinFragment("JOIN transactions ON id=?", 1))
+
+	assert.Equal(t, rel.JoinQuery{
+		Mode:      "JOIN transactions ON transactions.user_id=users.id",
+		Arguments: []interface{}{},
+	}, rel.NewJoinFragment("JOIN transactions ON transactions.user_id=users.id"))
 }
 
 func TestJoin(t *testing.T) {

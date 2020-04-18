@@ -37,6 +37,11 @@ func NewJoinWith(mode string, table string, from string, to string) JoinQuery {
 
 // NewJoinFragment defines a join clause using raw query.
 func NewJoinFragment(expr string, args ...interface{}) JoinQuery {
+	if args == nil {
+		// prevent buildJoin to populate From and To variable.
+		args = []interface{}{}
+	}
+
 	return JoinQuery{
 		Mode:      expr,
 		Arguments: args,

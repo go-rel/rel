@@ -495,6 +495,23 @@ func TestCountWithCondition(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestFindAndCountAll(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [find-and-count-all]
+	books := []Book{
+		{ID: 1, Title: "REL for dummies"},
+	}
+	repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10)).Result(books, 12)
+	/// [find-and-count-all]
+
+	assert.Nil(t, FindAndCountAll(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

@@ -306,6 +306,17 @@ func CountWithCondition(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// FindAndCountAll docs example.
+func FindAndCountAll(ctx context.Context, repo rel.Repository) error {
+	/// [find-and-count-all]
+	var books []Book
+	count, err := repo.FindAndCountAll(ctx, &books, rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10))
+	/// [find-and-count-all]
+
+	_ = count
+	return err
+}
+
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 

@@ -399,17 +399,15 @@ FindAndCountAll returns count of records (ignoring limit and offset query) and a
 
 ### **Example**
 
-```go
-// Find and count total books in database.
-count, err = repo.FindAndCountAll(ctx, &books, rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10))
-```
+Retrieve all books within limit and offset and also count of all books.
+
+[query.go](query.go ':include :fragment=find-and-count-all')
 
 ### **Mock**
 
-```go
-// Expect count to returns books and with total count of 12.
-repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10)).Result(books, 12)
-```
+Mock retrieve all books within limit and offset and also count of all books.
+
+[query_test.go](query_test.go ':include :fragment=find-and-count-all')
 
 <!-- tabs:end -->
 

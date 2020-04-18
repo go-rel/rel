@@ -96,8 +96,6 @@ func TestQuerier(t *testing.T) {
 					{
 						Mode:  "JOIN",
 						Table: "users",
-						From:  "transactions.user_id",
-						To:    "users.id",
 					},
 				},
 				GroupQuery: rel.GroupQuery{
@@ -169,8 +167,6 @@ func TestQuery_Join(t *testing.T) {
 			{
 				Mode:  "JOIN",
 				Table: "transactions",
-				From:  "users.transaction_id",
-				To:    "transactions.id",
 			},
 		},
 	}

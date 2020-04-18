@@ -1,9 +1,5 @@
 package rel
 
-import (
-	"strings"
-)
-
 // JoinQuery defines join clause in query.
 type JoinQuery struct {
 	Mode      string
@@ -16,13 +12,6 @@ type JoinQuery struct {
 // Build query.
 func (jq JoinQuery) Build(query *Query) {
 	query.JoinQuery = append(query.JoinQuery, jq)
-}
-
-func (jq *JoinQuery) buildJoin(query Query) {
-	if jq.Arguments == nil && (jq.From == "" || jq.To == "") {
-		jq.From = query.Table + "." + strings.TrimSuffix(jq.Table, "s") + "_id"
-		jq.To = jq.Table + ".id"
-	}
 }
 
 // NewJoinWith query with custom join mode, table and field.

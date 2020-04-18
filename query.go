@@ -43,10 +43,6 @@ func Build(table string, queriers ...Querier) Query {
 		query.Table = table
 	}
 
-	for i := range query.JoinQuery {
-		query.JoinQuery[i].buildJoin(query)
-	}
-
 	return query
 }
 

@@ -274,7 +274,7 @@ To join tables, you can use `join` api.
 
 ### **Example**
 
-Join transaction and book table, then filter only transaction that have specified book name. REL can automatically infer which columns to use to join the table.
+Join transaction and book table, then filter only transaction that have specified book name. This methods assumes belongs to relation, which means it'll try to join using `transactions.book_id=books.id`.
 
 [query.go](query.go ':include :fragment=join')
 

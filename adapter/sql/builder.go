@@ -59,7 +59,7 @@ func (b *Builder) Aggregate(query rel.Query, mode string, field string) (string,
 
 func (b *Builder) query(buffer *Buffer, query rel.Query) {
 	b.from(buffer, query.Table)
-	b.join(buffer, query.JoinQuery)
+	b.join(buffer, query.Table, query.JoinQuery)
 	b.where(buffer, query.WhereQuery)
 
 	if len(query.GroupQuery.Fields) > 0 {
@@ -295,12 +295,25 @@ func (b *Builder) from(buffer *Buffer, table string) {
 	buffer.WriteString(b.config.EscapeChar)
 }
 
-func (b *Builder) join(buffer *Buffer, joins []rel.JoinQuery) {
+func (b *Builder) join(buffer *Buffer, table string, joins []rel.JoinQuery) {
 	if len(joins) == 0 {
 		return
 	}
 
 	for _, join := range joins {
+		var (
+			from = b.escape(join.From)
+			to   = b.escape(join.To)
+		)
+
+		// TODO: move this to core functionality, and infer join condition using assoc data.
+		if join.Arguments == nil && (join.From == "" || join.To == "") {
+			from = b.config.EscapeChar + table + b.config.EscapeChar +
+				"." + b.config.EscapeChar + strings.TrimSuffix(join.Table, "s") + "_id" + b.config.EscapeChar
+			to = b.config.EscapeChar + join.Table + b.config.EscapeChar +
+				"." + b.config.EscapeChar + "id" + b.config.EscapeChar
+		}
+
 		buffer.WriteByte(' ')
 		buffer.WriteString(join.Mode)
 		buffer.WriteByte(' ')
@@ -310,9 +323,9 @@ func (b *Builder) join(buffer *Buffer, joins []rel.JoinQuery) {
 			buffer.WriteString(join.Table)
 			buffer.WriteString(b.config.EscapeChar)
 			buffer.WriteString(" ON ")
-			buffer.WriteString(b.escape(join.From))
+			buffer.WriteString(from)
 			buffer.WriteString("=")
-			buffer.WriteString(b.escape(join.To))
+			buffer.WriteString(to)
 		}
 
 		buffer.Append(join.Arguments...)

@@ -10,15 +10,15 @@ REL provides two basic finders method, `Find` for retrieving single record, and 
 
 ### **Example**
 
-```go
-repo.Find(ctx, &book)
-```
+Retrieve a book where id=1.
+
+[query.go](query.go ':include :fragment=find')
 
 ### **Mock**
 
-```go
-repo.ExpectFind().Result(book)
-```
+Mock retrieve a book where id=1.
+
+[query_test.go](query_test.go ':include :fragment=find')
 
 <!-- tabs:end -->
 
@@ -28,49 +28,51 @@ repo.ExpectFind().Result(book)
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books)
-```
+Retrieve all books.
+
+[query.go](query.go ':include :fragment=find-all')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll().Result(books)
-```
+Mock retrieve all books.
+
+[query_test.go](query_test.go ':include :fragment=find-all')
 
 <!-- tabs:end -->
 
 ## Conditions
 
-To retrieve filtered recods from database, you can use filter api to specify coondition. For example, to filter all books that available, you can use `rel.Eq` in the query builder.
+To retrieve filtered recods from database, you can use filter api to specify [condition](https://pkg.go.dev/github.com/Fs02/rel/where). For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-// Retrieve all available books
-repo.FindAll(ctx, &books, rel.Eq("available", true))
+Retrieve all available books using filter query.
 
-// or use alias: github.com/Fs02/rel/where
-repo.FindAll(ctx, &books, where.Eq("available", true))
+[query.go](query.go ':include :fragment=condition')
 
-// or use raw query
-repo.FindAll(ctx, &books, where.Fragment("available=?", true))
-```
+Alias can be used to boost readability when dealing with short query.
+
+[query.go](query.go ':include :fragment=condition-alias')
+
+Use fragment to specify custom SQL query.
+
+[query.go](query.go ':include :fragment=condition-fragment')
 
 ### **Mock**
 
-```go
-// mock and returns books
-repo.ExpectFindAll(rel.Eq("available", true)).Result(book)
+Mock retrieve all available books.
 
-// with alias
-repo.ExpectFindAll(where.Eq("available", true)).Result(book)
+[query_test.go](query_test.go ':include :fragment=condition')
 
-// with raw query
-repo.ExpectFindAll(&books, where.Fragment("available=?", true)).Result(book)
-```
+Mock retrieve all using alias.
+
+[query_test.go](query_test.go ':include :fragment=condition-alias')
+
+Mock retrieve all using fragment to specify custom SQL query.
+
+[query_test.go](query_test.go ':include :fragment=condition-fragment')
 
 <!-- tabs:end -->
 
@@ -80,27 +82,33 @@ You can use `rel.And` or `rel.Or` to specify more conditions.
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
+Retrieve all available books where price is at least 100 or in discount using filter query.
 
-// or use filter chain
-repo.FindAll(ctx, rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
+[query.go](query.go ':include :fragment=condition-advanced')
 
-// or use alias: github.com/Fs02/rel/where
-repo.FindAll(ctx, where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
-```
+Retrieve all available books where price is at least 100 or in discount using chained filter query.
+
+[query.go](query.go ':include :fragment=condition-advanced-chain')
+
+Retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
+
+[query.go](query.go ':include :fragment=condition-advanced-alias')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true)))).Result(book)
 
-// or use filter chain
-repo.ExpectFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true))).Result(book)
+Mock retrieve all available books where price is at least 100 or in discount using filter query.
 
-// or use alias: github.com/Fs02/rel/where
-repo.ExpectFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true))).Result(book)
-```
+[query_test.go](query_test.go ':include :fragment=condition-advanced')
+
+Mock retrieve all available books where price is at least 100 or in discount using chained filter query.
+
+[query_test.go](query_test.go ':include :fragment=condition-advanced-chain')
+
+Mock retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
+
+[query_test.go](query_test.go ':include :fragment=condition-advanced-alias')
+
 
 <!-- tabs:end -->
 
@@ -111,45 +119,50 @@ To retrieve records from database in a specific order, you can use the sort api.
 <!-- tabs:start -->
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.NewSortAsc("updated_at"))
+Sort books ascending by updated_at field.
 
-// or use alias: github.com/Fs02/rel/sort
-repo.FindAll(ctx, &books, sort.Asc("updated_at"))
-```
+[query.go](query.go ':include :fragment=sorting')
+
+Using alias if you need more syntactic sugar.
+
+[query.go](query.go ':include :fragment=sorting-alias')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.NewSortAsc("updated_at")).Result(book)
+Mock sort books ascending by updated_at field.
 
-// or use alias: github.com/Fs02/rel/sort
-repo.ExpectFindAll(sort.Asc("updated_at")).Result(book)
-```
+[query_test.go](query_test.go ':include :fragment=sorting')
+
+Mock sort using alias.
+
+[query_test.go](query_test.go ':include :fragment=sorting-alias')
 
 <!-- tabs:end -->
 
-You can also chain sort with other query.
+Combining with other query is fairly easy.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Where(where.Eq("available", true).SortAsc("updated_at")))
+Chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
 
-// which is equal to:
-repo.FindAll(ctx, &books, where.Eq("available", true), sort.Asc("updated_at"))
-```
+[query.go](query.go ':include :fragment=sorting-with-condition')
+
+It's also possible to use variadic arguments to combine multiple queries.
+
+[query.go](query.go ':include :fragment=sorting-with-condition-variadic')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Where(where.Eq("available", true).SortAsc("updated_at"))).Result(books)
+Mock chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
 
-// which is equal to:
-repo.ExpectFindAll(where.Eq("available", true), sort.Asc("updated_at")).Result(books)
-```
+[query_test.go](query_test.go ':include :fragment=sorting-with-condition')
+
+Mock query that uses variadic arguments to combine multiple queries.
+
+[query_test.go](query_test.go ':include :fragment=sorting-with-condition-variadic')
+
 
 <!-- tabs:end -->
 
@@ -157,19 +170,21 @@ repo.ExpectFindAll(where.Eq("available", true), sort.Asc("updated_at")).Result(b
 
 To select specific fields, you can use `Select` method, this way only specificied field will be mapped to books.
 
+?> Specifying select without argument (`rel.Select()`) will automatically load all fields. This is helpful when used as query builder entry point (compared to using `rel.From`), because you can let REL to infer the table name.
+
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Select("id", "title"))
-```
+Load only id and title.
+
+[query.go](query.go ':include :fragment=select')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
-```
+Mock find all to load only id and title.
+
+[query_test.go](query_test.go ':include :fragment=select')
 
 <!-- tabs:end -->
 
@@ -181,21 +196,23 @@ By default, REL will use pluralized-snakecase struct name as the table name. To 
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.From("ebooks"))
+Load from `ebooks` table.
 
-// chain it with select
-repo.FindAll(ctx, &books, rel.Select("id", "title").From("ebooks"))
-```
+[query.go](query.go ':include :fragment=table')
+
+Chain the query with select.
+
+[query.go](query.go ':include :fragment=table-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.From("ebooks")).Result(books)
+Mock load from `ebooks` table.
 
-// chain it with select
-repo.ExpectFindAll(rel.Select("id", "title").From("ebooks")).Result(books)
-```
+[query_test.go](query_test.go ':include :fragment=table')
+
+Mock chain the query with select.
+
+[query_test.go](query_test.go ':include :fragment=table-chained')
 
 <!-- tabs:end -->
 
@@ -207,21 +224,23 @@ To set the limit and offset of query, use `Limit` and `Offset` api. `Offset` wil
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Limit(10), rel.Offset(20))
+Specify limit and offset.
 
-// as chainable query.
-repo.FindAll(ctx, &books, rel.Select().Limit(10).Offset(20))
-```
+[query.go](query.go ':include :fragment=limit-offset')
+
+As a chainable api.
+
+[query.go](query.go ':include :fragment=limit-offset-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Limit(10), rel.Offset(20)).Result(books)
+Mock limit and offset.
 
-// as chainable query.
-repo.ExpectFindAll(rel.Select().Limit(10).Offset(20)).Result(books)
-```
+[query_test.go](query_test.go ':include :fragment=limit-offset')
+
+Mock using chainable api.
+
+[query_test.go](query_test.go ':include :fragment=limit-offset-chained')
 
 <!-- tabs:end -->
 
@@ -233,22 +252,15 @@ To use group by query, you can use `Group` method.
 
 ### **Example**
 
-```go
-// custom struct to store the result.
-var results []struct {
-    Category string
-    Count    int
-}
+Retrieve count of books for every category.
 
-// we need to explicitly specify table name since we are using an anonymous struct. 
-repo.FindAll(ctx, &results, rel.Select("category", "COUNT(id) as id").From("books").Group("category"))
-```
+[query.go](query.go ':include :fragment=group')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group("category")).Result(results)
-```
+Mock retrieve count of books for every category.
+
+[query_test.go](query_test.go ':include :fragment=group')
 
 <!-- tabs:end -->
 
@@ -256,37 +268,53 @@ repo.ExpectFindAll(rel.Select("category", "COUNT(id) as id").From("books").Group
 
 To join tables, you can use `join` api.
 
-> Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
+?> Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Join("users"))
-// or with explicit columns
-repo.FindAll(ctx, &books, rel.JoinOn("users", "addresses.users_id", "users.id"))
-// or use alias: github.com/Fs02/rel/join
-repo.FindAll(ctx, &books, join.On("users", "addresses.users_id", "users.id"))
-// or with custom join mode.
-repo.FindAll(ctx, &books, rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id"))
-// or with raw sql
-repo.FindAll(ctx, &books, rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"))
-```
+Join transaction and book table, then filter only transaction that have specified book name. This methods assumes belongs to relation, which means it'll try to join using `transactions.book_id=books.id`.
+
+[query.go](query.go ':include :fragment=join')
+
+Specifying which column to join using JoinOn.
+
+[query.go](query.go ':include :fragment=join-on')
+
+Syntactic sugar also available for join.
+
+[query.go](query.go ':include :fragment=join-alias')
+
+Joining table with custom join mode.
+
+[query.go](query.go ':include :fragment=join-with')
+
+Use fragment for more complex join query.
+
+[query.go](query.go ':include :fragment=join-fragment')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Join("users")).Result(books)
-// or with explicit columns
-repo.ExpectFindAll(rel.JoinOn("users", "addresses.users_id", "users.id")).Result(books)
-// or use alias: github.com/Fs02/rel/join
-repo.ExpectFindAll(join.On("users", "addresses.users_id", "users.id")).Result(books)
-// or with custom join mode.
-repo.ExpectFindAll(rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id")).Result(books)
-// or with raw sql
-repo.ExpectFindAll(rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`")).Result(books)
-```
+Mock join transaction and book table, then filter only transaction that have specified book name.
+
+[query_test.go](query_test.go ':include :fragment=join')
+
+Specifying which column to join using JoinOn.
+
+[query_test.go](query_test.go ':include :fragment=join-on')
+
+Syntactic sugar also available for join.
+
+[query_test.go](query_test.go ':include :fragment=join-alias')
+
+Joining table with custom join mode.
+
+[query_test.go](query_test.go ':include :fragment=join-with')
+
+Use fragment for more complex join query.
+
+[query_test.go](query_test.go ':include :fragment=join-fragment')
 
 <!-- tabs:end -->
 
@@ -298,23 +326,31 @@ REL supports pessimistic locking by using mechanism provided by the underlying d
 
 ### **Example**
 
-```go
-repo.Find(ctx, &book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
-// or
-repo.Find(ctx, &book, where.Eq("id", 1), rel.ForUpdate())
-// or
-repo.Find(ctx, &book, query.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
-```
+Retrieve and lock a row for update.
+
+[query.go](query.go ':include :fragment=lock')
+
+Retrieve and lock a row using predefined lock alias.
+
+[query.go](query.go ':include :fragment=lock-for-update')
+
+Retrieve and lock a row using chained query.
+
+[query.go](query.go ':include :fragment=lock-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFind(where.Eq("id", 1), rel.Lock("FOR UPDATE")).Result(book)
-// or
-repo.ExpectFind(where.Eq("id", 1), rel.ForUpdate()).Result(book)
-// or
-repo.ExpectFind(query.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
-```
+Mock retrieve and lock a row for update.
+
+[query_test.go](query_test.go ':include :fragment=lock')
+
+Mock retrieve and lock a row using predefined lock alias.
+
+[query_test.go](query_test.go ':include :fragment=lock-for-update')
+
+Mock retrieve and lock a row using chained query.
+
+[query_test.go](query_test.go ':include :fragment=lock-chained')
 
 <!-- tabs:end -->
 
@@ -326,23 +362,31 @@ REL provides a very basic `Aggregate` method which can be used to count, sum, ma
 
 ### **Example**
 
-```go
-count, err = repo.Aggregate(ctx, rel.From("books").Where(where.Eq("available", true)), "count", "id")
-// or
-count, err = repo.Count(ctx, "books", where.Eq("available", true))
-// or just count all books.
-count, err = repo.Count(ctx, "books")
-```
+Count all available books using aggregate.
+
+[query.go](query.go ':include :fragment=aggregate')
+
+Count all available books using count.
+
+[query.go](query.go ':include :fragment=count')
+
+Count all available books using count.
+
+[query.go](query.go ':include :fragment=count-with-condition')
 
 ### **Mock**
 
-```go
-repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
-// or
-repo.ExpectCount("books", where.Eq("available", true)).Result(5)
-// or just count all books.
-repo.ExpectCount("books").Result(7)
-```
+Mock count all available books using aggregate.
+
+[query_test.go](query_test.go ':include :fragment=aggregate')
+
+Mock count all available books using count.
+
+[query_test.go](query_test.go ':include :fragment=count')
+
+Mock count all available books using count.
+
+[query_test.go](query_test.go ':include :fragment=count-with-condition')
 
 <!-- tabs:end -->
 
@@ -355,17 +399,15 @@ FindAndCountAll returns count of records (ignoring limit and offset query) and a
 
 ### **Example**
 
-```go
-// Find and count total books in database.
-count, err = repo.FindAndCountAll(ctx, &books, rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10))
-```
+Retrieve all books within limit and offset and also count of all books.
+
+[query.go](query.go ':include :fragment=find-and-count-all')
 
 ### **Mock**
 
-```go
-// Expect count to returns books and with total count of 12.
-repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10)).Result(books, 12)
-```
+Mock retrieve all books within limit and offset and also count of all books.
+
+[query_test.go](query_test.go ':include :fragment=find-and-count-all')
 
 <!-- tabs:end -->
 

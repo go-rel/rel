@@ -616,20 +616,24 @@ func TestBuilder_Join(t *testing.T) {
 	}{
 		{
 			"",
-			rel.From("trxs"),
+			rel.From("transactions"),
 		},
 		{
-			" JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			rel.From("trxs").JoinOn("users", "user.id", "trxs.user_id"),
+			" JOIN `users` ON `transactions`.`user_id`=`users`.`id`",
+			rel.From("transactions").Join("users"),
 		},
 		{
-			" INNER JOIN `users` ON `user`.`id`=`trxs`.`user_id`",
-			rel.From("trxs").JoinWith("INNER JOIN", "users", "user.id", "trxs.user_id"),
+			" JOIN `users` ON `users`.`id`=`transactions`.`user_id`",
+			rel.From("transactions").JoinOn("users", "users.id", "transactions.user_id"),
 		},
 		{
-			" JOIN `users` ON `user`.`id`=`trxs`.`user_id` JOIN `payments` ON `payments`.`id`=`trxs`.`payment_id`",
-			rel.From("trxs").JoinOn("users", "user.id", "trxs.user_id").
-				JoinOn("payments", "payments.id", "trxs.payment_id"),
+			" INNER JOIN `users` ON `users`.`id`=`transactions`.`user_id`",
+			rel.From("transactions").JoinWith("INNER JOIN", "users", "users.id", "transactions.user_id"),
+		},
+		{
+			" JOIN `users` ON `users`.`id`=`transactions`.`user_id` JOIN `payments` ON `payments`.`id`=`transactions`.`payment_id`",
+			rel.From("transactions").JoinOn("users", "users.id", "transactions.user_id").
+				JoinOn("payments", "payments.id", "transactions.payment_id"),
 		},
 	}
 
@@ -640,7 +644,7 @@ func TestBuilder_Join(t *testing.T) {
 				builder = NewBuilder(config)
 			)
 
-			builder.join(&buffer, rel.Build("", test.Query).JoinQuery)
+			builder.join(&buffer, "transactions", rel.Build("", test.Query).JoinQuery)
 
 			assert.Equal(t, test.QueryString, buffer.String())
 			assert.Nil(t, buffer.Arguments)

@@ -96,8 +96,6 @@ func TestQuerier(t *testing.T) {
 					{
 						Mode:  "JOIN",
 						Table: "users",
-						From:  "transactions.user_id",
-						To:    "users.id",
 					},
 				},
 				GroupQuery: rel.GroupQuery{
@@ -169,8 +167,6 @@ func TestQuery_Join(t *testing.T) {
 			{
 				Mode:  "JOIN",
 				Table: "transactions",
-				From:  "users.transaction_id",
-				To:    "transactions.id",
 			},
 		},
 	}
@@ -328,14 +324,6 @@ func TestQuery_OrWhere(t *testing.T) {
 			},
 		},
 		{
-			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (where package)`,
-			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
-			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
-			},
-		},
-		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (chained where package)`,
 			rel.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
 			rel.Query{
@@ -389,29 +377,7 @@ func TestQuery_Having(t *testing.T) {
 			},
 		},
 		{
-			`id=1 AND deleted_at IS NIL`,
-			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")),
-			rel.Query{
-				Table: "users",
-				GroupQuery: rel.GroupQuery{
-					Fields: []string{"active", "plan"},
-					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
-				},
-			},
-		},
-		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
-			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
-			rel.Query{
-				Table: "users",
-				GroupQuery: rel.GroupQuery{
-					Fields: []string{"active", "plan"},
-					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
-				},
-			},
-		},
-		{
-			`id=1 AND deleted_at IS NIL AND active<>false (where package)`,
 			rel.From("users").Group("active", "plan").Having(where.Eq("id", 1), where.Nil("deleted_at")).Having(where.Ne("active", false)),
 			rel.Query{
 				Table: "users",

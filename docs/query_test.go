@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/join"
 	"github.com/Fs02/rel/reltest"
 	"github.com/Fs02/rel/sort"
 	"github.com/Fs02/rel/where"
@@ -319,6 +320,91 @@ func TestGroup(t *testing.T) {
 	/// [group]
 
 	assert.Nil(t, Group(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestJoin(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [join]
+	transactions := []Transaction{
+		{ID: 1, Status: "paid"},
+	}
+	repo.ExpectFindAll(rel.Join("books").Where(where.Eq("books.name", "REL for Dummies"))).Result(transactions)
+	/// [join]
+
+	assert.Nil(t, Join(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestJoinOn(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [join-on]
+	transactions := []Transaction{
+		{ID: 1, Status: "paid"},
+	}
+	repo.ExpectFindAll(rel.JoinOn("books", "transactions.book_id", "books.id")).Result(transactions)
+	/// [join-on]
+
+	assert.Nil(t, JoinOn(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestJoinAlias(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [join-alias]
+	transactions := []Transaction{
+		{ID: 1, Status: "paid"},
+	}
+	repo.ExpectFindAll(join.On("books", "transactions.book_id", "books.id")).Result(transactions)
+	/// [join-alias]
+
+	assert.Nil(t, JoinAlias(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestJoinWith(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [join-with]
+	transactions := []Transaction{
+		{ID: 1, Status: "paid"},
+	}
+	repo.ExpectFindAll(rel.JoinWith("LEFT JOIN", "books", "transactions.book_id", "books.id")).Result(transactions)
+	/// [join-with]
+
+	assert.Nil(t, JoinWith(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestJoinFragment(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [join-fragment]
+	transactions := []Transaction{
+		{ID: 1, Status: "paid"},
+	}
+	repo.ExpectFindAll(rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`")).Result(transactions)
+	/// [join-fragment]
+
+	assert.Nil(t, JoinFragment(ctx, repo))
 	repo.AssertExpectations(t)
 }
 

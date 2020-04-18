@@ -274,31 +274,47 @@ To join tables, you can use `join` api.
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, rel.Join("users"))
-// or with explicit columns
-repo.FindAll(ctx, &books, rel.JoinOn("users", "addresses.users_id", "users.id"))
-// or use alias: github.com/Fs02/rel/join
-repo.FindAll(ctx, &books, join.On("users", "addresses.users_id", "users.id"))
-// or with custom join mode.
-repo.FindAll(ctx, &books, rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id"))
-// or with raw sql
-repo.FindAll(ctx, &books, rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`"))
-```
+Join transaction and book table, then filter only transaction that have specified book name. REL can automatically infer which columns to use to join the table.
+
+[query.go](query.go ':include :fragment=join')
+
+Specifying which column to join using JoinOn.
+
+[query.go](query.go ':include :fragment=join-on')
+
+Syntactic sugar also available for join.
+
+[query.go](query.go ':include :fragment=join-alias')
+
+Joining table with custom join mode.
+
+[query.go](query.go ':include :fragment=join-with')
+
+Use fragment for more complex join query.
+
+[query.go](query.go ':include :fragment=join-fragment')
 
 ### **Mock**
 
-```go
-repo.ExpectFindAll(rel.Join("users")).Result(books)
-// or with explicit columns
-repo.ExpectFindAll(rel.JoinOn("users", "addresses.users_id", "users.id")).Result(books)
-// or use alias: github.com/Fs02/rel/join
-repo.ExpectFindAll(join.On("users", "addresses.users_id", "users.id")).Result(books)
-// or with custom join mode.
-repo.ExpectFindAll(rel.JoinWith("LEFT JOIN", "users", "addresses.users_id", "users.id")).Result(books)
-// or with raw sql
-repo.ExpectFindAll(rel.Joinf("JOIN `users` ON `addresses`.`user_id`=`users`.`id`")).Result(books)
-```
+Mock join transaction and book table, then filter only transaction that have specified book name.
+
+[query_test.go](query_test.go ':include :fragment=join')
+
+Specifying which column to join using JoinOn.
+
+[query_test.go](query_test.go ':include :fragment=join-on')
+
+Syntactic sugar also available for join.
+
+[query_test.go](query_test.go ':include :fragment=join-alias')
+
+Joining table with custom join mode.
+
+[query_test.go](query_test.go ':include :fragment=join-with')
+
+Use fragment for more complex join query.
+
+[query_test.go](query_test.go ':include :fragment=join-fragment')
 
 <!-- tabs:end -->
 

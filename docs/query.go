@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/join"
 	"github.com/Fs02/rel/sort"
 	"github.com/Fs02/rel/where"
 )
@@ -191,6 +192,56 @@ func Group(ctx context.Context, repo rel.Repository) error {
 	// we need to explicitly specify table name since we are using an anonymous struct.
 	err := repo.FindAll(ctx, &results, rel.Select("category", "COUNT(id) as total").From("books").Group("category"))
 	/// [group]
+
+	return err
+}
+
+// Join docs example.
+func Join(ctx context.Context, repo rel.Repository) error {
+	/// [join]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, rel.Join("books").Where(where.Eq("books.name", "REL for Dummies")))
+	/// [join]
+
+	return err
+}
+
+// JoinOn docs example.
+func JoinOn(ctx context.Context, repo rel.Repository) error {
+	/// [join-on]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, rel.JoinOn("books", "transactions.book_id", "books.id"))
+	/// [join-on]
+
+	return err
+}
+
+// JoinAlias docs example.
+func JoinAlias(ctx context.Context, repo rel.Repository) error {
+	/// [join-alias]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, join.On("books", "transactions.book_id", "books.id"))
+	/// [join-alias]
+
+	return err
+}
+
+// JoinWith docs example.
+func JoinWith(ctx context.Context, repo rel.Repository) error {
+	/// [join-with]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, rel.JoinWith("LEFT JOIN", "books", "transactions.book_id", "books.id"))
+	/// [join-with]
+
+	return err
+}
+
+// JoinFragment docs example.
+func JoinFragment(ctx context.Context, repo rel.Repository) error {
+	/// [join-fragment]
+	var transactions []Transaction
+	err := repo.FindAll(ctx, &transactions, rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`"))
+	/// [join-fragment]
 
 	return err
 }

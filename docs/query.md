@@ -326,23 +326,31 @@ REL supports pessimistic locking by using mechanism provided by the underlying d
 
 ### **Example**
 
-```go
-repo.Find(ctx, &book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
-// or
-repo.Find(ctx, &book, where.Eq("id", 1), rel.ForUpdate())
-// or
-repo.Find(ctx, &book, query.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
-```
+Retrieve and lock a row for update.
+
+[query.go](query.go ':include :fragment=lock')
+
+Retrieve and lock a row using predefined lock alias.
+
+[query.go](query.go ':include :fragment=lock-for-update')
+
+Retrieve and lock a row using chained query.
+
+[query.go](query.go ':include :fragment=lock-chained')
 
 ### **Mock**
 
-```go
-repo.ExpectFind(where.Eq("id", 1), rel.Lock("FOR UPDATE")).Result(book)
-// or
-repo.ExpectFind(where.Eq("id", 1), rel.ForUpdate()).Result(book)
-// or
-repo.ExpectFind(query.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
-```
+Mock retrieve and lock a row for update.
+
+[query_test.go](query_test.go ':include :fragment=lock')
+
+Mock retrieve and lock a row using predefined lock alias.
+
+[query_test.go](query_test.go ':include :fragment=lock-for-update')
+
+Mock retrieve and lock a row using chained query.
+
+[query_test.go](query_test.go ':include :fragment=lock-chained')
 
 <!-- tabs:end -->
 

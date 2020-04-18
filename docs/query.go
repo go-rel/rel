@@ -236,6 +236,36 @@ func JoinWith(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// Lock docs example.
+func Lock(ctx context.Context, repo rel.Repository) error {
+	/// [lock]
+	var book Book
+	err := repo.Find(ctx, &book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
+	/// [lock]
+
+	return err
+}
+
+// LockForUpdate docs example.
+func LockForUpdate(ctx context.Context, repo rel.Repository) error {
+	/// [lock-for-update]
+	var book Book
+	err := repo.Find(ctx, &book, where.Eq("id", 1), rel.ForUpdate())
+	/// [lock-for-update]
+
+	return err
+}
+
+// LockChained docs example.
+func LockChained(ctx context.Context, repo rel.Repository) error {
+	/// [lock-chained]
+	var book Book
+	err := repo.Find(ctx, &book, rel.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
+	/// [lock-chained]
+
+	return err
+}
+
 // JoinFragment docs example.
 func JoinFragment(ctx context.Context, repo rel.Repository) error {
 	/// [join-fragment]

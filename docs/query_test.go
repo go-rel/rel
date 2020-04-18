@@ -408,6 +408,51 @@ func TestJoinFragment(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestLock(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [lock]
+	var book Book
+	repo.ExpectFind(where.Eq("id", 1), rel.Lock("FOR UPDATE")).Result(book)
+	/// [lock]
+
+	assert.Nil(t, Lock(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestLockForUpdate(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [lock-for-update]
+	var book Book
+	repo.ExpectFind(where.Eq("id", 1), rel.ForUpdate()).Result(book)
+	/// [lock-for-update]
+
+	assert.Nil(t, LockForUpdate(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestLockChained(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [lock-chained]
+	var book Book
+	repo.ExpectFind(rel.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
+	/// [lock-chained]
+
+	assert.Nil(t, LockChained(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()

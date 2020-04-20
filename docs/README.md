@@ -41,7 +41,7 @@ type userRepository struct {
 	db *DB
 }
 
-func (ur userRepository) Find(user *User, int id) error {
+func (ur userRepository) Find(user *User, id int) error {
 	return db.Where("id = ?", 1).First(&user)
 }
 ```

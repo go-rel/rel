@@ -25,6 +25,23 @@ func TestCrudInsert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestCrudInsert_for(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [insert-for]
+	repo.ExpectInsert().For(&Book{
+		Title:    "Rel for dummies",
+		Category: "education",
+	})
+	/// [insert-for]
+
+	assert.Nil(t, CrudInsert(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestCrudInsert_forType(t *testing.T) {
 	var (
 		ctx  = context.TODO()
@@ -34,23 +51,6 @@ func TestCrudInsert_forType(t *testing.T) {
 	/// [insert-for-type]
 	repo.ExpectInsert().ForType("main.Book")
 	/// [insert-for-type]
-
-	assert.Nil(t, CrudInsert(ctx, repo))
-	repo.AssertExpectations(t)
-}
-
-func TestCrudInsert_specific(t *testing.T) {
-	var (
-		ctx  = context.TODO()
-		repo = reltest.New()
-	)
-
-	/// [insert-specific]
-	repo.ExpectInsert().For(&Book{
-		Title:    "Rel for dummies",
-		Category: "education",
-	})
-	/// [insert-specific]
 
 	assert.Nil(t, CrudInsert(ctx, repo))
 	repo.AssertExpectations(t)
@@ -111,7 +111,7 @@ func TestCrudInsertAll(t *testing.T) {
 	)
 
 	/// [insert-all]
-	repo.ExpectInsertAll()
+	repo.ExpectInsertAll().ForType("[]main.Book")
 	/// [insert-all]
 
 	assert.Nil(t, CrudInsertAll(ctx, repo))

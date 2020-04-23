@@ -106,11 +106,11 @@ func CrudFindAll(ctx context.Context, repo rel.Repository) error {
 
 // CrudFindAllChained docs example.
 func CrudFindAllChained(ctx context.Context, repo rel.Repository) error {
-	/// [find-all]
+	/// [find-all-chained]
 	var books []Book
 	query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
 	err := repo.FindAll(ctx, &books, query)
-	/// [find-all]
+	/// [find-all-chained]
 
 	return err
 }
@@ -151,9 +151,9 @@ func CrudDelete(ctx context.Context, repo rel.Repository) error {
 
 // CrudDeleteAll docs example.
 func CrudDeleteAll(ctx context.Context, repo rel.Repository) error {
-	/// [delete]
+	/// [delete-all]
 	err := repo.DeleteAll(ctx, rel.From("books").Where(where.Eq("id", 1)))
-	/// [delete]
+	/// [delete-all]
 
 	return err
 }

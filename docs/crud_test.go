@@ -196,3 +196,60 @@ func TestCrudFindAllChained(t *testing.T) {
 	assert.Nil(t, CrudFindAllChained(ctx, repo))
 	repo.AssertExpectations(t)
 }
+
+func TestCrudUpdate(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [update]
+	repo.ExpectUpdate().ForType("main.Book")
+	/// [update]
+
+	assert.Nil(t, CrudUpdate(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestCrudUpdateDec(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [update-dec]
+	repo.ExpectUpdate(rel.Dec("stock")).ForType("main.Book")
+	/// [update-dec]
+
+	assert.Nil(t, CrudUpdateDec(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestCrudDelete(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+		book Book
+	)
+
+	/// [delete]
+	repo.ExpectDelete().For(&book)
+	/// [delete]
+
+	assert.Nil(t, CrudDelete(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
+func TestCrudDeleteAll(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [delete-all]
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	/// [delete-all]
+
+	assert.Nil(t, CrudDeleteAll(ctx, repo))
+	repo.AssertExpectations(t)
+}

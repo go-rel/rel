@@ -114,3 +114,46 @@ func CrudFindAllChained(ctx context.Context, repo rel.Repository) error {
 
 	return err
 }
+
+// CrudUpdate docs example.
+func CrudUpdate(ctx context.Context, repo rel.Repository) error {
+	var book Book
+
+	/// [update]
+	book.Title = "REL for dummies"
+	err := repo.Update(ctx, &book)
+	/// [update]
+
+	return err
+}
+
+// CrudUpdateDec docs example.
+func CrudUpdateDec(ctx context.Context, repo rel.Repository) error {
+	var book Book
+
+	/// [update-dec]
+	err := repo.Update(ctx, &book, rel.Dec("stock"))
+	/// [update-dec]
+
+	return err
+}
+
+// CrudDelete docs example.
+func CrudDelete(ctx context.Context, repo rel.Repository) error {
+	var book Book
+
+	/// [delete]
+	err := repo.Delete(ctx, &book)
+	/// [delete]
+
+	return err
+}
+
+// CrudDeleteAll docs example.
+func CrudDeleteAll(ctx context.Context, repo rel.Repository) error {
+	/// [delete]
+	err := repo.DeleteAll(ctx, rel.From("books").Where(where.Eq("id", 1)))
+	/// [delete]
+
+	return err
+}

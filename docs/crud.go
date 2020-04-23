@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 )
 
-// Insert docs example.
-func Insert(ctx context.Context, repo rel.Repository) error {
+// CrudInsert docs example.
+func CrudInsert(ctx context.Context, repo rel.Repository) error {
 	/// [insert]
 	book := Book{
 		Title:    "Rel for dummies",
@@ -21,8 +22,8 @@ func Insert(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// InsertMap docs example.
-func InsertMap(ctx context.Context, repo rel.Repository) error {
+// CrudInsertMap docs example.
+func CrudInsertMap(ctx context.Context, repo rel.Repository) error {
 	/// [insert-map]
 	var book Book
 	data := rel.Map{
@@ -37,8 +38,8 @@ func InsertMap(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// InsertSet docs example.
-func InsertSet(ctx context.Context, repo rel.Repository) error {
+// CrudInsertSet docs example.
+func CrudInsertSet(ctx context.Context, repo rel.Repository) error {
 	/// [insert-set]
 	var book Book
 	err := repo.Insert(ctx, &book,
@@ -50,8 +51,8 @@ func InsertSet(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// InsertAll docs example.
-func InsertAll(ctx context.Context, repo rel.Repository) error {
+// CrudInsertAll docs example.
+func CrudInsertAll(ctx context.Context, repo rel.Repository) error {
 	/// [insert-all]
 	books := []Book{
 		{
@@ -66,6 +67,50 @@ func InsertAll(ctx context.Context, repo rel.Repository) error {
 
 	err := repo.InsertAll(ctx, &books)
 	/// [insert-all]
+
+	return err
+}
+
+// CrudFind docs example.
+func CrudFind(ctx context.Context, repo rel.Repository) error {
+	/// [find]
+	var book Book
+	err := repo.Find(ctx, &book, rel.Eq("id", 1))
+	/// [find]
+
+	return err
+}
+
+// CrudFindAlias docs example.
+func CrudFindAlias(ctx context.Context, repo rel.Repository) error {
+	/// [find-alias]
+	var book Book
+	err := repo.Find(ctx, &book, where.Eq("id", 1))
+	/// [find-alias]
+
+	return err
+}
+
+// CrudFindAll docs example.
+func CrudFindAll(ctx context.Context, repo rel.Repository) error {
+	/// [find-all]
+	var books []Book
+	err := repo.FindAll(ctx, &books,
+		where.Like("title", "%dummies%").AndEq("category", "education"),
+		rel.Limit(10),
+	)
+	/// [find-all]
+
+	return err
+}
+
+// CrudFindAllChained docs example.
+func CrudFindAllChained(ctx context.Context, repo rel.Repository) error {
+	/// [find-all]
+	var books []Book
+	query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
+	err := repo.FindAll(ctx, &books, query)
+	/// [find-all]
 
 	return err
 }

@@ -8,41 +8,27 @@ A new record can be inserted to database using a struct, map or set function. To
 
 ### **Example**
 
-```go
-book := Book{
-    Title:    "Rel for dummies",
-    Category: "education",
-}
-
-// Insert directly using struct.
-if err := repo.Insert(ctx, &book); err != nil {
-    // handle error
-}
-```
+[crud.go](crud.go ':include :fragment=insert')
 
 ### **Mock**
 
 > reltest.Repository will automatically sets any primary key value to be 1.
 
-```go
-// Expect any insert called.
-repo.ExpectInsert()
+Expect any insert called.
 
-// OR: Expect insertion for a specific type.
-repo.ExpectInsert().ForType("main.Book")
+[crud_test.go](crud_test.go ':include :fragment=insert')
 
-// OR: Expect insertion for a specific record.
-repo.ExpectInsert().For(&Book{
-    Title:    "Rel for dummies",
-    Category: "education",
-})
+Expect insertion only for a specific record.
 
-// OR: Expect it to return an error.
-repo.ExpectInsert().ForType("main.Book").Error(errors.New("oops!"))
+[crud_test.go](crud_test.go ':include :fragment=insert-for')
 
-// Assert all expectation is called.
-repo.AssertExpectations(t)
-```
+Expect insertion only for a specific type.
+
+[crud_test.go](crud_test.go ':include :fragment=insert-for-type')
+
+Expect insertion to to return an error.
+
+[crud_test.go](crud_test.go ':include :fragment=insert-error')
 
 <!-- tabs:end -->
 
@@ -52,28 +38,13 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 ### **Example**
 
-```go
-var book Book
-data := rel.Map{
-    "title":    "Rel for dummies",
-    "category": "education",
-}
-
-// Insert using map.
-repo.Insert(ctx, &book, data)
-```
+[crud.go](crud.go ':include :fragment=insert-map')
 
 ### **Mock**
 
 > reltest.Repository will automatically populate record using value provided by map.
 
-```go
-// Expect insertion with given modifier.
-repo.ExpectInsert(rel.Map{
-    "title":    "Rel for dummies",
-    "category": "education",
-}).ForType("main.Book")
-```
+[crud_test.go](crud_test.go ':include :fragment=insert-map')
 
 <!-- tabs:end -->
 
@@ -83,20 +54,11 @@ It's also possible to insert a new record manually using `rel.Set`, which is a v
 
 ### **Example**
 
-```go
-// Insert using set.
-repo.Insert(ctx, &book, rel.Set("title", "Rel for dummies"), rel.Set("category", "education"))
-```
+[crud.go](crud.go ':include :fragment=insert-set')
 
 ### **Mock**
 
-```go
-// Expect insertion with given modifier.
-repo.ExpectInsert(
-    rel.Set("title", "Rel for dummies"),
-    rel.Set("category", "education"),
-).ForType("main.Book")
-```
+[crud_test.go](crud_test.go ':include :fragment=insert-set')
 
 <!-- tabs:end -->
 
@@ -107,17 +69,12 @@ To inserts multiple records at once, use `InsertAll`.
 
 ### **Example**
 
-```go
-// InsertAll books.
-repo.InsertAll(ctx, &books)
-```
+[crud.go](crud.go ':include :fragment=insert-all')
 
 ### **Mock**
 
-```go
-// Expect any insert all.
-repo.ExpectInsertAll()
-```
+[crud_test.go](crud_test.go ':include :fragment=insert-all')
+
 
 <!-- tabs:end -->
 
@@ -131,23 +88,24 @@ REL provides a powerful API for querying record from database. To query a single
 
 ### **Example**
 
-```go
-// Retrieve a book with id 1
-repo.Find(ctx, &book, rel.Eq("id", 1))
+Retrieve a book with id 1.
 
-// OR: with sugar alias
-repo.Find(ctx, &book, where.Eq("id", 1))
-```
+[crud.go](crud.go ':include :fragment=find')
+
+Retrieve a book with iid 1 using syntactic sugar.
+
+[crud.go](crud.go ':include :fragment=find-alias')
+
 
 ### **Mock**
 
-```go
-// Expect a find query and mock the result.
-repo.ExpectFind(rel.Eq("id", 1)).Result(book)
+Mock retrieve a book with id 1.
 
-// OR: Expect a find query and returns rel.NotFoundError
-repo.ExpectFind(where.Eq("id", 1)).NotFound()
-```
+[crud_test.go](crud_test.go ':include :fragment=find')
+
+Mock retrieve a book with id 1 using syntactic sugar and returns error.
+
+[crud_test.go](crud_test.go ':include :fragment=find-alias-error')
 
 <!-- tabs:end -->
 
@@ -158,16 +116,12 @@ To query multiple records, use `FindAll` method.
 
 ### **Example**
 
-```go
-repo.FindAll(ctx, &books, where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))
-```
+[crud.go](crud.go ':include :fragment=find-all')
+
 
 ### **Mock**
 
-```go
-// Expect a find all query and mock the result.
-repo.ExpectFindAll(where.Like("title", "%dummies%").AndEq("category", "education"), rel.Limit(10))).Result(books)
-```
+[crud_test.go](crud_test.go ':include :fragment=find-all')
 
 <!-- tabs:end -->
 
@@ -178,18 +132,11 @@ REL also support chainable query api for a more complex query use case.
 
 ### **Example**
 
-```go
-query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
-repo.FindAll(ctx, &books, query)
-```
+[crud.go](crud.go ':include :fragment=find-all-chained')
 
 ### **Mock**
 
-```go
-// Expect a find all query and mock the result.
-query := rel.Select("title", "category").Where(where.Eq("category", "education")).SortAsc("title")
-repo.ExpectFindAll(query).Result(books)
-```
+[crud_test.go](crud_test.go ':include :fragment=find-all-chained')
 
 <!-- tabs:end -->
 
@@ -197,43 +144,31 @@ repo.ExpectFindAll(query).Result(books)
 
 Similar to create, updating a record in REL can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
 
-> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map`, `rel.Set` or `rel.Structset` to update only specified fields.
+> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specific fields.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-// Update directly using struct.
-repo.Update(ctx, &book)
-```
+[crud.go](crud.go ':include :fragment=update')
 
 ### **Mock**
 
-```go
-// Expect any update is called.
-repo.ExpectUpdate()
-```
+[crud_test.go](crud_test.go ':include :fragment=update')
 
 <!-- tabs:end -->
 
-Besides struct, map and set function. There's also increment and decrement modifier to atomically increment/decrement any value in database.
+Besides `rel.Map` and `rel.Set` modifier. There's also increment and decrement modifier to atomically increment/decrement any value in database.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-// Update directly using struct.
-repo.Update(ctx, &book, rel.Inc("views"))
-```
+[crud.go](crud.go ':include :fragment=update-dec')
 
 ### **Mock**
 
-```go
-// Expect any update is called.
-repo.ExpectUpdate(rel.Inc("views"))
-```
+[crud_test.go](crud_test.go ':include :fragment=update-dec')
 
 <!-- tabs:end -->
 
@@ -241,23 +176,17 @@ repo.ExpectUpdate(rel.Inc("views"))
 
 To delete a record in rel, simply pass the record to be deleted.
 
-> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, append `rel.Unscoped(true)` when querying.
+> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, use `rel.Unscoped(true)` when querying.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-// Delete a record.
-repo.Delete(ctx, &book)
-```
+[crud.go](crud.go ':include :fragment=delete')
 
 ### **Mock**
 
-```go
-// Expect book to be deleted.
-repo.ExpectDelete().For(&book)
-```
+[crud_test.go](crud_test.go ':include :fragment=delete')
 
 <!-- tabs:end -->
 
@@ -268,17 +197,11 @@ Deleting multiple records is possible using `DeleteAll`.
 
 ### **Example**
 
-```go
-// We have manually define the table here.
-repo.DeleteAll(ctx, rel.From("books").Where(where.Eq("id", 1)))
-```
+[crud.go](crud.go ':include :fragment=delete-all')
 
 ### **Mock**
 
-```go
-// Expect books to be deleted.
-repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
-```
+[crud_test.go](crud_test.go ':include :fragment=delete-all')
 
 <!-- tabs:end -->
 

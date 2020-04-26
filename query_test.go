@@ -118,6 +118,17 @@ func TestQuerier(t *testing.T) {
 				LockQuery:  "FOR UPDATE",
 			},
 		},
+		{
+			name: "sql query",
+			queriers: [][]rel.Querier{
+				{
+					rel.SQL("SELECT 1"),
+				},
+			},
+			query: rel.Query{
+				SQLQuery: rel.SQL("SELECT 1"),
+			},
+		},
 	}
 
 	for _, test := range tests {

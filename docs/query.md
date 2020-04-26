@@ -441,7 +441,7 @@ Mock and retuns `reltest.ErrConnectionClosed` (`sql.ErrConnDone`).
 
 ## Native SQL Query
 
-REL allows querying using native SQL query, this is especially usefull when using complex query that cannot be covered with the query builder.
+REL allows querying using native SQL query, this is especially useful when using complex query that cannot be covered with the query builder.
 
 <!-- tabs:start -->
 

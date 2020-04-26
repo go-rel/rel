@@ -61,8 +61,8 @@ func Query(t *testing.T, repo rel.Repository) {
 		rel.Select("name").Where(where.Eq("id", 1)),
 		rel.Select("name", "age").Where(where.Eq("id", 1)),
 		rel.Select().Distinct().Where(where.Eq("id", 1)),
-		rel.SQL("SELECT 1+?", 2),
-		rel.SQL("SELECT 1+?;", 2),
+		rel.SQL("SELECT 1"),
+		rel.SQL("SELECT 1;"),
 	}
 
 	run(t, repo, tests)

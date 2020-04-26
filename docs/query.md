@@ -447,13 +447,13 @@ REL allows querying using native SQL query, this is especially useful when using
 
 ### **Example**
 
-Retrieve a book using raw sql query.
+Retrieve a book using native sql query.
 
 [query.go](query.go ':include :fragment=sql')
 
 ### **Mock**
 
-Mock and retrieve a book using raw sql query.
+Mock and retrieve a book using native sql query.
 
 [query_test.go](query_test.go ':include :fragment=sql')
 

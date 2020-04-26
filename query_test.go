@@ -122,11 +122,11 @@ func TestQuerier(t *testing.T) {
 			name: "sql query",
 			queriers: [][]rel.Querier{
 				{
-					rel.SQL("SELECT 1"),
+					rel.SQL("SELECT 1;"),
 				},
 			},
 			query: rel.Query{
-				SQLQuery: rel.SQL("SELECT 1"),
+				SQLQuery: rel.SQL("SELECT 1;"),
 			},
 		},
 	}

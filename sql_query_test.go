@@ -9,11 +9,11 @@ import (
 
 func TestSQLQuery(t *testing.T) {
 	assert.Equal(t, rel.SQLQuery{
-		Statement: "SELECT 1",
-	}, rel.SQL("SELECT 1"))
+		Statement: "SELECT 1;",
+	}, rel.SQL("SELECT 1;"))
 
 	assert.Equal(t, rel.SQLQuery{
-		Statement: "SELECT * FROM `users` WHERE id=?",
+		Statement: "SELECT * FROM `users` WHERE id=?;",
 		Values:    []interface{}{1},
-	}, rel.SQL("SELECT * FROM `users` WHERE id=?", 1))
+	}, rel.SQL("SELECT * FROM `users` WHERE id=?;", 1))
 }

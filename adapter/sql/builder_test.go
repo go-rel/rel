@@ -197,6 +197,18 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 	}
 }
 
+func TestBuilder_Find_SQLQuery(t *testing.T) {
+	var (
+		config   = &Config{}
+		builder  = NewBuilder(config)
+		query    = rel.Build("", rel.SQL("SELECT * FROM `users` WHERE id=?;", 1))
+		qs, args = builder.Find(query)
+	)
+
+	assert.Equal(t, "SELECT * FROM `users` WHERE id=?;", qs)
+	assert.Equal(t, []interface{}{1}, args)
+}
+
 func BenchmarkBuilder_Aggregate(b *testing.B) {
 	var (
 		config = &Config{

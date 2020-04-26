@@ -22,6 +22,10 @@ type Builder struct {
 
 // Find generates query for select.
 func (b *Builder) Find(query rel.Query) (string, []interface{}) {
+	if query.SQLQuery.Statement != "" {
+		return query.SQLQuery.Statement, query.SQLQuery.Values
+	}
+
 	var (
 		buffer Buffer
 	)

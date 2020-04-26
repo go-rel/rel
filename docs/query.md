@@ -439,4 +439,24 @@ Mock and retuns `reltest.ErrConnectionClosed` (`sql.ErrConnDone`).
 
 <!-- tabs:end -->
 
+## Native SQL Query
+
+REL allows querying using native SQL query, this is especially useful when using complex query that cannot be covered with the query builder.
+
+<!-- tabs:start -->
+
+### **Example**
+
+Retrieve a book using native sql query.
+
+[query.go](query.go ':include :fragment=sql')
+
+### **Mock**
+
+Mock and retrieve a book using native sql query.
+
+[query_test.go](query_test.go ':include :fragment=sql')
+
+<!-- tabs:end -->
+
 **Next: [Association](association.md)**

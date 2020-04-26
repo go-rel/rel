@@ -36,6 +36,8 @@ func Build(table string, queriers ...Querier) Query {
 			q.Build(&query)
 		case Unscoped:
 			q.Build(&query)
+		case SQLQuery:
+			q.Build(&query)
 		}
 	}
 
@@ -59,6 +61,7 @@ type Query struct {
 	LimitQuery    Limit
 	LockQuery     Lock
 	UnscopedQuery Unscoped
+	SQLQuery      SQLQuery
 }
 
 // Build query.

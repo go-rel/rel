@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// Pair is alias for array of 2 interfaces.
+type Pair [2]interface{}
+
 // Dirty tracking for golang structs.
 // This allows REL to efficiently to perform update operation only on updated fields and association.
 // The catch is, enabling dirty will duplicates the original struct values which consume more memory.
@@ -96,8 +99,8 @@ func (d *Dirty) changed(typ reflect.Type, old interface{}, new interface{}) bool
 }
 
 // Changes returns map of changes, with field names as the keys and an array of old and new values.
-func (d Dirty) Changes() map[string][2]interface{} {
-	changes := make(map[string][2]interface{})
+func (d Dirty) Changes() map[string]Pair {
+	changes := make(map[string]Pair)
 
 	for i, field := range d.doc.Fields() {
 		var (
@@ -177,8 +180,9 @@ func (d Dirty) applyAssocMany(field string, mod *Modification) {
 		}
 
 		var (
-			col, _ = assoc.Collection()
-			mods   = make([]Modification, col.Len())
+			col, _     = assoc.Collection()
+			mods       = make([]Modification, col.Len())
+			deletedIDs []interface{}
 		)
 
 		for i := 0; i < col.Len(); i++ {
@@ -189,10 +193,19 @@ func (d Dirty) applyAssocMany(field string, mod *Modification) {
 
 			if dirty, ok := dirties[pValue]; ok {
 				mods[i] = Apply(doc, dirty)
+				delete(dirties, pValue)
 			} else {
 				mods[i] = Apply(doc, newStructset(doc, false))
 			}
 		}
+
+		// leftover snapshot.
+		for i := range dirties {
+			deletedIDs = append(deletedIDs, i)
+		}
+
+		mod.SetAssoc(field, mods...)
+		mod.SetDeletedIDs(field, deletedIDs)
 	} else {
 		newStructset(d.doc, false).buildAssocMany(field, mod)
 	}

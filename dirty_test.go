@@ -31,9 +31,9 @@ func TestDirty(t *testing.T) {
 	user.Age = 21
 
 	assert.Equal(t, snapshot, user.Dirty.snapshot)
-	assert.Equal(t, map[string][2]interface{}{
-		"name": [2]interface{}{"User 1", "User 2"},
-		"age":  [2]interface{}{20, 21},
+	assert.Equal(t, map[string]Pair{
+		"name": Pair{"User 1", "User 2"},
+		"age":  Pair{20, 21},
 	}, user.Dirty.Changes())
 }
 
@@ -59,8 +59,8 @@ func TestDirty_ptr(t *testing.T) {
 	address.UserID = &userID
 
 	assert.Equal(t, snapshot, dirty.snapshot)
-	assert.Equal(t, map[string][2]interface{}{
-		"user_id": [2]interface{}{2, 3},
+	assert.Equal(t, map[string]Pair{
+		"user_id": Pair{2, 3},
 	}, dirty.Changes())
 }
 
@@ -88,8 +88,8 @@ func TestDirty_belongsTo(t *testing.T) {
 	address.User.Name = "User Satu"
 
 	assert.Equal(t, snapshot, dirty.snapshot)
-	assert.Equal(t, map[string][2]interface{}{
-		"name": [2]interface{}{"User 1", "User Satu"},
+	assert.Equal(t, map[string]Pair{
+		"name": Pair{"User 1", "User Satu"},
 	}, dirty.Changes())
 }
 
@@ -120,9 +120,45 @@ func TestDirty_hasOne(t *testing.T) {
 	user.Address.Notes = Notes("Home")
 
 	assert.Equal(t, snapshot, dirty.snapshot)
-	assert.Equal(t, map[string][2]interface{}{
-		"user_id": [2]interface{}{nil, user.ID},
-		"street":  [2]interface{}{"Grove Street", "Grove Street Blvd"},
-		"notes":   [2]interface{}{Notes("HQ"), Notes("Home")},
+	assert.Equal(t, map[string]Pair{
+		"user_id": Pair{nil, user.ID},
+		"street":  Pair{"Grove Street", "Grove Street Blvd"},
+		"notes":   Pair{Notes("HQ"), Notes("Home")},
 	}, dirty.Changes())
+}
+
+func TestDirty_hasMany(t *testing.T) {
+	var (
+		dirty Dirty
+		user  = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 11, Item: "Book", Status: "pending"},
+				{ID: 12, Item: "Eraser", Status: "pending"},
+			},
+		}
+		snapshots = [][]interface{}{
+			{11, "Book", Status("pending"), 0},
+			{12, "Eraser", Status("pending"), 0},
+		}
+		doc = NewDocument(&user)
+	)
+
+	dirty.Init(doc)
+	dirties := dirty.assocMany["transactions"]
+
+	assert.Equal(t, snapshots[0], dirties[11].snapshot)
+	assert.Equal(t, snapshots[1], dirties[12].snapshot)
+
+	assert.Empty(t, dirties[11].Changes())
+	assert.Empty(t, dirties[12].Changes())
+
+	// update
+	user.Transactions[0].Status = "paid"
+	assert.Equal(t, map[string]Pair{
+		"status": Pair{Status("pending"), Status("paid")},
+	}, dirties[11].Changes())
+
+	// replace eraser.
+	user.Transactions[1] = Transaction{Item: "Paper", Status: "pending"}
 }

@@ -16,6 +16,7 @@ type Dirty struct {
 	assocMany map[string]map[interface{}]*Dirty
 }
 
+// init dirty states.
 func (d *Dirty) init(doc *Document) {
 	d.doc = doc
 	d.snapshot = make([]interface{}, len(doc.Fields()))
@@ -45,7 +46,13 @@ func (d *Dirty) initAssoc(field string) {
 	)
 
 	if doc, loaded := assoc.Document(); loaded {
-		d.assoc[field] = doc.Dirty()
+		dirty := doc.Dirty()
+		if dirty == nil {
+			dirty = &Dirty{}
+			dirty.init(doc)
+		}
+
+		d.assoc[field] = dirty
 	}
 }
 
@@ -64,7 +71,13 @@ func (d *Dirty) initAssocMany(field string) {
 			)
 
 			if !isZero(pValue) {
-				d.assocMany[field][pValue] = doc.Dirty()
+				dirty := doc.Dirty()
+				if dirty == nil {
+					dirty = &Dirty{}
+					dirty.init(doc)
+				}
+
+				d.assocMany[field][pValue] = dirty
 			}
 		}
 	}
@@ -128,4 +141,40 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 	if len(mod.Modifies) > 0 && d.doc.Flag(HasUpdatedAt) && d.doc.SetValue("updated_at", t) {
 		mod.Add(Set("updated_at", t))
 	}
+
+	for _, field := range doc.BelongsTo() {
+		d.applyAssoc(field, mod)
+	}
+
+	for _, field := range doc.HasOne() {
+		d.applyAssoc(field, mod)
+	}
+
+	for _, field := range doc.HasMany() {
+		d.applyAssocMany(field, mod)
+	}
+}
+
+func (d Dirty) applyAssoc(field string, mod *Modification) {
+	var (
+		assoc = d.doc.Association(field)
+	)
+
+	if !assoc.IsZero() {
+		var (
+			modifier Modifier
+			doc, _   = assoc.Document()
+		)
+
+		if dirty, ok := d.assoc[field]; ok {
+			modifier = dirty
+		} else {
+			modifier = newStructset(doc, false)
+		}
+
+		mod.SetAssoc(field, Apply(doc, modifier))
+	}
+}
+
+func (d Dirty) applyAssocMany(field string, mod *Modification) {
 }

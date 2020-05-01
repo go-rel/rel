@@ -25,11 +25,22 @@ type Transaction struct {
 	Buyer   User `ref:"user_id" fk:"id"`
 }
 
+type Notes string
+
+func (n Notes) Equal(other interface{}) bool {
+	if o, ok := other.(Notes); ok {
+		return n == o
+	}
+
+	return false
+}
+
 type Address struct {
 	ID        int
 	UserID    *int
 	User      *User
 	Street    string
+	Notes     Notes
 	DeletedAt *time.Time
 }
 

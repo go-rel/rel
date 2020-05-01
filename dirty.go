@@ -16,8 +16,8 @@ type Dirty struct {
 	assocMany map[string]map[interface{}]*Dirty
 }
 
-// init dirty states.
-func (d *Dirty) init(doc *Document) {
+// Init dirty states.
+func (d *Dirty) Init(doc *Document) {
 	d.doc = doc
 	d.snapshot = make([]interface{}, len(doc.Fields()))
 	d.assoc = make(map[string]*Dirty)
@@ -49,9 +49,9 @@ func (d *Dirty) initAssoc(field string) {
 		dirty := doc.Dirty()
 		if dirty == nil {
 			dirty = &Dirty{}
-			dirty.init(doc)
 		}
 
+		dirty.Init(doc)
 		d.assoc[field] = dirty
 	}
 }
@@ -74,9 +74,9 @@ func (d *Dirty) initAssocMany(field string) {
 				dirty := doc.Dirty()
 				if dirty == nil {
 					dirty = &Dirty{}
-					dirty.init(doc)
 				}
 
+				dirty.Init(doc)
 				d.assocMany[field][pValue] = dirty
 			}
 		}
@@ -153,9 +153,6 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 	for _, field := range doc.HasMany() {
 		d.applyAssocMany(field, mod)
 	}
-
-	// TODO: reinitialize dirty
-	// d.init(d.doc)
 }
 
 func (d Dirty) applyAssoc(field string, mod *Modification) {

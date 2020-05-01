@@ -153,27 +153,50 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 	for _, field := range doc.HasMany() {
 		d.applyAssocMany(field, mod)
 	}
+
+	// TODO: reinitialize dirty
+	// d.init(d.doc)
 }
 
 func (d Dirty) applyAssoc(field string, mod *Modification) {
-	assoc := d.doc.Association(field)
-	if assoc.IsZero() {
-		return
-	}
-
-	var (
-		modifier Modifier
-		doc, _   = assoc.Document()
-	)
-
 	if dirty, ok := d.assoc[field]; ok {
-		modifier = dirty
-	} else {
-		modifier = newStructset(doc, false)
-	}
+		assoc := d.doc.Association(field)
+		if assoc.IsZero() {
+			return
+		}
 
-	mod.SetAssoc(field, Apply(doc, modifier))
+		doc, _ := assoc.Document()
+		mod.SetAssoc(field, Apply(doc, dirty))
+	} else {
+		newStructset(d.doc, false).buildAssoc(field, mod)
+	}
 }
 
 func (d Dirty) applyAssocMany(field string, mod *Modification) {
+	if dirties, ok := d.assocMany[field]; ok {
+		assoc := d.doc.Association(field)
+		if assoc.IsZero() {
+			return
+		}
+
+		var (
+			col, _ = assoc.Collection()
+			mods   = make([]Modification, col.Len())
+		)
+
+		for i := 0; i < col.Len(); i++ {
+			var (
+				doc    = col.Get(i)
+				pValue = doc.PrimaryValue()
+			)
+
+			if dirty, ok := dirties[pValue]; ok {
+				mods[i] = Apply(doc, dirty)
+			} else {
+				mods[i] = Apply(doc, newStructset(doc, false))
+			}
+		}
+	} else {
+		newStructset(d.doc, false).buildAssocMany(field, mod)
+	}
 }

@@ -38,6 +38,8 @@ var (
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
 	rtDirty           = reflect.TypeOf(Dirty{})
+	rtTable           = reflect.TypeOf((*table)(nil)).Elem()
+	rtPrimary         = reflect.TypeOf((*primary)(nil)).Elem()
 )
 
 type table interface {
@@ -55,13 +57,15 @@ type primaryData struct {
 }
 
 type documentData struct {
-	index      map[string]int
-	fields     []string
-	belongsTo  []string
-	hasOne     []string
-	hasMany    []string
-	flag       DocumentFlag
-	dirtyIndex int
+	index        map[string]int
+	fields       []string
+	belongsTo    []string
+	hasOne       []string
+	hasMany      []string
+	primaryField string
+	primaryIndex int
+	dirtyIndex   int
+	flag         DocumentFlag
 }
 
 // Document provides an abstraction over reflect to easily works with struct for database purpose.
@@ -93,15 +97,11 @@ func (d Document) PrimaryField() string {
 		return p.PrimaryField()
 	}
 
-	var (
-		field, _ = searchPrimary(d.rt)
-	)
-
-	if field == "" {
+	if d.data.primaryField == "" {
 		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
-	return field
+	return d.data.primaryField
 }
 
 // PrimaryValue of this document.
@@ -110,15 +110,11 @@ func (d Document) PrimaryValue() interface{} {
 		return p.PrimaryValue()
 	}
 
-	var (
-		_, index = searchPrimary(d.rt)
-	)
-
-	if index < 0 {
+	if d.data.primaryIndex < 0 {
 		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
-	return d.rv.Field(index).Interface()
+	return d.rv.Field(d.data.primaryIndex).Interface()
 }
 
 // Index returns map of column name and it's struct index.
@@ -431,6 +427,8 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 		}
 	}
 
+	data.primaryField, data.primaryIndex = searchPrimary(rt)
+
 	if !skipAssoc {
 		documentDataCache.Store(rt, data)
 	}
@@ -483,24 +481,28 @@ func searchPrimary(rt reflect.Type) (string, int) {
 		index = -1
 	)
 
-	for i := 0; i < rt.NumField(); i++ {
-		sf := rt.Field(i)
+	if rt.Implements(rtPrimary) {
+		var (
+			v = reflect.Zero(rt).Interface().(primary)
+		)
 
-		if tag := sf.Tag.Get("db"); strings.HasSuffix(tag, ",primary") {
-			index = i
-			if len(tag) > 8 { // has custom field name
-				field = tag[:len(tag)-8]
-			} else {
-				field = snakecase.SnakeCase(sf.Name)
+		field = v.PrimaryField()
+		index = -2 // special index to mark interface usage
+	} else {
+		for i := 0; i < rt.NumField(); i++ {
+			sf := rt.Field(i)
+
+			if tag := sf.Tag.Get("db"); strings.HasSuffix(tag, ",primary") {
+				index = i
+				field = fieldName(sf)
+				continue
 			}
 
-			continue
-		}
-
-		// check fallback for id field
-		if strings.EqualFold("id", sf.Name) {
-			index = i
-			field = "id"
+			// check fallback for id field
+			if strings.EqualFold("id", sf.Name) {
+				index = i
+				field = "id"
+			}
 		}
 	}
 

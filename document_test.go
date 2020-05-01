@@ -69,7 +69,6 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 func TestDocument_Primary(t *testing.T) {
 	var (
 		record = User{ID: 1}
-		rt     = reflect.TypeOf(record)
 		doc    = NewDocument(&record)
 	)
 
@@ -77,17 +76,11 @@ func TestDocument_Primary(t *testing.T) {
 	assert.Equal(t, "id", doc.PrimaryField())
 	assert.Equal(t, 1, doc.PrimaryValue())
 
-	// cached
-	_, cached := primariesCache.Load(rt)
-	assert.True(t, cached)
-
 	record.ID = 2
 
 	// infer primary key using cache
 	assert.Equal(t, "id", doc.PrimaryField())
 	assert.Equal(t, 2, doc.PrimaryValue())
-
-	primariesCache.Delete(rt)
 }
 
 func TestDocument_Primary_usingInterface(t *testing.T) {
@@ -95,21 +88,12 @@ func TestDocument_Primary_usingInterface(t *testing.T) {
 		record = Item{
 			UUID: "abc123",
 		}
-		rt  = reflect.TypeOf(record)
 		doc = NewDocument(&record)
 	)
-
-	// should not be cached yet
-	_, cached := primariesCache.Load(rt)
-	assert.False(t, cached)
 
 	// infer primary key
 	assert.Equal(t, "_uuid", doc.PrimaryField())
 	assert.Equal(t, "abc123", doc.PrimaryValue())
-
-	// never cache
-	_, cached = primariesCache.Load(rt)
-	assert.False(t, cached)
 }
 
 func TestDocument_Primary_usingTag(t *testing.T) {

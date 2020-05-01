@@ -121,21 +121,12 @@ func TestCollection_Primary_usingInterface(t *testing.T) {
 			{UUID: "abc123"},
 			{UUID: "def456"},
 		}
-		rt  = reflect.TypeOf(records).Elem()
 		col = NewCollection(&records)
 	)
-
-	// should not be cached yet
-	_, cached := primariesCache.Load(rt)
-	assert.False(t, cached)
 
 	// infer primary key
 	assert.Equal(t, "_uuid", col.PrimaryField())
 	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
-
-	// never cache
-	_, cached = primariesCache.Load(rt)
-	assert.False(t, cached)
 }
 
 func TestCollection_Primary_usingElemInterface(t *testing.T) {
@@ -148,17 +139,9 @@ func TestCollection_Primary_usingElemInterface(t *testing.T) {
 		col = NewCollection(&records)
 	)
 
-	// should not be cached yet
-	_, cached := primariesCache.Load(rt)
-	assert.False(t, cached)
-
 	// infer primary key
 	assert.Equal(t, "_uuid", col.PrimaryField())
 	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
-
-	// cache
-	_, cached = primariesCache.Load(rt)
-	assert.True(t, cached)
 
 	primariesCache.Delete(rt)
 }
@@ -179,6 +162,20 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 	// infer primary key
 	assert.Equal(t, "external_id", doc.PrimaryField())
 	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValue())
+}
+
+func TestCollection_Primary_notFound(t *testing.T) {
+	var (
+		records = []struct {
+			ExternalID int
+			Name       string
+		}{}
+		doc = NewCollection(&records)
+	)
+
+	assert.Panics(t, func() {
+		doc.PrimaryField()
+	})
 }
 
 func TestCollection_Truncate(t *testing.T) {

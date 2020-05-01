@@ -37,6 +37,7 @@ var (
 	typesCache        sync.Map
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
+	rtDirty           = reflect.TypeOf(Dirty{})
 )
 
 type table interface {
@@ -54,12 +55,13 @@ type primaryData struct {
 }
 
 type documentData struct {
-	index     map[string]int
-	fields    []string
-	belongsTo []string
-	hasOne    []string
-	hasMany   []string
-	flag      DocumentFlag
+	index      map[string]int
+	fields     []string
+	belongsTo  []string
+	hasOne     []string
+	hasMany    []string
+	flag       DocumentFlag
+	dirtyIndex int
 }
 
 // Document provides an abstraction over reflect to easily works with struct for database purpose.
@@ -288,6 +290,15 @@ func (d Document) Association(name string) Association {
 	return newAssociation(d.rv, index)
 }
 
+// Dirty returns dirty struct of document if exists.
+func (d Document) Dirty() *Dirty {
+	if d.data.dirtyIndex < 0 {
+		return nil
+	}
+
+	return d.rv.Field(d.data.dirtyIndex).Addr().Interface().(*Dirty)
+}
+
 // Reset this document, this is a noop for compatibility with collection.
 func (d Document) Reset() {
 }
@@ -362,7 +373,8 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 
 	var (
 		data = documentData{
-			index: make(map[string]int, rt.NumField()),
+			index:      make(map[string]int, rt.NumField()),
+			dirtyIndex: -1,
 		}
 	)
 
@@ -392,6 +404,11 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 		if flag := extractFlag(typ, name); flag != Invalid {
 			data.fields = append(data.fields, name)
 			data.flag |= flag
+			continue
+		}
+
+		if typ == rtDirty {
+			data.dirtyIndex = i
 			continue
 		}
 

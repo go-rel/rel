@@ -7,6 +7,7 @@ import (
 type Status string
 
 type User struct {
+	Dirty
 	ID           int
 	Name         string
 	Age          int

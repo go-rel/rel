@@ -156,24 +156,23 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 }
 
 func (d Dirty) applyAssoc(field string, mod *Modification) {
+	assoc := d.doc.Association(field)
+	if assoc.IsZero() {
+		return
+	}
+
 	var (
-		assoc = d.doc.Association(field)
+		modifier Modifier
+		doc, _   = assoc.Document()
 	)
 
-	if !assoc.IsZero() {
-		var (
-			modifier Modifier
-			doc, _   = assoc.Document()
-		)
-
-		if dirty, ok := d.assoc[field]; ok {
-			modifier = dirty
-		} else {
-			modifier = newStructset(doc, false)
-		}
-
-		mod.SetAssoc(field, Apply(doc, modifier))
+	if dirty, ok := d.assoc[field]; ok {
+		modifier = dirty
+	} else {
+		modifier = newStructset(doc, false)
 	}
+
+	mod.SetAssoc(field, Apply(doc, modifier))
 }
 
 func (d Dirty) applyAssocMany(field string, mod *Modification) {

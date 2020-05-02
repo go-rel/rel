@@ -382,27 +382,6 @@ func TestDocument_Association(t *testing.T) {
 // 	})
 // }
 
-func TestDocument_Dirty(t *testing.T) {
-	var (
-		user = User{}
-		doc  = NewDocument(&user)
-	)
-
-	assert.NotPanics(t, func() {
-		assert.Equal(t, &user.Dirty, doc.Dirty())
-	})
-}
-
-func TestDocument_Dirty_disabled(t *testing.T) {
-	var (
-		doc = NewDocument(&Item{})
-	)
-
-	assert.NotPanics(t, func() {
-		assert.Nil(t, doc.Dirty())
-	})
-}
-
 func TestDocument(t *testing.T) {
 	tests := []struct {
 		record interface{}

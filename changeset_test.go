@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDirty(t *testing.T) {
+func TestChangeset(t *testing.T) {
 	var (
 		ts   = time.Now()
 		user = User{
@@ -17,46 +17,35 @@ func TestDirty(t *testing.T) {
 			UpdatedAt: ts,
 			CreatedAt: ts,
 		}
-		snapshot = []interface{}{1, "User 1", 20, ts, ts}
-		doc      = NewDocument(&user)
+		snapshot  = []interface{}{1, "User 1", 20, ts, ts}
+		doc       = NewDocument(&user)
+		changeset = NewChangeset(&user)
 	)
 
-	t.Run("apply not initialized", func(t *testing.T) {
-		assert.Equal(t,
-			Apply(doc, newStructset(doc, false)),
-			Apply(doc, user),
-		)
-	})
-
-	t.Run("init", func(t *testing.T) {
-		user.UpdatedAt = ts
-		user.CreatedAt = ts
-
-		user.init(doc)
-
-		assert.Equal(t, snapshot, user.Dirty.snapshot)
-		assert.Empty(t, user.Dirty.Changes())
+	t.Run("snapshot", func(t *testing.T) {
+		assert.Equal(t, snapshot, changeset.snapshot)
+		assert.Empty(t, changeset.Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc:    map[string]AssocModification{},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
 		user.Name = "User 2"
 		user.Age = 21
 
-		assert.Equal(t, snapshot, user.Dirty.snapshot)
+		assert.Equal(t, snapshot, changeset.snapshot)
 		assert.Equal(t, map[string]pair{
 			"name": pair{"User 1", "User 2"},
 			"age":  pair{20, 21},
-		}, user.Dirty.Changes())
+		}, changeset.Changes())
 	})
 
-	t.Run("apply dirty", func(t *testing.T) {
+	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{
 				"name":       Set("name", "User 2"),
@@ -64,7 +53,7 @@ func TestDirty(t *testing.T) {
 				"updated_at": Set("updated_at", now()),
 			},
 			Assoc: map[string]AssocModification{},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("apply new assoc as structset", func(t *testing.T) {
@@ -91,53 +80,51 @@ func TestDirty(t *testing.T) {
 					},
 				},
 			},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 }
 
-func TestDirty_ptr(t *testing.T) {
+func TestChangeset_ptr(t *testing.T) {
 	var (
-		dirty   Dirty
 		userID  = 2
 		address = Address{
 			ID:     1,
 			UserID: &userID,
 		}
-		snapshot = []interface{}{1, 2, "", Notes(""), nil}
-		doc      = NewDocument(&address)
+		snapshot  = []interface{}{1, 2, "", Notes(""), nil}
+		doc       = NewDocument(&address)
+		changeset = NewChangeset(&address)
 	)
 
-	t.Run("init", func(t *testing.T) {
-		dirty.init(doc)
-
-		assert.Equal(t, snapshot, dirty.snapshot)
-		assert.Empty(t, dirty.Changes())
+	t.Run("snapshot", func(t *testing.T) {
+		assert.Equal(t, snapshot, changeset.snapshot)
+		assert.Empty(t, changeset.Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc:    map[string]AssocModification{},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
 		userID = 3
 		address.UserID = &userID
 
-		assert.Equal(t, snapshot, dirty.snapshot)
+		assert.Equal(t, snapshot, changeset.snapshot)
 		assert.Equal(t, map[string]pair{
 			"user_id": pair{2, 3},
-		}, dirty.Changes())
+		}, changeset.Changes())
 	})
 
-	t.Run("apply dirty", func(t *testing.T) {
+	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{
 				"user_id": Set("user_id", 3),
 			},
 			Assoc: map[string]AssocModification{},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("apply new assoc as structset", func(t *testing.T) {
@@ -162,49 +149,45 @@ func TestDirty_ptr(t *testing.T) {
 					},
 				},
 			},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 }
 
-func TestDirty_belongsTo(t *testing.T) {
+func TestChangeset_belongsTo(t *testing.T) {
 	var (
-		dirty   Dirty
 		address = Address{
 			User: &User{
 				ID:   1,
 				Name: "User 1",
 			},
 		}
-		snapshot = []interface{}{1, "User 1", 0, time.Time{}, time.Time{}}
-		doc      = NewDocument(&address)
+		snapshot  = []interface{}{1, "User 1", 0, time.Time{}, time.Time{}}
+		doc       = NewDocument(&address)
+		changeset = NewChangeset(&address)
 	)
 
-	t.Run("init", func(t *testing.T) {
-		dirty.init(doc)
-		dirty.initAssoc()
-
-		assert.Equal(t, *dirty.assoc["user"], address.User.Dirty)
-		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
-		assert.Empty(t, dirty.assoc["user"].Changes())
+	t.Run("snapshot", func(t *testing.T) {
+		assert.Equal(t, snapshot, changeset.assoc["user"].snapshot)
+		assert.Empty(t, changeset.assoc["user"].Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc:    map[string]AssocModification{},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
 		address.User.Name = "User Satu"
 
-		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
+		assert.Equal(t, snapshot, changeset.assoc["user"].snapshot)
 		assert.Equal(t, map[string]pair{
 			"name": pair{"User 1", "User Satu"},
-		}, dirty.assoc["user"].Changes())
+		}, changeset.assoc["user"].Changes())
 	})
 
-	t.Run("apply dirty", func(t *testing.T) {
+	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc: map[string]AssocModification{
@@ -220,14 +203,13 @@ func TestDirty_belongsTo(t *testing.T) {
 					},
 				},
 			},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 }
 
-func TestDirty_hasOne(t *testing.T) {
+func TestChangeset_hasOne(t *testing.T) {
 	var (
-		dirty Dirty
-		user  = User{
+		user = User{
 			ID: 1,
 			Address: Address{
 				ID:     1,
@@ -235,23 +217,21 @@ func TestDirty_hasOne(t *testing.T) {
 				Notes:  "HQ",
 			},
 		}
-		snapshot = []interface{}{1, nil, "Grove Street", Notes("HQ"), nil}
-		doc      = NewDocument(&user)
+		snapshot  = []interface{}{1, nil, "Grove Street", Notes("HQ"), nil}
+		doc       = NewDocument(&user)
+		changeset = NewChangeset(&user)
 	)
 
-	t.Run("init", func(t *testing.T) {
-		dirty.init(doc)
-		dirty.initAssoc()
-
-		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
-		assert.Empty(t, dirty.assoc["address"].Changes())
+	t.Run("snapshot", func(t *testing.T) {
+		assert.Equal(t, snapshot, changeset.assoc["address"].snapshot)
+		assert.Empty(t, changeset.assoc["address"].Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc:    map[string]AssocModification{},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -259,15 +239,15 @@ func TestDirty_hasOne(t *testing.T) {
 		user.Address.Street = "Grove Street Blvd"
 		user.Address.Notes = Notes("Home")
 
-		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
+		assert.Equal(t, snapshot, changeset.assoc["address"].snapshot)
 		assert.Equal(t, map[string]pair{
 			"user_id": pair{nil, user.ID},
 			"street":  pair{"Grove Street", "Grove Street Blvd"},
 			"notes":   pair{Notes("HQ"), Notes("Home")},
-		}, dirty.assoc["address"].Changes())
+		}, changeset.assoc["address"].Changes())
 	})
 
-	t.Run("apply dirty", func(t *testing.T) {
+	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc: map[string]AssocModification{
@@ -284,14 +264,13 @@ func TestDirty_hasOne(t *testing.T) {
 					},
 				},
 			},
-		}, Apply(doc, dirty))
+		}, Apply(doc, changeset))
 	})
 }
 
-func TestDirty_hasMany(t *testing.T) {
+func TestChangeset_hasMany(t *testing.T) {
 	var (
-		dirties map[interface{}]*Dirty
-		user    = User{
+		user = User{
 			ID: 1,
 			Transactions: []Transaction{
 				{ID: 11, Item: "Book", Status: "pending"},
@@ -302,40 +281,40 @@ func TestDirty_hasMany(t *testing.T) {
 			{11, "Book", Status("pending"), 0},
 			{12, "Eraser", Status("pending"), 0},
 		}
-		doc = NewDocument(&user)
+		doc       = NewDocument(&user)
+		changeset = NewChangeset(&user)
 	)
 
-	t.Run("init", func(t *testing.T) {
-		user.Dirty.init(doc)
-		user.Dirty.initAssoc()
+	t.Run("snapshot", func(t *testing.T) {
+		trxch := changeset.assocMany["transactions"]
 
-		dirties = user.Dirty.assocMany["transactions"]
+		assert.Equal(t, snapshots[0], trxch[11].snapshot)
+		assert.Equal(t, snapshots[1], trxch[12].snapshot)
 
-		assert.Equal(t, snapshots[0], dirties[11].snapshot)
-		assert.Equal(t, snapshots[1], dirties[12].snapshot)
-
-		assert.Empty(t, dirties[11].Changes())
-		assert.Empty(t, dirties[12].Changes())
+		assert.Empty(t, trxch[11].Changes())
+		assert.Empty(t, trxch[12].Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc:    map[string]AssocModification{},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
+		trxch := changeset.assocMany["transactions"]
+
 		user.Transactions[0].Status = "paid"
-		// replaced struct is new, so there's no dirty states to check.
+		// replaced struct is new, so there's no changeset states to check.
 		user.Transactions[1] = Transaction{Item: "Paper", Status: "pending"}
 
 		assert.Equal(t, map[string]pair{
 			"status": pair{Status("pending"), Status("paid")},
-		}, dirties[11].Changes())
+		}, trxch[11].Changes())
 	})
 
-	t.Run("apply dirty", func(t *testing.T) {
+	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc: map[string]AssocModification{
@@ -359,7 +338,7 @@ func TestDirty_hasMany(t *testing.T) {
 					DeletedIDs: []interface{}{12},
 				},
 			},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("apply clear assoc", func(t *testing.T) {
@@ -372,6 +351,6 @@ func TestDirty_hasMany(t *testing.T) {
 					DeletedIDs:    []interface{}{11, 12},
 				},
 			},
-		}, Apply(doc, user))
+		}, Apply(doc, changeset))
 	})
 }

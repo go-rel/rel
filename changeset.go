@@ -149,8 +149,7 @@ func (c Changeset) applyAssocMany(field string, mod *Modification) {
 
 // NewChangeset returns new changeset modifier for given record.
 func NewChangeset(record interface{}) Changeset {
-	// TODO: make it readonly
-	return newChangeset(NewDocument(record, false))
+	return newChangeset(NewDocument(record, true))
 }
 
 func newChangeset(doc *Document) Changeset {

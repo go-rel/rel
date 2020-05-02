@@ -106,7 +106,7 @@ func (a Association) IsZero() bool {
 		rv = a.rv.FieldByIndex(a.data.targetIndex)
 	)
 
-	return isDeepZero(rv, 1)
+	return isDeepZero(reflect.Indirect(rv), 1)
 }
 
 // ReferenceField of the association.

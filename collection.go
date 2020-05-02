@@ -12,11 +12,6 @@ type slice interface {
 	Len() int
 }
 
-var (
-	tableRt   = reflect.TypeOf((*table)(nil)).Elem()
-	primaryRt = reflect.TypeOf((*primary)(nil)).Elem()
-)
-
 // Collection provides an abstraction over reflect to easily works with slice for database purpose.
 type Collection struct {
 	v       interface{}
@@ -51,7 +46,7 @@ func (c Collection) tableName() string {
 		return name.(string)
 	}
 
-	if rt.Implements(tableRt) {
+	if rt.Implements(rtTable) {
 		var (
 			v = reflect.Zero(rt).Interface().(table)
 		)
@@ -69,11 +64,11 @@ func (c Collection) PrimaryField() string {
 		return p.PrimaryField()
 	}
 
-	var (
-		field, _ = c.searchPrimary()
-	)
+	if c.data.primaryField == "" {
+		panic("rel: failed to infer primary key for type " + c.rt.String())
+	}
 
-	return field
+	return c.data.primaryField
 }
 
 // PrimaryValue of collection.
@@ -84,8 +79,8 @@ func (c Collection) PrimaryValue() interface{} {
 	}
 
 	var (
-		_, index = c.searchPrimary()
-		ids      = make([]interface{}, c.rv.Len())
+		index = c.data.primaryIndex
+		ids   = make([]interface{}, c.rv.Len())
 	)
 
 	for i := 0; i < len(ids); i++ {
@@ -102,34 +97,6 @@ func (c Collection) PrimaryValue() interface{} {
 	}
 
 	return ids
-}
-
-func (c Collection) searchPrimary() (string, int) {
-	var (
-		rt = c.rt.Elem()
-	)
-
-	if result, cached := primariesCache.Load(rt); cached {
-		p := result.(primaryData)
-		return p.field, p.index
-	}
-
-	if rt.Implements(primaryRt) {
-		var (
-			v     = reflect.Zero(rt).Interface().(primary)
-			field = v.PrimaryField()
-			index = -2 // special index to mark interface usage
-		)
-
-		primariesCache.Store(rt, primaryData{
-			field: field,
-			index: index,
-		})
-
-		return field, index
-	}
-
-	return searchPrimary(rt)
 }
 
 // Get an element from the underlying slice as a document.

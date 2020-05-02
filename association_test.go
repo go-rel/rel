@@ -24,6 +24,7 @@ func TestAssociation_Document(t *testing.T) {
 		typ            AssociationType
 		doc            *Document
 		loaded         bool
+		isZero         bool
 		referenceField string
 		referenceValue interface{}
 		foreignField   string
@@ -36,6 +37,7 @@ func TestAssociation_Document(t *testing.T) {
 			typ:            BelongsTo,
 			doc:            NewDocument(&transaction.Buyer),
 			loaded:         false,
+			isZero:         true,
 			referenceField: "user_id",
 			referenceValue: transaction.BuyerID,
 			foreignField:   "id",
@@ -48,6 +50,7 @@ func TestAssociation_Document(t *testing.T) {
 			typ:            BelongsTo,
 			doc:            NewDocument(&transactionLoaded.Buyer),
 			loaded:         true,
+			isZero:         false,
 			referenceField: "user_id",
 			referenceValue: transactionLoaded.BuyerID,
 			foreignField:   "id",
@@ -60,6 +63,7 @@ func TestAssociation_Document(t *testing.T) {
 			typ:            HasOne,
 			doc:            NewDocument(&user.Address),
 			loaded:         false,
+			isZero:         true,
 			referenceField: "id",
 			referenceValue: user.ID,
 			foreignField:   "user_id",
@@ -72,23 +76,25 @@ func TestAssociation_Document(t *testing.T) {
 			typ:            HasOne,
 			doc:            NewDocument(&userLoaded.Address),
 			loaded:         true,
+			isZero:         false,
 			referenceField: "id",
 			referenceValue: userLoaded.ID,
 			foreignField:   "user_id",
 			foreignValue:   nil,
 		},
-		// {
-		// 	record:         "Address",
-		// 	field:          "User",
-		// 	data:           address,
-		// 	typ:            BelongsTo,
-		// 	doc:         NewDocument(&User{}), // should be initialized to zero struct
-		// 	loaded:         false,
-		// 	referenceField: "user_id",
-		// 	referenceValue: address.UserID,
-		// 	foreignField:   "id",
-		// 	foreignValue:   0,
-		// },
+		{
+			record:         "Address",
+			field:          "User",
+			data:           address,
+			typ:            BelongsTo,
+			doc:            NewDocument(&User{}), // should be initialized to zero struct
+			loaded:         false,
+			isZero:         true,
+			referenceField: "user_id",
+			referenceValue: nil,
+			foreignField:   "id",
+			foreignValue:   0,
+		},
 		{
 			record:         "Address",
 			field:          "User",
@@ -96,6 +102,7 @@ func TestAssociation_Document(t *testing.T) {
 			typ:            BelongsTo,
 			doc:            NewDocument(addressLoaded.User),
 			loaded:         true,
+			isZero:         false,
 			referenceField: "user_id",
 			referenceValue: *addressLoaded.UserID,
 			foreignField:   "id",
@@ -113,8 +120,11 @@ func TestAssociation_Document(t *testing.T) {
 			)
 
 			assert.Equal(t, test.typ, assoc.Type())
-			assert.Equal(t, test.doc, doc)
+			assert.Equal(t, test.doc.rt, doc.rt)
+			assert.Equal(t, test.doc.data, doc.data)
+			assert.Equal(t, test.doc.v, doc.v)
 			assert.Equal(t, test.loaded, loaded)
+			assert.Equal(t, test.isZero, assoc.IsZero())
 			assert.Equal(t, test.referenceField, assoc.ReferenceField())
 			assert.Equal(t, test.referenceValue, assoc.ReferenceValue())
 			assert.Equal(t, test.foreignField, assoc.ForeignField())
@@ -147,6 +157,7 @@ func TestAssociation_Collection(t *testing.T) {
 		typ            AssociationType
 		col            *Collection
 		loaded         bool
+		isZero         bool
 		referenceField string
 		referenceValue interface{}
 		foreignField   string
@@ -159,6 +170,7 @@ func TestAssociation_Collection(t *testing.T) {
 			typ:            HasMany,
 			col:            NewCollection(&user.Transactions),
 			loaded:         false,
+			isZero:         true,
 			referenceField: "id",
 			referenceValue: user.ID,
 			foreignField:   "user_id",
@@ -171,6 +183,7 @@ func TestAssociation_Collection(t *testing.T) {
 			typ:            HasMany,
 			col:            NewCollection(&userLoaded.Transactions),
 			loaded:         true,
+			isZero:         false,
 			referenceField: "id",
 			referenceValue: userLoaded.ID,
 			foreignField:   "user_id",
@@ -190,6 +203,7 @@ func TestAssociation_Collection(t *testing.T) {
 			assert.Equal(t, test.typ, assoc.Type())
 			assert.Equal(t, test.col, col)
 			assert.Equal(t, test.loaded, loaded)
+			assert.Equal(t, test.isZero, assoc.IsZero())
 			assert.Equal(t, test.referenceField, assoc.ReferenceField())
 			assert.Equal(t, test.referenceValue, assoc.ReferenceValue())
 			assert.Equal(t, test.foreignField, assoc.ForeignField())

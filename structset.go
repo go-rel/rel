@@ -81,42 +81,40 @@ func (s Structset) applyAssoc(mod *Modification) {
 }
 
 func (s Structset) buildAssoc(field string, mod *Modification) {
+	assoc := s.doc.Association(field)
+	if assoc.IsZero() {
+		return
+	}
+
 	var (
-		assoc = s.doc.Association(field)
+		doc, _ = assoc.Document()
 	)
 
-	if !assoc.IsZero() {
-		var (
-			doc, _ = assoc.Document()
-		)
-
-		mod.SetAssoc(field, Apply(doc, newStructset(doc, s.skipZero)))
-	}
+	mod.SetAssoc(field, Apply(doc, newStructset(doc, s.skipZero)))
 }
 
 func (s Structset) buildAssocMany(field string, mod *Modification) {
+	assoc := s.doc.Association(field)
+	if assoc.IsZero() {
+		return
+	}
+
 	var (
-		assoc = s.doc.Association(field)
+		col, _ = assoc.Collection()
+		pField = col.PrimaryField()
+		mods   = make([]Modification, col.Len())
 	)
 
-	if !assoc.IsZero() {
+	for i := range mods {
 		var (
-			col, _ = assoc.Collection()
-			pField = col.PrimaryField()
-			mods   = make([]Modification, col.Len())
+			doc = col.Get(i)
 		)
 
-		for i := range mods {
-			var (
-				doc = col.Get(i)
-			)
-
-			mods[i] = Apply(doc, newStructset(doc, s.skipZero))
-			doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
-		}
-
-		mod.SetAssoc(field, mods...)
+		mods[i] = Apply(doc, newStructset(doc, s.skipZero))
+		doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
 	}
+
+	mod.SetAssoc(field, mods...)
 }
 
 func newStructset(doc *Document, skipZero bool) Structset {

@@ -170,8 +170,14 @@ func (d Dirty) applyAssoc(field string, mod *Modification) {
 		return
 	}
 
-	doc, _ := assoc.Document()
-	mod.SetAssoc(field, Apply(doc, dirty))
+	var (
+		doc, _   = assoc.Document()
+		assocMod = Apply(doc, dirty)
+	)
+
+	if len(assocMod.Modifies) > 0 || len(assocMod.Assoc) > 0 {
+		mod.SetAssoc(field, Apply(doc, dirty))
+	}
 }
 
 func (d Dirty) applyAssocMany(field string, mod *Modification) {

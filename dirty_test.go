@@ -171,20 +171,45 @@ func TestDirty_belongsTo(t *testing.T) {
 
 	t.Run("init", func(t *testing.T) {
 		dirty.Init(doc)
-		dirty = *dirty.assoc["user"]
 
-		assert.Equal(t, dirty, address.User.Dirty)
-		assert.Equal(t, snapshot, dirty.snapshot)
-		assert.Empty(t, dirty.Changes())
+		assert.Equal(t, *dirty.assoc["user"], address.User.Dirty)
+		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
+		assert.Empty(t, dirty.assoc["user"].Changes())
+	})
+
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc:    map[string]AssocModification{},
+		}, Apply(doc, dirty))
 	})
 
 	t.Run("update", func(t *testing.T) {
 		address.User.Name = "User Satu"
 
-		assert.Equal(t, snapshot, dirty.snapshot)
+		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
 		assert.Equal(t, map[string]Pair{
 			"name": Pair{"User 1", "User Satu"},
-		}, dirty.Changes())
+		}, dirty.assoc["user"].Changes())
+	})
+
+	t.Run("apply dirty", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc: map[string]AssocModification{
+				"user": AssocModification{
+					Modifications: []Modification{
+						{
+							Modifies: map[string]Modify{
+								"name":       Set("name", "User Satu"),
+								"updated_at": Set("updated_at", now()),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+					},
+				},
+			},
+		}, Apply(doc, dirty))
 	})
 }
 
@@ -205,10 +230,16 @@ func TestDirty_hasOne(t *testing.T) {
 
 	t.Run("init", func(t *testing.T) {
 		dirty.Init(doc)
-		dirty = *dirty.assoc["address"]
 
-		assert.Equal(t, snapshot, dirty.snapshot)
-		assert.Empty(t, dirty.Changes())
+		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
+		assert.Empty(t, dirty.assoc["address"].Changes())
+	})
+
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc:    map[string]AssocModification{},
+		}, Apply(doc, dirty))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -216,12 +247,32 @@ func TestDirty_hasOne(t *testing.T) {
 		user.Address.Street = "Grove Street Blvd"
 		user.Address.Notes = Notes("Home")
 
-		assert.Equal(t, snapshot, dirty.snapshot)
+		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
 		assert.Equal(t, map[string]Pair{
 			"user_id": Pair{nil, user.ID},
 			"street":  Pair{"Grove Street", "Grove Street Blvd"},
 			"notes":   Pair{Notes("HQ"), Notes("Home")},
-		}, dirty.Changes())
+		}, dirty.assoc["address"].Changes())
+	})
+
+	t.Run("apply dirty", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc: map[string]AssocModification{
+				"address": AssocModification{
+					Modifications: []Modification{
+						{
+							Modifies: map[string]Modify{
+								"user_id": Set("user_id", user.ID),
+								"street":  Set("street", "Grove Street Blvd"),
+								"notes":   Set("notes", Notes("Home")),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+					},
+				},
+			},
+		}, Apply(doc, dirty))
 	})
 }
 

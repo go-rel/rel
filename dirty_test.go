@@ -56,6 +56,33 @@ func TestDirty(t *testing.T) {
 			Assoc: map[string]AssocModification{},
 		}, Apply(doc, user))
 	})
+
+	t.Run("apply new assoc as structset", func(t *testing.T) {
+		user.Address.Street = "Grove Street"
+
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{
+				"name":       Set("name", "User 2"),
+				"age":        Set("age", 21),
+				"updated_at": Set("updated_at", now()),
+			},
+			Assoc: map[string]AssocModification{
+				"address": AssocModification{
+					Modifications: []Modification{
+						{
+							Modifies: map[string]Modify{
+								"user_id":    Set("user_id", nil),
+								"street":     Set("street", "Grove Street"),
+								"notes":      Set("notes", Notes("")),
+								"deleted_at": Set("deleted_at", nil),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+					},
+				},
+			},
+		}, Apply(doc, user))
+	})
 }
 
 func TestDirty_ptr(t *testing.T) {
@@ -100,6 +127,31 @@ func TestDirty_ptr(t *testing.T) {
 				"user_id": Set("user_id", 3),
 			},
 			Assoc: map[string]AssocModification{},
+		}, Apply(doc, dirty))
+	})
+
+	t.Run("apply new assoc as structset", func(t *testing.T) {
+		address.User = &User{Name: "User 3"}
+
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{
+				"user_id": Set("user_id", 3),
+			},
+			Assoc: map[string]AssocModification{
+				"user": AssocModification{
+					Modifications: []Modification{
+						{
+							Modifies: map[string]Modify{
+								"age":        Set("age", 0),
+								"name":       Set("name", "User 3"),
+								"created_at": Set("created_at", now()),
+								"updated_at": Set("updated_at", now()),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+					},
+				},
+			},
 		}, Apply(doc, dirty))
 	})
 }

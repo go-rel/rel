@@ -7,6 +7,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func BenchmarkSmallSliceLookup(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		var (
+			index  = 0
+			values = []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+			fields = []string{"field1", "field2", "field3", "field4", "field6", "field7", "field8", "field9", "field10"}
+		)
+
+		for i := range fields {
+			if fields[i] == "field10" {
+				index = i
+				break
+			}
+		}
+		_ = values[index]
+		_ = values
+		_ = fields
+	}
+}
+
+func BenchmarkSmallMapLookup(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		var (
+			values = map[string]interface{}{
+				"field1":  1,
+				"field2":  2,
+				"field3":  3,
+				"field4":  4,
+				"field5":  5,
+				"field6":  6,
+				"field7":  7,
+				"field8":  8,
+				"field9":  9,
+				"field10": 10,
+			}
+		)
+		_ = values["fields10"]
+		_ = values
+	}
+}
+
 func TestChangeset(t *testing.T) {
 	var (
 		ts   = time.Now()
@@ -43,6 +84,13 @@ func TestChangeset(t *testing.T) {
 			"name": pair{"User 1", "User 2"},
 			"age":  pair{20, 21},
 		}, changeset.Changes())
+
+		assert.True(t, changeset.FieldChanged("name"))
+		assert.True(t, changeset.FieldChanged("age"))
+
+		assert.False(t, changeset.FieldChanged("id"))
+		assert.False(t, changeset.FieldChanged("created_at"))
+		assert.False(t, changeset.FieldChanged("unknown"))
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {

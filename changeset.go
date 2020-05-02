@@ -17,7 +17,7 @@ type Changeset struct {
 	assocMany map[string]map[interface{}]Changeset
 }
 
-func (c Changeset) changed(typ reflect.Type, old interface{}, new interface{}) bool {
+func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface{}) bool {
 	if oeq, ok := old.(interface{ Equal(interface{}) bool }); ok {
 		return !oeq.Equal(new)
 	}
@@ -27,6 +27,24 @@ func (c Changeset) changed(typ reflect.Type, old interface{}, new interface{}) b
 	}
 
 	return !(typ.Comparable() && old == new)
+}
+
+// FieldChanged returns true if field exists and it's already chagned.
+// returns false otherwise.
+func (c Changeset) FieldChanged(field string) bool {
+	for i, f := range c.doc.Fields() {
+		if f == field {
+			var (
+				typ, _ = c.doc.Type(field)
+				old    = c.snapshot[i]
+				new, _ = c.doc.Value(field)
+			)
+
+			return c.valueChanged(typ, old, new)
+		}
+	}
+
+	return false
 }
 
 // Changes returns map of changes, with field names as the keys and an array of old and new values.
@@ -41,7 +59,7 @@ func (c Changeset) Changes() map[string]pair {
 			new, _ = c.doc.Value(field)
 		)
 
-		if c.changed(typ, old, new) {
+		if c.valueChanged(typ, old, new) {
 			changes[field] = pair{old, new}
 		}
 	}
@@ -62,7 +80,7 @@ func (c Changeset) Apply(doc *Document, mod *Modification) {
 			new, _ = c.doc.Value(field)
 		)
 
-		if c.changed(typ, old, new) {
+		if c.valueChanged(typ, old, new) {
 			mod.Add(Set(field, new))
 		}
 	}

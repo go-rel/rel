@@ -21,8 +21,18 @@ func TestDirty(t *testing.T) {
 		doc      = NewDocument(&user)
 	)
 
+	t.Run("apply not initialized", func(t *testing.T) {
+		assert.Equal(t,
+			Apply(doc, newStructset(doc, false)),
+			Apply(doc, user),
+		)
+	})
+
 	t.Run("init", func(t *testing.T) {
-		user.Init(doc)
+		user.UpdatedAt = ts
+		user.CreatedAt = ts
+
+		user.init(doc)
 
 		assert.Equal(t, snapshot, user.Dirty.snapshot)
 		assert.Empty(t, user.Dirty.Changes())
@@ -98,7 +108,7 @@ func TestDirty_ptr(t *testing.T) {
 	)
 
 	t.Run("init", func(t *testing.T) {
-		dirty.Init(doc)
+		dirty.init(doc)
 
 		assert.Equal(t, snapshot, dirty.snapshot)
 		assert.Empty(t, dirty.Changes())
@@ -170,7 +180,8 @@ func TestDirty_belongsTo(t *testing.T) {
 	)
 
 	t.Run("init", func(t *testing.T) {
-		dirty.Init(doc)
+		dirty.init(doc)
+		dirty.initAssoc()
 
 		assert.Equal(t, *dirty.assoc["user"], address.User.Dirty)
 		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
@@ -229,7 +240,8 @@ func TestDirty_hasOne(t *testing.T) {
 	)
 
 	t.Run("init", func(t *testing.T) {
-		dirty.Init(doc)
+		dirty.init(doc)
+		dirty.initAssoc()
 
 		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
 		assert.Empty(t, dirty.assoc["address"].Changes())
@@ -294,7 +306,9 @@ func TestDirty_hasMany(t *testing.T) {
 	)
 
 	t.Run("init", func(t *testing.T) {
-		user.Dirty.Init(doc)
+		user.Dirty.init(doc)
+		user.Dirty.initAssoc()
+
 		dirties = user.Dirty.assocMany["transactions"]
 
 		assert.Equal(t, snapshots[0], dirties[11].snapshot)

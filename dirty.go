@@ -18,8 +18,8 @@ type Dirty struct {
 	assocMany map[string]map[interface{}]*Dirty
 }
 
-// Init dirty states.
-func (d *Dirty) Init(doc *Document) {
+// init dirty states.
+func (d *Dirty) init(doc *Document) {
 	d.doc = doc
 	d.snapshot = make([]interface{}, len(doc.Fields()))
 	d.assoc = make(map[string]*Dirty)
@@ -28,21 +28,28 @@ func (d *Dirty) Init(doc *Document) {
 	for i, field := range doc.Fields() {
 		d.snapshot[i], _ = doc.Value(field)
 	}
+}
 
-	for _, field := range doc.BelongsTo() {
-		d.initAssoc(field)
+// initAssoc dirty states.
+// This function will panic if dirty is not yet initialized.
+func (d *Dirty) initAssoc() {
+	d.assoc = make(map[string]*Dirty)
+	d.assocMany = make(map[string]map[interface{}]*Dirty)
+
+	for _, field := range d.doc.BelongsTo() {
+		d.initAssocOne(field)
 	}
 
-	for _, field := range doc.HasOne() {
-		d.initAssoc(field)
+	for _, field := range d.doc.HasOne() {
+		d.initAssocOne(field)
 	}
 
-	for _, field := range doc.HasMany() {
+	for _, field := range d.doc.HasMany() {
 		d.initAssocMany(field)
 	}
 }
 
-func (d *Dirty) initAssoc(field string) {
+func (d *Dirty) initAssocOne(field string) {
 	var (
 		assoc       = d.doc.Association(field)
 		doc, loaded = assoc.Document()
@@ -54,7 +61,8 @@ func (d *Dirty) initAssoc(field string) {
 	}
 
 	if loaded {
-		dirty.Init(doc)
+		dirty.init(doc)
+		dirty.initAssoc()
 	}
 
 	d.assoc[field] = dirty
@@ -80,7 +88,9 @@ func (d *Dirty) initAssocMany(field string) {
 					dirty = &Dirty{}
 				}
 
-				dirty.Init(doc)
+				dirty.init(doc)
+				dirty.initAssoc()
+
 				d.assocMany[field][pValue] = dirty
 			}
 		}
@@ -100,6 +110,7 @@ func (d *Dirty) changed(typ reflect.Type, old interface{}, new interface{}) bool
 }
 
 // Changes returns map of changes, with field names as the keys and an array of old and new values.
+// TODO: also returns assoc diff.
 func (d Dirty) Changes() map[string]pair {
 	changes := make(map[string]pair)
 
@@ -160,18 +171,19 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 }
 
 func (d Dirty) applyAssoc(field string, mod *Modification) {
-	var (
-		assoc = d.doc.Association(field)
-		dirty = d.assoc[field]
-	)
-
+	assoc := d.doc.Association(field)
 	if assoc.IsZero() {
 		return
 	}
 
 	doc, _ := assoc.Document()
 
-	if amod := Apply(doc, dirty); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+	if dirty, ok := d.assoc[field]; ok {
+		if amod := Apply(doc, dirty); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+			mod.SetAssoc(field, amod)
+		}
+	} else {
+		amod := Apply(doc, newStructset(doc, false))
 		mod.SetAssoc(field, amod)
 	}
 }

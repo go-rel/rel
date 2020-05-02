@@ -148,18 +148,9 @@ func (r repository) find(ctx context.Context, doc *Document, query Query) error 
 	}
 
 	finish := r.instrument(ctx, "rel-scan-one", "scanning a record")
-	if err := scanOne(cur, doc); err != nil {
-		finish(err)
-		return err
-	}
-	finish(nil)
+	defer finish(nil)
 
-	// init dirty.
-	if doc.Dirty() != nil {
-		doc.Dirty().init(doc)
-	}
-
-	return nil
+	return scanOne(cur, doc)
 }
 
 // FindAll records that match the query.
@@ -191,20 +182,9 @@ func (r repository) findAll(ctx context.Context, col *Collection, query Query) e
 	}
 
 	finish := r.instrument(ctx, "rel-scan-all", "scanning all records")
-	if err := scanAll(cur, col); err != nil {
-		finish(err)
-		return err
-	}
-	finish(nil)
+	defer finish(nil)
 
-	// init dirties.
-	for i := 0; i < col.Len(); i++ {
-		if doc := col.Get(i); doc.Dirty() != nil {
-			defer doc.Dirty().init(doc)
-		}
-	}
-
-	return nil
+	return scanAll(cur, col)
 }
 
 // FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
@@ -733,7 +713,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	var (
-		targets, table, keyField, keyType, ddata, dirties = r.mapPreloadTargets(sl, path)
+		targets, table, keyField, keyType, ddata = r.mapPreloadTargets(sl, path)
 	)
 
 	if len(targets) == 0 {
@@ -760,18 +740,9 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	scanFinish := r.instrument(ctx, "rel-scan-multi", "scanning all records to multiple targets")
-	if err := scanMulti(cur, keyField, keyType, targets); err != nil {
-		scanFinish(err)
-		return err
-	}
-	scanFinish(nil)
+	defer scanFinish(nil)
 
-	// init dirties.
-	for i := range dirties {
-		dirties[i].initAssoc()
-	}
-
-	return nil
+	return scanMulti(cur, keyField, keyType, targets)
 }
 
 // MustPreload loads association with given query.
@@ -780,27 +751,25 @@ func (r repository) MustPreload(ctx context.Context, records interface{}, field 
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData, []*Dirty) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData) {
 	type frame struct {
 		index int
 		doc   *Document
-		dirty *Dirty
 	}
 
 	var (
-		table         string
-		keyField      string
-		keyType       reflect.Type
-		ddata         documentData
-		parentDirties []*Dirty
-		mapTarget     = make(map[interface{}][]slice)
-		stack         = make([]frame, sl.Len())
+		table     string
+		keyField  string
+		keyType   reflect.Type
+		ddata     documentData
+		mapTarget = make(map[interface{}][]slice)
+		stack     = make([]frame, sl.Len())
 	)
 
 	// init stack
 	for i := 0; i < len(stack); i++ {
 		doc := sl.Get(i)
-		stack[i] = frame{index: 0, doc: doc, dirty: doc.Dirty()}
+		stack[i] = frame{index: 0, doc: doc}
 	}
 
 	for len(stack) > 0 {
@@ -832,10 +801,6 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 			target.Reset()
 			mapTarget[ref] = append(mapTarget[ref], target)
 
-			if top.dirty != nil && top.dirty.doc != nil {
-				parentDirties = append(parentDirties, top.dirty)
-			}
-
 			if table == "" {
 				table = target.Table()
 				keyField = assocs.ForeignField()
@@ -852,7 +817,6 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		} else {
 			if assocs.Type() == HasMany {
 				var (
-					dirties     map[interface{}]*Dirty
 					col, loaded = assocs.Collection()
 				)
 
@@ -860,38 +824,18 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 					continue
 				}
 
-				if top.dirty != nil {
-					dirties = top.dirty.assocMany[field]
-				}
-
 				stack = append(stack, make([]frame, col.Len())...)
 				for i := 0; i < col.Len(); i++ {
-					var (
-						dirty *Dirty
-						doc   = col.Get(i)
-					)
-
-					if dirties != nil {
-						dirty = dirties[doc.PrimaryValue()]
-					}
-
 					stack[n+i] = frame{
 						index: top.index + 1,
-						doc:   doc,
-						dirty: dirty,
+						doc:   col.Get(i),
 					}
 				}
 			} else {
 				if doc, loaded := assocs.Document(); loaded {
-					var dirty *Dirty
-					if top.dirty != nil {
-						dirty = top.dirty.assoc[field]
-					}
-
 					stack = append(stack, frame{
 						index: top.index + 1,
 						doc:   doc,
-						dirty: dirty,
 					})
 				}
 			}
@@ -899,7 +843,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	}
 
-	return mapTarget, table, keyField, keyType, ddata, parentDirties
+	return mapTarget, table, keyField, keyType, ddata
 }
 
 func (r repository) withDefaultScope(ddata documentData, query Query) Query {

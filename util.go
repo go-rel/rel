@@ -100,8 +100,10 @@ func isDeepZero(rv reflect.Value, depth int) bool {
 			}
 		}
 		return true
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.UnsafePointer:
 		return rv.IsNil()
+	case reflect.Slice:
+		return rv.IsNil() || rv.Len() == 0
 	case reflect.String:
 		return rv.Len() == 0
 	case reflect.Struct:

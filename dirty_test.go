@@ -9,15 +9,15 @@ import (
 
 func TestDirty(t *testing.T) {
 	var (
-		now  = time.Now()
+		ts   = time.Now()
 		user = User{
 			ID:        1,
 			Name:      "User 1",
 			Age:       20,
-			UpdatedAt: now,
-			CreatedAt: now,
+			UpdatedAt: ts,
+			CreatedAt: ts,
 		}
-		snapshot = []interface{}{1, "User 1", 20, now, now}
+		snapshot = []interface{}{1, "User 1", 20, ts, ts}
 		doc      = NewDocument(&user)
 	)
 
@@ -26,6 +26,13 @@ func TestDirty(t *testing.T) {
 
 		assert.Equal(t, snapshot, user.Dirty.snapshot)
 		assert.Empty(t, user.Dirty.Changes())
+	})
+
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc:    map[string]AssocModification{},
+		}, Apply(doc, user))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -37,6 +44,17 @@ func TestDirty(t *testing.T) {
 			"name": Pair{"User 1", "User 2"},
 			"age":  Pair{20, 21},
 		}, user.Dirty.Changes())
+	})
+
+	t.Run("apply dirty", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{
+				"name":       Set("name", "User 2"),
+				"age":        Set("age", 21),
+				"updated_at": Set("updated_at", now()),
+			},
+			Assoc: map[string]AssocModification{},
+		}, Apply(doc, user))
 	})
 }
 
@@ -59,6 +77,13 @@ func TestDirty_ptr(t *testing.T) {
 		assert.Empty(t, dirty.Changes())
 	})
 
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc:    map[string]AssocModification{},
+		}, Apply(doc, dirty))
+	})
+
 	t.Run("update", func(t *testing.T) {
 		userID = 3
 		address.UserID = &userID
@@ -67,7 +92,15 @@ func TestDirty_ptr(t *testing.T) {
 		assert.Equal(t, map[string]Pair{
 			"user_id": Pair{2, 3},
 		}, dirty.Changes())
+	})
 
+	t.Run("apply dirty", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{
+				"user_id": Set("user_id", 3),
+			},
+			Assoc: map[string]AssocModification{},
+		}, Apply(doc, dirty))
 	})
 }
 

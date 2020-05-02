@@ -45,18 +45,20 @@ func (d *Dirty) Init(doc *Document) {
 
 func (d *Dirty) initAssoc(field string) {
 	var (
-		assoc = d.doc.Association(field)
+		assoc       = d.doc.Association(field)
+		doc, loaded = assoc.Document()
 	)
 
-	if doc, loaded := assoc.Document(); loaded {
-		dirty := doc.Dirty()
-		if dirty == nil {
-			dirty = &Dirty{}
-		}
-
-		dirty.Init(doc)
-		d.assoc[field] = dirty
+	dirty := doc.Dirty()
+	if dirty == nil {
+		dirty = &Dirty{}
 	}
+
+	if loaded {
+		dirty.Init(doc)
+	}
+
+	d.assoc[field] = dirty
 }
 
 func (d *Dirty) initAssocMany(field string) {
@@ -159,17 +161,17 @@ func (d Dirty) Apply(doc *Document, mod *Modification) {
 }
 
 func (d Dirty) applyAssoc(field string, mod *Modification) {
-	if dirty, ok := d.assoc[field]; ok {
-		assoc := d.doc.Association(field)
-		if assoc.IsZero() {
-			return
-		}
+	var (
+		assoc = d.doc.Association(field)
+		dirty = d.assoc[field]
+	)
 
-		doc, _ := assoc.Document()
-		mod.SetAssoc(field, Apply(doc, dirty))
-	} else {
-		newStructset(d.doc, false).buildAssoc(field, mod)
+	if assoc.IsZero() {
+		return
 	}
+
+	doc, _ := assoc.Document()
+	mod.SetAssoc(field, Apply(doc, dirty))
 }
 
 func (d Dirty) applyAssocMany(field string, mod *Modification) {
@@ -204,8 +206,10 @@ func (d Dirty) applyAssocMany(field string, mod *Modification) {
 			deletedIDs = append(deletedIDs, i)
 		}
 
-		mod.SetAssoc(field, mods...)
-		mod.SetDeletedIDs(field, deletedIDs)
+		if len(mods) > 0 || len(deletedIDs) > 0 {
+			mod.SetAssoc(field, mods...)
+			mod.SetDeletedIDs(field, deletedIDs)
+		}
 	} else {
 		newStructset(d.doc, false).buildAssocMany(field, mod)
 	}

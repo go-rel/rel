@@ -342,13 +342,18 @@ func TestChangeset_hasMany(t *testing.T) {
 	})
 
 	t.Run("apply clear assoc", func(t *testing.T) {
+		var deletedIDs []interface{}
+		for id := range changeset.assocMany["transactions"] {
+			deletedIDs = append(deletedIDs, id)
+		}
+
 		user.Transactions = []Transaction{}
 		assert.Equal(t, Modification{
 			Modifies: map[string]Modify{},
 			Assoc: map[string]AssocModification{
 				"transactions": AssocModification{
 					Modifications: []Modification{},
-					DeletedIDs:    []interface{}{11, 12},
+					DeletedIDs:    deletedIDs,
 				},
 			},
 		}, Apply(doc, changeset))

@@ -768,16 +768,14 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	// init stack
 	for i := 0; i < len(stack); i++ {
-		doc := sl.Get(i)
-		stack[i] = frame{index: 0, doc: doc}
+		stack[i] = frame{index: 0, doc: sl.Get(i)}
 	}
 
 	for len(stack) > 0 {
 		var (
 			n      = len(stack) - 1
 			top    = stack[n]
-			field  = path[top.index]
-			assocs = top.doc.Association(field)
+			assocs = top.doc.Association(path[top.index])
 		)
 
 		stack = stack[:n]

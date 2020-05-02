@@ -40,9 +40,9 @@ func TestDirty(t *testing.T) {
 		user.Age = 21
 
 		assert.Equal(t, snapshot, user.Dirty.snapshot)
-		assert.Equal(t, map[string]Pair{
-			"name": Pair{"User 1", "User 2"},
-			"age":  Pair{20, 21},
+		assert.Equal(t, map[string]pair{
+			"name": pair{"User 1", "User 2"},
+			"age":  pair{20, 21},
 		}, user.Dirty.Changes())
 	})
 
@@ -116,8 +116,8 @@ func TestDirty_ptr(t *testing.T) {
 		address.UserID = &userID
 
 		assert.Equal(t, snapshot, dirty.snapshot)
-		assert.Equal(t, map[string]Pair{
-			"user_id": Pair{2, 3},
+		assert.Equal(t, map[string]pair{
+			"user_id": pair{2, 3},
 		}, dirty.Changes())
 	})
 
@@ -188,8 +188,8 @@ func TestDirty_belongsTo(t *testing.T) {
 		address.User.Name = "User Satu"
 
 		assert.Equal(t, snapshot, dirty.assoc["user"].snapshot)
-		assert.Equal(t, map[string]Pair{
-			"name": Pair{"User 1", "User Satu"},
+		assert.Equal(t, map[string]pair{
+			"name": pair{"User 1", "User Satu"},
 		}, dirty.assoc["user"].Changes())
 	})
 
@@ -248,10 +248,10 @@ func TestDirty_hasOne(t *testing.T) {
 		user.Address.Notes = Notes("Home")
 
 		assert.Equal(t, snapshot, dirty.assoc["address"].snapshot)
-		assert.Equal(t, map[string]Pair{
-			"user_id": Pair{nil, user.ID},
-			"street":  Pair{"Grove Street", "Grove Street Blvd"},
-			"notes":   Pair{Notes("HQ"), Notes("Home")},
+		assert.Equal(t, map[string]pair{
+			"user_id": pair{nil, user.ID},
+			"street":  pair{"Grove Street", "Grove Street Blvd"},
+			"notes":   pair{Notes("HQ"), Notes("Home")},
 		}, dirty.assoc["address"].Changes())
 	})
 
@@ -304,13 +304,60 @@ func TestDirty_hasMany(t *testing.T) {
 		assert.Empty(t, dirties[12].Changes())
 	})
 
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc:    map[string]AssocModification{},
+		}, Apply(doc, user))
+	})
+
 	t.Run("update", func(t *testing.T) {
 		user.Transactions[0].Status = "paid"
 		// replaced struct is new, so there's no dirty states to check.
 		user.Transactions[1] = Transaction{Item: "Paper", Status: "pending"}
 
-		assert.Equal(t, map[string]Pair{
-			"status": Pair{Status("pending"), Status("paid")},
+		assert.Equal(t, map[string]pair{
+			"status": pair{Status("pending"), Status("paid")},
 		}, dirties[11].Changes())
+	})
+
+	t.Run("apply dirty", func(t *testing.T) {
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc: map[string]AssocModification{
+				"transactions": AssocModification{
+					Modifications: []Modification{
+						{
+							Modifies: map[string]Modify{
+								"status": Set("status", Status("paid")),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+						{
+							Modifies: map[string]Modify{
+								"item":    Set("item", "Paper"),
+								"status":  Set("status", Status("pending")),
+								"user_id": Set("user_id", 0),
+							},
+							Assoc: map[string]AssocModification{},
+						},
+					},
+					DeletedIDs: []interface{}{12},
+				},
+			},
+		}, Apply(doc, user))
+	})
+
+	t.Run("apply clear assoc", func(t *testing.T) {
+		user.Transactions = []Transaction{}
+		assert.Equal(t, Modification{
+			Modifies: map[string]Modify{},
+			Assoc: map[string]AssocModification{
+				"transactions": AssocModification{
+					Modifications: []Modification{},
+					DeletedIDs:    []interface{}{11, 12},
+				},
+			},
+		}, Apply(doc, user))
 	})
 }

@@ -5,8 +5,7 @@ import (
 	"time"
 )
 
-// Pair is alias for array of 2 interfaces.
-type Pair [2]interface{}
+type pair = [2]interface{}
 
 // Dirty tracking for golang structs.
 // This allows REL to efficiently to perform update operation only on updated fields and association.
@@ -101,8 +100,8 @@ func (d *Dirty) changed(typ reflect.Type, old interface{}, new interface{}) bool
 }
 
 // Changes returns map of changes, with field names as the keys and an array of old and new values.
-func (d Dirty) Changes() map[string]Pair {
-	changes := make(map[string]Pair)
+func (d Dirty) Changes() map[string]pair {
+	changes := make(map[string]pair)
 
 	for i, field := range d.doc.Fields() {
 		var (
@@ -112,7 +111,7 @@ func (d Dirty) Changes() map[string]Pair {
 		)
 
 		if d.changed(typ, old, new) {
-			changes[field] = [2]interface{}{old, new}
+			changes[field] = pair{old, new}
 		}
 	}
 
@@ -170,26 +169,20 @@ func (d Dirty) applyAssoc(field string, mod *Modification) {
 		return
 	}
 
-	var (
-		doc, _   = assoc.Document()
-		assocMod = Apply(doc, dirty)
-	)
+	doc, _ := assoc.Document()
 
-	if len(assocMod.Modifies) > 0 || len(assocMod.Assoc) > 0 {
-		mod.SetAssoc(field, Apply(doc, dirty))
+	if amod := Apply(doc, dirty); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+		mod.SetAssoc(field, amod)
 	}
 }
 
 func (d Dirty) applyAssocMany(field string, mod *Modification) {
 	if dirties, ok := d.assocMany[field]; ok {
-		assoc := d.doc.Association(field)
-		if assoc.IsZero() {
-			return
-		}
-
 		var (
+			assoc      = d.doc.Association(field)
 			col, _     = assoc.Collection()
-			mods       = make([]Modification, col.Len())
+			mods       = make([]Modification, 0, col.Len())
+			updatedIDs = make(map[interface{}]struct{})
 			deletedIDs []interface{}
 		)
 
@@ -200,16 +193,23 @@ func (d Dirty) applyAssocMany(field string, mod *Modification) {
 			)
 
 			if dirty, ok := dirties[pValue]; ok {
-				mods[i] = Apply(doc, dirty)
-				delete(dirties, pValue)
+				updatedIDs[pValue] = struct{}{}
+
+				if amod := Apply(doc, dirty); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+					mods = append(mods, amod)
+				}
 			} else {
-				mods[i] = Apply(doc, newStructset(doc, false))
+				mods = append(mods, Apply(doc, newStructset(doc, false)))
 			}
 		}
 
 		// leftover snapshot.
-		for i := range dirties {
-			deletedIDs = append(deletedIDs, i)
+		if len(updatedIDs) != len(dirties) {
+			for i := range dirties {
+				if _, ok := updatedIDs[i]; !ok {
+					deletedIDs = append(deletedIDs, i)
+				}
+			}
 		}
 
 		if len(mods) > 0 || len(deletedIDs) > 0 {

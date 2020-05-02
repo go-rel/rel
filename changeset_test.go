@@ -48,6 +48,62 @@ func BenchmarkSmallMapLookup(b *testing.B) {
 	}
 }
 
+func BenchmarkChangeset(b *testing.B) {
+	var (
+		user = User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+			Transactions: []Transaction{
+				{ID: 1, Item: "Sword"},
+				{ID: 2, Item: "Shield"},
+			},
+			Address: Address{
+				ID:     1,
+				Street: "Grove Street",
+			},
+			CreatedAt: time.Now(),
+		}
+		doc = NewDocument(&user)
+	)
+
+	for n := 0; n < b.N; n++ {
+		changeset := NewChangeset(&user)
+		user.Name = "Zoro"
+
+		Apply(doc, changeset)
+	}
+}
+
+func BenchmarkChangeset_assoc(b *testing.B) {
+	var (
+		user = User{
+			ID:   1,
+			Name: "Luffy",
+			Age:  20,
+			Transactions: []Transaction{
+				{ID: 1, Item: "Sword"},
+				{ID: 2, Item: "Shield"},
+			},
+			Address: Address{
+				ID:     1,
+				Street: "Grove Street",
+			},
+			CreatedAt: time.Now(),
+		}
+		doc = NewDocument(&user)
+	)
+
+	for n := 0; n < b.N; n++ {
+		changeset := NewChangeset(&user)
+		user.Name = "Zoro"
+		user.Transactions[0].Item = "Sake"
+		user.Address.Street = "Thousand Sunny"
+
+		Apply(doc, changeset)
+	}
+}
+
 func TestChangeset(t *testing.T) {
 	var (
 		ts   = time.Now()

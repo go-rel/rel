@@ -68,7 +68,7 @@ func (c Changeset) Changes() map[string]pair {
 }
 
 // Apply mutation.
-func (c Changeset) Apply(doc *Document, mod *Mutation) {
+func (c Changeset) Apply(doc *Document, mut *Mutation) {
 	var (
 		t = now().Truncate(time.Second)
 	)
@@ -81,28 +81,28 @@ func (c Changeset) Apply(doc *Document, mod *Mutation) {
 		)
 
 		if c.valueChanged(typ, old, new) {
-			mod.Add(Set(field, new))
+			mut.Add(Set(field, new))
 		}
 	}
 
-	if len(mod.Mutates) > 0 && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
-		mod.Add(Set("updated_at", t))
+	if len(mut.Mutates) > 0 && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
+		mut.Add(Set("updated_at", t))
 	}
 
 	for _, field := range doc.BelongsTo() {
-		c.applyAssoc(field, mod)
+		c.applyAssoc(field, mut)
 	}
 
 	for _, field := range doc.HasOne() {
-		c.applyAssoc(field, mod)
+		c.applyAssoc(field, mut)
 	}
 
 	for _, field := range doc.HasMany() {
-		c.applyAssocMany(field, mod)
+		c.applyAssocMany(field, mut)
 	}
 }
 
-func (c Changeset) applyAssoc(field string, mod *Mutation) {
+func (c Changeset) applyAssoc(field string, mut *Mutation) {
 	assoc := c.doc.Association(field)
 	if assoc.IsZero() {
 		return
@@ -112,15 +112,15 @@ func (c Changeset) applyAssoc(field string, mod *Mutation) {
 
 	if ch, ok := c.assoc[field]; ok {
 		if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
-			mod.SetAssoc(field, amod)
+			mut.SetAssoc(field, amod)
 		}
 	} else {
 		amod := Apply(doc, newStructset(doc, false))
-		mod.SetAssoc(field, amod)
+		mut.SetAssoc(field, amod)
 	}
 }
 
-func (c Changeset) applyAssocMany(field string, mod *Mutation) {
+func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 	if dirties, ok := c.assocMany[field]; ok {
 		var (
 			assoc      = c.doc.Association(field)
@@ -157,11 +157,11 @@ func (c Changeset) applyAssocMany(field string, mod *Mutation) {
 		}
 
 		if len(mods) > 0 || len(deletedIDs) > 0 {
-			mod.SetAssoc(field, mods...)
-			mod.SetDeletedIDs(field, deletedIDs)
+			mut.SetAssoc(field, mods...)
+			mut.SetDeletedIDs(field, deletedIDs)
 		}
 	} else {
-		newStructset(c.doc, false).buildAssocMany(field, mod)
+		newStructset(c.doc, false).buildAssocMany(field, mut)
 	}
 }
 

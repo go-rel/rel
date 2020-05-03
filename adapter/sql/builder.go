@@ -99,12 +99,12 @@ func (b *Builder) Insert(table string, mutates map[string]rel.Mutate) (string, [
 		buffer.WriteString(" (")
 
 		i := 0
-		for field, mod := range mutates {
-			if mod.Type == rel.ChangeSetOp {
+		for field, mut := range mutates {
+			if mut.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.config.EscapeChar)
 				buffer.WriteString(field)
 				buffer.WriteString(b.config.EscapeChar)
-				buffer.Arguments[i] = mod.Value
+				buffer.Arguments[i] = mut.Value
 			}
 
 			if i < count-1 {
@@ -171,9 +171,9 @@ func (b *Builder) InsertAll(table string, fields []string, bulkMutates []map[str
 		buffer.WriteByte('(')
 
 		for j, field := range fields {
-			if mod, ok := mutates[field]; ok && mod.Type == rel.ChangeSetOp {
+			if mut, ok := mutates[field]; ok && mut.Type == rel.ChangeSetOp {
 				buffer.WriteString(b.ph())
-				buffer.Append(mod.Value)
+				buffer.Append(mut.Value)
 			} else {
 				buffer.WriteString("DEFAULT")
 			}
@@ -216,23 +216,23 @@ func (b *Builder) Update(table string, mutates map[string]rel.Mutate, filter rel
 	buffer.WriteString(" SET ")
 
 	i := 0
-	for field, mod := range mutates {
-		switch mod.Type {
+	for field, mut := range mutates {
+		switch mut.Type {
 		case rel.ChangeSetOp:
 			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.ph())
-			buffer.Append(mod.Value)
+			buffer.Append(mut.Value)
 		case rel.ChangeIncOp:
 			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.escape(field))
 			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
-			buffer.Append(mod.Value)
+			buffer.Append(mut.Value)
 		case rel.ChangeFragmentOp:
 			buffer.WriteString(field)
-			buffer.Append(mod.Value.([]interface{})...)
+			buffer.Append(mut.Value.([]interface{})...)
 		}
 
 		if i < count-1 {

@@ -124,7 +124,7 @@ func TestMutate_Insert_map(t *testing.T) {
 			},
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"title": "Rel for dummies",
 			"author": rel.Map{
 				"name": "Kia",
@@ -139,14 +139,14 @@ func TestMutate_Insert_map(t *testing.T) {
 		}
 	)
 
-	repo.ExpectInsert(mod)
-	assert.Nil(t, repo.Insert(context.TODO(), &result, mod))
+	repo.ExpectInsert(mut)
+	assert.Nil(t, repo.Insert(context.TODO(), &result, mut))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectInsert(mod)
+	repo.ExpectInsert(mut)
 	assert.NotPanics(t, func() {
-		repo.MustInsert(context.TODO(), &result, mod)
+		repo.MustInsert(context.TODO(), &result, mut)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -446,7 +446,7 @@ func TestMutate_Update_map(t *testing.T) {
 			},
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"title": "Rel for dummies",
 			"author": rel.Map{
 				"id":   2,
@@ -462,14 +462,14 @@ func TestMutate_Update_map(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mod)
-	assert.Nil(t, repo.Update(context.TODO(), &result, mod))
+	repo.ExpectUpdate(mut)
+	assert.Nil(t, repo.Update(context.TODO(), &result, mut))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectUpdate(mod)
+	repo.ExpectUpdate(mut)
 	assert.NotPanics(t, func() {
-		repo.MustUpdate(context.TODO(), &result, mod)
+		repo.MustUpdate(context.TODO(), &result, mut)
 		assert.Equal(t, book, result)
 	})
 	repo.AssertExpectations(t)
@@ -485,7 +485,7 @@ func TestMutate_Update_belongsToInconsistentFk(t *testing.T) {
 			AuthorID: &authorID,
 			Author:   Author{ID: 2, Name: "Kia"},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"author": rel.Map{
 				"id":   2,
 				"name": "Koa",
@@ -493,12 +493,12 @@ func TestMutate_Update_belongsToInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mod)
+	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "author_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-	}, repo.Update(context.TODO(), &result, mod))
+	}, repo.Update(context.TODO(), &result, mut))
 	repo.AssertExpectations(t)
 }
 
@@ -510,7 +510,7 @@ func TestMutate_Update_hasOneInconsistentPk(t *testing.T) {
 			Title:  "Golang for dummies",
 			Poster: Poster{ID: 1, BookID: 2, Image: "http://image.url"},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"poster": rel.Map{
 				"id":    2,
 				"image": "http://image.url/other",
@@ -518,9 +518,9 @@ func TestMutate_Update_hasOneInconsistentPk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mod)
+	repo.ExpectUpdate(mut)
 	assert.Panics(t, func() {
-		_ = repo.Update(context.TODO(), &result, mod)
+		_ = repo.Update(context.TODO(), &result, mut)
 	})
 	repo.AssertExpectations(t)
 }
@@ -533,7 +533,7 @@ func TestMutate_Update_hasOneInconsistentFk(t *testing.T) {
 			Title:  "Golang for dummies",
 			Poster: Poster{ID: 1, BookID: 1, Image: "http://image.url"},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"poster": rel.Map{
 				"id":    1,
 				"image": "http://image.url/other",
@@ -541,12 +541,12 @@ func TestMutate_Update_hasOneInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mod)
+	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has one ref and fk"),
-	}, repo.Update(context.TODO(), &result, mod))
+	}, repo.Update(context.TODO(), &result, mut))
 	repo.AssertExpectations(t)
 }
 
@@ -560,19 +560,19 @@ func TestMutate_Update_hasManyInconsistentFk(t *testing.T) {
 				{ID: 2, BookID: 1, Score: 5},
 			},
 		}
-		mod = rel.Map{
+		mut = rel.Map{
 			"ratings": []rel.Map{
 				{"id": 2, "score": 9},
 			},
 		}
 	)
 
-	repo.ExpectUpdate(mod)
+	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has many ref and fk"),
-	}, repo.Update(context.TODO(), &result, mod))
+	}, repo.Update(context.TODO(), &result, mut))
 	repo.AssertExpectations(t)
 }
 

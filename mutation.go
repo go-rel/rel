@@ -41,8 +41,8 @@ type Mutation struct {
 }
 
 // Add a mutate.
-func (m *Mutation) Add(mod Mutate) {
-	m.Mutates[mod.Field] = mod
+func (m *Mutation) Add(mut Mutate) {
+	m.Mutates[mut.Field] = mut
 }
 
 // SetAssoc mutation.

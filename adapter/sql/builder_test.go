@@ -252,7 +252,7 @@ func BenchmarkBuilder_Insert(b *testing.B) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		modifies = map[string]rel.Modify{
+		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
 			"agree": rel.Set("agree", true),
@@ -261,7 +261,7 @@ func BenchmarkBuilder_Insert(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		builder.Insert("users", modifies)
+		builder.Insert("users", mutates)
 	}
 }
 
@@ -272,12 +272,12 @@ func TestBuilder_Insert(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{
+		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
 			"agree": rel.Set("agree", true),
 		}
-		qs, args = builder.Insert("users", modifies)
+		qs, args = builder.Insert("users", mutates)
 	)
 
 	assert.Regexp(t, fmt.Sprint(`^INSERT INTO `, "`users`", ` \((`, "`", `\w*`, "`", `,?){3}\) VALUES \(\?,\?,\?\);`), qs)
@@ -296,12 +296,12 @@ func TestBuilder_Insert_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{
+		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
 			"agree": rel.Set("agree", true),
 		}
-		qs, args = builder.Returning("id").Insert("users", modifies)
+		qs, args = builder.Returning("id").Insert("users", mutates)
 	)
 
 	assert.Regexp(t, `^INSERT INTO \"users\" \(("\w*",?){3}\) VALUES \(\$1,\$2,\$3\) RETURNING \"id\";`, qs)
@@ -319,8 +319,8 @@ func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 			InsertDefaultValues: false,
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{}
-		qs, args = builder.Insert("users", modifies)
+		mutates = map[string]rel.Mutate{}
+		qs, args = builder.Insert("users", mutates)
 	)
 
 	assert.Equal(t, "INSERT INTO `users` () VALUES ();", qs)
@@ -335,8 +335,8 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 			EscapeChar:          "`",
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{}
-		qs, args = builder.Returning("id").Insert("users", modifies)
+		mutates = map[string]rel.Mutate{}
+		qs, args = builder.Returning("id").Insert("users", mutates)
 	)
 
 	assert.Equal(t, "INSERT INTO `users` DEFAULT VALUES RETURNING `id`;", qs)
@@ -350,7 +350,7 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 			EscapeChar:  "`",
 		}
 		builder      = NewBuilder(config)
-		bulkModifies = []map[string]rel.Modify{
+		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
 			},
@@ -365,7 +365,7 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 	)
 
 	for n := 0; n < b.N; n++ {
-		builder.InsertAll("users", []string{"name"}, bulkModifies)
+		builder.InsertAll("users", []string{"name"}, bulkMutates)
 	}
 }
 
@@ -376,7 +376,7 @@ func TestBuilder_InsertAll(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder      = NewBuilder(config)
-		bulkModifies = []map[string]rel.Modify{
+		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
 			},
@@ -390,12 +390,12 @@ func TestBuilder_InsertAll(t *testing.T) {
 		}
 	)
 
-	statement, args := builder.InsertAll("users", []string{"name"}, bulkModifies)
+	statement, args := builder.InsertAll("users", []string{"name"}, bulkMutates)
 	assert.Equal(t, "INSERT INTO `users` (`name`) VALUES (?),(DEFAULT),(?);", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
-	statement, args = builder.InsertAll("users", []string{"name", "age"}, bulkModifies)
+	statement, args = builder.InsertAll("users", []string{"name", "age"}, bulkMutates)
 	assert.Equal(t, "INSERT INTO `users` (`name`,`age`) VALUES (?,DEFAULT),(DEFAULT,?),(?,?);", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
 }
@@ -409,7 +409,7 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder      = NewBuilder(config)
-		bulkModifies = []map[string]rel.Modify{
+		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
 			},
@@ -423,13 +423,13 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 		}
 	)
 
-	statement, args := builder.Returning("id").InsertAll("users", []string{"name"}, bulkModifies)
+	statement, args := builder.Returning("id").InsertAll("users", []string{"name"}, bulkMutates)
 	assert.Equal(t, "INSERT INTO \"users\" (\"name\") VALUES ($1),(DEFAULT),($2) RETURNING \"id\";", statement)
 	assert.Equal(t, []interface{}{"foo", "boo"}, args)
 
 	// with age
 	builder.count = 0
-	statement, args = builder.Returning("id").InsertAll("users", []string{"name", "age"}, bulkModifies)
+	statement, args = builder.Returning("id").InsertAll("users", []string{"name", "age"}, bulkMutates)
 	assert.Equal(t, "INSERT INTO \"users\" (\"name\",\"age\") VALUES ($1,DEFAULT),(DEFAULT,$2),($3,$4) RETURNING \"id\";", statement)
 	assert.Equal(t, []interface{}{"foo", 10, "boo", 20}, args)
 }
@@ -441,18 +441,18 @@ func TestBuilder_Update(t *testing.T) {
 			EscapeChar:  "`",
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{
+		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
 			"agree": rel.Set("agree", true),
 		}
 	)
 
-	qs, qargs := builder.Update("users", modifies, where.And())
+	qs, qargs := builder.Update("users", mutates, where.And())
 	assert.Regexp(t, fmt.Sprint("UPDATE `users` SET `", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ";"), qs)
 	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, qargs)
 
-	qs, qargs = builder.Update("users", modifies, where.Eq("id", 1))
+	qs, qargs = builder.Update("users", mutates, where.Eq("id", 1))
 	assert.Regexp(t, fmt.Sprint("UPDATE `users` SET `", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, ",`", `\w*`, "`=", `\?`, " WHERE `id`=", `\?`, ";"), qs)
 	assert.ElementsMatch(t, []interface{}{"foo", 10, true, 1}, qargs)
 }
@@ -466,19 +466,19 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 			InsertDefaultValues: true,
 		}
 		builder  = NewBuilder(config)
-		modifies = map[string]rel.Modify{
+		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
 			"agree": rel.Set("agree", true),
 		}
 	)
 
-	qs, args := builder.Update("users", modifies, where.And())
+	qs, args := builder.Update("users", mutates, where.And())
 	assert.Regexp(t, `UPDATE "users" SET "\w*"=\$1,"\w*"=\$2,"\w*"=\$3;`, qs)
 	assert.ElementsMatch(t, []interface{}{"foo", 10, true}, args)
 
 	builder.count = 0
-	qs, args = builder.Update("users", modifies, where.Eq("id", 1))
+	qs, args = builder.Update("users", mutates, where.Eq("id", 1))
 	assert.Regexp(t, `UPDATE "users" SET "\w*"=\$1,"\w*"=\$2,"\w*"=\$3 WHERE "id"=\$4;`, qs)
 	assert.ElementsMatch(t, []interface{}{"foo", 10, true, 1}, args)
 }
@@ -492,11 +492,11 @@ func TestBuilder_Update_incDecAndFragment(t *testing.T) {
 		builder = NewBuilder(config)
 	)
 
-	qs, qargs := builder.Update("users", map[string]rel.Modify{"age": rel.Inc("age")}, where.And())
+	qs, qargs := builder.Update("users", map[string]rel.Mutate{"age": rel.Inc("age")}, where.And())
 	assert.Equal(t, "UPDATE `users` SET `age`=`age`+?;", qs)
 	assert.Equal(t, []interface{}{1}, qargs)
 
-	qs, qargs = builder.Update("users", map[string]rel.Modify{"age=?": rel.SetFragment("age=?", 10)}, where.And())
+	qs, qargs = builder.Update("users", map[string]rel.Mutate{"age=?": rel.SetFragment("age=?", 10)}, where.And())
 	assert.Equal(t, "UPDATE `users` SET age=?;", qs)
 	assert.Equal(t, []interface{}{10}, qargs)
 }

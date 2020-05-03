@@ -4,15 +4,15 @@ import (
 	"fmt"
 )
 
-// Map can be used as modification for repository insert or update operation.
+// Map can be used as mutation for repository insert or update operation.
 // This allows inserting or updating only on specified field.
 // Insert/Update of has one or belongs to can be done using other Map as a value.
 // Insert/Update of has many can be done using slice of Map as a value.
 // Map is intended to be used internally within application, and not to be exposed directly as an APIs.
 type Map map[string]interface{}
 
-// Apply modification.
-func (m Map) Apply(doc *Document, modification *Modification) {
+// Apply mutation.
+func (m Map) Apply(doc *Document, mutation *Mutation) {
 	var (
 		pField = doc.PrimaryField()
 		pValue = doc.PrimaryValue()
@@ -31,18 +31,18 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 
 			var (
 				assocDoc, _       = assoc.Document()
-				assocModification = Apply(assocDoc, v)
+				assocMutation = Apply(assocDoc, v)
 			)
 
-			modification.SetAssoc(field, assocModification)
+			mutation.SetAssoc(field, assocMutation)
 		case []Map:
 			var (
 				assoc            = doc.Association(field)
 				mods, deletedIDs = applyMaps(v, assoc)
 			)
 
-			modification.SetAssoc(field, mods...)
-			modification.SetDeletedIDs(field, deletedIDs)
+			mutation.SetAssoc(field, mods...)
+			mutation.SetDeletedIDs(field, deletedIDs)
 		default:
 			if field == pField {
 				if v != pValue {
@@ -56,15 +56,15 @@ func (m Map) Apply(doc *Document, modification *Modification) {
 				panic(fmt.Sprint("rel: cannot assign ", v, " as ", field, " into ", doc.Table()))
 			}
 
-			modification.Add(Set(field, v))
+			mutation.Add(Set(field, v))
 		}
 	}
 }
 
-func applyMaps(maps []Map, assoc Association) ([]Modification, []interface{}) {
+func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 	var (
 		deletedIDs []interface{}
-		mods       = make([]Modification, len(maps))
+		mods       = make([]Mutation, len(maps))
 		col, _     = assoc.Collection()
 		pField     = col.PrimaryField()
 		pIndex     = make(map[interface{}]int)

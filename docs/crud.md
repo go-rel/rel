@@ -32,7 +32,7 @@ Expect insertion to to return an error.
 
 <!-- tabs:end -->
 
-To insert a new record using a map, simply pass a `rel.Map` as the second argument, modification defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` or `updated_at` field.
+To insert a new record using a map, simply pass a `rel.Map` as the second argument, mutation defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` or `updated_at` field.
 
 <!-- tabs:start -->
 
@@ -48,7 +48,7 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 <!-- tabs:end -->
 
-It's also possible to insert a new record manually using `rel.Set`, which is a very basic type of `modifier`.
+It's also possible to insert a new record manually using `rel.Set`, which is a very basic type of `mutator`.
 
 <!-- tabs:start -->
 
@@ -158,7 +158,7 @@ Similar to create, updating a record in REL can also be done using struct, map o
 
 <!-- tabs:end -->
 
-Besides `rel.Map` and `rel.Set` modifier. There's also increment and decrement modifier to atomically increment/decrement any value in database.
+Besides `rel.Map` and `rel.Set` mutator. There's also increment and decrement mutator to atomically increment/decrement any value in database.
 
 <!-- tabs:start -->
 

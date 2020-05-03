@@ -95,7 +95,7 @@ repo.ExpectPreload("buyer.address").Result(addresses)
 
 <!-- tabs:end -->
 
-## Modifying Association
+## Updating Association
 
 REL will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, REL will try to update the association, else it'll create a new association.
 
@@ -165,27 +165,27 @@ To selectively update only specific fields or association, `use rel.Map`.
 ### **Example**
 
 ```go
-modification := rel.Map{
+mutation := rel.Map{
     "address": rel.Map{
         "city": "bandung",
     },
 }
 
 // Update address record with id 1, only set city to bandung.
-repo.Update(ctx, &user, modification)
+repo.Update(ctx, &user, mutation)
 ```
 
 ### **Mock**
 
 ```go
-modification := rel.Map{
+mutation := rel.Map{
     "address": rel.Map{
         "city": "bandung",
     },
 }
 
 // Update address record with id 1, only set city to bandung.
-repo.ExpectUpdate(modification).For(&user)
+repo.ExpectUpdate(mutation).For(&user)
 ```
 
 <!-- tabs:end -->

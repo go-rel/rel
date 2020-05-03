@@ -120,9 +120,9 @@ func (adapter *Adapter) exec(ctx context.Context, statement string, args []inter
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, modifies map[string]rel.Modify) (interface{}, error) {
+func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Table, modifies)
+		statement, args = NewBuilder(adapter.Config).Insert(query.Table, mutates)
 		id, _, err      = adapter.Exec(ctx, statement, args)
 	)
 
@@ -130,15 +130,15 @@ func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, modifies ma
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkModifies []map[string]rel.Modify) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkModifies)
+func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
+	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkMutates)
 	id, _, err := adapter.Exec(ctx, statement, args)
 	if err != nil {
 		return nil, err
 	}
 
 	var (
-		ids = make([]interface{}, len(bulkModifies))
+		ids = make([]interface{}, len(bulkMutates))
 		inc = 1
 	)
 
@@ -147,7 +147,7 @@ func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields [
 	}
 
 	if inc < 0 {
-		id = id + int64((len(bulkModifies)-1)*inc)
+		id = id + int64((len(bulkMutates)-1)*inc)
 		inc *= -1
 	}
 
@@ -159,9 +159,9 @@ func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields [
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(ctx context.Context, query rel.Query, modifies map[string]rel.Modify) (int, error) {
+func (adapter *Adapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
 	var (
-		statement, args      = NewBuilder(adapter.Config).Update(query.Table, modifies, query.WhereQuery)
+		statement, args      = NewBuilder(adapter.Config).Update(query.Table, mutates, query.WhereQuery)
 		_, updatedCount, err = adapter.Exec(ctx, statement, args)
 	)
 

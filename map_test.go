@@ -21,26 +21,26 @@ func TestMap(t *testing.T) {
 				"street": "Grove Street",
 			},
 		}
-		userModification = Apply(NewDocument(&User{}),
+		userMutation = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 		)
-		transaction1Modification = Apply(NewDocument(&Transaction{}),
+		transaction1Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Modification = Apply(NewDocument(&Transaction{}),
+		transaction2Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
-		addressModification = Apply(NewDocument(&Address{}),
+		addressMutation = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 		)
 	)
 
-	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
-	userModification.SetAssoc("address", addressModification)
-	userModification.SetDeletedIDs("transactions", []interface{}{})
+	userMutation.SetAssoc("transactions", transaction1Mutation, transaction2Mutation)
+	userMutation.SetAssoc("address", addressMutation)
+	userMutation.SetDeletedIDs("transactions", []interface{}{})
 
-	assert.Equal(t, userModification, Apply(doc, data))
+	assert.Equal(t, userMutation, Apply(doc, data))
 	assert.Equal(t, User{
 		Name: "Luffy",
 		Age:  20,
@@ -78,26 +78,26 @@ func TestMap_update(t *testing.T) {
 				"street": "Grove Street",
 			},
 		}
-		userModification = Apply(NewDocument(&User{}),
+		userMutation = Apply(NewDocument(&User{}),
 			Set("name", "Luffy"),
 			Set("age", 20),
 		)
-		transaction1Modification = Apply(NewDocument(&Transaction{}),
+		transaction1Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Modification = Apply(NewDocument(&Transaction{}),
+		transaction2Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
-		addressModification = Apply(NewDocument(&Address{}),
+		addressMutation = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),
 		)
 	)
 
-	userModification.SetAssoc("transactions", transaction1Modification, transaction2Modification)
-	userModification.SetAssoc("address", addressModification)
-	userModification.SetDeletedIDs("transactions", []interface{}{})
+	userMutation.SetAssoc("transactions", transaction1Mutation, transaction2Mutation)
+	userMutation.SetAssoc("address", addressMutation)
+	userMutation.SetDeletedIDs("transactions", []interface{}{})
 
-	assert.Equal(t, userModification, Apply(doc, data))
+	assert.Equal(t, userMutation, Apply(doc, data))
 	assert.Equal(t, User{
 		ID:   1,
 		Name: "Luffy",
@@ -128,19 +128,19 @@ func TestMap_hasManyUpdateDeleteInsert(t *testing.T) {
 				{"id": 3, "item": "Shield"},
 			},
 		}
-		userModification         = Apply(NewDocument(&User{}))
-		transaction1Modification = Apply(NewDocument(&Transaction{}),
+		userMutation         = Apply(NewDocument(&User{}))
+		transaction1Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)
-		transaction2Modification = Apply(NewDocument(&Transaction{}),
+		transaction2Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 		)
 	)
 
-	userModification.SetAssoc("transactions", transaction2Modification, transaction1Modification)
-	userModification.SetDeletedIDs("transactions", []interface{}{2})
+	userMutation.SetAssoc("transactions", transaction2Mutation, transaction1Mutation)
+	userMutation.SetDeletedIDs("transactions", []interface{}{2})
 
-	assert.Equal(t, userModification, Apply(doc, data))
+	assert.Equal(t, userMutation, Apply(doc, data))
 	assert.Equal(t, User{
 		Transactions: []Transaction{
 			{ID: 3, Item: "Shield"},

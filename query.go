@@ -353,7 +353,7 @@ func (u Unscoped) Build(query *Query) {
 	query.UnscopedQuery = u
 }
 
-// Apply modification.
-func (u Unscoped) Apply(doc *Document, modification *Modification) {
-	modification.Unscoped = u
+// Apply mutation.
+func (u Unscoped) Apply(doc *Document, mutation *Mutation) {
+	mutation.Unscoped = u
 }

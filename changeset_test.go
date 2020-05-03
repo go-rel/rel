@@ -125,9 +125,9 @@ func TestChangeset(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc:    map[string]AssocModification{},
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc:    map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
@@ -150,36 +150,36 @@ func TestChangeset(t *testing.T) {
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{
 				"name":       Set("name", "User 2"),
 				"age":        Set("age", 21),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: map[string]AssocModification{},
+			Assoc: map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
 	t.Run("apply new assoc as structset", func(t *testing.T) {
 		user.Address.Street = "Grove Street"
 
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{
 				"name":       Set("name", "User 2"),
 				"age":        Set("age", 21),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: map[string]AssocModification{
-				"address": AssocModification{
-					Modifications: []Modification{
+			Assoc: map[string]AssocMutation{
+				"address": AssocMutation{
+					Mutations: []Mutation{
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"user_id":    Set("user_id", nil),
 								"street":     Set("street", "Grove Street"),
 								"notes":      Set("notes", Notes("")),
 								"deleted_at": Set("deleted_at", nil),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 					},
 				},
@@ -206,9 +206,9 @@ func TestChangeset_ptr(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc:    map[string]AssocModification{},
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc:    map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
@@ -223,32 +223,32 @@ func TestChangeset_ptr(t *testing.T) {
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{
 				"user_id": Set("user_id", 3),
 			},
-			Assoc: map[string]AssocModification{},
+			Assoc: map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
 	t.Run("apply new assoc as structset", func(t *testing.T) {
 		address.User = &User{Name: "User 3"}
 
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{
 				"user_id": Set("user_id", 3),
 			},
-			Assoc: map[string]AssocModification{
-				"user": AssocModification{
-					Modifications: []Modification{
+			Assoc: map[string]AssocMutation{
+				"user": AssocMutation{
+					Mutations: []Mutation{
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"age":        Set("age", 0),
 								"name":       Set("name", "User 3"),
 								"created_at": Set("created_at", now()),
 								"updated_at": Set("updated_at", now()),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 					},
 				},
@@ -276,9 +276,9 @@ func TestChangeset_belongsTo(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc:    map[string]AssocModification{},
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc:    map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
@@ -292,17 +292,17 @@ func TestChangeset_belongsTo(t *testing.T) {
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc: map[string]AssocModification{
-				"user": AssocModification{
-					Modifications: []Modification{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc: map[string]AssocMutation{
+				"user": AssocMutation{
+					Mutations: []Mutation{
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"name":       Set("name", "User Satu"),
 								"updated_at": Set("updated_at", now()),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 					},
 				},
@@ -332,9 +332,9 @@ func TestChangeset_hasOne(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc:    map[string]AssocModification{},
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc:    map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
@@ -352,18 +352,18 @@ func TestChangeset_hasOne(t *testing.T) {
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc: map[string]AssocModification{
-				"address": AssocModification{
-					Modifications: []Modification{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc: map[string]AssocMutation{
+				"address": AssocMutation{
+					Mutations: []Mutation{
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"user_id": Set("user_id", user.ID),
 								"street":  Set("street", "Grove Street Blvd"),
 								"notes":   Set("notes", Notes("Home")),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 					},
 				},
@@ -400,9 +400,9 @@ func TestChangeset_hasMany(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc:    map[string]AssocModification{},
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc:    map[string]AssocMutation{},
 		}, Apply(doc, changeset))
 	})
 
@@ -419,24 +419,24 @@ func TestChangeset_hasMany(t *testing.T) {
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {
-		assert.Equal(t, Modification{
-			Modifies: map[string]Modify{},
-			Assoc: map[string]AssocModification{
-				"transactions": AssocModification{
-					Modifications: []Modification{
+		assert.Equal(t, Mutation{
+			Mutates: map[string]Mutate{},
+			Assoc: map[string]AssocMutation{
+				"transactions": AssocMutation{
+					Mutations: []Mutation{
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"status": Set("status", Status("paid")),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 						{
-							Modifies: map[string]Modify{
+							Mutates: map[string]Mutate{
 								"item":    Set("item", "Paper"),
 								"status":  Set("status", Status("pending")),
 								"user_id": Set("user_id", 0),
 							},
-							Assoc: map[string]AssocModification{},
+							Assoc: map[string]AssocMutation{},
 						},
 					},
 					DeletedIDs: []interface{}{12},

@@ -270,12 +270,12 @@ func TestAdapter_InsertAll_error(t *testing.T) {
 	defer adapter.Close()
 
 	fields := []string{"notexist"}
-	modifications := []map[string]rel.Modify{
+	mutations := []map[string]rel.Mutate{
 		{"notexist": rel.Set("notexist", "13")},
 		{"notexist": rel.Set("notexist", "12")},
 	}
 
-	ids, err := adapter.InsertAll(context.TODO(), rel.Query{}, fields, modifications)
+	ids, err := adapter.InsertAll(context.TODO(), rel.Query{}, fields, mutations)
 	assert.NotNil(t, err)
 	assert.Nil(t, ids)
 }

@@ -38,18 +38,18 @@ func TestStructset(t *testing.T) {
 			Name: "Luffy",
 		}
 		doc          = NewDocument(&user)
-		modification = Modification{
-			Modifies: map[string]Modify{
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: make(map[string]AssocModification),
+			Assoc: make(map[string]AssocMutation),
 		}
 	)
 
-	assert.Equal(t, modification, Apply(doc, NewStructset(&user, false)))
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, false)))
 }
 
 func TestStructset_skipZero(t *testing.T) {
@@ -59,17 +59,17 @@ func TestStructset_skipZero(t *testing.T) {
 			Name: "Luffy",
 		}
 		doc          = NewDocument(&user)
-		modification = Modification{
-			Modifies: map[string]Modify{
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: make(map[string]AssocModification),
+			Assoc: make(map[string]AssocMutation),
 		}
 	)
 
-	assert.Equal(t, modification, Apply(doc, NewStructset(&user, true)))
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, true)))
 }
 
 func TestStructset_withAssoc(t *testing.T) {
@@ -133,13 +133,13 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			CreatedAt: 1,
 		}
 		doc          = NewDocument(&user)
-		modification = Apply(NewDocument(&user),
+		mutation = Apply(NewDocument(&user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
 		)
 	)
 
-	assert.Equal(t, modification, Apply(doc, NewStructset(&user, false)))
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, false)))
 }
 
 func TestStructset_differentStruct(t *testing.T) {
@@ -157,13 +157,13 @@ func TestStructset_differentStruct(t *testing.T) {
 			Age:  20,
 		}
 		doc          = NewDocument(&usertmp)
-		modification = Apply(NewDocument(&user),
+		mutation = Apply(NewDocument(&user),
 			Set("name", "Luffy"),
 			Set("age", 20),
 		)
 	)
 
-	assert.Equal(t, modification, Apply(doc, NewStructset(&user, true)))
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, true)))
 	assert.Equal(t, user.Name, usertmp.Name)
 	assert.Equal(t, user.Age, usertmp.Age)
 }

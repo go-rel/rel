@@ -141,22 +141,22 @@ func (r *Repository) ExpectFindAndCountAll(queriers ...rel.Querier) *FindAndCoun
 	return ExpectFindAndCountAll(r, queriers)
 }
 
-// Insert provides a mock function with given fields: record, modifiers
-func (r *Repository) Insert(ctx context.Context, record interface{}, modifiers ...rel.Modifier) error {
-	ret := r.mock.Called(record, modifiers)
+// Insert provides a mock function with given fields: record, mutators
+func (r *Repository) Insert(ctx context.Context, record interface{}, mutators ...rel.Mutator) error {
+	ret := r.mock.Called(record, mutators)
 
-	r.repo.Insert(ctx, record, modifiers...)
+	r.repo.Insert(ctx, record, mutators...)
 	return ret.Error(0)
 }
 
-// MustInsert provides a mock function with given fields: record, modifiers
-func (r *Repository) MustInsert(ctx context.Context, record interface{}, modifiers ...rel.Modifier) {
-	must(r.Insert(ctx, record, modifiers...))
+// MustInsert provides a mock function with given fields: record, mutators
+func (r *Repository) MustInsert(ctx context.Context, record interface{}, mutators ...rel.Mutator) {
+	must(r.Insert(ctx, record, mutators...))
 }
 
 // ExpectInsert apply mocks and expectations for Insert
-func (r *Repository) ExpectInsert(modifiers ...rel.Modifier) *Modify {
-	return ExpectInsert(r, modifiers)
+func (r *Repository) ExpectInsert(mutators ...rel.Mutator) *Mutate {
+	return ExpectInsert(r, mutators)
 }
 
 // InsertAll records.
@@ -173,29 +173,29 @@ func (r *Repository) MustInsertAll(ctx context.Context, records interface{}) {
 }
 
 // ExpectInsertAll records.
-func (r *Repository) ExpectInsertAll() *Modify {
+func (r *Repository) ExpectInsertAll() *Mutate {
 	return ExpectInsertAll(r)
 }
 
-// Update provides a mock function with given fields: record, modifiers
-func (r *Repository) Update(ctx context.Context, record interface{}, modifiers ...rel.Modifier) error {
-	ret := r.mock.Called(record, modifiers)
+// Update provides a mock function with given fields: record, mutators
+func (r *Repository) Update(ctx context.Context, record interface{}, mutators ...rel.Mutator) error {
+	ret := r.mock.Called(record, mutators)
 
-	if err := r.repo.Update(ctx, record, modifiers...); err != nil {
+	if err := r.repo.Update(ctx, record, mutators...); err != nil {
 		return err
 	}
 
 	return ret.Error(0)
 }
 
-// MustUpdate provides a mock function with given fields: record, modifiers
-func (r *Repository) MustUpdate(ctx context.Context, record interface{}, modifiers ...rel.Modifier) {
-	must(r.Update(ctx, record, modifiers...))
+// MustUpdate provides a mock function with given fields: record, mutators
+func (r *Repository) MustUpdate(ctx context.Context, record interface{}, mutators ...rel.Mutator) {
+	must(r.Update(ctx, record, mutators...))
 }
 
 // ExpectUpdate apply mocks and expectations for Update
-func (r *Repository) ExpectUpdate(modifiers ...rel.Modifier) *Modify {
-	return ExpectUpdate(r, modifiers)
+func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *Mutate {
+	return ExpectUpdate(r, mutators)
 }
 
 // Delete provides a mock function with given fields: record

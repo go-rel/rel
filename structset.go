@@ -9,16 +9,16 @@ var (
 	now = time.Now
 )
 
-// Structset can be used as modification for repository insert or update operation.
+// Structset can be used as mutation for repository insert or update operation.
 // This will save every field in struct and it's association as long as it's loaded.
-// This is the default modifier used by repository.
+// This is the default mutator used by repository.
 type Structset struct {
 	doc      *Document
 	skipZero bool
 }
 
-// Apply modification.
-func (s Structset) Apply(doc *Document, mod *Modification) {
+// Apply mutation.
+func (s Structset) Apply(doc *Document, mod *Mutation) {
 	var (
 		pField = s.doc.PrimaryField()
 		t      = now().Truncate(time.Second)
@@ -48,7 +48,7 @@ func (s Structset) Apply(doc *Document, mod *Modification) {
 	s.applyAssoc(mod)
 }
 
-func (s Structset) set(doc *Document, mod *Modification, field string, value interface{}, force bool) {
+func (s Structset) set(doc *Document, mod *Mutation, field string, value interface{}, force bool) {
 	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
 		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
 	}
@@ -56,7 +56,7 @@ func (s Structset) set(doc *Document, mod *Modification, field string, value int
 	mod.Add(Set(field, value))
 }
 
-func (s Structset) applyValue(doc *Document, mod *Modification, field string) {
+func (s Structset) applyValue(doc *Document, mod *Mutation, field string) {
 	if value, ok := s.doc.Value(field); ok {
 		if s.skipZero && isZero(value) {
 			return
@@ -66,7 +66,7 @@ func (s Structset) applyValue(doc *Document, mod *Modification, field string) {
 	}
 }
 
-func (s Structset) applyAssoc(mod *Modification) {
+func (s Structset) applyAssoc(mod *Mutation) {
 	for _, field := range s.doc.BelongsTo() {
 		s.buildAssoc(field, mod)
 	}
@@ -80,7 +80,7 @@ func (s Structset) applyAssoc(mod *Modification) {
 	}
 }
 
-func (s Structset) buildAssoc(field string, mod *Modification) {
+func (s Structset) buildAssoc(field string, mod *Mutation) {
 	assoc := s.doc.Association(field)
 	if assoc.IsZero() {
 		return
@@ -93,7 +93,7 @@ func (s Structset) buildAssoc(field string, mod *Modification) {
 	mod.SetAssoc(field, Apply(doc, newStructset(doc, s.skipZero)))
 }
 
-func (s Structset) buildAssocMany(field string, mod *Modification) {
+func (s Structset) buildAssocMany(field string, mod *Mutation) {
 	assoc := s.doc.Association(field)
 	if assoc.IsZero() {
 		return
@@ -102,7 +102,7 @@ func (s Structset) buildAssocMany(field string, mod *Modification) {
 	var (
 		col, _ = assoc.Collection()
 		pField = col.PrimaryField()
-		mods   = make([]Modification, col.Len())
+		mods   = make([]Mutation, col.Len())
 	)
 
 	for i := range mods {

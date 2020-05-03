@@ -7,35 +7,35 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Modify asserts and simulate insert or update function for test.
-type Modify struct {
+// Mutate asserts and simulate insert or update function for test.
+type Mutate struct {
 	*Expect
 }
 
 // For match expect calls for given record.
-func (m *Modify) For(record interface{}) *Modify {
+func (m *Mutate) For(record interface{}) *Mutate {
 	m.Arguments[0] = record
 	return m
 }
 
 // ForType match expect calls for given type.
 // Type must include package name, example: `model.User`.
-func (m *Modify) ForType(typ string) *Modify {
+func (m *Mutate) ForType(typ string) *Mutate {
 	return m.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
 }
 
 // NotUnique sets not unique error to be returned.
-func (m *Modify) NotUnique(key string) {
+func (m *Mutate) NotUnique(key string) {
 	m.Error(rel.ConstraintError{
 		Key:  key,
 		Type: rel.UniqueConstraint,
 	})
 }
 
-func expectModify(r *Repository, methodName string, modifiers []rel.Modifier) *Modify {
-	em := &Modify{
+func expectMutate(r *Repository, methodName string, mutators []rel.Mutator) *Mutate {
+	em := &Mutate{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, modifiers},
+			[]interface{}{mock.Anything, mutators},
 			[]interface{}{nil},
 		),
 	}
@@ -44,18 +44,18 @@ func expectModify(r *Repository, methodName string, modifiers []rel.Modifier) *M
 }
 
 // ExpectInsert to be called with given field and queries.
-func ExpectInsert(r *Repository, modifiers []rel.Modifier) *Modify {
-	return expectModify(r, "Insert", modifiers)
+func ExpectInsert(r *Repository, mutators []rel.Mutator) *Mutate {
+	return expectMutate(r, "Insert", mutators)
 }
 
 // ExpectUpdate to be called with given field and queries.
-func ExpectUpdate(r *Repository, modifiers []rel.Modifier) *Modify {
-	return expectModify(r, "Update", modifiers)
+func ExpectUpdate(r *Repository, mutators []rel.Mutator) *Mutate {
+	return expectMutate(r, "Update", mutators)
 }
 
 // ExpectInsertAll to be called.
-func ExpectInsertAll(r *Repository) *Modify {
-	em := &Modify{
+func ExpectInsertAll(r *Repository) *Mutate {
+	em := &Mutate{
 		Expect: newExpect(r, "InsertAll",
 			[]interface{}{mock.Anything},
 			[]interface{}{nil},

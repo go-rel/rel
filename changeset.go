@@ -7,7 +7,7 @@ import (
 
 type pair = [2]interface{}
 
-// Changeset modifier for structs.
+// Changeset mutator for structs.
 // This allows REL to efficiently to perform update operation only on updated fields and association.
 // The catch is, enabling changeset will duplicates the original struct values which consumes more memory.
 type Changeset struct {
@@ -67,8 +67,8 @@ func (c Changeset) Changes() map[string]pair {
 	return changes
 }
 
-// Apply modification.
-func (c Changeset) Apply(doc *Document, mod *Modification) {
+// Apply mutation.
+func (c Changeset) Apply(doc *Document, mod *Mutation) {
 	var (
 		t = now().Truncate(time.Second)
 	)
@@ -85,7 +85,7 @@ func (c Changeset) Apply(doc *Document, mod *Modification) {
 		}
 	}
 
-	if len(mod.Modifies) > 0 && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
+	if len(mod.Mutates) > 0 && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
 		mod.Add(Set("updated_at", t))
 	}
 
@@ -102,7 +102,7 @@ func (c Changeset) Apply(doc *Document, mod *Modification) {
 	}
 }
 
-func (c Changeset) applyAssoc(field string, mod *Modification) {
+func (c Changeset) applyAssoc(field string, mod *Mutation) {
 	assoc := c.doc.Association(field)
 	if assoc.IsZero() {
 		return
@@ -111,7 +111,7 @@ func (c Changeset) applyAssoc(field string, mod *Modification) {
 	doc, _ := assoc.Document()
 
 	if ch, ok := c.assoc[field]; ok {
-		if amod := Apply(doc, ch); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+		if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
 			mod.SetAssoc(field, amod)
 		}
 	} else {
@@ -120,12 +120,12 @@ func (c Changeset) applyAssoc(field string, mod *Modification) {
 	}
 }
 
-func (c Changeset) applyAssocMany(field string, mod *Modification) {
+func (c Changeset) applyAssocMany(field string, mod *Mutation) {
 	if dirties, ok := c.assocMany[field]; ok {
 		var (
 			assoc      = c.doc.Association(field)
 			col, _     = assoc.Collection()
-			mods       = make([]Modification, 0, col.Len())
+			mods       = make([]Mutation, 0, col.Len())
 			updatedIDs = make(map[interface{}]struct{})
 			deletedIDs []interface{}
 		)
@@ -139,7 +139,7 @@ func (c Changeset) applyAssocMany(field string, mod *Modification) {
 			if ch, ok := dirties[pValue]; ok {
 				updatedIDs[pValue] = struct{}{}
 
-				if amod := Apply(doc, ch); len(amod.Modifies) > 0 || len(amod.Assoc) > 0 {
+				if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
 					mods = append(mods, amod)
 				}
 			} else {
@@ -165,7 +165,7 @@ func (c Changeset) applyAssocMany(field string, mod *Modification) {
 	}
 }
 
-// NewChangeset returns new changeset modifier for given record.
+// NewChangeset returns new changeset mutator for given record.
 func NewChangeset(record interface{}) Changeset {
 	return newChangeset(NewDocument(record))
 }

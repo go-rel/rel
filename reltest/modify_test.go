@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestModify_Insert(t *testing.T) {
+func TestMutate_Insert(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{Title: "Golang for dummies"}
@@ -29,7 +29,7 @@ func TestModify_Insert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_nested(t *testing.T) {
+func TestMutate_Insert_nested(t *testing.T) {
 	var (
 		repo     = New()
 		authorID = 1
@@ -68,7 +68,7 @@ func TestModify_Insert_nested(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_record(t *testing.T) {
+func TestMutate_Insert_record(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{Title: "Golang for dummies"}
@@ -88,7 +88,7 @@ func TestModify_Insert_record(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_set(t *testing.T) {
+func TestMutate_Insert_set(t *testing.T) {
 	var (
 		repo   = New()
 		result Book
@@ -108,7 +108,7 @@ func TestModify_Insert_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_map(t *testing.T) {
+func TestMutate_Insert_map(t *testing.T) {
 	var (
 		repo     = New()
 		result   Book
@@ -152,7 +152,7 @@ func TestModify_Insert_map(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_unknownField(t *testing.T) {
+func TestMutate_Insert_unknownField(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -165,7 +165,7 @@ func TestModify_Insert_unknownField(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Insert_notUnique(t *testing.T) {
+func TestMutate_Insert_notUnique(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -179,7 +179,7 @@ func TestModify_Insert_notUnique(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_InsertAll(t *testing.T) {
+func TestMutate_InsertAll(t *testing.T) {
 	var (
 		repo    = New()
 		results = []Book{
@@ -205,7 +205,7 @@ func TestModify_InsertAll(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update(t *testing.T) {
+func TestMutate_Update(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -222,7 +222,7 @@ func TestModify_Update(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_nested(t *testing.T) {
+func TestMutate_Update_nested(t *testing.T) {
 	var (
 		repo     = New()
 		authorID = 2
@@ -263,7 +263,7 @@ func TestModify_Update_nested(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_nestedInsert(t *testing.T) {
+func TestMutate_Update_nestedInsert(t *testing.T) {
 	var (
 		repo     = New()
 		authorID = 1
@@ -303,7 +303,7 @@ func TestModify_Update_nestedInsert(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_record(t *testing.T) {
+func TestMutate_Update_record(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -320,7 +320,7 @@ func TestModify_Update_record(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-// func TestModify_Update_withoutPrimaryValue(t *testing.T) {
+// func TestMutate_Update_withoutPrimaryValue(t *testing.T) {
 // 	var (
 // 		repo   = New()
 // 		result = Book{Title: "Golang for dummies"}
@@ -333,7 +333,7 @@ func TestModify_Update_record(t *testing.T) {
 // 	repo.AssertExpectations(t)
 // }
 
-func TestModify_Update_set(t *testing.T) {
+func TestMutate_Update_set(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -353,7 +353,7 @@ func TestModify_Update_set(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-// func TestModify_Update_inc(t *testing.T) {
+// func TestMutate_Update_inc(t *testing.T) {
 // 	var (
 // 		repo   = New()
 // 		result = Book{ID: 2, Views: 10}
@@ -366,7 +366,7 @@ func TestModify_Update_set(t *testing.T) {
 // 	repo.AssertExpectations(t)
 // }
 
-// func TestModify_Update_dec(t *testing.T) {
+// func TestMutate_Update_dec(t *testing.T) {
 // 	var (
 // 		repo   = New()
 // 		result = Book{ID: 2, Views: 10}
@@ -379,7 +379,7 @@ func TestModify_Update_set(t *testing.T) {
 // 	repo.AssertExpectations(t)
 // }
 
-func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
+func TestMutate_Update_incOrDecFieldNotExists(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Views: 10}
@@ -393,7 +393,7 @@ func TestModify_Update_incOrDecFieldNotExists(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
+func TestMutate_Update_incOrDecFieldInvalid(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Views: 10}
@@ -407,7 +407,7 @@ func TestModify_Update_incOrDecFieldInvalid(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_setNil(t *testing.T) {
+func TestMutate_Update_setNil(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -420,7 +420,7 @@ func TestModify_Update_setNil(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_map(t *testing.T) {
+func TestMutate_Update_map(t *testing.T) {
 	var (
 		repo     = New()
 		authorID = 2
@@ -475,7 +475,7 @@ func TestModify_Update_map(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
+func TestMutate_Update_belongsToInconsistentFk(t *testing.T) {
 	var (
 		repo     = New()
 		authorID = 1
@@ -502,7 +502,7 @@ func TestModify_Update_belongsToInconsistentFk(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
+func TestMutate_Update_hasOneInconsistentPk(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{
@@ -525,7 +525,7 @@ func TestModify_Update_hasOneInconsistentPk(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
+func TestMutate_Update_hasOneInconsistentFk(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{
@@ -550,7 +550,7 @@ func TestModify_Update_hasOneInconsistentFk(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
+func TestMutate_Update_hasManyInconsistentFk(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{
@@ -576,7 +576,7 @@ func TestModify_Update_hasManyInconsistentFk(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_unknownField(t *testing.T) {
+func TestMutate_Update_unknownField(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}
@@ -589,7 +589,7 @@ func TestModify_Update_unknownField(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestModify_Update_notUnique(t *testing.T) {
+func TestMutate_Update_notUnique(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{ID: 2, Title: "Golang for dummies"}

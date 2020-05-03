@@ -14,11 +14,11 @@ type TestRecord struct {
 	Field5 int
 }
 
-func TestApplyModification(t *testing.T) {
+func TestApplyMutation(t *testing.T) {
 	var (
 		record    = TestRecord{}
 		doc       = NewDocument(&record)
-		modifiers = []Modifier{
+		mutators = []Mutator{
 			Set("field1", "string"),
 			Set("field2", true),
 			Set("field3", "string pointer"),
@@ -26,8 +26,8 @@ func TestApplyModification(t *testing.T) {
 			DecBy("field5", 2),
 			SetFragment("field6=?", true),
 		}
-		modification = Modification{
-			Modifies: map[string]Modify{
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
 				"field1":   Set("field1", "string"),
 				"field2":   Set("field2", true),
 				"field3":   Set("field3", "string pointer"),
@@ -35,12 +35,12 @@ func TestApplyModification(t *testing.T) {
 				"field5":   DecBy("field5", 2),
 				"field6=?": SetFragment("field6=?", true),
 			},
-			Assoc:  map[string]AssocModification{},
+			Assoc:  map[string]AssocMutation{},
 			Reload: true,
 		}
 	)
 
-	assert.Equal(t, modification, Apply(doc, modifiers...))
+	assert.Equal(t, mutation, Apply(doc, mutators...))
 	assert.Equal(t, "string", record.Field1)
 	assert.Equal(t, true, record.Field2)
 	assert.Equal(t, "string pointer", *record.Field3)
@@ -50,28 +50,28 @@ func TestApplyModification(t *testing.T) {
 	assert.Equal(t, 0, record.Field5)
 }
 
-func TestApplyModification_Reload(t *testing.T) {
+func TestApplyMutation_Reload(t *testing.T) {
 	var (
 		record    = TestRecord{}
 		doc       = NewDocument(&record)
-		modifiers = []Modifier{
+		mutators = []Mutator{
 			Set("field1", "string"),
 			Reload(true),
 		}
-		modification = Modification{
-			Modifies: map[string]Modify{
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
 				"field1": Set("field1", "string"),
 			},
-			Assoc:  map[string]AssocModification{},
+			Assoc:  map[string]AssocMutation{},
 			Reload: true,
 		}
 	)
 
-	assert.Equal(t, modification, Apply(doc, modifiers...))
+	assert.Equal(t, mutation, Apply(doc, mutators...))
 	assert.Equal(t, "string", record.Field1)
 }
 
-func TestApplyModification_setValueError(t *testing.T) {
+func TestApplyMutation_setValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
@@ -83,7 +83,7 @@ func TestApplyModification_setValueError(t *testing.T) {
 	assert.Equal(t, "", record.Field1)
 }
 
-func TestApplyModification_incValueError(t *testing.T) {
+func TestApplyMutation_incValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)
@@ -95,7 +95,7 @@ func TestApplyModification_incValueError(t *testing.T) {
 	assert.Equal(t, "", record.Field1)
 }
 
-func TestApplyModification_unknownFieldValueError(t *testing.T) {
+func TestApplyMutation_unknownFieldValueError(t *testing.T) {
 	var (
 		record = TestRecord{}
 		doc    = NewDocument(&record)

@@ -25,12 +25,12 @@ type Repository interface {
 	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
 	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
 	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
-	Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error
-	MustInsert(ctx context.Context, record interface{}, modifiers ...Modifier)
+	Insert(ctx context.Context, record interface{}, mutators ...Mutator) error
+	MustInsert(ctx context.Context, record interface{}, mutators ...Mutator)
 	InsertAll(ctx context.Context, records interface{}) error
 	MustInsertAll(ctx context.Context, records interface{})
-	Update(ctx context.Context, record interface{}, modifiers ...Modifier) error
-	MustUpdate(ctx context.Context, record interface{}, modifiers ...Modifier)
+	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
+	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
 	Delete(ctx context.Context, record interface{}) error
 	MustDelete(ctx context.Context, record interface{})
 	DeleteAll(ctx context.Context, query Query) error
@@ -218,7 +218,7 @@ func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}
 }
 
 // Insert an record to database.
-func (r repository) Insert(ctx context.Context, record interface{}, modifiers ...Modifier) error {
+func (r repository) Insert(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrument(ctx, "rel-insert", "inserting a record")
 	defer finish(nil)
 
@@ -227,41 +227,41 @@ func (r repository) Insert(ctx context.Context, record interface{}, modifiers ..
 	}
 
 	var (
-		modification Modification
+		mutation Mutation
 		doc          = NewDocument(record)
 	)
 
-	if len(modifiers) == 0 {
-		modification = Apply(doc, newStructset(doc, false))
+	if len(mutators) == 0 {
+		mutation = Apply(doc, newStructset(doc, false))
 	} else {
-		modification = Apply(doc, modifiers...)
+		mutation = Apply(doc, mutators...)
 	}
 
-	if len(modification.Assoc) > 0 {
+	if len(mutation.Assoc) > 0 {
 		return r.Transaction(ctx, func(r Repository) error {
-			return r.(*repository).insert(ctx, doc, modification)
+			return r.(*repository).insert(ctx, doc, mutation)
 		})
 	}
 
-	return r.insert(ctx, doc, modification)
+	return r.insert(ctx, doc, mutation)
 }
 
-func (r repository) insert(ctx context.Context, doc *Document, modification Modification) error {
+func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = Build(doc.Table())
 	)
 
-	if err := r.saveBelongsTo(ctx, doc, &modification); err != nil {
+	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
 		return err
 	}
 
-	pValue, err := r.Adapter().Insert(ctx, queriers, modification.Modifies)
+	pValue, err := r.Adapter().Insert(ctx, queriers, mutation.Mutates)
 	if err != nil {
 		return err
 	}
 
-	if modification.Reload {
+	if mutation.Reload {
 		// fetch record
 		if err := r.find(ctx, doc, queriers.Where(Eq(pField, pValue))); err != nil {
 			return err
@@ -271,11 +271,11 @@ func (r repository) insert(ctx context.Context, doc *Document, modification Modi
 		doc.SetValue(pField, pValue)
 	}
 
-	if err := r.saveHasOne(ctx, doc, &modification); err != nil {
+	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(ctx, doc, &modification, true); err != nil {
+	if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
 		return err
 	}
 
@@ -284,8 +284,8 @@ func (r repository) insert(ctx context.Context, doc *Document, modification Modi
 
 // MustInsert an record to database.
 // It'll panic if any error occurred.
-func (r repository) MustInsert(ctx context.Context, record interface{}, modifiers ...Modifier) {
-	must(r.Insert(ctx, record, modifiers...))
+func (r repository) MustInsert(ctx context.Context, record interface{}, mutators ...Mutator) {
+	must(r.Insert(ctx, record, mutators...))
 }
 
 func (r repository) InsertAll(ctx context.Context, records interface{}) error {
@@ -298,7 +298,7 @@ func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 
 	var (
 		col  = NewCollection(records)
-		mods = make([]Modification, col.Len())
+		mods = make([]Mutation, col.Len())
 	)
 
 	for i := range mods {
@@ -314,31 +314,31 @@ func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
 }
 
 // TODO: support assocs
-func (r repository) insertAll(ctx context.Context, col *Collection, modification []Modification) error {
-	if len(modification) == 0 {
+func (r repository) insertAll(ctx context.Context, col *Collection, mutation []Mutation) error {
+	if len(mutation) == 0 {
 		return nil
 	}
 
 	var (
 		pField       = col.PrimaryField()
 		queriers     = Build(col.Table())
-		fields       = make([]string, 0, len(modification[0].Modifies))
-		fieldMap     = make(map[string]struct{}, len(modification[0].Modifies))
-		bulkModifies = make([]map[string]Modify, len(modification))
+		fields       = make([]string, 0, len(mutation[0].Mutates))
+		fieldMap     = make(map[string]struct{}, len(mutation[0].Mutates))
+		bulkMutates = make([]map[string]Mutate, len(mutation))
 	)
 
 	// TODO: baypassable if it's predictable.
-	for i := range modification {
-		for field := range modification[i].Modifies {
+	for i := range mutation {
+		for field := range mutation[i].Mutates {
 			if _, exist := fieldMap[field]; !exist {
 				fieldMap[field] = struct{}{}
 				fields = append(fields, field)
 			}
 		}
-		bulkModifies[i] = modification[i].Modifies
+		bulkMutates[i] = mutation[i].Mutates
 	}
 
-	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkModifies)
+	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkMutates)
 	if err != nil {
 		return err
 	}
@@ -356,7 +356,7 @@ func (r repository) insertAll(ctx context.Context, col *Collection, modification
 // not supported:
 // - update has many (will be replaced by default)
 // - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
-func (r repository) Update(ctx context.Context, record interface{}, modifiers ...Modifier) error {
+func (r repository) Update(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrument(ctx, "rel-update", "updating a record")
 	defer finish(nil)
 
@@ -365,36 +365,36 @@ func (r repository) Update(ctx context.Context, record interface{}, modifiers ..
 	}
 
 	var (
-		modification Modification
+		mutation Mutation
 		doc          = NewDocument(record)
 		pField       = doc.PrimaryField()
 		pValue       = doc.PrimaryValue()
 	)
 
-	if len(modifiers) == 0 {
-		modification = Apply(doc, newStructset(doc, false))
+	if len(mutators) == 0 {
+		mutation = Apply(doc, newStructset(doc, false))
 	} else {
-		modification = Apply(doc, modifiers...)
+		mutation = Apply(doc, mutators...)
 	}
 
-	if len(modification.Assoc) > 0 {
+	if len(mutation.Assoc) > 0 {
 		return r.Transaction(ctx, func(r Repository) error {
-			return r.(*repository).update(ctx, doc, modification, Eq(pField, pValue))
+			return r.(*repository).update(ctx, doc, mutation, Eq(pField, pValue))
 		})
 	}
 
-	return r.update(ctx, doc, modification, Eq(pField, pValue))
+	return r.update(ctx, doc, mutation, Eq(pField, pValue))
 }
 
-func (r repository) update(ctx context.Context, doc *Document, modification Modification, filter FilterQuery) error {
-	if err := r.saveBelongsTo(ctx, doc, &modification); err != nil {
+func (r repository) update(ctx context.Context, doc *Document, mutation Mutation, filter FilterQuery) error {
+	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
 		return err
 	}
 
-	if len(modification.Modifies) != 0 {
+	if len(mutation.Mutates) != 0 {
 		var (
-			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter, modification.Unscoped))
-			updatedCount, err = r.adapter.Update(ctx, query, modification.Modifies)
+			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped))
+			updatedCount, err = r.adapter.Update(ctx, query, mutation.Mutates)
 		)
 
 		if err != nil {
@@ -405,18 +405,18 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 			return NotFoundError{}
 		}
 
-		if modification.Reload {
+		if mutation.Reload {
 			if err := r.find(ctx, doc, query); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := r.saveHasOne(ctx, doc, &modification); err != nil {
+	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
 		return err
 	}
 
-	if err := r.saveHasMany(ctx, doc, &modification, false); err != nil {
+	if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
 		return err
 	}
 
@@ -425,22 +425,22 @@ func (r repository) update(ctx context.Context, doc *Document, modification Modi
 
 // MustUpdate an record in database.
 // It'll panic if any error occurred.
-func (r repository) MustUpdate(ctx context.Context, record interface{}, modifiers ...Modifier) {
-	must(r.Update(ctx, record, modifiers...))
+func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator) {
+	must(r.Update(ctx, record, mutators...))
 }
 
 // TODO: support deletion
-func (r repository) saveBelongsTo(ctx context.Context, doc *Document, modification *Modification) error {
+func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.BelongsTo() {
-		assocMods, changed := modification.Assoc[field]
-		if !changed || len(assocMods.Modifications) == 0 {
+		assocMods, changed := mutation.Assoc[field]
+		if !changed || len(assocMods.Mutations) == 0 {
 			continue
 		}
 
 		var (
 			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
-			assocMod         = assocMods.Modifications[0]
+			assocMod         = assocMods.Mutations[0]
 		)
 
 		if loaded {
@@ -473,7 +473,7 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, modificati
 				fValue = assoc.ForeignValue()
 			)
 
-			modification.Add(Set(rField, fValue))
+			mutation.Add(Set(rField, fValue))
 			doc.SetValue(rField, fValue)
 		}
 	}
@@ -482,10 +482,10 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, modificati
 }
 
 // TODO: suppprt deletion
-func (r repository) saveHasOne(ctx context.Context, doc *Document, modification *Modification) error {
+func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
-		assocMods, changed := modification.Assoc[field]
-		if !changed || len(assocMods.Modifications) == 0 {
+		assocMods, changed := mutation.Assoc[field]
+		if !changed || len(assocMods.Mutations) == 0 {
 			continue
 		}
 
@@ -496,7 +496,7 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, modification 
 			assocDoc, loaded = assoc.Document()
 			pField           = assocDoc.PrimaryField()
 			pValue           = assocDoc.PrimaryValue()
-			assocMod         = assocMods.Modifications[0]
+			assocMod         = assocMods.Mutations[0]
 		)
 
 		if loaded {
@@ -529,10 +529,10 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, modification 
 	return nil
 }
 
-// saveHasMany expects has many modification to be ordered the same as the recrods in collection.
-func (r repository) saveHasMany(ctx context.Context, doc *Document, modification *Modification, insertion bool) error {
+// saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
+func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		assocMods, changed := modification.Assoc[field]
+		assocMods, changed := mutation.Assoc[field]
 		if !changed {
 			continue
 		}
@@ -544,13 +544,13 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, modification
 			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
-			mods       = assocMods.Modifications
+			mods       = assocMods.Mutations
 			deletedIDs = assocMods.DeletedIDs
 		)
 
-		// this shouldn't happen unless there's bug in the modifier.
+		// this shouldn't happen unless there's bug in the mutator.
 		if len(mods) != col.Len() {
-			panic("rel: invalid modifier")
+			panic("rel: invalid mutator")
 		}
 
 		if !insertion {
@@ -645,8 +645,8 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 	)
 
 	if doc.Flag(HasDeletedAt) {
-		modifies := map[string]Modify{"deleted_at": Set("deleted_at", now())}
-		deletedCount, err = r.adapter.Update(ctx, query, modifies)
+		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
+		deletedCount, err = r.adapter.Update(ctx, query, mutates)
 	} else {
 		deletedCount, err = r.adapter.Delete(ctx, query)
 	}
@@ -681,8 +681,8 @@ func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Quer
 	)
 
 	if flag.Is(HasDeletedAt) {
-		modifies := map[string]Modify{"deleted_at": Set("deleted_at", nil)}
-		_, err = r.adapter.Update(ctx, query, modifies)
+		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", nil)}
+		_, err = r.adapter.Update(ctx, query, mutates)
 	} else {
 		_, err = r.adapter.Delete(ctx, query)
 	}

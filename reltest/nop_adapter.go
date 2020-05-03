@@ -33,16 +33,16 @@ func (na *nopAdapter) Delete(ctx context.Context, query rel.Query) (int, error) 
 	return 1, nil
 }
 
-func (na *nopAdapter) Insert(ctx context.Context, query rel.Query, modifies map[string]rel.Modify) (interface{}, error) {
+func (na *nopAdapter) Insert(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (interface{}, error) {
 	return 1, nil
 }
 
-func (na *nopAdapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkModifies []map[string]rel.Modify) ([]interface{}, error) {
+func (na *nopAdapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
 	var (
-		ids = make([]interface{}, len(bulkModifies))
+		ids = make([]interface{}, len(bulkMutates))
 	)
 
-	for i := range bulkModifies {
+	for i := range bulkMutates {
 		ids[i] = i + 1
 	}
 
@@ -57,7 +57,7 @@ func (na *nopAdapter) Rollback(ctx context.Context) error {
 	return nil
 }
 
-func (na *nopAdapter) Update(ctx context.Context, query rel.Query, modifies map[string]rel.Modify) (int, error) {
+func (na *nopAdapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
 	return 1, nil
 }
 

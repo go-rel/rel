@@ -30,7 +30,7 @@
 
     * [Defining Association](association.md#defining-association)
     * [Preloading Association](association.md#preloading-association)
-    * [Updating Association](association.md#updating-association)
+    * [Inserting and Updating Association](association.md#inserting-and-updating-association)
 
 * [Transactions](transactions.md)
 * [Instrumentation](instrumentation.md)

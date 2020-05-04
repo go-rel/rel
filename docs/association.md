@@ -7,45 +7,7 @@ Association field is a field with the type of another struct.
 Reference id is an id field that can be mapped to the foreign id field in another struct.
 By following that convention, REL currently supports `belongs to`, `has one` and `has many` association.
 
-```go
-type User struct {
-	ID        int
-	Name      string
-	Age       int
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	// has many transactions.
-	// with custom reference and foreign field declaration.
-	// ref: id refers to User.ID field.
-	// fk: buyer_id refers to Transaction.BuyerID
-	Transactions []Transaction `ref:"id" fk:"buyer_id"`
-
-	// has one address.
-	// doesn't contains primary key of other struct.
-	// REL can guess the reference and foreign field if it's not specified.
-	Address Address
-}
-
-type Transaction struct {
-	ID   int
-	Paid bool
-
-	// belongs to user.
-	// contains primary key of other struct.
-	Buyer   User `ref:"buyer_id" fk:"id"`
-	BuyerID int
-}
-
-type Address struct {
-	ID   int
-	City string
-
-	// belongs to user.
-	User   *User
-	UserID *int
-}
-```
+[association.go](association.go ':include :fragment=association-schema')
 
 ## Preloading Association
 
@@ -55,74 +17,69 @@ Preload will load association to structs. To preload association, use `Preload`.
 
 ### **Example**
 
-```go
-// preload transaction `belongs to` buyer association.
-repo.Preload(ctx, &transaction, "buyer")
+Preload Transaction's Buyer (`belongs to` association).
 
-// preload user `has one` address association
-repo.Preload(ctx, &user, "address")
+[association.go](association.go ':include :fragment=preload-belongs-to')
 
-// preload user `has many` transactions association
-repo.Preload(ctx, &user, "transactions")
+Preload User's Address (`has one` association).
 
-// preload paid transactions from user.
-repo.Preload(ctx, &user, "transactions", where.Eq("paid", true))
+[association.go](association.go ':include :fragment=preload-has-one')
 
-// preload every buyer's address in transactions.
-// note: buyer needs to be preloaded before preloading buyer's address.
-repo.Preload(ctx, &transactions, "buyer.address")
-```
+Preload User's Transactions (`has many` association).
+
+[association.go](association.go ':include :fragment=preload-has-many')
+
+Preload only paid Transactions from users.
+
+[association.go](association.go ':include :fragment=preload-has-many-filter')
+
+Preload every Buyer's Address in Transactions.
+
+**Note:** Buyer needs to be preloaded before preloading Buyer's Address.
+
+[association.go](association.go ':include :fragment=preload-nested')
 
 ### **Mock**
 
-```go
-// preload transaction `belongs to` buyer association.
-repo.ExpectPreload("buyer").Result(user)
+Mock preload Transaction's Buyer (`belongs to` association).
 
-// preload user `has one` address association
-repo.ExpectPreload("address").Result(address)
+[association_test.go](association_test.go ':include :fragment=preload-belongs-to')
 
-// preload user `has many` transactions association
-repo.ExpectPreload("transactions").Result(transactions)
+Mock preload User's Address (`has one` association).
 
-// preload paid transactions from user.
-repo.ExpectPreload(&user, "transactions", where.Eq("paid", true)).Result(transactions)
+[association_test.go](association_test.go ':include :fragment=preload-has-one')
 
-// preload every buyer's address in transactions.
-// note: buyer needs to be preloaded before preloading buyer's address.
-repo.ExpectPreload("buyer.address").Result(addresses)
-```
+Preload User's Transactions (`has many` association).
+
+[association_test.go](association_test.go ':include :fragment=preload-has-many')
+
+Mock preload only paid Transactions from users.
+
+[association_test.go](association_test.go ':include :fragment=preload-has-many-filter')
+
+Mock preload every Buyer's Address in Transactions.
+
+**Note:** Address will be assigned based on `UserID` (association key).
+
+[association_test.go](association_test.go ':include :fragment=preload-nested')
 
 <!-- tabs:end -->
 
-## Updating Association
+## Inserting and Updating Association
 
 REL will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, REL will try to update the association, else it'll create a new association.
 
-REL will try to create a new record for association if `ID` is a zero value.
+> REL will try to create a new record for association if Primary Value (`ID`) is a zero value.
 
 <!-- tabs:start -->
 
 ### **Example**
 
-```go
-user := User{
-    Name: "rel",
-    Address: Address{
-        City: "Bandung",
-    },
-}
-
-// Inserts a new record to users and address table.
-// Result: User{ID: 1, Name: "rel", Address: Address{ID: 1, City: "Bandung", UserID: 1}}
-repo.Insert(ctx, &user)
-```
+[association.go](association.go ':include :fragment=insert-association')
 
 ### **Mock**
 
-```go
-repo.ExpectInsert().For(&user)
-```
+[association_test.go](association_test.go ':include :fragment=insert-association')
 
 <!-- tabs:end -->
 
@@ -132,29 +89,11 @@ REL will try to update a new record for association if `ID` is a zero value. To 
 
 ### **Example**
 
-```go
-userId := 1
-user := User{
-    ID:   1,
-    Name: "rel",
-    // association is loaded when the primary key (id) is not zero.
-    Address: Address{
-        ID:     1,
-        UserID: &userId,
-        City:   "Bandung",
-    },
-}
-
-// Update user record with id 1.
-// Update address record with id 1.
-repo.Update(ctx, &user)
-```
+[association.go](association.go ':include :fragment=update-association')
 
 ### **Mock**
 
-```go
-repo.ExpectUpdate().For(&user)
-```
+[association_test.go](association_test.go ':include :fragment=update-association')
 
 <!-- tabs:end -->
 
@@ -164,29 +103,11 @@ To selectively update only specific fields or association, `use rel.Map`.
 
 ### **Example**
 
-```go
-mutation := rel.Map{
-    "address": rel.Map{
-        "city": "bandung",
-    },
-}
-
-// Update address record with id 1, only set city to bandung.
-repo.Update(ctx, &user, mutation)
-```
+[association.go](association.go ':include :fragment=update-association-with-map')
 
 ### **Mock**
 
-```go
-mutation := rel.Map{
-    "address": rel.Map{
-        "city": "bandung",
-    },
-}
-
-// Update address record with id 1, only set city to bandung.
-repo.ExpectUpdate(mutation).For(&user)
-```
+[association_test.go](association_test.go ':include :fragment=update-association-with-map')
 
 <!-- tabs:end -->
 

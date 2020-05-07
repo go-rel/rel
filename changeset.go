@@ -47,8 +47,7 @@ func (c Changeset) FieldChanged(field string) bool {
 	return false
 }
 
-// Changes returns map of changes, with field names as the keys and an array of old and new values.
-// TODO: also returns assoc changes.
+// Changes returns map of changes.
 func (c Changeset) Changes() map[string]interface{} {
 	return buildChanges(c.doc, c)
 }

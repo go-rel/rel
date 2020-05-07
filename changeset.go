@@ -47,24 +47,9 @@ func (c Changeset) FieldChanged(field string) bool {
 	return false
 }
 
-// Changes returns map of changes, with field names as the keys and an array of old and new values.
-// TODO: also returns assoc changes.
-func (c Changeset) Changes() map[string]pair {
-	changes := make(map[string]pair)
-
-	for i, field := range c.doc.Fields() {
-		var (
-			typ, _ = c.doc.Type(field)
-			old    = c.snapshot[i]
-			new, _ = c.doc.Value(field)
-		)
-
-		if c.valueChanged(typ, old, new) {
-			changes[field] = pair{old, new}
-		}
-	}
-
-	return changes
+// Changes returns map of changes.
+func (c Changeset) Changes() map[string]interface{} {
+	return buildChanges(c.doc, c)
 }
 
 // Apply mutation.
@@ -121,7 +106,7 @@ func (c Changeset) applyAssoc(field string, mut *Mutation) {
 }
 
 func (c Changeset) applyAssocMany(field string, mut *Mutation) {
-	if dirties, ok := c.assocMany[field]; ok {
+	if chs, ok := c.assocMany[field]; ok {
 		var (
 			assoc      = c.doc.Association(field)
 			col, _     = assoc.Collection()
@@ -136,7 +121,7 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 				pValue = doc.PrimaryValue()
 			)
 
-			if ch, ok := dirties[pValue]; ok {
+			if ch, ok := chs[pValue]; ok {
 				updatedIDs[pValue] = struct{}{}
 
 				if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
@@ -148,10 +133,10 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 		}
 
 		// leftover snapshot.
-		if len(updatedIDs) != len(dirties) {
-			for i := range dirties {
-				if _, ok := updatedIDs[i]; !ok {
-					deletedIDs = append(deletedIDs, i)
+		if len(updatedIDs) != len(chs) {
+			for id := range chs {
+				if _, ok := updatedIDs[id]; !ok {
+					deletedIDs = append(deletedIDs, id)
 				}
 			}
 		}
@@ -223,5 +208,106 @@ func initChangesetAssocMany(doc *Document, assoc map[string]map[interface{}]Chan
 		if !isZero(pValue) {
 			assoc[field][pValue] = newChangeset(doc)
 		}
+	}
+}
+
+func buildChanges(doc *Document, c Changeset) map[string]interface{} {
+	var (
+		changes = make(map[string]interface{})
+		fields  []string
+	)
+
+	if doc != nil {
+		fields = doc.Fields()
+	} else {
+		fields = c.doc.Fields()
+	}
+
+	for i, field := range fields {
+		switch {
+		case doc == nil:
+			if old := c.snapshot[i]; old != nil {
+				changes[field] = pair{old, nil}
+			}
+		case i >= len(c.snapshot):
+			if new, _ := doc.Value(field); new != nil {
+				changes[field] = pair{nil, new}
+			}
+		default:
+			old := c.snapshot[i]
+			new, _ := doc.Value(field)
+			if typ, _ := doc.Type(field); c.valueChanged(typ, old, new) {
+				changes[field] = pair{old, new}
+			}
+		}
+	}
+
+	if doc == nil || len(c.snapshot) == 0 {
+		return changes
+	}
+
+	for _, field := range doc.BelongsTo() {
+		buildChangesAssoc(changes, c, field)
+	}
+
+	for _, field := range doc.HasOne() {
+		buildChangesAssoc(changes, c, field)
+	}
+
+	for _, field := range doc.HasMany() {
+		buildChangesAssocMany(changes, c, field)
+	}
+
+	return changes
+}
+
+func buildChangesAssoc(out map[string]interface{}, c Changeset, field string) {
+	assoc := c.doc.Association(field)
+	if assoc.IsZero() {
+		return
+	}
+
+	doc, _ := assoc.Document()
+	if changes := buildChanges(doc, c.assoc[field]); len(changes) != 0 {
+		out[field] = changes
+	}
+}
+
+func buildChangesAssocMany(out map[string]interface{}, c Changeset, field string) {
+	var (
+		changes    []map[string]interface{}
+		chs        = c.assocMany[field]
+		assoc      = c.doc.Association(field)
+		col, _     = assoc.Collection()
+		updatedIDs = make(map[interface{}]struct{})
+	)
+
+	for i := 0; i < col.Len(); i++ {
+		var (
+			doc          = col.Get(i)
+			pValue       = doc.PrimaryValue()
+			ch, isUpdate = chs[pValue]
+		)
+
+		if isUpdate {
+			updatedIDs[pValue] = struct{}{}
+		}
+
+		if dChanges := buildChanges(doc, ch); len(dChanges) != 0 {
+			changes = append(changes, dChanges)
+		}
+	}
+
+	// leftover snapshot.
+	if len(updatedIDs) != len(chs) {
+		for id, ch := range chs {
+			if _, ok := updatedIDs[id]; !ok {
+				changes = append(changes, buildChanges(nil, ch))
+			}
+		}
+	}
+
+	if len(changes) != 0 {
+		out[field] = changes
 	}
 }

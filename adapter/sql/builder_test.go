@@ -271,7 +271,7 @@ func TestBuilder_Insert(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder  = NewBuilder(config)
+		builder = NewBuilder(config)
 		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
@@ -295,7 +295,7 @@ func TestBuilder_Insert_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder  = NewBuilder(config)
+		builder = NewBuilder(config)
 		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
@@ -319,7 +319,7 @@ func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 			InsertDefaultValues: false,
 		}
 		builder  = NewBuilder(config)
-		mutates = map[string]rel.Mutate{}
+		mutates  = map[string]rel.Mutate{}
 		qs, args = builder.Insert("users", mutates)
 	)
 
@@ -335,7 +335,7 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 			EscapeChar:          "`",
 		}
 		builder  = NewBuilder(config)
-		mutates = map[string]rel.Mutate{}
+		mutates  = map[string]rel.Mutate{}
 		qs, args = builder.Returning("id").Insert("users", mutates)
 	)
 
@@ -349,7 +349,7 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder      = NewBuilder(config)
+		builder     = NewBuilder(config)
 		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
@@ -375,7 +375,7 @@ func TestBuilder_InsertAll(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder      = NewBuilder(config)
+		builder     = NewBuilder(config)
 		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
@@ -408,7 +408,7 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder      = NewBuilder(config)
+		builder     = NewBuilder(config)
 		bulkMutates = []map[string]rel.Mutate{
 			{
 				"name": rel.Set("name", "foo"),
@@ -440,7 +440,7 @@ func TestBuilder_Update(t *testing.T) {
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
-		builder  = NewBuilder(config)
+		builder = NewBuilder(config)
 		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),
@@ -465,7 +465,7 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 			Ordinal:             true,
 			InsertDefaultValues: true,
 		}
-		builder  = NewBuilder(config)
+		builder = NewBuilder(config)
 		mutates = map[string]rel.Mutate{
 			"name":  rel.Set("name", "foo"),
 			"age":   rel.Set("age", 10),

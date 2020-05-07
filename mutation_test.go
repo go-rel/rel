@@ -16,8 +16,8 @@ type TestRecord struct {
 
 func TestApplyMutation(t *testing.T) {
 	var (
-		record    = TestRecord{}
-		doc       = NewDocument(&record)
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
 		mutators = []Mutator{
 			Set("field1", "string"),
 			Set("field2", true),
@@ -52,8 +52,8 @@ func TestApplyMutation(t *testing.T) {
 
 func TestApplyMutation_Reload(t *testing.T) {
 	var (
-		record    = TestRecord{}
-		doc       = NewDocument(&record)
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
 		mutators = []Mutator{
 			Set("field1", "string"),
 			Reload(true),

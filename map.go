@@ -30,7 +30,7 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 			}
 
 			var (
-				assocDoc, _       = assoc.Document()
+				assocDoc, _   = assoc.Document()
 				assocMutation = Apply(assocDoc, v)
 			)
 

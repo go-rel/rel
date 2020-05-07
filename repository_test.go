@@ -452,9 +452,9 @@ func TestRepository_MustFindAndCountAll(t *testing.T) {
 
 func TestRepository_Insert(t *testing.T) {
 	var (
-		user      User
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     User
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
 			Set("created_at", now()),
@@ -567,9 +567,9 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 
 func TestRepository_Insert_error(t *testing.T) {
 	var (
-		user      User
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     User
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
 			Set("created_at", now()),
@@ -608,8 +608,8 @@ func TestRepository_InsertAll(t *testing.T) {
 			{Name: "name1"},
 			{Name: "name2", Age: 12},
 		}
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
+		adapter = &testAdapter{}
+		repo    = New(adapter)
 		mutates = []map[string]Mutate{
 			{
 				"name":       Set("name", "name1"),
@@ -663,9 +663,9 @@ func TestRepository_InsertAll_nothing(t *testing.T) {
 
 func TestRepository_Update(t *testing.T) {
 	var (
-		user      = User{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -691,9 +691,9 @@ func TestRepository_Update(t *testing.T) {
 
 func TestRepository_Update_softDelete(t *testing.T) {
 	var (
-		address   = Address{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		address  = Address{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("street", "street"),
 		}
@@ -716,9 +716,9 @@ func TestRepository_Update_softDelete(t *testing.T) {
 
 func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
 	var (
-		address   = Address{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		address  = Address{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Unscoped(true),
 			Set("street", "street"),
@@ -742,9 +742,9 @@ func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
 
 func TestRepository_Update_notFound(t *testing.T) {
 	var (
-		user      = User{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -765,9 +765,9 @@ func TestRepository_Update_notFound(t *testing.T) {
 
 func TestRepository_Update_reload(t *testing.T) {
 	var (
-		user      = User{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			SetFragment("name=?", "name"),
 		}
@@ -878,9 +878,9 @@ func TestRepository_Update_nothing(t *testing.T) {
 
 func TestRepository_Update_error(t *testing.T) {
 	var (
-		user      = User{ID: 1}
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
 			Set("updated_at", now()),
@@ -901,11 +901,11 @@ func TestRepository_Update_error(t *testing.T) {
 
 func TestRepository_saveBelongsTo_update(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		transaction  = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc,
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -940,11 +940,11 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 
 func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		transaction  = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc,
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -971,11 +971,11 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 
 func TestRepository_saveBelongsTo_updateInconsistentAssoc(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		transaction  = Transaction{Buyer: User{ID: 1}}
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc,
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{Buyer: User{ID: 1}}
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc,
 			Map{
 				"buyer": Map{
 					"id":   1,
@@ -997,11 +997,11 @@ func TestRepository_saveBelongsTo_updateInconsistentAssoc(t *testing.T) {
 
 func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 	var (
-		transaction  Transaction
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc,
+		transaction Transaction
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc,
 			Map{
 				"buyer": Map{
 					"name": "buyer1",
@@ -1034,11 +1034,11 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 
 func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		transaction  = Transaction{}
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc,
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{}
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc,
 			Map{
 				"buyer": Map{
 					"name":       "buyer1",
@@ -1067,11 +1067,11 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 
 func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		transaction  = Transaction{}
-		doc          = NewDocument(&transaction)
-		mutation = Apply(doc)
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{}
+		doc         = NewDocument(&transaction)
+		mutation    = Apply(doc)
 	)
 
 	err := repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation)
@@ -1081,11 +1081,11 @@ func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 
 func TestRepository_saveHasOne_update(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		userID       = 1
-		user         = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		userID   = 1
+		user     = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
@@ -1107,11 +1107,11 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 
 func TestRepository_saveHasOne_updateError(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		userID       = 1
-		user         = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		userID   = 1
+		user     = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
@@ -1135,10 +1135,10 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 
 func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		user         = User{ID: 1, Address: Address{ID: 2}}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		user     = User{ID: 1, Address: Address{ID: 2}}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
@@ -1160,10 +1160,10 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 
 func TestRepository_saveHasOne_insertNew(t *testing.T) {
 	var (
-		user         = User{ID: 1}
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		doc          = NewDocument(&user)
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
@@ -1195,10 +1195,10 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 
 func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		user         = User{ID: 1}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		user     = User{ID: 1}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
@@ -1222,10 +1222,10 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 
 func TestRepository_saveHasMany_insert(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		user         = User{ID: 1}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		user     = User{ID: 1}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
@@ -1258,10 +1258,10 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 
 func TestRepository_saveHasMany_insertError(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		user         = User{ID: 1}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		user     = User{ID: 1}
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
@@ -1298,7 +1298,7 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 				{ID: 3, BuyerID: 1, Item: "item3"},
 			},
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
@@ -1342,7 +1342,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 				{ID: 1, BuyerID: 1, Item: "item1"},
 			},
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
@@ -1351,7 +1351,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 				},
 			},
 		)
-		q        = Build("transactions")
+		q       = Build("transactions")
 		mutates = []map[string]Mutate{
 			{"item": Set("item", "item1 updated")},
 			{"user_id": Set("user_id", user.ID), "item": Set("item", "new item")},
@@ -1385,7 +1385,7 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 				{ID: 2, Item: "item2"},
 			},
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
@@ -1432,9 +1432,9 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 				{Item: "item5"},
 			},
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc, NewStructset(doc, false))
-		mutates     = []map[string]Mutate{
+		mutates  = []map[string]Mutate{
 			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item3")},
 			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item4")},
 			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item5")},
@@ -1471,10 +1471,10 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 				{ID: 2, Item: "item2"},
 			},
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(doc, NewStructset(doc, false))
-		q            = Build("transactions")
-		err          = errors.New("delete all error")
+		q        = Build("transactions")
+		err      = errors.New("delete all error")
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(0, err).Once()
@@ -1486,10 +1486,10 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 
 func TestRepository_saveHasMany_invalidMutator(t *testing.T) {
 	var (
-		adapter      = &testAdapter{}
-		repo         = New(adapter)
-		user         = User{ID: 1}
-		doc          = NewDocument(&user)
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		user     = User{ID: 1}
+		doc      = NewDocument(&user)
 		mutation = Apply(NewDocument(&User{}),
 			Map{
 				"transactions": []Map{
@@ -1522,10 +1522,10 @@ func TestRepository_Delete(t *testing.T) {
 
 func TestRepository_Delete_softDelete(t *testing.T) {
 	var (
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		address  = Address{ID: 1}
-		query    = From("addresses").Where(Eq("id", address.ID))
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		address = Address{ID: 1}
+		query   = From("addresses").Where(Eq("id", address.ID))
 		mutates = map[string]Mutate{
 			"deleted_at": Set("deleted_at", now()),
 		}

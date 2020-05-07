@@ -228,7 +228,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 
 	var (
 		mutation Mutation
-		doc          = NewDocument(record)
+		doc      = NewDocument(record)
 	)
 
 	if len(mutators) == 0 {
@@ -320,10 +320,10 @@ func (r repository) insertAll(ctx context.Context, col *Collection, mutation []M
 	}
 
 	var (
-		pField       = col.PrimaryField()
-		queriers     = Build(col.Table())
-		fields       = make([]string, 0, len(mutation[0].Mutates))
-		fieldMap     = make(map[string]struct{}, len(mutation[0].Mutates))
+		pField      = col.PrimaryField()
+		queriers    = Build(col.Table())
+		fields      = make([]string, 0, len(mutation[0].Mutates))
+		fieldMap    = make(map[string]struct{}, len(mutation[0].Mutates))
 		bulkMutates = make([]map[string]Mutate, len(mutation))
 	)
 
@@ -366,9 +366,9 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 
 	var (
 		mutation Mutation
-		doc          = NewDocument(record)
-		pField       = doc.PrimaryField()
-		pValue       = doc.PrimaryValue()
+		doc      = NewDocument(record)
+		pField   = doc.PrimaryField()
+		pValue   = doc.PrimaryValue()
 	)
 
 	if len(mutators) == 0 {

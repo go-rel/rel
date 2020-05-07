@@ -107,7 +107,7 @@ func (c Changeset) applyAssoc(field string, mut *Mutation) {
 }
 
 func (c Changeset) applyAssocMany(field string, mut *Mutation) {
-	if dirties, ok := c.assocMany[field]; ok {
+	if chs, ok := c.assocMany[field]; ok {
 		var (
 			assoc      = c.doc.Association(field)
 			col, _     = assoc.Collection()
@@ -122,7 +122,7 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 				pValue = doc.PrimaryValue()
 			)
 
-			if ch, ok := dirties[pValue]; ok {
+			if ch, ok := chs[pValue]; ok {
 				updatedIDs[pValue] = struct{}{}
 
 				if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
@@ -134,10 +134,10 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 		}
 
 		// leftover snapshot.
-		if len(updatedIDs) != len(dirties) {
-			for i := range dirties {
-				if _, ok := updatedIDs[i]; !ok {
-					deletedIDs = append(deletedIDs, i)
+		if len(updatedIDs) != len(chs) {
+			for id := range chs {
+				if _, ok := updatedIDs[id]; !ok {
+					deletedIDs = append(deletedIDs, id)
 				}
 			}
 		}
@@ -213,25 +213,37 @@ func initChangesetAssocMany(doc *Document, assoc map[string]map[interface{}]Chan
 }
 
 func buildChanges(doc *Document, c Changeset) map[string]interface{} {
-	changes := make(map[string]interface{})
+	var (
+		changes = make(map[string]interface{})
+		fields  []string
+	)
 
-	for i, field := range doc.Fields() {
-		var (
-			typ, _ = doc.Type(field)
-			old    interface{}
-			new, _ = doc.Value(field)
-		)
+	if doc != nil {
+		fields = doc.Fields()
+	} else {
+		fields = c.doc.Fields()
+	}
 
-		if i < len(c.snapshot) {
-			old = c.snapshot[i]
-		}
-
-		if c.valueChanged(typ, old, new) {
-			changes[field] = pair{old, new}
+	for i, field := range fields {
+		switch {
+		case doc == nil:
+			if old := c.snapshot[i]; old != nil {
+				changes[field] = pair{old, nil}
+			}
+		case i >= len(c.snapshot):
+			if new, _ := doc.Value(field); new != nil {
+				changes[field] = pair{nil, new}
+			}
+		default:
+			old := c.snapshot[i]
+			new, _ := doc.Value(field)
+			if typ, _ := doc.Type(field); c.valueChanged(typ, old, new) {
+				changes[field] = pair{old, new}
+			}
 		}
 	}
 
-	if len(c.snapshot) == 0 {
+	if doc == nil || len(c.snapshot) == 0 {
 		return changes
 	}
 
@@ -247,9 +259,11 @@ func buildChanges(doc *Document, c Changeset) map[string]interface{} {
 		}
 	}
 
-	// for _, field := range doc.HasMany() {
-	// 	c.applyAssocMany(field, mut)
-	// }
+	for _, field := range doc.HasMany() {
+		if amchanges := buildChangesAssocMany(c, field); len(amchanges) != 0 {
+			changes[field] = amchanges
+		}
+	}
 
 	return changes
 }
@@ -262,4 +276,41 @@ func buildChangesAssoc(c Changeset, field string) map[string]interface{} {
 
 	doc, _ := assoc.Document()
 	return buildChanges(doc, c.assoc[field])
+}
+
+func buildChangesAssocMany(c Changeset, field string) []map[string]interface{} {
+	var (
+		changes    []map[string]interface{}
+		chs        = c.assocMany[field]
+		assoc      = c.doc.Association(field)
+		col, _     = assoc.Collection()
+		updatedIDs = make(map[interface{}]struct{})
+	)
+
+	for i := 0; i < col.Len(); i++ {
+		var (
+			doc          = col.Get(i)
+			pValue       = doc.PrimaryValue()
+			ch, isUpdate = chs[pValue]
+		)
+
+		if isUpdate {
+			updatedIDs[pValue] = struct{}{}
+		}
+
+		if dChanges := buildChanges(doc, ch); len(dChanges) != 0 {
+			changes = append(changes, dChanges)
+		}
+	}
+
+	// leftover snapshot.
+	if len(updatedIDs) != len(chs) {
+		for id, ch := range chs {
+			if _, ok := updatedIDs[id]; !ok {
+				changes = append(changes, buildChanges(nil, ch))
+			}
+		}
+	}
+
+	return changes
 }

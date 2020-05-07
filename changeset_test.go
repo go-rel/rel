@@ -469,8 +469,7 @@ func TestChangeset_hasMany(t *testing.T) {
 		assert.Equal(t, snapshots[0], trxch[11].snapshot)
 		assert.Equal(t, snapshots[1], trxch[12].snapshot)
 
-		assert.Empty(t, trxch[11].Changes())
-		assert.Empty(t, trxch[12].Changes())
+		assert.Empty(t, changeset.Changes())
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
@@ -481,15 +480,28 @@ func TestChangeset_hasMany(t *testing.T) {
 	})
 
 	t.Run("update", func(t *testing.T) {
-		trxch := changeset.assocMany["transactions"]
-
 		user.Transactions[0].Status = "paid"
-		// replaced struct is new, so there's no changeset states to check.
 		user.Transactions[1] = Transaction{Item: "Paper", Status: "pending"}
 
 		assert.Equal(t, map[string]interface{}{
-			"status": pair{Status("pending"), Status("paid")},
-		}, trxch[11].Changes())
+			"transactions": []map[string]interface{}{
+				{
+					"status": pair{Status("pending"), Status("paid")},
+				},
+				{
+					"id":      pair{nil, 0},
+					"item":    pair{nil, "Paper"},
+					"status":  pair{nil, Status("pending")},
+					"user_id": pair{nil, 0},
+				},
+				{
+					"id":      pair{12, nil},
+					"item":    pair{"Eraser", nil},
+					"status":  pair{Status("pending"), nil},
+					"user_id": pair{0, nil},
+				},
+			},
+		}, changeset.Changes())
 	})
 
 	t.Run("apply changeset", func(t *testing.T) {

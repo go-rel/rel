@@ -248,37 +248,33 @@ func buildChanges(doc *Document, c Changeset) map[string]interface{} {
 	}
 
 	for _, field := range doc.BelongsTo() {
-		if achanges := buildChangesAssoc(c, field); len(achanges) != 0 {
-			changes[field] = achanges
-		}
+		buildChangesAssoc(changes, c, field)
 	}
 
 	for _, field := range doc.HasOne() {
-		if achanges := buildChangesAssoc(c, field); len(achanges) != 0 {
-			changes[field] = achanges
-		}
+		buildChangesAssoc(changes, c, field)
 	}
 
 	for _, field := range doc.HasMany() {
-		if amchanges := buildChangesAssocMany(c, field); len(amchanges) != 0 {
-			changes[field] = amchanges
-		}
+		buildChangesAssocMany(changes, c, field)
 	}
 
 	return changes
 }
 
-func buildChangesAssoc(c Changeset, field string) map[string]interface{} {
+func buildChangesAssoc(out map[string]interface{}, c Changeset, field string) {
 	assoc := c.doc.Association(field)
 	if assoc.IsZero() {
-		return nil
+		return
 	}
 
 	doc, _ := assoc.Document()
-	return buildChanges(doc, c.assoc[field])
+	if changes := buildChanges(doc, c.assoc[field]); len(changes) != 0 {
+		out[field] = changes
+	}
 }
 
-func buildChangesAssocMany(c Changeset, field string) []map[string]interface{} {
+func buildChangesAssocMany(out map[string]interface{}, c Changeset, field string) {
 	var (
 		changes    []map[string]interface{}
 		chs        = c.assocMany[field]
@@ -312,5 +308,7 @@ func buildChangesAssocMany(c Changeset, field string) []map[string]interface{} {
 		}
 	}
 
-	return changes
+	if len(changes) != 0 {
+		out[field] = changes
+	}
 }

@@ -49,22 +49,8 @@ func (c Changeset) FieldChanged(field string) bool {
 
 // Changes returns map of changes, with field names as the keys and an array of old and new values.
 // TODO: also returns assoc changes.
-func (c Changeset) Changes() map[string]pair {
-	changes := make(map[string]pair)
-
-	for i, field := range c.doc.Fields() {
-		var (
-			typ, _ = c.doc.Type(field)
-			old    = c.snapshot[i]
-			new, _ = c.doc.Value(field)
-		)
-
-		if c.valueChanged(typ, old, new) {
-			changes[field] = pair{old, new}
-		}
-	}
-
-	return changes
+func (c Changeset) Changes() map[string]interface{} {
+	return buildChanges(c.doc, c)
 }
 
 // Apply mutation.
@@ -224,4 +210,56 @@ func initChangesetAssocMany(doc *Document, assoc map[string]map[interface{}]Chan
 			assoc[field][pValue] = newChangeset(doc)
 		}
 	}
+}
+
+func buildChanges(doc *Document, c Changeset) map[string]interface{} {
+	changes := make(map[string]interface{})
+
+	for i, field := range doc.Fields() {
+		var (
+			typ, _ = doc.Type(field)
+			old    interface{}
+			new, _ = doc.Value(field)
+		)
+
+		if i < len(c.snapshot) {
+			old = c.snapshot[i]
+		}
+
+		if c.valueChanged(typ, old, new) {
+			changes[field] = pair{old, new}
+		}
+	}
+
+	if len(c.snapshot) == 0 {
+		return changes
+	}
+
+	for _, field := range doc.BelongsTo() {
+		if achanges := buildChangesAssoc(c, field); len(achanges) != 0 {
+			changes[field] = achanges
+		}
+	}
+
+	for _, field := range doc.HasOne() {
+		if achanges := buildChangesAssoc(c, field); len(achanges) != 0 {
+			changes[field] = achanges
+		}
+	}
+
+	// for _, field := range doc.HasMany() {
+	// 	c.applyAssocMany(field, mut)
+	// }
+
+	return changes
+}
+
+func buildChangesAssoc(c Changeset, field string) map[string]interface{} {
+	assoc := c.doc.Association(field)
+	if assoc.IsZero() {
+		return nil
+	}
+
+	doc, _ := assoc.Document()
+	return buildChanges(doc, c.assoc[field])
 }

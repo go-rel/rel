@@ -37,7 +37,7 @@ func TestStructset(t *testing.T) {
 			ID:   1,
 			Name: "Luffy",
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Mutation{
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
@@ -58,7 +58,7 @@ func TestStructset_skipZero(t *testing.T) {
 			ID:   1,
 			Name: "Luffy",
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Mutation{
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
@@ -132,7 +132,7 @@ func TestStructset_invalidCreatedAtType(t *testing.T) {
 			Name:      "Luffy",
 			CreatedAt: 1,
 		}
-		doc          = NewDocument(&user)
+		doc      = NewDocument(&user)
 		mutation = Apply(NewDocument(&user),
 			Set("name", "Luffy"),
 			Set("created_at", 1),
@@ -156,7 +156,7 @@ func TestStructset_differentStruct(t *testing.T) {
 			Name: "Luffy",
 			Age:  20,
 		}
-		doc          = NewDocument(&usertmp)
+		doc      = NewDocument(&usertmp)
 		mutation = Apply(NewDocument(&user),
 			Set("name", "Luffy"),
 			Set("age", 20),

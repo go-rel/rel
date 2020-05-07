@@ -141,8 +141,8 @@ func (b *Builder) Insert(table string, mutates map[string]rel.Mutate) (string, [
 // InsertAll generates query for multiple insert.
 func (b *Builder) InsertAll(table string, fields []string, bulkMutates []map[string]rel.Mutate) (string, []interface{}) {
 	var (
-		buffer        Buffer
-		fieldsCount   = len(fields)
+		buffer       Buffer
+		fieldsCount  = len(fields)
 		mutatesCount = len(bulkMutates)
 	)
 

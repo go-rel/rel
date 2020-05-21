@@ -632,14 +632,34 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 	defer finish(nil)
 
 	var (
+		doc     = NewDocument(record)
+		pField  = doc.PrimaryField()
+		pValue  = doc.PrimaryValue()
+		cascade = Cascade(false)
+	)
+
+	if cascade {
+		return r.Transaction(ctx, func(r Repository) error {
+			return r.(*repository).delete(ctx, doc, Eq(pField, pValue), cascade)
+		})
+	}
+
+	return r.delete(ctx, doc, Eq(pField, pValue), cascade)
+}
+
+func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuery, cascade Cascade) error {
+	var (
 		err          error
 		deletedCount int
-		doc          = NewDocument(record)
 		table        = doc.Table()
-		pField       = doc.PrimaryField()
-		pValue       = doc.PrimaryValue()
-		query        = Build(table, Eq(pField, pValue))
+		query        = Build(table, filter)
 	)
+
+	if cascade {
+		if err := r.deleteBelongsTo(ctx, doc, cascade); err != nil {
+			return err
+		}
+	}
 
 	if doc.Flag(HasDeletedAt) {
 		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
@@ -652,7 +672,107 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 		return NotFoundError{}
 	}
 
+	if cascade {
+		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
+			return err
+		}
+
+		if err := r.deleteHasMany(ctx, doc); err != nil {
+			return err
+		}
+	}
+
 	return err
+}
+
+func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade Cascade) error {
+	for _, field := range doc.BelongsTo() {
+		var (
+			assoc            = doc.Association(field)
+			assocDoc, loaded = assoc.Document()
+		)
+
+		if loaded {
+			var (
+				fValue = assoc.ForeignValue()
+			)
+
+			if assoc.ReferenceValue() != fValue {
+				return ConstraintError{
+					Key:  assoc.ReferenceField(),
+					Type: ForeignKeyConstraint,
+					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+				}
+			}
+
+			var (
+				filter = Eq(assoc.ForeignField(), fValue)
+			)
+
+			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cascade) error {
+	for _, field := range doc.HasOne() {
+		var (
+			assoc            = doc.Association(field)
+			fField           = assoc.ForeignField()
+			rValue           = assoc.ReferenceValue()
+			assocDoc, loaded = assoc.Document()
+			pField           = assocDoc.PrimaryField()
+			pValue           = assocDoc.PrimaryValue()
+		)
+
+		if loaded {
+			if rValue != assoc.ForeignValue() {
+				return ConstraintError{
+					Key:  fField,
+					Type: ForeignKeyConstraint,
+					Err:  errors.New("rel: inconsistent has one ref and fk"),
+				}
+			}
+
+			var (
+				filter = Eq(pField, pValue).AndEq(fField, rValue)
+			)
+
+			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
+	for _, field := range doc.HasMany() {
+		var (
+			assoc       = doc.Association(field)
+			col, loaded = assoc.Collection()
+		)
+
+		if loaded {
+			var (
+				table  = col.Table()
+				fField = assoc.ForeignField()
+				rValue = assoc.ReferenceValue()
+				filter = Eq(fField, rValue)
+			)
+
+			if err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // MustDelete single entry.

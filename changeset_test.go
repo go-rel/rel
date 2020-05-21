@@ -125,7 +125,9 @@ func TestChangeset(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -148,6 +150,7 @@ func TestChangeset(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "User 2"),
 				"age":        Set("age", 21),
@@ -175,7 +178,9 @@ func TestChangeset_ptr(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -190,6 +195,7 @@ func TestChangeset_ptr(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Mutates: map[string]Mutate{
 				"user_id": Set("user_id", 3),
 			},
@@ -216,7 +222,9 @@ func TestChangeset_belongsTo(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -232,10 +240,12 @@ func TestChangeset_belongsTo(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Assoc: map[string]AssocMutation{
 				"user": AssocMutation{
 					Mutations: []Mutation{
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"name":       Set("name", "User Satu"),
 								"updated_at": Set("updated_at", now()),
@@ -263,7 +273,9 @@ func TestChangeset_belongsTo_new(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("create", func(t *testing.T) {
@@ -286,10 +298,12 @@ func TestChangeset_belongsTo_new(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Assoc: map[string]AssocMutation{
 				"user": AssocMutation{
 					Mutations: []Mutation{
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"name":       Set("name", "User Satu"),
 								"age":        Set("age", 20),
@@ -325,7 +339,9 @@ func TestChangeset_hasOne(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -345,10 +361,12 @@ func TestChangeset_hasOne(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Assoc: map[string]AssocMutation{
 				"address": AssocMutation{
 					Mutations: []Mutation{
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"user_id": Set("user_id", user.ID),
 								"street":  Set("street", "Grove Street Blvd"),
@@ -377,7 +395,9 @@ func TestChangeset_hasOne_new(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("create", func(t *testing.T) {
@@ -400,10 +420,12 @@ func TestChangeset_hasOne_new(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Assoc: map[string]AssocMutation{
 				"address": AssocMutation{
 					Mutations: []Mutation{
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"user_id":    Set("user_id", user.ID),
 								"street":     Set("street", "Grove Street Blvd"),
@@ -445,7 +467,9 @@ func TestChangeset_hasMany(t *testing.T) {
 	})
 
 	t.Run("apply clean", func(t *testing.T) {
-		assert.Equal(t, Mutation{}, Apply(doc, changeset))
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -475,15 +499,18 @@ func TestChangeset_hasMany(t *testing.T) {
 
 	t.Run("apply changeset", func(t *testing.T) {
 		assert.Equal(t, Mutation{
+			Cascade: true,
 			Assoc: map[string]AssocMutation{
 				"transactions": AssocMutation{
 					Mutations: []Mutation{
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"status": Set("status", Status("paid")),
 							},
 						},
 						{
+							Cascade: true,
 							Mutates: map[string]Mutate{
 								"item":    Set("item", "Paper"),
 								"status":  Set("status", Status("pending")),

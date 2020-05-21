@@ -27,6 +27,7 @@ func TestApplyMutation(t *testing.T) {
 			SetFragment("field6=?", true),
 		}
 		mutation = Mutation{
+			Cascade: true,
 			Mutates: map[string]Mutate{
 				"field1":   Set("field1", "string"),
 				"field2":   Set("field2", true),
@@ -47,26 +48,6 @@ func TestApplyMutation(t *testing.T) {
 	// non set op won't update the struct
 	assert.Equal(t, 0, record.Field4)
 	assert.Equal(t, 0, record.Field5)
-}
-
-func TestApplyMutation_Reload(t *testing.T) {
-	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
-		mutators = []Mutator{
-			Set("field1", "string"),
-			Reload(true),
-		}
-		mutation = Mutation{
-			Mutates: map[string]Mutate{
-				"field1": Set("field1", "string"),
-			},
-			Reload: true,
-		}
-	)
-
-	assert.Equal(t, mutation, Apply(doc, mutators...))
-	assert.Equal(t, "string", record.Field1)
 }
 
 func TestApplyMutation_setValueError(t *testing.T) {
@@ -103,4 +84,45 @@ func TestApplyMutation_unknownFieldValueError(t *testing.T) {
 		Apply(doc, Dec("field0"))
 	})
 	assert.Equal(t, "", record.Field1)
+}
+
+func TestApplyMutation_Reload(t *testing.T) {
+	var (
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
+		mutators = []Mutator{
+			Set("field1", "string"),
+			Reload(true),
+		}
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
+				"field1": Set("field1", "string"),
+			},
+			Reload:  true,
+			Cascade: true,
+		}
+	)
+
+	assert.Equal(t, mutation, Apply(doc, mutators...))
+	assert.Equal(t, "string", record.Field1)
+}
+
+func TestApplyMutation_Cascade(t *testing.T) {
+	var (
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
+		mutators = []Mutator{
+			Set("field1", "string"),
+			Cascade(false),
+		}
+		mutation = Mutation{
+			Mutates: map[string]Mutate{
+				"field1": Set("field1", "string"),
+			},
+			Cascade: false,
+		}
+	)
+
+	assert.Equal(t, mutation, Apply(doc, mutators...))
+	assert.Equal(t, "string", record.Field1)
 }

@@ -480,6 +480,62 @@ func TestRepository_Insert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Insert_saveBelongsTo(t *testing.T) {
+	var (
+		userID    = 1
+		addressID = 2
+		address   = Address{
+			Street: "street",
+			User:   &User{Name: "name"},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
+	adapter.On("Insert", From("addresses"), mock.Anything).Return(addressID, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &address))
+	assert.Equal(t, Address{
+		ID:     addressID,
+		Street: "street",
+		UserID: &userID,
+		User: &User{
+			ID:        userID,
+			Name:      "name",
+			CreatedAt: now(),
+			UpdatedAt: now(),
+		},
+	}, address)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_saveBelongsToCascadeDisabled(t *testing.T) {
+	var (
+		address = Address{
+			Street: "street",
+			User:   &User{Name: "name"},
+		}
+		adapter      = &testAdapter{}
+		repo         = New(adapter)
+		newAddressID = 2
+	)
+
+	adapter.On("Insert", From("addresses"), mock.Anything).Return(newAddressID, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &address, Cascade(false)))
+	assert.Equal(t, Address{
+		ID:     newAddressID,
+		Street: "street",
+		User:   &User{Name: "name"},
+	}, address)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 	var (
 		address = Address{
@@ -496,6 +552,70 @@ func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &address))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_saveHasOne(t *testing.T) {
+	var (
+		userID    = 1
+		addressID = 2
+		user      = User{
+			Name: "name",
+			Address: Address{
+				Street: "street",
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
+	adapter.On("Insert", From("addresses"), mock.Anything).Return(addressID, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        userID,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Address: Address{
+			ID:     addressID,
+			UserID: &userID,
+			Street: "street",
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_saveHasOneCascadeDisabled(t *testing.T) {
+	var (
+		userID = 1
+		user   = User{
+			Name: "name",
+			Address: Address{
+				Street: "street",
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user, Cascade(false)))
+	assert.Equal(t, User{
+		ID:        userID,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Address: Address{
+			Street: "street",
+		},
+	}, user)
 
 	adapter.AssertExpectations(t)
 }
@@ -520,13 +640,63 @@ func TestRepository_Insert_saveHasOneError(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_saveHasMany(t *testing.T) {
+	var (
+		user = User{
+			Name: "name",
+			Transactions: []Transaction{
+				{Item: "soap"},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
+	adapter.On("InsertAll", From("transactions"), mock.Anything, mock.Anything).Return([]interface{}{2}, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
 		CreatedAt: now(),
 		UpdatedAt: now(),
-		Address: Address{
-			Street: "street",
+		Transactions: []Transaction{
+			{ID: 2, BuyerID: 1, Item: "soap"},
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_saveHasManyCascadeDisabled(t *testing.T) {
+	var (
+		user = User{
+			Name: "name",
+			Transactions: []Transaction{
+				{Item: "soap"},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user, Cascade(false)))
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Transactions: []Transaction{
+			{Item: "soap"},
 		},
 	}, user)
 
@@ -552,15 +722,6 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
-	assert.Equal(t, User{
-		ID:        1,
-		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
-		Transactions: []Transaction{
-			{BuyerID: 1, Item: "soap"},
-		},
-	}, user)
 
 	adapter.AssertExpectations(t)
 }
@@ -788,6 +949,71 @@ func TestRepository_Update_reload(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Update_saveBelongsTo(t *testing.T) {
+	var (
+		userID  = 1
+		address = Address{
+			ID:     1,
+			UserID: &userID,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", *address.UserID)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", address.ID).AndNil("deleted_at")), mock.Anything).Return(1, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &address))
+	assert.Equal(t, Address{
+		ID:     1,
+		UserID: &userID,
+		User: &User{
+			ID:        1,
+			Name:      "name",
+			UpdatedAt: now(),
+			CreatedAt: now(),
+		},
+	}, address)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveBelongsToCascadeDisabled(t *testing.T) {
+	var (
+		userID  = 1
+		address = Address{
+			ID:     1,
+			UserID: &userID,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Update", From("addresses").Where(Eq("id", address.ID).AndNil("deleted_at")), mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &address, Cascade(false)))
+	assert.Equal(t, Address{
+		ID:     1,
+		UserID: &userID,
+		User: &User{
+			ID:   1,
+			Name: "name",
+		},
+	}, address)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	var (
 		userID  = 1
@@ -814,6 +1040,73 @@ func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Update_saveHasOne(t *testing.T) {
+	var (
+		userID = 10
+		user   = User{
+			ID: userID,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+				UserID: &userID,
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), mock.Anything).Return(1, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        userID,
+		UpdatedAt: now(),
+		CreatedAt: now(),
+		Address: Address{
+			ID:     1,
+			Street: "street",
+			UserID: &userID,
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
+	var (
+		userID = 10
+		user   = User{
+			ID: userID,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+				UserID: &userID,
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
+	assert.Equal(t, User{
+		ID:        userID,
+		UpdatedAt: now(),
+		CreatedAt: now(),
+		Address: Address{
+			ID:     1,
+			Street: "street",
+			UserID: &userID,
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Update_saveHasOneError(t *testing.T) {
 	var (
 		userID = 10
@@ -836,6 +1129,77 @@ func TestRepository_Update_saveHasOneError(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &user))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveHasMany(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "soap",
+				},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10))).Return(1, nil).Once()
+	adapter.On("InsertAll", From("transactions"), mock.Anything, mock.Anything).Return([]interface{}{1}, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        10,
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Transactions: []Transaction{
+			{
+				ID:      1,
+				BuyerID: 10,
+				Item:    "soap",
+			},
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "soap",
+				},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
+	assert.Equal(t, User{
+		ID:        10,
+		CreatedAt: now(),
+		UpdatedAt: now(),
+		Transactions: []Transaction{
+			{
+				ID:   1,
+				Item: "soap",
+			},
+		},
+	}, user)
+
 	adapter.AssertExpectations(t)
 }
 

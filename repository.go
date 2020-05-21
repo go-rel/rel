@@ -231,7 +231,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 		mutation = Apply(doc, mutators...)
 	)
 
-	if !mutation.IsAssocEmpty() {
+	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
 		return r.Transaction(ctx, func(r Repository) error {
 			return r.(*repository).insert(ctx, doc, mutation)
 		})
@@ -365,7 +365,7 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 		mutation = Apply(doc, mutators...)
 	)
 
-	if !mutation.IsAssocEmpty() {
+	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
 		return r.Transaction(ctx, func(r Repository) error {
 			return r.(*repository).update(ctx, doc, mutation, Eq(pField, pValue))
 		})
@@ -379,17 +379,14 @@ func (r repository) update(ctx context.Context, doc *Document, mutation Mutation
 		return err
 	}
 
-	if len(mutation.Mutates) != 0 {
+	if !mutation.IsMutatesEmpty() {
 		var (
-			query             = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped))
-			updatedCount, err = r.adapter.Update(ctx, query, mutation.Mutates)
+			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped))
 		)
 
-		if err != nil {
+		if updatedCount, err := r.adapter.Update(ctx, query, mutation.Mutates); err != nil {
 			return err
-		}
-
-		if updatedCount == 0 {
+		} else if updatedCount == 0 {
 			return NotFoundError{}
 		}
 
@@ -419,6 +416,10 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 
 // TODO: support deletion
 func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
+	if !mutation.Cascade {
+		return nil
+	}
+
 	for _, field := range doc.BelongsTo() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -471,6 +472,10 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 
 // TODO: suppprt deletion
 func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
+	if !mutation.Cascade {
+		return nil
+	}
+
 	for _, field := range doc.HasOne() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -519,6 +524,10 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
+	if !mutation.Cascade {
+		return nil
+	}
+
 	for _, field := range doc.HasMany() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed {

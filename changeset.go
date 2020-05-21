@@ -74,16 +74,18 @@ func (c Changeset) Apply(doc *Document, mut *Mutation) {
 		mut.Add(Set("updated_at", t))
 	}
 
-	for _, field := range doc.BelongsTo() {
-		c.applyAssoc(field, mut)
-	}
+	if mut.Cascade {
+		for _, field := range doc.BelongsTo() {
+			c.applyAssoc(field, mut)
+		}
 
-	for _, field := range doc.HasOne() {
-		c.applyAssoc(field, mut)
-	}
+		for _, field := range doc.HasOne() {
+			c.applyAssoc(field, mut)
+		}
 
-	for _, field := range doc.HasMany() {
-		c.applyAssocMany(field, mut)
+		for _, field := range doc.HasMany() {
+			c.applyAssocMany(field, mut)
+		}
 	}
 }
 

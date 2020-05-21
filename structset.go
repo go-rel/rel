@@ -45,7 +45,9 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 		s.applyValue(doc, mut, field)
 	}
 
-	s.applyAssoc(mut)
+	if mut.Cascade {
+		s.applyAssoc(mut)
+	}
 }
 
 func (s Structset) set(doc *Document, mut *Mutation, field string, value interface{}, force bool) {

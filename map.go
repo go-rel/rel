@@ -21,6 +21,10 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 	for field, value := range m {
 		switch v := value.(type) {
 		case Map:
+			if !mutation.Cascade {
+				continue
+			}
+
 			var (
 				assoc = doc.Association(field)
 			)
@@ -36,6 +40,9 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 
 			mutation.SetAssoc(field, assocMutation)
 		case []Map:
+			if !mutation.Cascade {
+				continue
+			}
 			var (
 				assoc            = doc.Association(field)
 				mods, deletedIDs = applyMaps(v, assoc)

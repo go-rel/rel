@@ -438,20 +438,18 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 
 		if loaded {
 			var (
+				rValue = assoc.ReferenceValue()
 				fValue = assoc.ForeignValue()
+				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if assoc.ReferenceValue() != fValue {
+			if rValue != fValue {
 				return ConstraintError{
 					Key:  assoc.ReferenceField(),
 					Type: ForeignKeyConstraint,
 					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
 				}
 			}
-
-			var (
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
 
 			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
@@ -690,20 +688,18 @@ func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade 
 
 		if loaded {
 			var (
+				rValue = assoc.ReferenceValue()
 				fValue = assoc.ForeignValue()
+				filter = Eq(assoc.ForeignField(), fValue)
 			)
 
-			if assoc.ReferenceValue() != fValue {
+			if rValue != fValue {
 				return ConstraintError{
 					Key:  assoc.ReferenceField(),
 					Type: ForeignKeyConstraint,
 					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
 				}
 			}
-
-			var (
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
 
 			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
 				return err

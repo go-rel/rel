@@ -246,8 +246,10 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 		queriers = Build(doc.Table())
 	)
 
-	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
-		return err
+	if mutation.Cascade {
+		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+			return err
+		}
 	}
 
 	pValue, err := r.Adapter().Insert(ctx, queriers, mutation.Mutates)
@@ -265,12 +267,14 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 		doc.SetValue(pField, pValue)
 	}
 
-	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
-		return err
-	}
+	if mutation.Cascade {
+		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+			return err
+		}
 
-	if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
-		return err
+		if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -375,8 +379,10 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 }
 
 func (r repository) update(ctx context.Context, doc *Document, mutation Mutation, filter FilterQuery) error {
-	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
-		return err
+	if mutation.Cascade {
+		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+			return err
+		}
 	}
 
 	if !mutation.IsMutatesEmpty() {
@@ -397,12 +403,14 @@ func (r repository) update(ctx context.Context, doc *Document, mutation Mutation
 		}
 	}
 
-	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
-		return err
-	}
+	if mutation.Cascade {
+		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+			return err
+		}
 
-	if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
-		return err
+		if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -416,10 +424,6 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 
 // TODO: support deletion
 func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
-	if !mutation.Cascade {
-		return nil
-	}
-
 	for _, field := range doc.BelongsTo() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -472,10 +476,6 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 
 // TODO: suppprt deletion
 func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
-	if !mutation.Cascade {
-		return nil
-	}
-
 	for _, field := range doc.HasOne() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -524,10 +524,6 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
-	if !mutation.Cascade {
-		return nil
-	}
-
 	for _, field := range doc.HasMany() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed {

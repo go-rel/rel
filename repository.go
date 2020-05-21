@@ -237,7 +237,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 		mutation = Apply(doc, mutators...)
 	}
 
-	if len(mutation.Assoc) > 0 {
+	if !mutation.IsAssocEmpty() {
 		return r.Transaction(ctx, func(r Repository) error {
 			return r.(*repository).insert(ctx, doc, mutation)
 		})
@@ -377,7 +377,7 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 		mutation = Apply(doc, mutators...)
 	}
 
-	if len(mutation.Assoc) > 0 {
+	if !mutation.IsAssocEmpty() {
 		return r.Transaction(ctx, func(r Repository) error {
 			return r.(*repository).update(ctx, doc, mutation, Eq(pField, pValue))
 		})

@@ -49,15 +49,18 @@ func (m *Mutation) initAssoc() {
 	}
 }
 
-func (m *Mutation) isEmpty() bool {
-	return m.isMutatesEmpty() || m.isAssocEmpty()
+// IsEmpty returns true if no mutates operation and assoc's mutation is defined.
+func (m *Mutation) IsEmpty() bool {
+	return m.IsMutatesEmpty() && m.IsAssocEmpty()
 }
 
-func (m *Mutation) isMutatesEmpty() bool {
+// IsMutatesEmpty returns true if no mutates operation is defined.
+func (m *Mutation) IsMutatesEmpty() bool {
 	return len(m.Mutates) == 0
 }
 
-func (m *Mutation) isAssocEmpty() bool {
+// IsAssocEmpty returns true if no assoc's mutation is defined.
+func (m *Mutation) IsAssocEmpty() bool {
 	return len(m.Assoc) == 0
 }
 

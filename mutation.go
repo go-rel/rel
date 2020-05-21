@@ -13,13 +13,17 @@ type Mutator interface {
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
 	var (
-		mutation     Mutation
 		optionsCount int
+		mutation     = Mutation{
+			Unscoped: false,
+			Reload:   false,
+			Cascade:  true,
+		}
 	)
 
 	for i := range mutators {
 		switch mut := mutators[i].(type) {
-		case Unscoped, Reload:
+		case Unscoped, Reload, Cascade:
 			optionsCount++
 			mut.Apply(doc, &mutation)
 		default:
@@ -48,6 +52,7 @@ type Mutation struct {
 	Assoc    map[string]AssocMutation
 	Unscoped Unscoped
 	Reload   Reload
+	Cascade  Cascade
 }
 
 func (m *Mutation) initMutates() {
@@ -204,9 +209,19 @@ func SetFragment(raw string, args ...interface{}) Mutate {
 var Setf = SetFragment
 
 // Reload force reload after insert/update.
+// Default to false.
 type Reload bool
 
 // Apply mutation.
 func (r Reload) Apply(doc *Document, mutation *Mutation) {
 	mutation.Reload = r
+}
+
+// Cascade enable or disable updating associations.
+// Default to true.
+type Cascade bool
+
+// Apply mutation.
+func (c Cascade) Apply(doc *Document, mutation *Mutation) {
+	mutation.Cascade = c
 }

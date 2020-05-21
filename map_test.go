@@ -54,6 +54,35 @@ func TestMap(t *testing.T) {
 	}, user)
 }
 
+func TestMap_CascadeDisabled(t *testing.T) {
+	var (
+		user User
+		doc  = NewDocument(&user)
+		data = Map{
+			"name": "Luffy",
+			"age":  20,
+			"transactions": []Map{
+				{"item": "Sword"},
+				{"item": "Shield"},
+			},
+			"address": Map{
+				"street": "Grove Street",
+			},
+		}
+		userMutation = Apply(NewDocument(&User{}),
+			Cascade(false),
+			Set("name", "Luffy"),
+			Set("age", 20),
+		)
+	)
+
+	assert.Equal(t, userMutation, Apply(doc, Cascade(false), data))
+	assert.Equal(t, User{
+		Name: "Luffy",
+		Age:  20,
+	}, user)
+}
+
 func TestMap_update(t *testing.T) {
 	var (
 		user = User{
@@ -128,7 +157,7 @@ func TestMap_hasManyUpdateDeleteInsert(t *testing.T) {
 				{"id": 3, "item": "Shield"},
 			},
 		}
-		userMutation         Mutation
+		userMutation         = Mutation{Cascade: true}
 		transaction1Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)

@@ -39,6 +39,7 @@ func TestStructset(t *testing.T) {
 		}
 		doc      = NewDocument(&user)
 		mutation = Mutation{
+			Cascade: true,
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
@@ -59,6 +60,7 @@ func TestStructset_skipZero(t *testing.T) {
 		}
 		doc      = NewDocument(&user)
 		mutation = Mutation{
+			Cascade: true,
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"created_at": Set("created_at", now()),

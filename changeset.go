@@ -70,7 +70,7 @@ func (c Changeset) Apply(doc *Document, mut *Mutation) {
 		}
 	}
 
-	if len(mut.Mutates) > 0 && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
+	if !mut.IsMutatesEmpty() && c.doc.Flag(HasUpdatedAt) && c.doc.SetValue("updated_at", t) {
 		mut.Add(Set("updated_at", t))
 	}
 
@@ -96,7 +96,7 @@ func (c Changeset) applyAssoc(field string, mut *Mutation) {
 	doc, _ := assoc.Document()
 
 	if ch, ok := c.assoc[field]; ok {
-		if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
+		if amod := Apply(doc, ch); !amod.IsEmpty() {
 			mut.SetAssoc(field, amod)
 		}
 	} else {
@@ -124,7 +124,7 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 			if ch, ok := chs[pValue]; ok {
 				updatedIDs[pValue] = struct{}{}
 
-				if amod := Apply(doc, ch); len(amod.Mutates) > 0 || len(amod.Assoc) > 0 {
+				if amod := Apply(doc, ch); !amod.IsEmpty() {
 					mods = append(mods, amod)
 				}
 			} else {

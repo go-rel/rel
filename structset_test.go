@@ -45,7 +45,6 @@ func TestStructset(t *testing.T) {
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: make(map[string]AssocMutation),
 		}
 	)
 
@@ -65,7 +64,6 @@ func TestStructset_skipZero(t *testing.T) {
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
-			Assoc: make(map[string]AssocMutation),
 		}
 	)
 

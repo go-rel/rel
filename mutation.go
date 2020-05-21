@@ -12,14 +12,24 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
-	mutation := Mutation{
-		Mutates: make(map[string]Mutate),
-		Assoc:   make(map[string]AssocMutation),
+	var (
+		mutation     Mutation
+		optionsCount int
+	)
+
+	for i := range mutators {
+		switch mut := mutators[i].(type) {
+		case Unscoped, Reload:
+			optionsCount++
+			mut.Apply(doc, &mutation)
+		default:
+			mut.Apply(doc, &mutation)
+		}
 	}
 
-	// FIXME: supports db default
-	for i := range mutators {
-		mutators[i].Apply(doc, &mutation)
+	// fallback to structset.
+	if optionsCount == len(mutators) {
+		newStructset(doc, false).Apply(doc, &mutation)
 	}
 
 	return mutation
@@ -37,16 +47,47 @@ type Mutation struct {
 	Mutates  map[string]Mutate
 	Assoc    map[string]AssocMutation
 	Unscoped Unscoped
-	Reload   bool
+	Reload   Reload
+}
+
+func (m *Mutation) initMutates() {
+	if m.Mutates == nil {
+		m.Mutates = make(map[string]Mutate)
+	}
+}
+
+func (m *Mutation) initAssoc() {
+	if m.Assoc == nil {
+		m.Assoc = make(map[string]AssocMutation)
+	}
+}
+
+// IsEmpty returns true if no mutates operation and assoc's mutation is defined.
+func (m *Mutation) IsEmpty() bool {
+	return m.IsMutatesEmpty() && m.IsAssocEmpty()
+}
+
+// IsMutatesEmpty returns true if no mutates operation is defined.
+func (m *Mutation) IsMutatesEmpty() bool {
+	return len(m.Mutates) == 0
+}
+
+// IsAssocEmpty returns true if no assoc's mutation is defined.
+func (m *Mutation) IsAssocEmpty() bool {
+	return len(m.Assoc) == 0
 }
 
 // Add a mutate.
 func (m *Mutation) Add(mut Mutate) {
+	m.initMutates()
+
 	m.Mutates[mut.Field] = mut
 }
 
 // SetAssoc mutation.
 func (m *Mutation) SetAssoc(field string, mods ...Mutation) {
+	m.initAssoc()
+
 	assoc := m.Assoc[field]
 	assoc.Mutations = mods
 	m.Assoc[field] = assoc
@@ -55,6 +96,8 @@ func (m *Mutation) SetAssoc(field string, mods ...Mutation) {
 // SetDeletedIDs mutation.
 // nil slice will clear association.
 func (m *Mutation) SetDeletedIDs(field string, ids []interface{}) {
+	m.initAssoc()
+
 	assoc := m.Assoc[field]
 	assoc.DeletedIDs = ids
 	m.Assoc[field] = assoc
@@ -165,5 +208,5 @@ type Reload bool
 
 // Apply mutation.
 func (r Reload) Apply(doc *Document, mutation *Mutation) {
-	mutation.Reload = bool(r)
+	mutation.Reload = r
 }

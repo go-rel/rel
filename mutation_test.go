@@ -35,7 +35,6 @@ func TestApplyMutation(t *testing.T) {
 				"field5":   DecBy("field5", 2),
 				"field6=?": SetFragment("field6=?", true),
 			},
-			Assoc:  map[string]AssocMutation{},
 			Reload: true,
 		}
 	)
@@ -62,7 +61,6 @@ func TestApplyMutation_Reload(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"field1": Set("field1", "string"),
 			},
-			Assoc:  map[string]AssocMutation{},
 			Reload: true,
 		}
 	)

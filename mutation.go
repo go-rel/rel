@@ -12,11 +12,24 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
-	var mutation Mutation
+	var (
+		mutation     Mutation
+		optionsCount int
+	)
 
-	// FIXME: supports db default
 	for i := range mutators {
-		mutators[i].Apply(doc, &mutation)
+		switch mut := mutators[i].(type) {
+		case Unscoped, Reload:
+			optionsCount++
+			mut.Apply(doc, &mutation)
+		default:
+			mut.Apply(doc, &mutation)
+		}
+	}
+
+	// fallback to structset.
+	if optionsCount == len(mutators) {
+		newStructset(doc, false).Apply(doc, &mutation)
 	}
 
 	return mutation
@@ -34,7 +47,7 @@ type Mutation struct {
 	Mutates  map[string]Mutate
 	Assoc    map[string]AssocMutation
 	Unscoped Unscoped
-	Reload   bool
+	Reload   Reload
 }
 
 func (m *Mutation) initMutates() {
@@ -195,5 +208,5 @@ type Reload bool
 
 // Apply mutation.
 func (r Reload) Apply(doc *Document, mutation *Mutation) {
-	mutation.Reload = bool(r)
+	mutation.Reload = r
 }

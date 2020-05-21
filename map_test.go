@@ -128,7 +128,7 @@ func TestMap_hasManyUpdateDeleteInsert(t *testing.T) {
 				{"id": 3, "item": "Shield"},
 			},
 		}
-		userMutation         = Apply(NewDocument(&User{}))
+		userMutation         Mutation
 		transaction1Mutation = Apply(NewDocument(&Transaction{}),
 			Set("item", "Sword"),
 		)

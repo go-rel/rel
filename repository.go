@@ -227,15 +227,9 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 	}
 
 	var (
-		mutation Mutation
 		doc      = NewDocument(record)
-	)
-
-	if len(mutators) == 0 {
-		mutation = Apply(doc, newStructset(doc, false))
-	} else {
 		mutation = Apply(doc, mutators...)
-	}
+	)
 
 	if !mutation.IsAssocEmpty() {
 		return r.Transaction(ctx, func(r Repository) error {
@@ -365,17 +359,11 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	}
 
 	var (
-		mutation Mutation
 		doc      = NewDocument(record)
 		pField   = doc.PrimaryField()
 		pValue   = doc.PrimaryValue()
-	)
-
-	if len(mutators) == 0 {
-		mutation = Apply(doc, newStructset(doc, false))
-	} else {
 		mutation = Apply(doc, mutators...)
-	}
+	)
 
 	if !mutation.IsAssocEmpty() {
 		return r.Transaction(ctx, func(r Repository) error {

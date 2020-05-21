@@ -22,32 +22,34 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 		switch v := value.(type) {
 		case Map:
 			if !mutation.Cascade {
-
-				var (
-					assoc = doc.Association(field)
-				)
-
-				if assoc.Type() != HasOne && assoc.Type() != BelongsTo {
-					panic(fmt.Sprint("rel: cannot associate has many", v, "as", field, "into", doc.Table()))
-				}
-
-				var (
-					assocDoc, _   = assoc.Document()
-					assocMutation = Apply(assocDoc, v)
-				)
-
-				mutation.SetAssoc(field, assocMutation)
+				continue
 			}
+
+			var (
+				assoc = doc.Association(field)
+			)
+
+			if assoc.Type() != HasOne && assoc.Type() != BelongsTo {
+				panic(fmt.Sprint("rel: cannot associate has many", v, "as", field, "into", doc.Table()))
+			}
+
+			var (
+				assocDoc, _   = assoc.Document()
+				assocMutation = Apply(assocDoc, v)
+			)
+
+			mutation.SetAssoc(field, assocMutation)
 		case []Map:
-			if mutation.Cascade {
-				var (
-					assoc            = doc.Association(field)
-					mods, deletedIDs = applyMaps(v, assoc)
-				)
-
-				mutation.SetAssoc(field, mods...)
-				mutation.SetDeletedIDs(field, deletedIDs)
+			if !mutation.Cascade {
+				continue
 			}
+			var (
+				assoc            = doc.Association(field)
+				mods, deletedIDs = applyMaps(v, assoc)
+			)
+
+			mutation.SetAssoc(field, mods...)
+			mutation.SetDeletedIDs(field, deletedIDs)
 		default:
 			if field == pField {
 				if v != pValue {

@@ -663,10 +663,10 @@ func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuer
 	}
 
 	if err == nil && deletedCount == 0 {
-		return NotFoundError{}
+		err = NotFoundError{}
 	}
 
-	if cascade {
+	if err != nil && cascade {
 		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
 			return err
 		}

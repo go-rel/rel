@@ -421,51 +421,64 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 	}
 
 	for _, field := range doc.BelongsTo() {
-		assocMods, changed := mutation.Assoc[field]
-		if !changed || len(assocMods.Mutations) == 0 {
+		assocMuts, changed := mutation.Assoc[field]
+		if !changed || len(assocMuts.Mutations) == 0 {
 			continue
 		}
 
 		var (
+			err              error
 			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
-			assocMod         = assocMods.Mutations[0]
+			assocMut         = assocMuts.Mutations[0]
 		)
 
 		if loaded {
-			var (
-				fValue = assoc.ForeignValue()
-			)
-
-			if assoc.ReferenceValue() != fValue {
-				return ConstraintError{
-					Key:  assoc.ReferenceField(),
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-				}
-			}
-
-			var (
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
-
-			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
-				return err
-			}
+			err = r.updateBelongsTo(ctx, assoc, assocDoc, assocMut)
 		} else {
-			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
-				return err
-			}
+			err = r.insertBelongsTo(ctx, assoc, assocDoc, assocMut, doc, mutation)
+		}
 
-			var (
-				rField = assoc.ReferenceField()
-				fValue = assoc.ForeignValue()
-			)
-
-			mutation.Add(Set(rField, fValue))
-			doc.SetValue(rField, fValue)
+		if err != nil {
+			return err
 		}
 	}
+
+	return nil
+}
+
+func (r repository) updateBelongsTo(ctx context.Context, assoc Association, doc *Document, mut Mutation) error {
+	var (
+		fValue = assoc.ForeignValue()
+	)
+
+	if assoc.ReferenceValue() != fValue {
+		return ConstraintError{
+			Key:  assoc.ReferenceField(),
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+		}
+	}
+
+	var (
+		filter = Eq(assoc.ForeignField(), fValue)
+	)
+
+	return r.update(ctx, doc, mut, filter)
+}
+
+func (r repository) insertBelongsTo(ctx context.Context, assoc Association, doc *Document, mut Mutation, parentDoc *Document, parentMutation *Mutation) error {
+	if err := r.insert(ctx, doc, mut); err != nil {
+		return err
+	}
+
+	var (
+		rField = assoc.ReferenceField()
+		fValue = assoc.ForeignValue()
+	)
+
+	parentMutation.Add(Set(rField, fValue))
+	parentDoc.SetValue(rField, fValue)
 
 	return nil
 }

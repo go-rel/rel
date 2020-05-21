@@ -12,10 +12,7 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
-	mutation := Mutation{
-		Mutates: make(map[string]Mutate),
-		Assoc:   make(map[string]AssocMutation),
-	}
+	var mutation Mutation
 
 	// FIXME: supports db default
 	for i := range mutators {
@@ -40,13 +37,41 @@ type Mutation struct {
 	Reload   bool
 }
 
+func (m *Mutation) initMutates() {
+	if m.Mutates == nil {
+		m.Mutates = make(map[string]Mutate)
+	}
+}
+
+func (m *Mutation) initAssoc() {
+	if m.Assoc == nil {
+		m.Assoc = make(map[string]AssocMutation)
+	}
+}
+
+func (m *Mutation) isEmpty() bool {
+	return m.isMutatesEmpty() || m.isAssocEmpty()
+}
+
+func (m *Mutation) isMutatesEmpty() bool {
+	return len(m.Mutates) == 0
+}
+
+func (m *Mutation) isAssocEmpty() bool {
+	return len(m.Assoc) == 0
+}
+
 // Add a mutate.
 func (m *Mutation) Add(mut Mutate) {
+	m.initMutates()
+
 	m.Mutates[mut.Field] = mut
 }
 
 // SetAssoc mutation.
 func (m *Mutation) SetAssoc(field string, mods ...Mutation) {
+	m.initAssoc()
+
 	assoc := m.Assoc[field]
 	assoc.Mutations = mods
 	m.Assoc[field] = assoc
@@ -55,6 +80,8 @@ func (m *Mutation) SetAssoc(field string, mods ...Mutation) {
 // SetDeletedIDs mutation.
 // nil slice will clear association.
 func (m *Mutation) SetDeletedIDs(field string, ids []interface{}) {
+	m.initAssoc()
+
 	assoc := m.Assoc[field]
 	assoc.DeletedIDs = ids
 	m.Assoc[field] = assoc

@@ -10,6 +10,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Author is a model that maps to authors table.
+type Author struct {
+	ID   int
+	Name string
+}
+
 // Book is a model that maps to books table.
 type Book struct {
 	ID        int
@@ -18,6 +24,8 @@ type Book struct {
 	Price     int
 	Discount  bool
 	Stock     int
+	AuthorID  int
+	Author    Author
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -44,6 +52,11 @@ func Example(ctx context.Context, repo rel.Repository) error {
 	// Querying Books.
 	// Find a book with id 1.
 	if err := repo.Find(ctx, &book, where.Eq("id", 1)); err != nil {
+		return err
+	}
+
+	// Preload Book's Author.
+	if err := repo.Preload(ctx, &book, "author"); err != nil {
 		return err
 	}
 

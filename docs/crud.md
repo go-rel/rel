@@ -4,6 +4,8 @@
 
 A new record can be inserted to database using a struct, map or set function. To insert a new record using a struct, simply pass the pointer to the instance as the only argment. Insertion using struct will update `created_at` and `updated_at` field if any.
 
+?> REL will automatically insert all associations if it's non zero, to disable cascade inserts, you can pass `rel.Cascade(false)` mutator.
+
 <!-- tabs:start -->
 
 ### **Example**
@@ -12,7 +14,7 @@ A new record can be inserted to database using a struct, map or set function. To
 
 ### **Mock**
 
-> reltest.Repository will automatically sets any primary key value to be 1.
+?> reltest.Repository will automatically sets any primary key value to be 1.
 
 Expect any insert called.
 
@@ -42,7 +44,7 @@ To insert a new record using a map, simply pass a `rel.Map` as the second argume
 
 ### **Mock**
 
-> reltest.Repository will automatically populate record using value provided by map.
+?> reltest.Repository will automatically populate record using value provided by map.
 
 [crud_test.go](crud_test.go ':include :fragment=insert-map')
 
@@ -144,7 +146,11 @@ REL also support chainable query api for a more complex query use case.
 
 Similar to create, updating a record in REL can also be done using struct, map or set function. Updating using struct will also update `updated_at` field if any.
 
-> An update using struct will cause all fields to be saved to database, regardless of whether it's been updated or not. Use `rel.Map` or `rel.Set` to update only specific fields.
+An update using struct will cause all fields and association to be saved to database, regardless of whether it's been updated or not. Use `rel.Map`, `rel.Set` or `rel.Changeset` to update only specific fields.
+
+?> REL will automatically update all associations if it's non zero, to disable cascade updates, you can pass `rel.Cascade(false)` mutator.
+
+?> When updating belongs to association, it's recommended to not expose reference key (`[other]_id`) for updates directly from user, since there's no way to validate belongs to association using query.
 
 <!-- tabs:start -->
 
@@ -176,7 +182,9 @@ Besides `rel.Map` and `rel.Set` mutator. There's also increment and decrement mu
 
 To delete a record in rel, simply pass the record to be deleted.
 
-> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, use `rel.Unscoped(true)` when querying.
+?> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, use `rel.Unscoped(true)` when querying.
+
+?> REL will not automatically delete all associations, to enable application level cascade deletes, you can pass `rel.Cascade(true)` mutator.
 
 <!-- tabs:start -->
 

@@ -35,6 +35,9 @@ func TestCrudInsert_for(t *testing.T) {
 	repo.ExpectInsert().For(&Book{
 		Title:    "Rel for dummies",
 		Category: "education",
+		Author: Author{
+			Name: "CZ2I28 Delta",
+		},
 	})
 	/// [insert-for]
 

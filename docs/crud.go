@@ -13,6 +13,9 @@ func CrudInsert(ctx context.Context, repo rel.Repository) error {
 	book := Book{
 		Title:    "Rel for dummies",
 		Category: "education",
+		Author: Author{
+			Name: "CZ2I28 Delta",
+		},
 	}
 
 	// Insert directly using struct.

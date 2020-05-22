@@ -19,15 +19,19 @@ func TestExample(t *testing.T) {
 			ID:       1,
 			Title:    "Go for dummies",
 			Category: "learning",
+			AuthorID: 1,
 		}
+		author = Author{ID: 1, Name: "CZ2I28 Delta"}
 	)
 
-	// mock find and return other result
+	// mock find and return result
 	repo.ExpectFind(where.Eq("id", 1)).Result(book)
 
+	// mock preload and return result
+	repo.ExpectPreload("author").ForType("main.Book").Result(author)
+
 	// mocks update
-	book.Title = "REL for dummies"
-	repo.ExpectUpdate().For(&book)
+	repo.ExpectUpdate().ForType("main.Book")
 
 	// run and asserts
 	assert.Nil(t, Example(context.Background(), repo))
@@ -46,12 +50,30 @@ func TestExample_findNoResult(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestExample_preloadError(t *testing.T) {
+	// create a mocked repository.
+	var repo = reltest.New()
+
+	// mock find and return other result
+	repo.ExpectFind(where.Eq("id", 1)).Result(Book{ID: 1, AuthorID: 1})
+
+	// mock preload and return result
+	repo.ExpectPreload("author").ForType("main.Book").ConnectionClosed()
+
+	// run and asserts
+	assert.Equal(t, reltest.ErrConnectionClosed, Example(context.Background(), repo))
+	repo.AssertExpectations(t)
+}
+
 func TestExample_updateError(t *testing.T) {
 	// create a mocked repository.
 	var repo = reltest.New()
 
 	// mock find and return other result
-	repo.ExpectFind(where.Eq("id", 1)).Result(Book{ID: 1})
+	repo.ExpectFind(where.Eq("id", 1)).Result(Book{ID: 1, AuthorID: 1})
+
+	// mock preload and return result
+	repo.ExpectPreload("author").ForType("main.Book").Result(Author{ID: 1, Name: "CZ2I28 Delta"})
 
 	// mocks update
 	repo.ExpectUpdate().ForType("main.Book").ConnectionClosed()

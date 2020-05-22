@@ -480,6 +480,70 @@ func TestRepository_Insert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Insert_reload(t *testing.T) {
+	var (
+		user     User
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		mutators = []Mutator{
+			Reload(true),
+			Set("name", "name"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
+		}
+		mutates = map[string]Mutate{
+			"name":       Set("name", "name"),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
+		cur = createCursor(1)
+	)
+
+	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user, mutators...))
+	assert.Equal(t, User{
+		ID:        10,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+	}, user)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Insert_reloadError(t *testing.T) {
+	var (
+		user     User
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		mutators = []Mutator{
+			Reload(true),
+			Set("name", "name"),
+			Set("created_at", now()),
+			Set("updated_at", now()),
+		}
+		mutates = map[string]Mutate{
+			"name":       Set("name", "name"),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
+		cur = &testCursor{}
+		err = errors.New("error")
+	)
+
+	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
+	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Insert_saveBelongsTo(t *testing.T) {
 	var (
 		userID    = 1
@@ -944,6 +1008,31 @@ func TestRepository_Update_reload(t *testing.T) {
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, mutators...))
 	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Update_reloadError(t *testing.T) {
+	var (
+		user     = User{ID: 1}
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		mutators = []Mutator{
+			SetFragment("name=?", "name"),
+		}
+		mutates = map[string]Mutate{
+			"name=?": SetFragment("name=?", "name"),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Query", queries.Limit(1)).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Update(context.TODO(), &user, mutators...))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -1884,6 +1973,20 @@ func TestRepository_Delete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Delete_notFound(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{ID: 1}
+	)
+
+	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(0, nil).Once()
+
+	assert.Equal(t, NotFoundError{}, repo.Delete(context.TODO(), &user))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Delete_softDelete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
@@ -1898,6 +2001,228 @@ func TestRepository_Delete_softDelete(t *testing.T) {
 	adapter.On("Update", query, mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Delete(context.TODO(), &address))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_belongsTo(t *testing.T) {
+	var (
+		userID  = 1
+		address = Address{
+			ID:     1,
+			UserID: &userID,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		addressMut = map[string]Mutate{
+			"deleted_at": Set("deleted_at", now()),
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	// if db constraint enabled, deleting users where it referenced by soft deleted address will raise error.
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", address.ID)), addressMut).Return(1, nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", *address.UserID))).Return(1, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &address, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_belongsToInconsistentAssoc(t *testing.T) {
+	var (
+		userID  = 2
+		address = Address{
+			ID:     1,
+			UserID: &userID,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		addressMut = map[string]Mutate{
+			"deleted_at": Set("deleted_at", now()),
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", address.ID)), addressMut).Return(1, nil).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, ConstraintError{
+		Key:  "user_id",
+		Type: ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+	}, repo.Delete(context.TODO(), &address, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_belongsToError(t *testing.T) {
+	var (
+		userID  = 1
+		address = Address{
+			ID:     1,
+			UserID: &userID,
+			User: &User{
+				ID:   1,
+				Name: "name",
+			},
+		}
+		addressMut = map[string]Mutate{
+			"deleted_at": Set("deleted_at", now()),
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", *address.UserID))).Return(1, err).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", address.ID)), addressMut).Return(1, nil).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Delete(context.TODO(), &address, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_hasOne(t *testing.T) {
+	var (
+		userID = 10
+		user   = User{
+			ID: userID,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+				UserID: &userID,
+			},
+		}
+		addressMut = map[string]Mutate{
+			"deleted_at": Set("deleted_at", now()),
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), addressMut).Return(1, nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", 10))).Return(1, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &user, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_hasOneInconsistentAssoc(t *testing.T) {
+	var (
+		userID = 10
+		user   = User{
+			ID: 5,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+				UserID: &userID,
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, ConstraintError{
+		Key:  "user_id",
+		Type: ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent has one ref and fk"),
+	}, repo.Delete(context.TODO(), &user, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_hasOneError(t *testing.T) {
+	var (
+		userID = 10
+		user   = User{
+			ID: userID,
+			Address: Address{
+				ID:     1,
+				Street: "street",
+				UserID: &userID,
+			},
+		}
+		addressMut = map[string]Mutate{
+			"deleted_at": Set("deleted_at", now()),
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), addressMut).Return(1, err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Delete(context.TODO(), &user, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_hasMany(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "soap",
+				},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10).AndIn("id", 1))).Return(1, nil).Once()
+	adapter.On("Delete", From("users").Where(Eq("id", 10))).Return(1, nil).Once()
+	adapter.On("Commit").Return(nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &user, Cascade(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_hasManyError(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+			Transactions: []Transaction{
+				{
+					ID:   1,
+					Item: "soap",
+				},
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		err     = errors.New("err")
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Delete", From("transactions").Where(Eq("user_id", 10).AndIn("id", 1))).Return(1, err).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Delete(context.TODO(), &user, Cascade(true)))
 
 	adapter.AssertExpectations(t)
 }

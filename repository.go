@@ -31,8 +31,8 @@ type Repository interface {
 	MustInsertAll(ctx context.Context, records interface{})
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
-	Delete(ctx context.Context, record interface{}) error
-	MustDelete(ctx context.Context, record interface{})
+	Delete(ctx context.Context, record interface{}, options ...Cascade) error
+	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
 	DeleteAll(ctx context.Context, query Query) error
 	MustDeleteAll(ctx context.Context, query Query)
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
@@ -437,6 +437,7 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 		)
 
 		if loaded {
+			// TODO: warning about exposing foreign_field to user input
 			filter, err := r.buildBelongsToFilter(assoc)
 			if err != nil {
 				return err
@@ -644,7 +645,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 }
 
 // Delete single entry.
-func (r repository) Delete(ctx context.Context, record interface{}) error {
+func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
 	finish := r.instrument(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
 
@@ -654,6 +655,10 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 		pValue  = doc.PrimaryValue()
 		cascade = Cascade(false)
 	)
+
+	if len(options) > 0 {
+		cascade = options[0]
+	}
 
 	if cascade {
 		return r.Transaction(ctx, func(r Repository) error {
@@ -673,7 +678,11 @@ func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuer
 	)
 
 	if cascade {
-		if err := r.deleteBelongsTo(ctx, doc, cascade); err != nil {
+		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
+			return err
+		}
+
+		if err := r.deleteHasMany(ctx, doc); err != nil {
 			return err
 		}
 	}
@@ -689,12 +698,8 @@ func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuer
 		err = NotFoundError{}
 	}
 
-	if err != nil && cascade {
-		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
-			return err
-		}
-
-		if err := r.deleteHasMany(ctx, doc); err != nil {
+	if err == nil && cascade {
+		if err := r.deleteBelongsTo(ctx, doc, cascade); err != nil {
 			return err
 		}
 	}
@@ -760,7 +765,7 @@ func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
 				pValues = col.PrimaryValue().([]interface{})
 				fField  = assoc.ForeignField()
 				rValue  = assoc.ReferenceValue()
-				filter  = Eq(fField, rValue).AndIn(pField, pValues)
+				filter  = Eq(fField, rValue).AndIn(pField, pValues...)
 			)
 
 			if err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
@@ -774,7 +779,7 @@ func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
 
 // MustDelete single entry.
 // It'll panic if any error eccured.
-func (r repository) MustDelete(ctx context.Context, record interface{}) {
+func (r repository) MustDelete(ctx context.Context, record interface{}, options ...Cascade) {
 	must(r.Delete(ctx, record))
 }
 

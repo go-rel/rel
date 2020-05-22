@@ -3,6 +3,7 @@ package reltest
 import (
 	"strings"
 
+	"github.com/Fs02/rel"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -24,8 +25,8 @@ func (d *Delete) ForType(typ string) *Delete {
 }
 
 // ExpectDelete to be called.
-func ExpectDelete(r *Repository) *Delete {
+func ExpectDelete(r *Repository, options []rel.Cascade) *Delete {
 	return &Delete{
-		Expect: newExpect(r, "Delete", []interface{}{mock.Anything}, []interface{}{nil}),
+		Expect: newExpect(r, "Delete", []interface{}{mock.Anything, options}, []interface{}{nil}),
 	}
 }

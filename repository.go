@@ -437,18 +437,9 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 		)
 
 		if loaded {
-			var (
-				rValue = assoc.ReferenceValue()
-				fValue = assoc.ForeignValue()
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
-
-			if rValue != fValue {
-				return ConstraintError{
-					Key:  assoc.ReferenceField(),
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: update inconsistent belongs to ref and fk"),
-				}
+			filter, err := r.buildBelongsToFilter(assoc)
+			if err != nil {
+				return err
 			}
 
 			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
@@ -472,6 +463,24 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 	return nil
 }
 
+func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error) {
+	var (
+		rValue = assoc.ReferenceValue()
+		fValue = assoc.ForeignValue()
+		filter = Eq(assoc.ForeignField(), fValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  assoc.ReferenceField(),
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+		}
+	}
+
+	return filter, nil
+}
+
 // TODO: suppprt deletion
 func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
@@ -482,42 +491,56 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 
 		var (
 			assoc            = doc.Association(field)
-			fField           = assoc.ForeignField()
-			rValue           = assoc.ReferenceValue()
 			assocDoc, loaded = assoc.Document()
-			pField           = assocDoc.PrimaryField()
-			pValue           = assocDoc.PrimaryValue()
 			assocMod         = assocMods.Mutations[0]
 		)
 
 		if loaded {
-			if rValue != assoc.ForeignValue() {
-				return ConstraintError{
-					Key:  fField,
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: update inconsistent has one ref and fk"),
-				}
+			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			if err != nil {
+				return err
 			}
-
-			var (
-				filter = Eq(pField, pValue).AndEq(fField, rValue)
-			)
 
 			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
+			var (
+				fField = assoc.ForeignField()
+				rValue = assoc.ReferenceValue()
+			)
+
 			assocMod.Add(Set(fField, rValue))
+			assocDoc.SetValue(fField, rValue)
 
 			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
 				return err
 			}
 		}
-
-		assocDoc.SetValue(fField, rValue)
 	}
 
 	return nil
+}
+
+func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (FilterQuery, error) {
+	var (
+		fField = assoc.ForeignField()
+		fValue = assoc.ForeignValue()
+		rValue = assoc.ReferenceValue()
+		pField = asssocDoc.PrimaryField()
+		pValue = asssocDoc.PrimaryValue()
+		filter = Eq(pField, pValue).AndEq(fField, rValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  fField,
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent has one ref and fk"),
+		}
+	}
+
+	return filter, nil
 }
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
@@ -687,18 +710,9 @@ func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade 
 		)
 
 		if loaded {
-			var (
-				rValue = assoc.ReferenceValue()
-				fValue = assoc.ForeignValue()
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
-
-			if rValue != fValue {
-				return ConstraintError{
-					Key:  assoc.ReferenceField(),
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: delete inconsistent belongs to ref and fk"),
-				}
+			filter, err := r.buildBelongsToFilter(assoc)
+			if err != nil {
+				return err
 			}
 
 			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
@@ -714,25 +728,14 @@ func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cas
 	for _, field := range doc.HasOne() {
 		var (
 			assoc            = doc.Association(field)
-			fField           = assoc.ForeignField()
-			rValue           = assoc.ReferenceValue()
 			assocDoc, loaded = assoc.Document()
-			pField           = assocDoc.PrimaryField()
-			pValue           = assocDoc.PrimaryValue()
 		)
 
 		if loaded {
-			if rValue != assoc.ForeignValue() {
-				return ConstraintError{
-					Key:  fField,
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: delete inconsistent has one ref and fk"),
-				}
+			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			if err != nil {
+				return err
 			}
-
-			var (
-				filter = Eq(pField, pValue).AndEq(fField, rValue)
-			)
 
 			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
 				return err

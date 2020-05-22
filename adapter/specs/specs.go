@@ -37,7 +37,7 @@ type Address struct {
 	UpdatedAt time.Time
 }
 
-// Extra defines baz schema.
+// Extra defines extra schema.
 type Extra struct {
 	ID     uint
 	Slug   *string

@@ -31,8 +31,8 @@ type Repository interface {
 	MustInsertAll(ctx context.Context, records interface{})
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
-	Delete(ctx context.Context, record interface{}) error
-	MustDelete(ctx context.Context, record interface{})
+	Delete(ctx context.Context, record interface{}, options ...Cascade) error
+	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
 	DeleteAll(ctx context.Context, query Query) error
 	MustDeleteAll(ctx context.Context, query Query)
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
@@ -246,8 +246,10 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 		queriers = Build(doc.Table())
 	)
 
-	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
-		return err
+	if mutation.Cascade {
+		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+			return err
+		}
 	}
 
 	pValue, err := r.Adapter().Insert(ctx, queriers, mutation.Mutates)
@@ -265,12 +267,14 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 		doc.SetValue(pField, pValue)
 	}
 
-	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
-		return err
-	}
+	if mutation.Cascade {
+		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+			return err
+		}
 
-	if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
-		return err
+		if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -375,8 +379,10 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 }
 
 func (r repository) update(ctx context.Context, doc *Document, mutation Mutation, filter FilterQuery) error {
-	if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
-		return err
+	if mutation.Cascade {
+		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+			return err
+		}
 	}
 
 	if !mutation.IsMutatesEmpty() {
@@ -397,12 +403,14 @@ func (r repository) update(ctx context.Context, doc *Document, mutation Mutation
 		}
 	}
 
-	if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
-		return err
-	}
+	if mutation.Cascade {
+		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+			return err
+		}
 
-	if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
-		return err
+		if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -416,10 +424,6 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 
 // TODO: support deletion
 func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
-	if !mutation.Cascade {
-		return nil
-	}
-
 	for _, field := range doc.BelongsTo() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -433,21 +437,10 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 		)
 
 		if loaded {
-			var (
-				fValue = assoc.ForeignValue()
-			)
-
-			if assoc.ReferenceValue() != fValue {
-				return ConstraintError{
-					Key:  assoc.ReferenceField(),
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-				}
+			filter, err := r.buildBelongsToFilter(assoc)
+			if err != nil {
+				return err
 			}
-
-			var (
-				filter = Eq(assoc.ForeignField(), fValue)
-			)
 
 			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
@@ -470,12 +463,26 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 	return nil
 }
 
-// TODO: suppprt deletion
-func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
-	if !mutation.Cascade {
-		return nil
+func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error) {
+	var (
+		rValue = assoc.ReferenceValue()
+		fValue = assoc.ForeignValue()
+		filter = Eq(assoc.ForeignField(), fValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  assoc.ReferenceField(),
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+		}
 	}
 
+	return filter, nil
+}
+
+// TODO: suppprt deletion
+func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed || len(assocMods.Mutations) == 0 {
@@ -484,50 +491,60 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 
 		var (
 			assoc            = doc.Association(field)
-			fField           = assoc.ForeignField()
-			rValue           = assoc.ReferenceValue()
 			assocDoc, loaded = assoc.Document()
-			pField           = assocDoc.PrimaryField()
-			pValue           = assocDoc.PrimaryValue()
 			assocMod         = assocMods.Mutations[0]
 		)
 
 		if loaded {
-			if rValue != assoc.ForeignValue() {
-				return ConstraintError{
-					Key:  fField,
-					Type: ForeignKeyConstraint,
-					Err:  errors.New("rel: inconsistent has one ref and fk"),
-				}
+			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			if err != nil {
+				return err
 			}
-
-			var (
-				filter = Eq(pField, pValue).AndEq(fField, rValue)
-			)
 
 			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
 				return err
 			}
 		} else {
+			var (
+				fField = assoc.ForeignField()
+				rValue = assoc.ReferenceValue()
+			)
+
 			assocMod.Add(Set(fField, rValue))
+			assocDoc.SetValue(fField, rValue)
 
 			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
 				return err
 			}
 		}
-
-		assocDoc.SetValue(fField, rValue)
 	}
 
 	return nil
 }
 
-// saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
-func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
-	if !mutation.Cascade {
-		return nil
+func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (FilterQuery, error) {
+	var (
+		fField = assoc.ForeignField()
+		fValue = assoc.ForeignValue()
+		rValue = assoc.ReferenceValue()
+		pField = asssocDoc.PrimaryField()
+		pValue = asssocDoc.PrimaryValue()
+		filter = Eq(pField, pValue).AndEq(fField, rValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  fField,
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent has one ref and fk"),
+		}
 	}
 
+	return filter, nil
+}
+
+// saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
+func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		assocMods, changed := mutation.Assoc[field]
 		if !changed {
@@ -627,19 +644,47 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 }
 
 // Delete single entry.
-func (r repository) Delete(ctx context.Context, record interface{}) error {
+func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
 	finish := r.instrument(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
 
 	var (
+		doc     = NewDocument(record)
+		pField  = doc.PrimaryField()
+		pValue  = doc.PrimaryValue()
+		cascade = Cascade(false)
+	)
+
+	if len(options) > 0 {
+		cascade = options[0]
+	}
+
+	if cascade {
+		return r.Transaction(ctx, func(r Repository) error {
+			return r.(*repository).delete(ctx, doc, Eq(pField, pValue), cascade)
+		})
+	}
+
+	return r.delete(ctx, doc, Eq(pField, pValue), cascade)
+}
+
+func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuery, cascade Cascade) error {
+	var (
 		err          error
 		deletedCount int
-		doc          = NewDocument(record)
 		table        = doc.Table()
-		pField       = doc.PrimaryField()
-		pValue       = doc.PrimaryValue()
-		query        = Build(table, Eq(pField, pValue))
+		query        = Build(table, filter)
 	)
+
+	if cascade {
+		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
+			return err
+		}
+
+		if err := r.deleteHasMany(ctx, doc); err != nil {
+			return err
+		}
+	}
 
 	if doc.Flag(HasDeletedAt) {
 		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
@@ -649,16 +694,92 @@ func (r repository) Delete(ctx context.Context, record interface{}) error {
 	}
 
 	if err == nil && deletedCount == 0 {
-		return NotFoundError{}
+		err = NotFoundError{}
+	}
+
+	if err == nil && cascade {
+		if err := r.deleteBelongsTo(ctx, doc, cascade); err != nil {
+			return err
+		}
 	}
 
 	return err
 }
 
+func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade Cascade) error {
+	for _, field := range doc.BelongsTo() {
+		var (
+			assoc            = doc.Association(field)
+			assocDoc, loaded = assoc.Document()
+		)
+
+		if loaded {
+			filter, err := r.buildBelongsToFilter(assoc)
+			if err != nil {
+				return err
+			}
+
+			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cascade) error {
+	for _, field := range doc.HasOne() {
+		var (
+			assoc            = doc.Association(field)
+			assocDoc, loaded = assoc.Document()
+		)
+
+		if loaded {
+			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			if err != nil {
+				return err
+			}
+
+			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
+	for _, field := range doc.HasMany() {
+		var (
+			assoc       = doc.Association(field)
+			col, loaded = assoc.Collection()
+		)
+
+		if loaded {
+			var (
+				table   = col.Table()
+				pField  = col.PrimaryField()
+				pValues = col.PrimaryValue().([]interface{})
+				fField  = assoc.ForeignField()
+				rValue  = assoc.ReferenceValue()
+				filter  = Eq(fField, rValue).AndIn(pField, pValues...)
+			)
+
+			if err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // MustDelete single entry.
 // It'll panic if any error eccured.
-func (r repository) MustDelete(ctx context.Context, record interface{}) {
-	must(r.Delete(ctx, record))
+func (r repository) MustDelete(ctx context.Context, record interface{}, options ...Cascade) {
+	must(r.Delete(ctx, record, options...))
 }
 
 func (r repository) DeleteAll(ctx context.Context, query Query) error {

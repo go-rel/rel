@@ -199,18 +199,18 @@ func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *Mutate {
 }
 
 // Delete provides a mock function with given fields: record
-func (r *Repository) Delete(ctx context.Context, record interface{}) error {
-	return r.mock.Called(record).Error(0)
+func (r *Repository) Delete(ctx context.Context, record interface{}, options ...rel.Cascade) error {
+	return r.mock.Called(record, options).Error(0)
 }
 
 // MustDelete provides a mock function with given fields: record
-func (r *Repository) MustDelete(ctx context.Context, record interface{}) {
-	must(r.Delete(ctx, record))
+func (r *Repository) MustDelete(ctx context.Context, record interface{}, options ...rel.Cascade) {
+	must(r.Delete(ctx, record, options...))
 }
 
 // ExpectDelete apply mocks and expectations for Delete
-func (r *Repository) ExpectDelete() *Delete {
-	return ExpectDelete(r)
+func (r *Repository) ExpectDelete(options ...rel.Cascade) *Delete {
+	return ExpectDelete(r, options)
 }
 
 // DeleteAll provides a mock function with given fields: query

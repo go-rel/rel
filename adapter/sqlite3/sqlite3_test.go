@@ -117,6 +117,9 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Delete specs
 	specs.Delete(t, repo)
+	specs.DeleteBelongsTo(t, repo)
+	specs.DeleteHasOne(t, repo)
+	specs.DeleteHasMany(t, repo)
 	specs.DeleteAll(t, repo)
 
 	// Constraint specs

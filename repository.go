@@ -779,7 +779,7 @@ func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
 // MustDelete single entry.
 // It'll panic if any error eccured.
 func (r repository) MustDelete(ctx context.Context, record interface{}, options ...Cascade) {
-	must(r.Delete(ctx, record))
+	must(r.Delete(ctx, record, options...))
 }
 
 func (r repository) DeleteAll(ctx context.Context, query Query) error {

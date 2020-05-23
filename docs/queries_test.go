@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestQueryFind(t *testing.T) {
+func TestQueriesFind(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -24,11 +24,11 @@ func TestQueryFind(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 1)).Result(book)
 	/// [find]
 
-	assert.Nil(t, QueryFind(ctx, repo))
+	assert.Nil(t, QueriesFind(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryFindAll(t *testing.T) {
+func TestQueriesFindAll(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -41,11 +41,11 @@ func TestQueryFindAll(t *testing.T) {
 	repo.ExpectFindAll().Result(books)
 	/// [find-all]
 
-	assert.Nil(t, QueryFindAll(ctx, repo))
+	assert.Nil(t, QueriesFindAll(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryCondition(t *testing.T) {
+func TestQueriesCondition(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -58,11 +58,11 @@ func TestQueryCondition(t *testing.T) {
 	repo.ExpectFindAll(rel.Eq("available", true)).Result(books)
 	/// [condition]
 
-	assert.Nil(t, QueryCondition(ctx, repo))
+	assert.Nil(t, QueriesCondition(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryConditionAlias(t *testing.T) {
+func TestQueriesConditionAlias(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -75,11 +75,11 @@ func TestQueryConditionAlias(t *testing.T) {
 	repo.ExpectFindAll(where.Eq("available", true)).Result(books)
 	/// [condition-alias]
 
-	assert.Nil(t, QueryConditionAlias(ctx, repo))
+	assert.Nil(t, QueriesConditionAlias(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryConditionFragment(t *testing.T) {
+func TestQueriesConditionFragment(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -92,11 +92,11 @@ func TestQueryConditionFragment(t *testing.T) {
 	repo.ExpectFindAll(where.Fragment("available=?", true)).Result(books)
 	/// [condition-fragment]
 
-	assert.Nil(t, QueryConditionFragment(ctx, repo))
+	assert.Nil(t, QueriesConditionFragment(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryConditionAdvanced(t *testing.T) {
+func TestQueriesConditionAdvanced(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -110,11 +110,11 @@ func TestQueryConditionAdvanced(t *testing.T) {
 	repo.ExpectFindAll(rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true)))).Result(books)
 	/// [condition-advanced]
 
-	assert.Nil(t, QueryConditionAdvanced(ctx, repo))
+	assert.Nil(t, QueriesConditionAdvanced(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryConditionAdvancedChain(t *testing.T) {
+func TestQueriesConditionAdvancedChain(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -128,11 +128,11 @@ func TestQueryConditionAdvancedChain(t *testing.T) {
 	repo.ExpectFindAll(rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true))).Result(books)
 	/// [condition-advanced-chain]
 
-	assert.Nil(t, QueryConditionAdvancedChain(ctx, repo))
+	assert.Nil(t, QueriesConditionAdvancedChain(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryConditionAdvancedAlias(t *testing.T) {
+func TestQueriesConditionAdvancedAlias(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -146,11 +146,11 @@ func TestQueryConditionAdvancedAlias(t *testing.T) {
 	repo.ExpectFindAll(where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true))).Result(books)
 	/// [condition-advanced-alias]
 
-	assert.Nil(t, QueryConditionAdvancedAlias(ctx, repo))
+	assert.Nil(t, QueriesConditionAdvancedAlias(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySorting(t *testing.T) {
+func TestQueriesSorting(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -163,11 +163,11 @@ func TestQuerySorting(t *testing.T) {
 	repo.ExpectFindAll(rel.NewSortAsc("updated_at")).Result(books)
 	/// [sorting]
 
-	assert.Nil(t, QuerySorting(ctx, repo))
+	assert.Nil(t, QueriesSorting(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySortingAlias(t *testing.T) {
+func TestQueriesSortingAlias(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -180,11 +180,11 @@ func TestQuerySortingAlias(t *testing.T) {
 	repo.ExpectFindAll(sort.Asc("updated_at")).Result(books)
 	/// [sorting-alias]
 
-	assert.Nil(t, QuerySortingAlias(ctx, repo))
+	assert.Nil(t, QueriesSortingAlias(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySortingWithCondition(t *testing.T) {
+func TestQueriesSortingWithCondition(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -197,11 +197,11 @@ func TestQuerySortingWithCondition(t *testing.T) {
 	repo.ExpectFindAll(rel.Where(where.Eq("available", true)).SortAsc("updated_at")).Result(books)
 	/// [sorting-with-condition]
 
-	assert.Nil(t, QuerySortingWithCondition(ctx, repo))
+	assert.Nil(t, QueriesSortingWithCondition(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySortingWithConditionVariadic(t *testing.T) {
+func TestQueriesSortingWithConditionVariadic(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -214,11 +214,11 @@ func TestQuerySortingWithConditionVariadic(t *testing.T) {
 	repo.ExpectFindAll(where.Eq("available", true), sort.Asc("updated_at")).Result(books)
 	/// [sorting-with-condition-variadic]
 
-	assert.Nil(t, QuerySortingWithConditionVariadic(ctx, repo))
+	assert.Nil(t, QueriesSortingWithConditionVariadic(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySelect(t *testing.T) {
+func TestQueriesSelect(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -231,11 +231,11 @@ func TestQuerySelect(t *testing.T) {
 	repo.ExpectFindAll(rel.Select("id", "title")).Result(books)
 	/// [select]
 
-	assert.Nil(t, QuerySelect(ctx, repo))
+	assert.Nil(t, QueriesSelect(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryTable(t *testing.T) {
+func TestQueriesTable(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -248,11 +248,11 @@ func TestQueryTable(t *testing.T) {
 	repo.ExpectFindAll(rel.From("ebooks")).Result(books)
 	/// [table]
 
-	assert.Nil(t, QueryTable(ctx, repo))
+	assert.Nil(t, QueriesTable(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryTableChained(t *testing.T) {
+func TestQueriesTableChained(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -265,11 +265,11 @@ func TestQueryTableChained(t *testing.T) {
 	repo.ExpectFindAll(rel.Select("id", "title").From("ebooks")).Result(books)
 	/// [table-chained]
 
-	assert.Nil(t, QueryTableChained(ctx, repo))
+	assert.Nil(t, QueriesTableChained(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryLimitOffset(t *testing.T) {
+func TestQueriesLimitOffset(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -282,11 +282,11 @@ func TestQueryLimitOffset(t *testing.T) {
 	repo.ExpectFindAll(rel.Limit(10), rel.Offset(20)).Result(books)
 	/// [limit-offset]
 
-	assert.Nil(t, QueryLimitOffset(ctx, repo))
+	assert.Nil(t, QueriesLimitOffset(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryLimitOffsetChained(t *testing.T) {
+func TestQueriesLimitOffsetChained(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -299,11 +299,11 @@ func TestQueryLimitOffsetChained(t *testing.T) {
 	repo.ExpectFindAll(rel.Select().Limit(10).Offset(20)).Result(books)
 	/// [limit-offset-chained]
 
-	assert.Nil(t, QueryLimitOffsetChained(ctx, repo))
+	assert.Nil(t, QueriesLimitOffsetChained(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryGroup(t *testing.T) {
+func TestQueriesGroup(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -319,11 +319,11 @@ func TestQueryGroup(t *testing.T) {
 	repo.ExpectFindAll(rel.Select("category", "COUNT(id) as total").From("books").Group("category")).Result(results)
 	/// [group]
 
-	assert.Nil(t, QueryGroup(ctx, repo))
+	assert.Nil(t, QueriesGroup(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryJoin(t *testing.T) {
+func TestQueriesJoin(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -336,11 +336,11 @@ func TestQueryJoin(t *testing.T) {
 	repo.ExpectFindAll(rel.Join("books").Where(where.Eq("books.name", "REL for Dummies"))).Result(transactions)
 	/// [join]
 
-	assert.Nil(t, QueryJoin(ctx, repo))
+	assert.Nil(t, QueriesJoin(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryJoinOn(t *testing.T) {
+func TestQueriesJoinOn(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -353,11 +353,11 @@ func TestQueryJoinOn(t *testing.T) {
 	repo.ExpectFindAll(rel.JoinOn("books", "transactions.book_id", "books.id")).Result(transactions)
 	/// [join-on]
 
-	assert.Nil(t, QueryJoinOn(ctx, repo))
+	assert.Nil(t, QueriesJoinOn(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryJoinAlias(t *testing.T) {
+func TestQueriesJoinAlias(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -370,11 +370,11 @@ func TestQueryJoinAlias(t *testing.T) {
 	repo.ExpectFindAll(join.On("books", "transactions.book_id", "books.id")).Result(transactions)
 	/// [join-alias]
 
-	assert.Nil(t, QueryJoinAlias(ctx, repo))
+	assert.Nil(t, QueriesJoinAlias(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryJoinWith(t *testing.T) {
+func TestQueriesJoinWith(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -387,11 +387,11 @@ func TestQueryJoinWith(t *testing.T) {
 	repo.ExpectFindAll(rel.JoinWith("LEFT JOIN", "books", "transactions.book_id", "books.id")).Result(transactions)
 	/// [join-with]
 
-	assert.Nil(t, QueryJoinWith(ctx, repo))
+	assert.Nil(t, QueriesJoinWith(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryJoinFragment(t *testing.T) {
+func TestQueriesJoinFragment(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -404,11 +404,11 @@ func TestQueryJoinFragment(t *testing.T) {
 	repo.ExpectFindAll(rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`")).Result(transactions)
 	/// [join-fragment]
 
-	assert.Nil(t, QueryJoinFragment(ctx, repo))
+	assert.Nil(t, QueriesJoinFragment(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryLock(t *testing.T) {
+func TestQueriesLock(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -419,11 +419,11 @@ func TestQueryLock(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 1), rel.Lock("FOR UPDATE")).Result(book)
 	/// [lock]
 
-	assert.Nil(t, QueryLock(ctx, repo))
+	assert.Nil(t, QueriesLock(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryLockForUpdate(t *testing.T) {
+func TestQueriesLockForUpdate(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -434,11 +434,11 @@ func TestQueryLockForUpdate(t *testing.T) {
 	repo.ExpectFind(where.Eq("id", 1), rel.ForUpdate()).Result(book)
 	/// [lock-for-update]
 
-	assert.Nil(t, QueryLockForUpdate(ctx, repo))
+	assert.Nil(t, QueriesLockForUpdate(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryLockChained(t *testing.T) {
+func TestQueriesLockChained(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -449,11 +449,11 @@ func TestQueryLockChained(t *testing.T) {
 	repo.ExpectFind(rel.Where(where.Eq("id", 1)).Lock("FOR UPDATE")).Result(book)
 	/// [lock-chained]
 
-	assert.Nil(t, QueryLockChained(ctx, repo))
+	assert.Nil(t, QueriesLockChained(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryAggregate(t *testing.T) {
+func TestQueriesAggregate(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -463,11 +463,11 @@ func TestQueryAggregate(t *testing.T) {
 	repo.ExpectAggregate(rel.From("books").Where(where.Eq("available", true)), "count", "id").Result(5)
 	/// [aggregate]
 
-	assert.Nil(t, QueryAggregate(ctx, repo))
+	assert.Nil(t, QueriesAggregate(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryCount(t *testing.T) {
+func TestQueriesCount(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -477,11 +477,11 @@ func TestQueryCount(t *testing.T) {
 	repo.ExpectCount("books").Result(7)
 	/// [count]
 
-	assert.Nil(t, QueryCount(ctx, repo))
+	assert.Nil(t, QueriesCount(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryCountWithCondition(t *testing.T) {
+func TestQueriesCountWithCondition(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -491,11 +491,11 @@ func TestQueryCountWithCondition(t *testing.T) {
 	repo.ExpectCount("books", where.Eq("available", true)).Result(5)
 	/// [count-with-condition]
 
-	assert.Nil(t, QueryCountWithCondition(ctx, repo))
+	assert.Nil(t, QueriesCountWithCondition(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryFindAndCountAll(t *testing.T) {
+func TestQueriesFindAndCountAll(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -508,11 +508,11 @@ func TestQueryFindAndCountAll(t *testing.T) {
 	repo.ExpectFindAndCountAll(rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10)).Result(books, 12)
 	/// [find-and-count-all]
 
-	assert.Nil(t, QueryFindAndCountAll(ctx, repo))
+	assert.Nil(t, QueriesFindAndCountAll(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryIteration(t *testing.T) {
+func TestQueriesIteration(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -523,11 +523,11 @@ func TestQueryIteration(t *testing.T) {
 	repo.ExpectIterate(rel.From("users"), rel.BatchSize(500)).Result(users)
 	/// [batch-iteration]
 
-	assert.Nil(t, QueryIteration(ctx, repo))
+	assert.Nil(t, QueriesIteration(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQueryIteration_error(t *testing.T) {
+func TestQueriesIteration_error(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -537,11 +537,11 @@ func TestQueryIteration_error(t *testing.T) {
 	repo.ExpectIterate(rel.From("users"), rel.BatchSize(500)).ConnectionClosed()
 	/// [batch-iteration-connection-error]
 
-	assert.Equal(t, reltest.ErrConnectionClosed, QueryIteration(ctx, repo))
+	assert.Equal(t, reltest.ErrConnectionClosed, QueriesIteration(ctx, repo))
 	repo.AssertExpectations(t)
 }
 
-func TestQuerySQL(t *testing.T) {
+func TestQueriesSQL(t *testing.T) {
 	var (
 		ctx  = context.TODO()
 		repo = reltest.New()
@@ -553,6 +553,6 @@ func TestQuerySQL(t *testing.T) {
 	repo.ExpectFind(sql).Result(book)
 	/// [sql]
 
-	assert.Nil(t, QuerySQL(ctx, repo))
+	assert.Nil(t, QueriesSQL(ctx, repo))
 	repo.AssertExpectations(t)
 }

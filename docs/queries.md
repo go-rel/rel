@@ -1,4 +1,4 @@
-# Query Iterface
+# Queries
 
 ## Retrieving Data
 

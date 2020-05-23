@@ -10,7 +10,7 @@
     * [Update](crud.md#update)
     * [Delete](crud.md#delete)
 
-* [Query Interface](query.md)
+* [Queries](query.md)
 
     * [Retrieving Record](query.md#retrieving-data)
     * [Conditions](query.md#conditions)

@@ -437,7 +437,6 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 		)
 
 		if loaded {
-			// TODO: warning about exposing foreign_field to user input
 			filter, err := r.buildBelongsToFilter(assoc)
 			if err != nil {
 				return err

@@ -87,7 +87,7 @@ Mock update only price and discount field using changeset.
 
 ## Map
 
-Map allows to define group of `Set` mutator, this is intended to be use internally and not to be exposed directly to user.
+Map allows to define group of `Set` mutator, this is intended to be use internally and not to be exposed directly to user. Mutation defined in the map will be applied to the struct passed as the first argument. Insert/Update using map wont update `created_at` or `updated_at` field.
 
 <!-- tabs:start -->
 

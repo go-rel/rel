@@ -25,35 +25,6 @@ func CrudInsert(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// CrudInsertMap docs example.
-func CrudInsertMap(ctx context.Context, repo rel.Repository) error {
-	/// [insert-map]
-	var book Book
-	data := rel.Map{
-		"title":    "Rel for dummies",
-		"category": "education",
-	}
-
-	// Insert using map.
-	err := repo.Insert(ctx, &book, data)
-	/// [insert-map]
-
-	return err
-}
-
-// CrudInsertSet docs example.
-func CrudInsertSet(ctx context.Context, repo rel.Repository) error {
-	/// [insert-set]
-	var book Book
-	err := repo.Insert(ctx, &book,
-		rel.Set("title", "Rel for dummies"),
-		rel.Set("category", "education"),
-	)
-	/// [insert-set]
-
-	return err
-}
-
 // CrudInsertAll docs example.
 func CrudInsertAll(ctx context.Context, repo rel.Repository) error {
 	/// [insert-all]
@@ -126,17 +97,6 @@ func CrudUpdate(ctx context.Context, repo rel.Repository) error {
 	book.Title = "REL for dummies"
 	err := repo.Update(ctx, &book)
 	/// [update]
-
-	return err
-}
-
-// CrudUpdateDec docs example.
-func CrudUpdateDec(ctx context.Context, repo rel.Repository) error {
-	var book Book
-
-	/// [update-dec]
-	err := repo.Update(ctx, &book, rel.Dec("stock"))
-	/// [update-dec]
 
 	return err
 }

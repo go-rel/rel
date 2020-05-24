@@ -73,40 +73,6 @@ func TestCrudInsert_error(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestCrudInsertMap(t *testing.T) {
-	var (
-		ctx  = context.TODO()
-		repo = reltest.New()
-	)
-
-	/// [insert-map]
-	repo.ExpectInsert(rel.Map{
-		"title":    "Rel for dummies",
-		"category": "education",
-	}).ForType("main.Book")
-	/// [insert-map]
-
-	assert.Nil(t, CrudInsertMap(ctx, repo))
-	repo.AssertExpectations(t)
-}
-
-func TestCrudInsertSet(t *testing.T) {
-	var (
-		ctx  = context.TODO()
-		repo = reltest.New()
-	)
-
-	/// [insert-set]
-	repo.ExpectInsert(
-		rel.Set("title", "Rel for dummies"),
-		rel.Set("category", "education"),
-	).ForType("main.Book")
-	/// [insert-set]
-
-	assert.Nil(t, CrudInsertSet(ctx, repo))
-	repo.AssertExpectations(t)
-}
-
 func TestCrudInsertAll(t *testing.T) {
 	var (
 		ctx  = context.TODO()
@@ -211,20 +177,6 @@ func TestCrudUpdate(t *testing.T) {
 	/// [update]
 
 	assert.Nil(t, CrudUpdate(ctx, repo))
-	repo.AssertExpectations(t)
-}
-
-func TestCrudUpdateDec(t *testing.T) {
-	var (
-		ctx  = context.TODO()
-		repo = reltest.New()
-	)
-
-	/// [update-dec]
-	repo.ExpectUpdate(rel.Dec("stock")).ForType("main.Book")
-	/// [update-dec]
-
-	assert.Nil(t, CrudUpdateDec(ctx, repo))
 	repo.AssertExpectations(t)
 }
 

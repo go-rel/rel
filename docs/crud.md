@@ -4,8 +4,6 @@
 
 A new record can be inserted to database using a struct, map or set function. To insert a new record using a struct, simply pass the pointer to the instance as the only argment. Insertion using struct will update `created_at` and `updated_at` field if any.
 
-?> REL will automatically insert all associations if it's non zero, to disable cascade inserts, you can pass `rel.Cascade(false)` mutator.
-
 <!-- tabs:start -->
 
 ### **Example**
@@ -34,38 +32,7 @@ Expect insertion to to return an error.
 
 <!-- tabs:end -->
 
-To insert a new record using a map, simply pass a `rel.Map` as the second argument, mutation defined in the map will be applied to the struct passed as the first argument. Insertion using map wont update `created_at` or `updated_at` field.
-
-<!-- tabs:start -->
-
-### **Example**
-
-[crud.go](crud.go ':include :fragment=insert-map')
-
-### **Mock**
-
-?> reltest.Repository will automatically populate record using value provided by map.
-
-[crud_test.go](crud_test.go ':include :fragment=insert-map')
-
-<!-- tabs:end -->
-
-It's also possible to insert a new record manually using `rel.Set`, which is a very basic type of `mutator`.
-
-<!-- tabs:start -->
-
-### **Example**
-
-[crud.go](crud.go ':include :fragment=insert-set')
-
-### **Mock**
-
-[crud_test.go](crud_test.go ':include :fragment=insert-set')
-
-<!-- tabs:end -->
-
 To inserts multiple records at once, use `InsertAll`.
-
 
 <!-- tabs:start -->
 
@@ -77,9 +44,7 @@ To inserts multiple records at once, use `InsertAll`.
 
 [crud_test.go](crud_test.go ':include :fragment=insert-all')
 
-
 <!-- tabs:end -->
-
 
 ## Read
 
@@ -148,8 +113,6 @@ Similar to create, updating a record in REL can also be done using struct, map o
 
 An update using struct will cause all fields and association to be saved to database, regardless of whether it's been updated or not. Use `rel.Map`, `rel.Set` or `rel.Changeset` to update only specific fields.
 
-?> REL will automatically update all associations if it's non zero, to disable cascade updates, you can pass `rel.Cascade(false)` mutator.
-
 ?> When updating belongs to association, it's recommended to not expose reference key (`[other]_id`) for updates directly from user, since there's no way to validate belongs to association using query.
 
 <!-- tabs:start -->
@@ -164,27 +127,11 @@ An update using struct will cause all fields and association to be saved to data
 
 <!-- tabs:end -->
 
-Besides `rel.Map` and `rel.Set` mutator. There's also increment and decrement mutator to atomically increment/decrement any value in database.
-
-<!-- tabs:start -->
-
-### **Example**
-
-[crud.go](crud.go ':include :fragment=update-dec')
-
-### **Mock**
-
-[crud_test.go](crud_test.go ':include :fragment=update-dec')
-
-<!-- tabs:end -->
-
 ## Delete
 
 To delete a record in rel, simply pass the record to be deleted.
 
 ?> REL will automatically apply soft-delete if `DeletedAt time.Time` field exists in a struct. To query soft-deleted records, use `rel.Unscoped(true)` when querying.
-
-?> REL will not automatically delete all associations, to enable application level cascade deletes, you can pass `rel.Cascade(true)` mutator.
 
 <!-- tabs:start -->
 

@@ -26,6 +26,15 @@
     * [Batch Iteration](queries.md#batch-iteration)
     * [Native SQL Query](queries.md#native-sql-queries)
 
+* [Mutations](mutations.md)
+
+    * [Basic Mutator](mutations.md#basic-mutator)
+    * [Structset](mutations.md#structset)
+    * [Changeset](mutations.md#changeset)
+    * [Map](mutations.md#map)
+    * [Reloading Updated Struct](mutations.md#reloading-updated-struct)
+    * [Cascade Operations](mutations.md#cascade-operations)
+
 * [Association](association.md)
 
     * [Defining Association](association.md#defining-association)

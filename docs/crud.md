@@ -161,4 +161,4 @@ Deleting multiple records is possible using `DeleteAll`.
 <!-- tabs:end -->
 
 
-**Next: [Query Interface](query.md)**
+**Next: [Queries](queries.md)**

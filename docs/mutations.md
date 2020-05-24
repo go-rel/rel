@@ -152,3 +152,5 @@ Mock enable cascade delete (default disabled).
 [mutations_test.go](mutations_test.go ':include :fragment=delete-cascade')
 
 <!-- tabs:end -->
+
+**Next: [Association](association.md)**

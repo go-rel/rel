@@ -33,9 +33,14 @@ func (m *Mutate) NotUnique(key string) {
 }
 
 func expectMutate(r *Repository, methodName string, mutators []rel.Mutator) *Mutate {
+	mutatorsArgument := interface{}(mutators)
+	if mutators == nil {
+		mutatorsArgument = mock.Anything
+	}
+
 	em := &Mutate{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, mutators},
+			[]interface{}{mock.Anything, mutatorsArgument},
 			[]interface{}{nil},
 		),
 	}

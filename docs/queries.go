@@ -10,8 +10,8 @@ import (
 	"github.com/Fs02/rel/where"
 )
 
-// QueryFind docs example.
-func QueryFind(ctx context.Context, repo rel.Repository) error {
+// QueriesFind docs example.
+func QueriesFind(ctx context.Context, repo rel.Repository) error {
 	/// [find]
 	var book Book
 	err := repo.Find(ctx, &book, where.Eq("id", 1))
@@ -20,8 +20,8 @@ func QueryFind(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryFindAll docs example.
-func QueryFindAll(ctx context.Context, repo rel.Repository) error {
+// QueriesFindAll docs example.
+func QueriesFindAll(ctx context.Context, repo rel.Repository) error {
 	/// [find-all]
 	var books []Book
 	err := repo.FindAll(ctx, &books)
@@ -30,8 +30,8 @@ func QueryFindAll(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryCondition docs example.
-func QueryCondition(ctx context.Context, repo rel.Repository) error {
+// QueriesCondition docs example.
+func QueriesCondition(ctx context.Context, repo rel.Repository) error {
 	/// [condition]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Eq("available", true))
@@ -40,8 +40,8 @@ func QueryCondition(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryConditionAlias docs example.
-func QueryConditionAlias(ctx context.Context, repo rel.Repository) error {
+// QueriesConditionAlias docs example.
+func QueriesConditionAlias(ctx context.Context, repo rel.Repository) error {
 	/// [condition-alias]
 	var books []Book
 	err := repo.FindAll(ctx, &books, where.Eq("available", true))
@@ -50,8 +50,8 @@ func QueryConditionAlias(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryConditionFragment docs example.
-func QueryConditionFragment(ctx context.Context, repo rel.Repository) error {
+// QueriesConditionFragment docs example.
+func QueriesConditionFragment(ctx context.Context, repo rel.Repository) error {
 	/// [condition-fragment]
 	var books []Book
 	err := repo.FindAll(ctx, &books, where.Fragment("available=?", true))
@@ -60,8 +60,8 @@ func QueryConditionFragment(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryConditionAdvanced docs example.
-func QueryConditionAdvanced(ctx context.Context, repo rel.Repository) error {
+// QueriesConditionAdvanced docs example.
+func QueriesConditionAdvanced(ctx context.Context, repo rel.Repository) error {
 	/// [condition-advanced]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.And(rel.Eq("available", true), rel.Or(rel.Gte("price", 100), rel.Eq("discount", true))))
@@ -70,8 +70,8 @@ func QueryConditionAdvanced(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryConditionAdvancedChain docs example.
-func QueryConditionAdvancedChain(ctx context.Context, repo rel.Repository) error {
+// QueriesConditionAdvancedChain docs example.
+func QueriesConditionAdvancedChain(ctx context.Context, repo rel.Repository) error {
 	/// [condition-advanced-chain]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Eq("available", true).And(rel.Gte("price", 100).OrEq("discount", true)))
@@ -80,8 +80,8 @@ func QueryConditionAdvancedChain(ctx context.Context, repo rel.Repository) error
 	return err
 }
 
-// QueryConditionAdvancedAlias docs example.
-func QueryConditionAdvancedAlias(ctx context.Context, repo rel.Repository) error {
+// QueriesConditionAdvancedAlias docs example.
+func QueriesConditionAdvancedAlias(ctx context.Context, repo rel.Repository) error {
 	/// [condition-advanced-alias]
 	var books []Book
 	err := repo.FindAll(ctx, &books, where.Eq("available", true).And(where.Gte("price", 100).OrEq("discount", true)))
@@ -90,8 +90,8 @@ func QueryConditionAdvancedAlias(ctx context.Context, repo rel.Repository) error
 	return err
 }
 
-// QuerySorting docs example.
-func QuerySorting(ctx context.Context, repo rel.Repository) error {
+// QueriesSorting docs example.
+func QueriesSorting(ctx context.Context, repo rel.Repository) error {
 	/// [sorting]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.NewSortAsc("updated_at"))
@@ -100,8 +100,8 @@ func QuerySorting(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QuerySortingAlias docs example.
-func QuerySortingAlias(ctx context.Context, repo rel.Repository) error {
+// QueriesSortingAlias docs example.
+func QueriesSortingAlias(ctx context.Context, repo rel.Repository) error {
 	/// [sorting-alias]
 	var books []Book
 	err := repo.FindAll(ctx, &books, sort.Asc("updated_at"))
@@ -110,8 +110,8 @@ func QuerySortingAlias(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QuerySortingWithCondition docs example.
-func QuerySortingWithCondition(ctx context.Context, repo rel.Repository) error {
+// QueriesSortingWithCondition docs example.
+func QueriesSortingWithCondition(ctx context.Context, repo rel.Repository) error {
 	/// [sorting-with-condition]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Where(where.Eq("available", true)).SortAsc("updated_at"))
@@ -120,8 +120,8 @@ func QuerySortingWithCondition(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QuerySortingWithConditionVariadic docs example.
-func QuerySortingWithConditionVariadic(ctx context.Context, repo rel.Repository) error {
+// QueriesSortingWithConditionVariadic docs example.
+func QueriesSortingWithConditionVariadic(ctx context.Context, repo rel.Repository) error {
 	/// [sorting-with-condition-variadic]
 	var books []Book
 	err := repo.FindAll(ctx, &books, where.Eq("available", true), sort.Asc("updated_at"))
@@ -130,8 +130,8 @@ func QuerySortingWithConditionVariadic(ctx context.Context, repo rel.Repository)
 	return err
 }
 
-// QuerySelect docs example.
-func QuerySelect(ctx context.Context, repo rel.Repository) error {
+// QueriesSelect docs example.
+func QueriesSelect(ctx context.Context, repo rel.Repository) error {
 	/// [select]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Select("id", "title"))
@@ -140,8 +140,8 @@ func QuerySelect(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryTable docs example.
-func QueryTable(ctx context.Context, repo rel.Repository) error {
+// QueriesTable docs example.
+func QueriesTable(ctx context.Context, repo rel.Repository) error {
 	/// [table]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.From("ebooks"))
@@ -150,8 +150,8 @@ func QueryTable(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryTableChained docs example.
-func QueryTableChained(ctx context.Context, repo rel.Repository) error {
+// QueriesTableChained docs example.
+func QueriesTableChained(ctx context.Context, repo rel.Repository) error {
 	/// [table-chained]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Select("id", "title").From("ebooks"))
@@ -160,8 +160,8 @@ func QueryTableChained(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryLimitOffset docs example.
-func QueryLimitOffset(ctx context.Context, repo rel.Repository) error {
+// QueriesLimitOffset docs example.
+func QueriesLimitOffset(ctx context.Context, repo rel.Repository) error {
 	/// [limit-offset]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Limit(10), rel.Offset(20))
@@ -170,8 +170,8 @@ func QueryLimitOffset(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryLimitOffsetChained docs example.
-func QueryLimitOffsetChained(ctx context.Context, repo rel.Repository) error {
+// QueriesLimitOffsetChained docs example.
+func QueriesLimitOffsetChained(ctx context.Context, repo rel.Repository) error {
 	/// [limit-offset-chained]
 	var books []Book
 	err := repo.FindAll(ctx, &books, rel.Select().Limit(10).Offset(20))
@@ -180,8 +180,8 @@ func QueryLimitOffsetChained(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryGroup docs example.
-func QueryGroup(ctx context.Context, repo rel.Repository) error {
+// QueriesGroup docs example.
+func QueriesGroup(ctx context.Context, repo rel.Repository) error {
 	/// [group]
 	// custom struct to store the result.
 	var results []struct {
@@ -196,8 +196,8 @@ func QueryGroup(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryJoin docs example.
-func QueryJoin(ctx context.Context, repo rel.Repository) error {
+// QueriesJoin docs example.
+func QueriesJoin(ctx context.Context, repo rel.Repository) error {
 	/// [join]
 	var transactions []Transaction
 	err := repo.FindAll(ctx, &transactions, rel.Join("books").Where(where.Eq("books.name", "REL for Dummies")))
@@ -206,8 +206,8 @@ func QueryJoin(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryJoinOn docs example.
-func QueryJoinOn(ctx context.Context, repo rel.Repository) error {
+// QueriesJoinOn docs example.
+func QueriesJoinOn(ctx context.Context, repo rel.Repository) error {
 	/// [join-on]
 	var transactions []Transaction
 	err := repo.FindAll(ctx, &transactions, rel.JoinOn("books", "transactions.book_id", "books.id"))
@@ -216,8 +216,8 @@ func QueryJoinOn(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryJoinAlias docs example.
-func QueryJoinAlias(ctx context.Context, repo rel.Repository) error {
+// QueriesJoinAlias docs example.
+func QueriesJoinAlias(ctx context.Context, repo rel.Repository) error {
 	/// [join-alias]
 	var transactions []Transaction
 	err := repo.FindAll(ctx, &transactions, join.On("books", "transactions.book_id", "books.id"))
@@ -226,8 +226,8 @@ func QueryJoinAlias(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryJoinWith docs example.
-func QueryJoinWith(ctx context.Context, repo rel.Repository) error {
+// QueriesJoinWith docs example.
+func QueriesJoinWith(ctx context.Context, repo rel.Repository) error {
 	/// [join-with]
 	var transactions []Transaction
 	err := repo.FindAll(ctx, &transactions, rel.JoinWith("LEFT JOIN", "books", "transactions.book_id", "books.id"))
@@ -236,8 +236,8 @@ func QueryJoinWith(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryJoinFragment docs example.
-func QueryJoinFragment(ctx context.Context, repo rel.Repository) error {
+// QueriesJoinFragment docs example.
+func QueriesJoinFragment(ctx context.Context, repo rel.Repository) error {
 	/// [join-fragment]
 	var transactions []Transaction
 	err := repo.FindAll(ctx, &transactions, rel.Joinf("JOIN `books` ON `transactions`.`book_id`=`books`.`id`"))
@@ -246,8 +246,8 @@ func QueryJoinFragment(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryLock docs example.
-func QueryLock(ctx context.Context, repo rel.Repository) error {
+// QueriesLock docs example.
+func QueriesLock(ctx context.Context, repo rel.Repository) error {
 	/// [lock]
 	var book Book
 	err := repo.Find(ctx, &book, where.Eq("id", 1), rel.Lock("FOR UPDATE"))
@@ -256,8 +256,8 @@ func QueryLock(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryLockForUpdate docs example.
-func QueryLockForUpdate(ctx context.Context, repo rel.Repository) error {
+// QueriesLockForUpdate docs example.
+func QueriesLockForUpdate(ctx context.Context, repo rel.Repository) error {
 	/// [lock-for-update]
 	var book Book
 	err := repo.Find(ctx, &book, where.Eq("id", 1), rel.ForUpdate())
@@ -266,8 +266,8 @@ func QueryLockForUpdate(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryLockChained docs example.
-func QueryLockChained(ctx context.Context, repo rel.Repository) error {
+// QueriesLockChained docs example.
+func QueriesLockChained(ctx context.Context, repo rel.Repository) error {
 	/// [lock-chained]
 	var book Book
 	err := repo.Find(ctx, &book, rel.Where(where.Eq("id", 1)).Lock("FOR UPDATE"))
@@ -276,8 +276,8 @@ func QueryLockChained(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryAggregate docs example.
-func QueryAggregate(ctx context.Context, repo rel.Repository) error {
+// QueriesAggregate docs example.
+func QueriesAggregate(ctx context.Context, repo rel.Repository) error {
 	/// [aggregate]
 	count, err := repo.Aggregate(ctx, rel.From("books").Where(where.Eq("available", true)), "count", "id")
 	/// [aggregate]
@@ -286,8 +286,8 @@ func QueryAggregate(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryCount docs example.
-func QueryCount(ctx context.Context, repo rel.Repository) error {
+// QueriesCount docs example.
+func QueriesCount(ctx context.Context, repo rel.Repository) error {
 	/// [count]
 	count, err := repo.Count(ctx, "books")
 	/// [count]
@@ -296,8 +296,8 @@ func QueryCount(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryCountWithCondition docs example.
-func QueryCountWithCondition(ctx context.Context, repo rel.Repository) error {
+// QueriesCountWithCondition docs example.
+func QueriesCountWithCondition(ctx context.Context, repo rel.Repository) error {
 	/// [count-with-condition]
 	count, err := repo.Count(ctx, "books", where.Eq("available", true))
 	/// [count-with-condition]
@@ -306,8 +306,8 @@ func QueryCountWithCondition(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
-// QueryFindAndCountAll docs example.
-func QueryFindAndCountAll(ctx context.Context, repo rel.Repository) error {
+// QueriesFindAndCountAll docs example.
+func QueriesFindAndCountAll(ctx context.Context, repo rel.Repository) error {
 	/// [find-and-count-all]
 	var books []Book
 	count, err := repo.FindAndCountAll(ctx, &books, rel.Where(where.Like("title", "%dummies%")).Limit(10).Offset(10))
@@ -320,8 +320,8 @@ func QueryFindAndCountAll(ctx context.Context, repo rel.Repository) error {
 // SendPromotionEmail tp demonstrate Iteration.
 func SendPromotionEmail(*User) {}
 
-// QueryIteration docs example.
-func QueryIteration(ctx context.Context, repo rel.Repository) error {
+// QueriesIteration docs example.
+func QueriesIteration(ctx context.Context, repo rel.Repository) error {
 	/// [batch-iteration]
 	var (
 		user User
@@ -349,8 +349,8 @@ func QueryIteration(ctx context.Context, repo rel.Repository) error {
 	return nil
 }
 
-// QuerySQL natively.
-func QuerySQL(ctx context.Context, repo rel.Repository) error {
+// QueriesSQL natively.
+func QueriesSQL(ctx context.Context, repo rel.Repository) error {
 	/// [sql]
 	var book Book
 	sql := rel.SQL("SELECT id, title, price, orders = (SELECT COUNT(t.id) FROM [transactions] t WHERE t.book_id = b.id) FROM books b where b.id=?", 1)

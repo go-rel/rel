@@ -24,7 +24,7 @@
     * [Aggregation](queries.md#aggregation)
     * [Pagination](queries.md#pagination)
     * [Batch Iteration](queries.md#batch-iteration)
-    * [Native SQL Query](queries.md#native-sql-queries)
+    * [Native SQL Query](queries.md#native-sql-query)
 
 * [Mutations](mutations.md)
 

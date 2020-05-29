@@ -27,11 +27,9 @@ type Adapter struct {
 
 var _ rel.Adapter = (*Adapter)(nil)
 
-// Open mysql connection using dsn.
-func Open(dsn string) (*Adapter, error) {
-	var err error
-
-	adapter := &Adapter{
+// New is mysql adapter constructor.
+func New(database *db.DB) *Adapter {
+	return &Adapter{
 		Adapter: &sql.Adapter{
 			Config: &sql.Config{
 				Placeholder:         "?",
@@ -40,11 +38,19 @@ func Open(dsn string) (*Adapter, error) {
 				IncrementFunc:       incrementFunc,
 				ErrorFunc:           errorFunc,
 			},
+			DB: database,
 		},
 	}
-	adapter.DB, err = db.Open("sqlite3", dsn)
+}
 
-	return adapter, err
+// Open mysql connection using dsn.
+func Open(dsn string) (_ *Adapter, err error) {
+	var database *db.DB
+	if database, err = db.Open("sqlite3", dsn); err != nil {
+		return nil, err
+	}
+
+	return New(database), nil
 }
 
 func incrementFunc(adapter sql.Adapter) int {

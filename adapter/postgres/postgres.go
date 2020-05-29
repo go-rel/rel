@@ -20,18 +20,16 @@ import (
 	"github.com/Fs02/rel/adapter/sql"
 )
 
-// Adapter definition for postgrees database.
+// Adapter definition for postgres database.
 type Adapter struct {
 	*sql.Adapter
 }
 
 var _ rel.Adapter = (*Adapter)(nil)
 
-// Open postgrees connection using dsn.
-func Open(dsn string) (*Adapter, error) {
-	var err error
-
-	adapter := &Adapter{
+// New is postgres adapter constructor.
+func New(database *db.DB) *Adapter {
+	return &Adapter{
 		Adapter: &sql.Adapter{
 			Config: &sql.Config{
 				Placeholder:         "$",
@@ -40,11 +38,19 @@ func Open(dsn string) (*Adapter, error) {
 				InsertDefaultValues: true,
 				ErrorFunc:           errorFunc,
 			},
+			DB: database,
 		},
 	}
-	adapter.DB, err = db.Open("postgres", dsn)
+}
 
-	return adapter, err
+// Open postgres connection using dsn.
+func Open(dsn string) (_ *Adapter, err error) {
+	var database *db.DB
+	if database, err = db.Open("postgres", dsn); err != nil {
+		return nil, err
+	}
+
+	return New(database), nil
 }
 
 // Insert inserts a record to database and returns its id.

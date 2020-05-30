@@ -44,13 +44,9 @@ func New(database *db.DB) *Adapter {
 }
 
 // Open postgres connection using dsn.
-func Open(dsn string) (_ *Adapter, err error) {
-	var database *db.DB
-	if database, err = db.Open("postgres", dsn); err != nil {
-		return nil, err
-	}
-
-	return New(database), nil
+func Open(dsn string) (*Adapter, error) {
+	var database, err = db.Open("postgres", dsn)
+	return New(database), err
 }
 
 // Insert inserts a record to database and returns its id.

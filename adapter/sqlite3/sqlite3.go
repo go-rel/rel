@@ -44,13 +44,9 @@ func New(database *db.DB) *Adapter {
 }
 
 // Open mysql connection using dsn.
-func Open(dsn string) (_ *Adapter, err error) {
-	var database *db.DB
-	if database, err = db.Open("sqlite3", dsn); err != nil {
-		return nil, err
-	}
-
-	return New(database), nil
+func Open(dsn string) (*Adapter, error) {
+	var database, err = db.Open("sqlite3", dsn)
+	return New(database), err
 }
 
 func incrementFunc(adapter sql.Adapter) int {

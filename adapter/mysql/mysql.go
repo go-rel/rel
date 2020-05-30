@@ -27,10 +27,23 @@ type Adapter struct {
 
 var _ rel.Adapter = (*Adapter)(nil)
 
+// New is mysql adapter constructor.
+func New(database *db.DB) *Adapter {
+	return &Adapter{
+		Adapter: &sql.Adapter{
+			Config: &sql.Config{
+				Placeholder:   "?",
+				EscapeChar:    "`",
+				IncrementFunc: incrementFunc,
+				ErrorFunc:     errorFunc,
+			},
+			DB: database,
+		},
+	}
+}
+
 // Open mysql connection using dsn.
 func Open(dsn string) (*Adapter, error) {
-	var err error
-
 	// force clientFoundRows=true
 	// this allows not found record check when updating a record.
 	if strings.ContainsRune(dsn, '?') {
@@ -39,19 +52,8 @@ func Open(dsn string) (*Adapter, error) {
 		dsn += "?clientFoundRows=true"
 	}
 
-	adapter := &Adapter{
-		Adapter: &sql.Adapter{
-			Config: &sql.Config{
-				Placeholder:   "?",
-				EscapeChar:    "`",
-				IncrementFunc: incrementFunc,
-				ErrorFunc:     errorFunc,
-			},
-		},
-	}
-	adapter.DB, err = db.Open("mysql", dsn)
-
-	return adapter, err
+	var database, err = db.Open("mysql", dsn)
+	return New(database), err
 }
 
 func incrementFunc(adapter sql.Adapter) int {

@@ -1,6 +1,6 @@
 * [Basics](basics.md)
 
-    * [Example](basics.md#example)
+    * [Full Example](basics.md#full-example)
     * [Conventions](basics.md#conventions)
 
 * [Reading and Writing Record](crud.md)

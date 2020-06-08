@@ -19,6 +19,35 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 - Soft Deletion.
 - Pagination.
 
+## Quick Example
+
+REL api might be slightly different than other Golang ORM/DAL. But it's developer friendly and doesn't requires a steep learning curve.
+
+```go
+book := Book{Title: "REL for Dummies"}
+
+// Insert a Book.
+if err := repo.Insert(ctx, &book); err != nil {
+    return err
+}
+
+// Find a Book with id 1.
+if err := repo.Find(ctx, &book, where.Eq("id", 1)); err != nil {
+    return err
+}
+
+// Update a Book.
+book.Title = "REL for Dummies 2nd Edition"
+if err := repo.Update(ctx, &book); err != nil {
+    return err
+}
+
+// Delete a Book.
+if err := repo.Delete(ctx, &book); err != nil {
+    return err
+}
+```
+
 ## Install
 
 ```bash

@@ -13,6 +13,22 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 - Soft Deletion.
 - Pagination.
 
+## Quick Example
+
+REL api might be slightly different than other Golang ORM/DAL. But it's developer friendly and doesn't requires a steep learning curve.
+
+<!-- tabs:start -->
+
+### **Example**
+
+[main.go](readme.go ':include :fragment=quick-example')
+
+### **Mock**
+
+[main_test.go](readme_test.go ':include :fragment=quick-example')
+
+<!-- tabs:end -->
+
 ## Install
 
 ```

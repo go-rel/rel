@@ -5,7 +5,6 @@ import (
 
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/where"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // QuickExample documentation.

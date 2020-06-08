@@ -1,6 +1,6 @@
 # Basics
 
-## Example
+## Full Example
 
 Below is a very basic example on how to utilize REL using mysql adapter.
 Testing database query using REL can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.

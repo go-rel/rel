@@ -21,7 +21,7 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 
 ## Quick Example
 
-REL api might be slightly different than other Golang ORM/DAL. But it's developer friendly and doesn't requires a steep learning curve.
+REL might be slightly different than other Golang ORM/DAL. It's designed as a Repository that's easy to test and extend.
 
 ```go
 book := Book{Title: "REL for Dummies"}

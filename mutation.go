@@ -48,11 +48,12 @@ type AssocMutation struct {
 // Mutation represents value to be inserted or updated to database.
 // It's not safe to be used multiple time. some operation my alter mutation data.
 type Mutation struct {
-	Mutates  map[string]Mutate
-	Assoc    map[string]AssocMutation
-	Unscoped Unscoped
-	Reload   Reload
-	Cascade  Cascade
+	Mutates   map[string]Mutate
+	Assoc     map[string]AssocMutation
+	Unscoped  Unscoped
+	Reload    Reload
+	Cascade   Cascade
+	ErrorFunc ErrorFunc
 }
 
 func (m *Mutation) initMutates() {
@@ -224,4 +225,20 @@ type Cascade bool
 // Apply mutation.
 func (c Cascade) Apply(doc *Document, mutation *Mutation) {
 	mutation.Cascade = c
+}
+
+// ErrorFunc allows conversion REL's error to Application custom errors.
+type ErrorFunc func(error) error
+
+// Apply mutation.
+func (ef ErrorFunc) Apply(doc *Document, mutation *Mutation) {
+	mutation.ErrorFunc = ef
+}
+
+func (ef ErrorFunc) transform(err error) error {
+	if ef != nil && err != nil {
+		return ef(err)
+	}
+
+	return err
 }

@@ -1,8 +1,12 @@
+branches:
+  only: 
+    - master
+
 env:
   global:
     - MYSQL_DATABASE=root@(127.0.0.1:3306)/rel_test
     - POSTGRESQL_DATABASE=postgres://postgres@localhost/rel_test
-
+    
 language: go
 
 services:

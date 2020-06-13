@@ -815,6 +815,51 @@ func TestRepository_Insert_error(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Insert_customError(t *testing.T) {
+	var (
+		user     User
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		mutators = []Mutator{
+			Set("name", "name"),
+			ErrorFunc(func(err error) error { return errors.New("custom error") }),
+		}
+		mutates = map[string]Mutate{
+			"name": Set("name", "name"),
+		}
+	)
+
+	adapter.On("Insert", From("users"), mutates).Return(0, errors.New("error")).Once()
+
+	assert.Equal(t, errors.New("custom error"), repo.Insert(context.TODO(), &user, mutators...))
+	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_customErrorNested(t *testing.T) {
+	var (
+		address = Address{
+			Street: "street",
+			User: &User{
+				Name: "name",
+			},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Begin").Return(nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything).Return(1, errors.New("error")).Once()
+	adapter.On("Rollback").Return(nil).Once()
+
+	assert.Equal(t, errors.New("error"), repo.Insert(context.TODO(), &address,
+		NewStructset(&address, false),
+		ErrorFunc(func(err error) error { return errors.New("custom error") }), // should not transform any errors of its children.
+	))
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Insert_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

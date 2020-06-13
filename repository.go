@@ -254,7 +254,7 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 
 	pValue, err := r.Adapter().Insert(ctx, queriers, mutation.Mutates)
 	if err != nil {
-		return err
+		return mutation.ErrorFunc.transform(err)
 	}
 
 	if mutation.Reload {
@@ -338,7 +338,7 @@ func (r repository) insertAll(ctx context.Context, col *Collection, mutation []M
 
 	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkMutates)
 	if err != nil {
-		return err
+		return mutation[0].ErrorFunc.transform(err)
 	}
 
 	// apply ids
@@ -391,7 +391,7 @@ func (r repository) update(ctx context.Context, doc *Document, mutation Mutation
 		)
 
 		if updatedCount, err := r.adapter.Update(ctx, query, mutation.Mutates); err != nil {
-			return err
+			return mutation.ErrorFunc.transform(err)
 		} else if updatedCount == 0 {
 			return NotFoundError{}
 		}
@@ -425,15 +425,15 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 // TODO: support deletion
 func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.BelongsTo() {
-		assocMods, changed := mutation.Assoc[field]
-		if !changed || len(assocMods.Mutations) == 0 {
+		assocMuts, changed := mutation.Assoc[field]
+		if !changed || len(assocMuts.Mutations) == 0 {
 			continue
 		}
 
 		var (
 			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
-			assocMod         = assocMods.Mutations[0]
+			assocMut         = assocMuts.Mutations[0]
 		)
 
 		if loaded {
@@ -442,11 +442,11 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 				return err
 			}
 
-			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
+			if err := r.update(ctx, assocDoc, assocMut, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
+			if err := r.insert(ctx, assocDoc, assocMut); err != nil {
 				return err
 			}
 
@@ -484,15 +484,15 @@ func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error)
 // TODO: suppprt deletion
 func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
-		assocMods, changed := mutation.Assoc[field]
-		if !changed || len(assocMods.Mutations) == 0 {
+		assocMuts, changed := mutation.Assoc[field]
+		if !changed || len(assocMuts.Mutations) == 0 {
 			continue
 		}
 
 		var (
 			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
-			assocMod         = assocMods.Mutations[0]
+			assocMut         = assocMuts.Mutations[0]
 		)
 
 		if loaded {
@@ -501,7 +501,7 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 				return err
 			}
 
-			if err := r.update(ctx, assocDoc, assocMod, filter); err != nil {
+			if err := r.update(ctx, assocDoc, assocMut, filter); err != nil {
 				return err
 			}
 		} else {
@@ -510,10 +510,10 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 				rValue = assoc.ReferenceValue()
 			)
 
-			assocMod.Add(Set(fField, rValue))
+			assocMut.Add(Set(fField, rValue))
 			assocDoc.SetValue(fField, rValue)
 
-			if err := r.insert(ctx, assocDoc, assocMod); err != nil {
+			if err := r.insert(ctx, assocDoc, assocMut); err != nil {
 				return err
 			}
 		}
@@ -546,7 +546,7 @@ func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (F
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		assocMods, changed := mutation.Assoc[field]
+		assocMuts, changed := mutation.Assoc[field]
 		if !changed {
 			continue
 		}
@@ -558,8 +558,8 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
-			mods       = assocMods.Mutations
-			deletedIDs = assocMods.DeletedIDs
+			mods       = assocMuts.Mutations
+			deletedIDs = assocMuts.DeletedIDs
 		)
 
 		// this shouldn't happen unless there's bug in the mutator.

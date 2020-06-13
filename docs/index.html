@@ -12,6 +12,12 @@
     content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
   <style>
+    @media screen and (max-width: 768px) {
+      .markdown-section {
+        max-width: 90%;
+      }
+    }
+
     .markdown-section iframe {
       margin: 0 0 0 1em;
     }
@@ -19,6 +25,14 @@
     .markdown-section iframe {
       border: initial;
       min-width: initial;
+    }
+
+    .docsify-tabs__content {
+      padding: 0 !important;
+    }
+
+    .docsify-tabs__content p {
+      margin: 1.2rem !important;
     }
 
     .support-us {
@@ -99,6 +113,17 @@
             reloadJs('//platform.twitter.com/widgets.js');
           })
         },
+        function (hook, vm) {
+          hook.doneEach(function () {
+            const id = vm.route.query.id;
+            const element = id ? document.querySelector(`[data-id="${id}"]`) : undefined;
+            if (element) {
+              setTimeout(function () {
+                element.scrollIntoView({ behavior: "smooth" });
+              }, 1000);
+            }
+          });
+        }
       ]
     }
   </script>

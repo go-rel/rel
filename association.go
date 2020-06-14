@@ -136,10 +136,6 @@ func (a Association) ForeignValue() interface{} {
 	)
 
 	if rv.Kind() == reflect.Ptr {
-		if rv.IsNil() {
-			return nil
-		}
-
 		rv = rv.Elem()
 	}
 

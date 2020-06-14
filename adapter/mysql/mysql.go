@@ -66,9 +66,7 @@ func incrementFunc(adapter sql.Adapter) int {
 		err = adapter.DB.QueryRow("SHOW VARIABLES LIKE 'auto_increment_increment';").Scan(&variable, &increment)
 	}
 
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
 	return increment
 }
@@ -103,5 +101,11 @@ func errorFunc(err error) error {
 		}
 	default:
 		return err
+	}
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
 	}
 }

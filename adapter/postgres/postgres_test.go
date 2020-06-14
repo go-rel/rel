@@ -116,6 +116,7 @@ func TestAdapter_specs(t *testing.T) {
 	specs.UpdateBelongsToUpdate(t, repo)
 	specs.UpdateAtomic(t, repo)
 	specs.Updates(t, repo)
+	specs.UpdateAll(t, repo)
 
 	// Delete specs
 	specs.Delete(t, repo)

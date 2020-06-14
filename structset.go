@@ -104,19 +104,19 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 	var (
 		col, _ = assoc.Collection()
 		pField = col.PrimaryField()
-		mods   = make([]Mutation, col.Len())
+		muts   = make([]Mutation, col.Len())
 	)
 
-	for i := range mods {
+	for i := range muts {
 		var (
 			doc = col.Get(i)
 		)
 
-		mods[i] = Apply(doc, newStructset(doc, s.skipZero))
+		muts[i] = Apply(doc, newStructset(doc, s.skipZero))
 		doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
 	}
 
-	mut.SetAssoc(field, mods...)
+	mut.SetAssoc(field, muts...)
 }
 
 func newStructset(doc *Document, skipZero bool) Structset {

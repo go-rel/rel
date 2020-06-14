@@ -107,6 +107,18 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
+			name: "where id=1 unscoped",
+			queriers: [][]rel.Querier{
+				{
+					where.Eq("id", 1), rel.Unscoped(true),
+				},
+			},
+			query: rel.Query{
+				WhereQuery:    where.Eq("id", 1),
+				UnscopedQuery: true,
+			},
+		},
+		{
 			name: "where id=1 for update",
 			queriers: [][]rel.Querier{
 				{
@@ -116,6 +128,21 @@ func TestQuerier(t *testing.T) {
 			query: rel.Query{
 				WhereQuery: where.Eq("id", 1),
 				LockQuery:  "FOR UPDATE",
+			},
+		},
+		{
+			name: "where id=1, from user group age for update",
+			queriers: [][]rel.Querier{
+				{
+					where.Nil("deleted_at"),
+					rel.Select("status", "count(id)").Group("status").Where(where.Ne("status", "paid")).Lock("FOR UPDATE"),
+				},
+			},
+			query: rel.Query{
+				SelectQuery: rel.SelectQuery{Fields: []string{"status", "count(id)"}},
+				GroupQuery:  rel.GroupQuery{Fields: []string{"status"}},
+				WhereQuery:  where.Nil("deleted_at").AndNe("status", "paid"),
+				LockQuery:   "FOR UPDATE",
 			},
 		},
 		{

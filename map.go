@@ -45,10 +45,10 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 			}
 			var (
 				assoc            = doc.Association(field)
-				mods, deletedIDs = applyMaps(v, assoc)
+				muts, deletedIDs = applyMaps(v, assoc)
 			)
 
-			mutation.SetAssoc(field, mods...)
+			mutation.SetAssoc(field, muts...)
 			mutation.SetDeletedIDs(field, deletedIDs)
 		default:
 			if field == pField {
@@ -71,7 +71,7 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 	var (
 		deletedIDs []interface{}
-		mods       = make([]Mutation, len(maps))
+		muts       = make([]Mutation, len(maps))
 		col, _     = assoc.Collection()
 		pField     = col.PrimaryField()
 		pIndex     = make(map[interface{}]int)
@@ -100,7 +100,7 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 				pValues[pID], pValues[curr] = pValues[curr], pValues[pID]
 			}
 
-			mods[curr] = Apply(col.Get(curr), m)
+			muts[curr] = Apply(col.Get(curr), m)
 			delete(pIndex, pChange)
 			curr++
 		} else {
@@ -118,9 +118,9 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 
 	// inserts remaining
 	for i, m := range inserts {
-		mods[curr+i] = Apply(col.Add(), m)
+		muts[curr+i] = Apply(col.Add(), m)
 	}
 
-	return mods, deletedIDs
+	return muts, deletedIDs
 
 }

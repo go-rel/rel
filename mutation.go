@@ -91,11 +91,11 @@ func (m *Mutation) Add(mut Mutate) {
 }
 
 // SetAssoc mutation.
-func (m *Mutation) SetAssoc(field string, mods ...Mutation) {
+func (m *Mutation) SetAssoc(field string, muts ...Mutation) {
 	m.initAssoc()
 
 	assoc := m.Assoc[field]
-	assoc.Mutations = mods
+	assoc.Mutations = muts
 	m.Assoc[field] = assoc
 }
 

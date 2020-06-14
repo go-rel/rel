@@ -164,6 +164,27 @@ func TestDocument_Fields(t *testing.T) {
 	assert.Equal(t, fields, doc.Fields())
 }
 
+func TestDocument_Index(t *testing.T) {
+	var (
+		record = struct {
+			A string
+			B *int
+			C []byte     `db:",primary"`
+			D bool       `db:"D"`
+			E []*float64 `db:"-"`
+		}{}
+		doc   = NewDocument(&record)
+		index = map[string]int{
+			"a": 0,
+			"b": 1,
+			"c": 2,
+			"D": 3,
+		}
+	)
+
+	assert.Equal(t, index, doc.Index())
+}
+
 func TestDocument_Types(t *testing.T) {
 	var (
 		record = struct {
@@ -213,18 +234,26 @@ func TestDocument_Value(t *testing.T) {
 		}
 		doc    = NewDocument(&record)
 		values = map[string]interface{}{
-			"id":     1,
-			"name":   "name",
-			"number": 10.5,
-			"data":   []byte("data"),
+			"id":      1,
+			"name":    "name",
+			"number":  10.5,
+			"address": address,
+			"data":    []byte("data"),
 		}
 	)
 
-	for field, evalue := range values {
-		value, ok := doc.Value(field)
-		assert.True(t, ok)
-		assert.Equal(t, evalue, value)
-	}
+	t.Run("ok", func(t *testing.T) {
+		for field, evalue := range values {
+			value, ok := doc.Value(field)
+			assert.True(t, ok)
+			assert.Equal(t, evalue, value)
+		}
+	})
+
+	t.Run("field not exists", func(t *testing.T) {
+		_, ok := doc.Value("not_exists")
+		assert.False(t, ok)
+	})
 }
 
 func TestDocument_SetValue(t *testing.T) {
@@ -240,41 +269,54 @@ func TestDocument_SetValue(t *testing.T) {
 		doc = NewDocument(&record)
 	)
 
-	assert.True(t, doc.SetValue("id", 1))
-	assert.True(t, doc.SetValue("name", "name"))
-	assert.True(t, doc.SetValue("number", 10.5))
-	assert.True(t, doc.SetValue("data", []byte("data")))
-	assert.True(t, doc.SetValue("address", "address"))
+	t.Run("ok", func(t *testing.T) {
+		assert.True(t, doc.SetValue("id", 1))
+		assert.True(t, doc.SetValue("name", "name"))
+		assert.True(t, doc.SetValue("number", 10.5))
+		assert.True(t, doc.SetValue("data", []byte("data")))
+		assert.True(t, doc.SetValue("address", "address"))
 
-	assert.False(t, doc.SetValue("id", "a"))
-	assert.False(t, doc.SetValue("skip", true))
-	assert.False(t, doc.SetValue("address", []byte("a")))
+		assert.Equal(t, 1, record.ID)
+		assert.Equal(t, "name", record.Name)
+		assert.Equal(t, false, record.Skip)
+		assert.Equal(t, 10.5, record.Number)
+		assert.Equal(t, "address", *record.Address)
+		assert.Equal(t, []byte("data"), record.Data)
+	})
 
-	assert.Equal(t, 1, record.ID)
-	assert.Equal(t, "name", record.Name)
-	assert.Equal(t, false, record.Skip)
-	assert.Equal(t, 10.5, record.Number)
-	assert.Equal(t, "address", *record.Address)
-	assert.Equal(t, []byte("data"), record.Data)
+	t.Run("zero", func(t *testing.T) {
+		assert.True(t, doc.SetValue("id", nil))
+		assert.True(t, doc.SetValue("name", nil))
+		assert.True(t, doc.SetValue("number", nil))
+		assert.True(t, doc.SetValue("data", nil))
+		assert.True(t, doc.SetValue("address", nil))
 
-	// test set zero
-	assert.True(t, doc.SetValue("id", nil))
-	assert.True(t, doc.SetValue("name", nil))
-	assert.True(t, doc.SetValue("number", nil))
-	assert.True(t, doc.SetValue("data", nil))
-	assert.True(t, doc.SetValue("address", nil))
+		assert.Equal(t, 0, record.ID)
+		assert.Equal(t, "", record.Name)
+		assert.Equal(t, float64(0), record.Number)
+		assert.Equal(t, (*string)(nil), record.Address)
+		assert.Equal(t, []byte(nil), record.Data)
+	})
 
-	assert.Equal(t, 0, record.ID)
-	assert.Equal(t, "", record.Name)
-	assert.Equal(t, float64(0), record.Number)
-	assert.Equal(t, (*string)(nil), record.Address)
-	assert.Equal(t, []byte(nil), record.Data)
+	t.Run("convert", func(t *testing.T) {
+		assert.True(t, doc.SetValue("id", uint(2)))
+		assert.True(t, doc.SetValue("number", 10))
+		assert.Equal(t, 2, record.ID)
+		assert.Equal(t, float64(10), record.Number)
+	})
 
-	// test convert
-	assert.True(t, doc.SetValue("id", uint(2)))
-	assert.True(t, doc.SetValue("number", 10))
-	assert.Equal(t, 2, record.ID)
-	assert.Equal(t, float64(10), record.Number)
+	t.Run("reflect", func(t *testing.T) {
+		assert.True(t, doc.SetValue("id", reflect.ValueOf(21)))
+		assert.True(t, doc.SetValue("address", reflect.ValueOf("continassa")))
+		assert.Equal(t, 21, record.ID)
+		assert.Equal(t, "continassa", *record.Address)
+	})
+
+	t.Run("field not exists", func(t *testing.T) {
+		assert.False(t, doc.SetValue("id", "a"))
+		assert.False(t, doc.SetValue("skip", true))
+		assert.False(t, doc.SetValue("address", []byte("a")))
+	})
 }
 
 func TestDocument_Scanners(t *testing.T) {
@@ -346,7 +388,8 @@ func TestDocument_Association(t *testing.T) {
 		{
 			name:      "Transaction",
 			record:    &Transaction{},
-			belongsTo: []string{"buyer"},
+			belongsTo: []string{"buyer", "address"},
+			hasMany:   []string{"histories"},
 		},
 		{
 			name:      "Address",
@@ -372,15 +415,15 @@ func TestDocument_Association(t *testing.T) {
 	}
 }
 
-// func TestDocument_Association_interface(t *testing.T) {
-// 	var (
-// 		doc = NewDocument(&Item{})
-// 	)
+func TestDocument_Association_notFOund(t *testing.T) {
+	var (
+		doc = NewDocument(&Item{})
+	)
 
-// 	assert.NotPanics(t, func() {
-// 		assert.Nil(t, doc.Association("empty"))
-// 	})
-// }
+	assert.Panics(t, func() {
+		doc.Association("empty")
+	})
+}
 
 func TestDocument(t *testing.T) {
 	tests := []struct {

@@ -450,8 +450,8 @@ func TestChangeset_hasMany(t *testing.T) {
 			},
 		}
 		snapshots = [][]interface{}{
-			{11, "Book", Status("pending"), 0},
-			{12, "Eraser", Status("pending"), 0},
+			{11, "Book", Status("pending"), 0, 0},
+			{12, "Eraser", Status("pending"), 0, 0},
 		}
 		doc       = NewDocument(&user)
 		changeset = NewChangeset(&user)
@@ -482,16 +482,18 @@ func TestChangeset_hasMany(t *testing.T) {
 					"status": pair{Status("pending"), Status("paid")},
 				},
 				{
-					"id":      pair{nil, 0},
-					"item":    pair{nil, "Paper"},
-					"status":  pair{nil, Status("pending")},
-					"user_id": pair{nil, 0},
+					"id":         pair{nil, 0},
+					"item":       pair{nil, "Paper"},
+					"status":     pair{nil, Status("pending")},
+					"user_id":    pair{nil, 0},
+					"address_id": pair{nil, 0},
 				},
 				{
-					"id":      pair{12, nil},
-					"item":    pair{"Eraser", nil},
-					"status":  pair{Status("pending"), nil},
-					"user_id": pair{0, nil},
+					"id":         pair{12, nil},
+					"item":       pair{"Eraser", nil},
+					"status":     pair{Status("pending"), nil},
+					"user_id":    pair{0, nil},
+					"address_id": pair{0, nil},
 				},
 			},
 		}, changeset.Changes())
@@ -512,9 +514,10 @@ func TestChangeset_hasMany(t *testing.T) {
 						{
 							Cascade: true,
 							Mutates: map[string]Mutate{
-								"item":    Set("item", "Paper"),
-								"status":  Set("status", Status("pending")),
-								"user_id": Set("user_id", 0),
+								"item":       Set("item", "Paper"),
+								"status":     Set("status", Status("pending")),
+								"user_id":    Set("user_id", 0),
+								"address_id": Set("address_id", 0),
 							},
 						},
 					},

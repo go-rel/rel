@@ -1801,31 +1801,96 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 			Map{
 				"transactions": []Map{
 					{"id": 1, "item": "item1 updated"},
-					{"id": 2, "item": "item2 updated"},
+					{"id": 3, "item": "item3 updated"},
 				},
 			},
 		)
 		mutates = []map[string]Mutate{
 			{"item": Set("item", "item1 updated")},
-			{"item": Set("item", "item2 updated")},
+			{"item": Set("item", "item3 updated")},
 		}
 		q = Build("transactions")
 	)
 
-	mutation.SetDeletedIDs("transactions", []interface{}{3})
+	mutation.SetDeletedIDs("transactions", []interface{}{2})
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(1, nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 2))).Return(1, nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 3).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
 			{ID: 1, BuyerID: 1, Item: "item1 updated"},
-			{ID: 2, BuyerID: 1, Item: "item2 updated"},
+			{ID: 3, BuyerID: 1, Item: "item3 updated"},
 		},
 	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_saveHasMany_updateInconsistentReferences(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, BuyerID: 2, Item: "item1"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"id": 1, "item": "item1 updated"},
+				},
+			},
+		)
+	)
+
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	assert.Equal(t, ConstraintError{
+		Key:  "user_id",
+		Type: ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent has many ref and fk"),
+	}, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_saveHasMany_updateError(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, BuyerID: 1, Item: "item1"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"id": 1, "item": "item1 updated"},
+				},
+			},
+		)
+		mutates = []map[string]Mutate{
+			{"item": Set("item", "item1 updated")},
+		}
+		q   = Build("transactions")
+		err = errors.New("update error")
+	)
+
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(0, err).Once()
+
+	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -1844,8 +1909,8 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
-					{"id": 1, "item": "item1 updated"},
 					{"item": "new item", "user_id": 1},
+					{"id": 1, "item": "item1 updated"},
 				},
 			},
 		)
@@ -1866,6 +1931,49 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		Transactions: []Transaction{
 			{ID: 1, BuyerID: 1, Item: "item1 updated"},
 			{ID: 2, BuyerID: 1, Item: "new item"},
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{Item: "item1"}, // new record not appended, but prepended/inserted
+				{ID: 1, BuyerID: 1, Item: "item2"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Mutation{}
+		q        = Build("transactions")
+		mutates  = []map[string]Mutate{
+			{"item": Set("item", "update")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "new")},
+		}
+	)
+
+	// insert first, so internally rel needs to reorder the assoc.
+	mutation.SetAssoc("transactions",
+		Apply(NewDocument(&user.Transactions[0]), Set("item", "new")),
+		Apply(NewDocument(&user.Transactions[1]), Set("item", "update")),
+	)
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+
+	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Equal(t, User{
+		ID: 1,
+		Transactions: []Transaction{
+			{ID: 1, BuyerID: 1, Item: "update"},
+			{ID: 2, BuyerID: 1, Item: "new"},
 		},
 	}, user)
 
@@ -1918,6 +2026,38 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_saveHasMany_deleteError(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, Item: "item1"},
+				{ID: 2, Item: "item2"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"item": "item3"},
+					{"item": "item4"},
+					{"item": "item5"},
+				},
+			},
+		)
+		q   = Build("transactions")
+		err = errors.New("delete all error")
+	)
+
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(0, err).Once()
+
+	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_saveHasMany_replace(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
@@ -1933,9 +2073,9 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 		doc      = NewDocument(&user)
 		mutation = Apply(doc, NewStructset(doc, false))
 		mutates  = []map[string]Mutate{
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item3")},
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item4")},
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item5")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item3")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item4")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item5")},
 		}
 		q = Build("transactions")
 	)
@@ -2768,6 +2908,39 @@ func TestRepository_Preload_ptrSliceBelongsTo(t *testing.T) {
 	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user"))
 	assert.Equal(t, users[0], *addresses[0].User)
 	assert.Equal(t, users[1], *addresses[1].User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_sliceNestedBelongsTo(t *testing.T) {
+	var (
+		adapter      = &testAdapter{}
+		repo         = New(adapter)
+		address      = Address{ID: 10, Street: "Continassa"}
+		transactions = []Transaction{
+			{AddressID: 10},
+		}
+		users = []User{
+			{ID: 10, Name: "Del Piero", Transactions: transactions},
+			{ID: 20, Name: "Nedved"},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("id", 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "street"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(address.ID, address.Street).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "transactions.address"))
+	assert.Equal(t, []Transaction{
+		{AddressID: 10, Address: address},
+	}, users[0].Transactions)
+	assert.Equal(t, []Transaction{}, users[1].Transactions)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

@@ -2,6 +2,7 @@ package rel
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -81,9 +82,7 @@ func TestScanOne(t *testing.T) {
 	cur.On("Next").Return(true).Once()
 	cur.MockScan(10, "Del Piero", nil, now, nil).Once()
 
-	err := scanOne(cur, doc)
-	assert.Nil(t, err)
-
+	assert.Nil(t, scanOne(cur, doc))
 	assert.Equal(t, User{
 		ID:        10,
 		Name:      "Del Piero",
@@ -93,7 +92,22 @@ func TestScanOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestScanMany(t *testing.T) {
+func TestScanOne_fieldsError(t *testing.T) {
+	var (
+		user User
+		cur  = &testCursor{}
+		doc  = NewDocument(&user)
+		err  = errors.New("field error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{}, err).Once()
+
+	assert.Equal(t, err, scanOne(cur, doc))
+	cur.AssertExpectations(t)
+}
+
+func TestScanAll(t *testing.T) {
 	var (
 		users []User
 		cur   = &testCursor{}
@@ -109,16 +123,13 @@ func TestScanMany(t *testing.T) {
 	cur.MockScan(11, "Nedved", 46, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
-	err := scanAll(cur, col)
-	assert.Nil(t, err)
+	assert.Nil(t, scanAll(cur, col))
 	assert.Len(t, users, 2)
-
 	assert.Equal(t, User{
 		ID:        10,
 		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users[0])
-
 	assert.Equal(t, User{
 		ID:        11,
 		Name:      "Nedved",
@@ -127,6 +138,39 @@ func TestScanMany(t *testing.T) {
 		UpdatedAt: now,
 	}, users[1])
 
+	cur.AssertExpectations(t)
+}
+
+func TestScanAll_scanError(t *testing.T) {
+	var (
+		users []User
+		cur   = &testCursor{}
+		col   = NewCollection(&users)
+		err   = errors.New("scan error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id"}, nil).Once()
+
+	cur.On("Next").Return(true).Once()
+	cur.On("Scan", mock.Anything).Return(err).Once()
+
+	assert.Equal(t, err, scanAll(cur, col))
+	cur.AssertExpectations(t)
+}
+
+func TestScanAll_fieldsError(t *testing.T) {
+	var (
+		users []User
+		cur   = &testCursor{}
+		col   = NewCollection(&users)
+		err   = errors.New("field error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{}, err).Once()
+
+	assert.Equal(t, err, scanAll(cur, col))
 	cur.AssertExpectations(t)
 }
 
@@ -153,23 +197,19 @@ func TestScanMulti(t *testing.T) {
 	cur.MockScan(11, "Nedved", 46, now, now).Twice()
 	cur.On("Next").Return(false).Once()
 
-	err := scanMulti(cur, keyField, keyType, cols)
-	assert.Nil(t, err)
-
+	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))
 	assert.Len(t, users1, 1)
 	assert.Equal(t, User{
 		ID:        10,
 		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users1[0])
-
 	assert.Len(t, users2, 1)
 	assert.Equal(t, User{
 		ID:        10,
 		Name:      "Del Piero",
 		CreatedAt: now,
 	}, users2[0])
-
 	assert.Len(t, users3, 1)
 	assert.Equal(t, User{
 		ID:        11,
@@ -179,5 +219,89 @@ func TestScanMulti(t *testing.T) {
 		UpdatedAt: now,
 	}, users3[0])
 
+	cur.AssertExpectations(t)
+}
+
+func TestScanMulti_scanError(t *testing.T) {
+	var (
+		users    []User
+		cur      = &testCursor{}
+		keyField = "id"
+		keyType  = reflect.TypeOf(0)
+		cols     = map[interface{}][]slice{
+			11: {NewCollection(&users)},
+		}
+		err = errors.New("scan error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
+
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(11, "Nedved", 46, now, now).Once()
+	cur.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(err).Once()
+
+	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))
+	cur.AssertExpectations(t)
+}
+
+func TestScanMulti_scanKeyError(t *testing.T) {
+	var (
+		users    []User
+		cur      = &testCursor{}
+		keyField = "id"
+		keyType  = reflect.TypeOf(0)
+		cols     = map[interface{}][]slice{
+			11: {NewCollection(&users)},
+		}
+		err = errors.New("scan key error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id"}, nil).Once()
+
+	cur.On("Next").Return(true).Once()
+	cur.On("Scan", mock.Anything).Return(err).Once()
+
+	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))
+	cur.AssertExpectations(t)
+}
+
+func TestScanMulti_keyFieldsNotExists(t *testing.T) {
+	var (
+		users    []User
+		cur      = &testCursor{}
+		keyField = "id"
+		keyType  = reflect.TypeOf(0)
+		cols     = map[interface{}][]slice{
+			11: {NewCollection(&users)},
+		}
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{}, nil).Once()
+
+	assert.Panics(t, func() {
+		scanMulti(cur, keyField, keyType, cols)
+	})
+	cur.AssertExpectations(t)
+}
+
+func TestScanMulti_fieldsError(t *testing.T) {
+	var (
+		users    []User
+		cur      = &testCursor{}
+		keyField = "id"
+		keyType  = reflect.TypeOf(0)
+		cols     = map[interface{}][]slice{
+			11: {NewCollection(&users)},
+		}
+		err = errors.New("fields error")
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{}, err).Once()
+
+	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))
 	cur.AssertExpectations(t)
 }

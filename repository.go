@@ -297,15 +297,15 @@ func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 
 	var (
 		col  = NewCollection(records)
-		mods = make([]Mutation, col.Len())
+		muts = make([]Mutation, col.Len())
 	)
 
-	for i := range mods {
+	for i := range muts {
 		doc := col.Get(i)
-		mods[i] = Apply(doc, newStructset(doc, false))
+		muts[i] = Apply(doc, newStructset(doc, false))
 	}
 
-	return r.insertAll(ctx, col, mods)
+	return r.insertAll(ctx, col, muts)
 }
 
 func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
@@ -556,12 +556,12 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
-			mods       = assocMuts.Mutations
+			muts       = assocMuts.Mutations
 			deletedIDs = assocMuts.DeletedIDs
 		)
 
 		// this shouldn't happen unless there's bug in the mutator.
-		if len(mods) != col.Len() {
+		if len(muts) != col.Len() {
 			panic("rel: invalid mutator")
 		}
 
@@ -584,7 +584,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 
 		// update and filter for bulk insertion.
 		updateCount := 0
-		for i := range mods {
+		for i := range muts {
 			var (
 				assocDoc = col.Get(i)
 				pValue   = assocDoc.PrimaryValue()
@@ -606,32 +606,32 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 
 				if updateCount < i {
 					col.Swap(updateCount, i)
-					mods[i], mods[updateCount] = mods[updateCount], mods[i]
+					muts[i], muts[updateCount] = muts[updateCount], muts[i]
 				}
 
-				if err := r.update(ctx, assocDoc, mods[i], filter); err != nil {
+				if err := r.update(ctx, assocDoc, muts[updateCount], filter); err != nil {
 					return err
 				}
 
 				updateCount++
 			} else {
-				mods[i].Add(Set(fField, rValue))
+				muts[i].Add(Set(fField, rValue))
 				assocDoc.SetValue(fField, rValue)
 			}
 		}
 
-		if len(mods)-updateCount > 0 {
+		if len(muts)-updateCount > 0 {
 			var (
-				insertMods = mods
+				insertMuts = muts
 				insertCol  = col
 			)
 
 			if updateCount > 0 {
-				insertMods = mods[updateCount:]
-				insertCol = col.Slice(updateCount, len(mods))
+				insertMuts = muts[updateCount:]
+				insertCol = col.Slice(updateCount, len(muts))
 			}
 
-			if err := r.insertAll(ctx, insertCol, insertMods); err != nil {
+			if err := r.insertAll(ctx, insertCol, insertMuts); err != nil {
 				return err
 			}
 		}

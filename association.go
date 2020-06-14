@@ -84,7 +84,7 @@ func (a Association) Collection() (*Collection, bool) {
 		loaded = !rv.IsNil()
 	)
 
-	if rv.Kind() == reflect.Ptr && rv.Elem().Kind() == reflect.Slice {
+	if rv.Kind() == reflect.Ptr {
 		if !loaded {
 			rv.Set(reflect.New(rv.Type().Elem()))
 			rv.Elem().Set(reflect.MakeSlice(rv.Elem().Type(), 0, 0))
@@ -136,10 +136,6 @@ func (a Association) ForeignValue() interface{} {
 	)
 
 	if rv.Kind() == reflect.Ptr {
-		if rv.IsNil() {
-			return nil
-		}
-
 		rv = rv.Elem()
 	}
 
@@ -180,7 +176,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 		}
 	)
 
-	if ft.Kind() == reflect.Ptr || ft.Kind() == reflect.Slice || ft.Kind() == reflect.Array {
+	for ft.Kind() == reflect.Ptr || ft.Kind() == reflect.Slice {
 		ft = ft.Elem()
 	}
 
@@ -215,7 +211,8 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	}
 
 	// guess assoc type
-	if sf.Type.Kind() == reflect.Slice || sf.Type.Kind() == reflect.Array {
+	if sf.Type.Kind() == reflect.Slice ||
+		(sf.Type.Kind() == reflect.Ptr && sf.Type.Elem().Kind() == reflect.Slice) {
 		assocData.typ = HasMany
 	} else {
 		if len(assocData.referenceColumn) > len(assocData.foreignField) {

@@ -197,3 +197,47 @@ func TestMap_hasManyUpdateNotLoaded(t *testing.T) {
 		Apply(doc, data)
 	})
 }
+
+func TestMap_hasManyWrongType(t *testing.T) {
+	var (
+		user = User{
+			Transactions: []Transaction{},
+		}
+		doc  = NewDocument(&user)
+		data = Map{
+			"transactions": Map{"item": "Sword"},
+		}
+	)
+
+	assert.Panics(t, func() {
+		Apply(doc, data)
+	})
+}
+
+func TestMap_wrongType(t *testing.T) {
+	var (
+		user User
+		doc  = NewDocument(&user)
+		data = Map{
+			"name": false,
+		}
+	)
+
+	assert.Panics(t, func() {
+		Apply(doc, Cascade(false), data)
+	})
+}
+
+func TestMap_replacingPrimaryKey(t *testing.T) {
+	var (
+		user = User{ID: 1}
+		doc  = NewDocument(&user)
+		data = Map{
+			"id": 2,
+		}
+	)
+
+	assert.Panics(t, func() {
+		Apply(doc, Cascade(false), data)
+	})
+}

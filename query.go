@@ -80,7 +80,9 @@ func (q Query) Build(query *Query) {
 
 		query.JoinQuery = append(query.JoinQuery, q.JoinQuery...)
 
-		query.WhereQuery = query.WhereQuery.And(q.WhereQuery)
+		if !q.WhereQuery.None() {
+			query.WhereQuery = query.WhereQuery.And(q.WhereQuery)
+		}
 
 		if q.GroupQuery.Fields != nil {
 			query.GroupQuery = q.GroupQuery

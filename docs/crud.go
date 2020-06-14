@@ -101,6 +101,15 @@ func CrudUpdate(ctx context.Context, repo rel.Repository) error {
 	return err
 }
 
+// CrudUpdateAll docs example.
+func CrudUpdateAll(ctx context.Context, repo rel.Repository) error {
+	/// [update-all]
+	err := repo.UpdateAll(ctx, rel.From("books").Where(where.Lt("stock", 100)), rel.Set("discount", true))
+	/// [update-all]
+
+	return err
+}
+
 // CrudDelete docs example.
 func CrudDelete(ctx context.Context, repo rel.Repository) error {
 	var book Book

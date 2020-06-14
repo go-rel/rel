@@ -360,3 +360,32 @@ func Updates(t *testing.T, repo rel.Repository) {
 		})
 	}
 }
+
+// UpdateAll tests update all specifications.
+func UpdateAll(t *testing.T, repo rel.Repository) {
+	repo.MustInsert(ctx, &User{Name: "update", Age: 100})
+	repo.MustInsert(ctx, &User{Name: "update", Age: 100})
+	repo.MustInsert(ctx, &User{Name: "other update", Age: 110})
+
+	tests := []rel.Query{
+		rel.From("users").Where(where.Eq("name", "update")),
+		rel.From("users").Where(where.Eq("name", "other update"), where.Gt("age", 100)),
+	}
+
+	for _, query := range tests {
+		t.Run("UpdateAll", func(t *testing.T) {
+			var (
+				result []User
+				name   = "all updated"
+			)
+
+			assert.Nil(t, repo.UpdateAll(ctx, query, rel.Set("name", name)))
+
+			assert.Nil(t, repo.FindAll(ctx, &result, query))
+			assert.Equal(t, 0, len(result))
+			for i := range result {
+				assert.Equal(t, name, result[i].Name)
+			}
+		})
+	}
+}

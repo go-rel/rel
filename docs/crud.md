@@ -127,6 +127,20 @@ An update using struct will cause all fields and association to be saved to data
 
 <!-- tabs:end -->
 
+Updating multiple records is possible using `UpdateAll`.
+
+<!-- tabs:start -->
+
+### **Example**
+
+[crud.go](crud.go ':include :fragment=update-all')
+
+### **Mock**
+
+[crud_test.go](crud_test.go ':include :fragment=update-all')
+
+<!-- tabs:end -->
+
 ## Delete
 
 To delete a record in rel, simply pass the record to be deleted.
@@ -147,7 +161,6 @@ To delete a record in rel, simply pass the record to be deleted.
 
 Deleting multiple records is possible using `DeleteAll`.
 
-
 <!-- tabs:start -->
 
 ### **Example**
@@ -159,6 +172,5 @@ Deleting multiple records is possible using `DeleteAll`.
 [crud_test.go](crud_test.go ':include :fragment=delete-all')
 
 <!-- tabs:end -->
-
 
 **Next: [Queries](queries.md)**

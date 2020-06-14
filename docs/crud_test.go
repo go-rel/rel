@@ -180,6 +180,20 @@ func TestCrudUpdate(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestCrudUpdateAll(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+	)
+
+	/// [update-all]
+	repo.ExpectUpdateAll(rel.From("books").Where(where.Lt("stock", 100)), rel.Set("discount", true))
+	/// [update-all]
+
+	assert.Nil(t, CrudUpdateAll(ctx, repo))
+	repo.AssertExpectations(t)
+}
+
 func TestCrudDelete(t *testing.T) {
 	var (
 		ctx  = context.TODO()

@@ -2004,6 +2004,42 @@ func TestRepository_saveHasMany_invalidMutator(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_UpdateAll(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("addresses").Where(Eq("user_id", 1))
+		mutates = map[string]Mutate{
+			"notes": Set("notes", "notes"),
+		}
+	)
+
+	adapter.On("Update", query, mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.UpdateAll(context.TODO(), query, Set("notes", "notes")))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_MustUpdateAll(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("addresses").Where(Eq("user_id", 1))
+		mutates = map[string]Mutate{
+			"notes": Set("notes", "notes"),
+		}
+	)
+
+	adapter.On("Update", query, mutates).Return(1, nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustUpdateAll(context.TODO(), query, Set("notes", "notes"))
+	})
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Delete(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

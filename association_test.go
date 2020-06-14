@@ -220,3 +220,33 @@ func TestAssociation_Collection(t *testing.T) {
 		})
 	}
 }
+
+func TestAssociation_refNotFound(t *testing.T) {
+	type Alpha struct {
+		ID int
+	}
+
+	type Beta struct {
+		ID    int
+		Alpha Alpha `ref:"alpha_id" fk:"id"`
+	}
+
+	assert.Panics(t, func() {
+		NewDocument(&Beta{})
+	})
+}
+
+func TestAssociation_fkNotFound(t *testing.T) {
+	type Alpha struct {
+		ID int
+	}
+
+	type Beta struct {
+		ID    int
+		Alpha Alpha
+	}
+
+	assert.Panics(t, func() {
+		NewDocument(&Beta{})
+	})
+}

@@ -1801,31 +1801,65 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 			Map{
 				"transactions": []Map{
 					{"id": 1, "item": "item1 updated"},
-					{"id": 2, "item": "item2 updated"},
+					{"id": 3, "item": "item3 updated"},
 				},
 			},
 		)
 		mutates = []map[string]Mutate{
 			{"item": Set("item", "item1 updated")},
-			{"item": Set("item", "item2 updated")},
+			{"item": Set("item", "item3 updated")},
 		}
 		q = Build("transactions")
 	)
 
-	mutation.SetDeletedIDs("transactions", []interface{}{3})
+	mutation.SetDeletedIDs("transactions", []interface{}{2})
 
-	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 3))).Return(1, nil).Once()
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 2))).Return(1, nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 2).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 3).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
 			{ID: 1, BuyerID: 1, Item: "item1 updated"},
-			{ID: 2, BuyerID: 1, Item: "item2 updated"},
+			{ID: 3, BuyerID: 1, Item: "item3 updated"},
 		},
 	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_saveHasMany_updateError(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, BuyerID: 1, Item: "item1"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"id": 1, "item": "item1 updated"},
+				},
+			},
+		)
+		mutates = []map[string]Mutate{
+			{"item": Set("item", "item1 updated")},
+		}
+		q   = Build("transactions")
+		err = errors.New("update error")
+	)
+
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(0, err).Once()
+
+	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -1844,8 +1878,8 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		mutation = Apply(doc,
 			Map{
 				"transactions": []Map{
-					{"id": 1, "item": "item1 updated"},
 					{"item": "new item", "user_id": 1},
+					{"id": 1, "item": "item1 updated"},
 				},
 			},
 		)

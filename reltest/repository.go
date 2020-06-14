@@ -198,6 +198,21 @@ func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *Mutate {
 	return ExpectUpdate(r, mutators)
 }
 
+// UpdateAll provides a mock function with given fields: query
+func (r *Repository) UpdateAll(ctx context.Context, query rel.Query, mutates ...rel.Mutate) error {
+	return r.mock.Called(query, mutates).Error(0)
+}
+
+// MustUpdateAll provides a mock function with given fields: query
+func (r *Repository) MustUpdateAll(ctx context.Context, query rel.Query, mutates ...rel.Mutate) {
+	must(r.UpdateAll(ctx, query, mutates...))
+}
+
+// ExpectUpdateAll apply mocks and expectations for UpdateAll
+func (r *Repository) ExpectUpdateAll(query rel.Query, mutates ...rel.Mutate) *MutateAll {
+	return ExpectUpdateAll(r, query, mutates)
+}
+
 // Delete provides a mock function with given fields: record
 func (r *Repository) Delete(ctx context.Context, record interface{}, options ...rel.Cascade) error {
 	return r.mock.Called(record, options).Error(0)
@@ -224,7 +239,7 @@ func (r *Repository) MustDeleteAll(ctx context.Context, query rel.Query) {
 }
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
-func (r *Repository) ExpectDeleteAll(query rel.Query) *DeleteAll {
+func (r *Repository) ExpectDeleteAll(query rel.Query) *MutateAll {
 	return ExpectDeleteAll(r, query)
 }
 

@@ -10,6 +10,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestUpdateAll(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	assert.Nil(t, repo.UpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)))
+	repo.AssertExpectations(t)
+
+	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	assert.NotPanics(t, func() {
+		repo.MustUpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	})
+	repo.AssertExpectations(t)
+}
+
 func TestDeleteAll(t *testing.T) {
 	var (
 		repo = New()

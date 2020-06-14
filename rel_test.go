@@ -24,6 +24,12 @@ type Transaction struct {
 	Buyer     User `ref:"user_id" fk:"id"`
 	AddressID int
 	Address   Address
+	Histories *[]History
+}
+
+type History struct {
+	ID            int
+	TransactionID int
 }
 
 type Notes string

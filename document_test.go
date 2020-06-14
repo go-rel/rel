@@ -347,6 +347,7 @@ func TestDocument_Association(t *testing.T) {
 			name:      "Transaction",
 			record:    &Transaction{},
 			belongsTo: []string{"buyer", "address"},
+			hasMany:   []string{"histories"},
 		},
 		{
 			name:      "Address",

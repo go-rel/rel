@@ -1933,9 +1933,9 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 		doc      = NewDocument(&user)
 		mutation = Apply(doc, NewStructset(doc, false))
 		mutates  = []map[string]Mutate{
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item3")},
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item4")},
-			{"user_id": Set("user_id", user.ID), "status": Set("status", Status("")), "item": Set("item", "item5")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item3")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item4")},
+			{"user_id": Set("user_id", user.ID), "address_id": Set("address_id", 0), "status": Set("status", Status("")), "item": Set("item", "item5")},
 		}
 		q = Build("transactions")
 	)
@@ -2768,6 +2768,39 @@ func TestRepository_Preload_ptrSliceBelongsTo(t *testing.T) {
 	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user"))
 	assert.Equal(t, users[0], *addresses[0].User)
 	assert.Equal(t, users[1], *addresses[1].User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_sliceNestedBelongsTo(t *testing.T) {
+	var (
+		adapter      = &testAdapter{}
+		repo         = New(adapter)
+		address      = Address{ID: 10, Street: "Continassa"}
+		transactions = []Transaction{
+			{AddressID: 10},
+		}
+		users = []User{
+			{ID: 10, Name: "Del Piero", Transactions: transactions},
+			{ID: 20, Name: "Nedved"},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("id", 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "street"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(address.ID, address.Street).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "transactions.address"))
+	assert.Equal(t, []Transaction{
+		{AddressID: 10, Address: address},
+	}, users[0].Transactions)
+	assert.Equal(t, []Transaction{}, users[1].Transactions)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

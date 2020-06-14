@@ -17,11 +17,13 @@ type User struct {
 }
 
 type Transaction struct {
-	ID      int
-	Item    string
-	Status  Status
-	BuyerID int  `db:"user_id"`
-	Buyer   User `ref:"user_id" fk:"id"`
+	ID        int
+	Item      string
+	Status    Status
+	BuyerID   int  `db:"user_id"`
+	Buyer     User `ref:"user_id" fk:"id"`
+	AddressID int
+	Address   Address
 }
 
 type Notes string

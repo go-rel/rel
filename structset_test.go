@@ -100,11 +100,13 @@ func TestStructset_withAssoc(t *testing.T) {
 			Set("item", "Sword"),
 			Set("status", Status("")),
 			Set("user_id", 0),
+			Set("address_id", 0),
 		)
 		trx2Mod = Apply(NewDocument(&Transaction{}),
 			Set("item", "Shield"),
 			Set("status", Status("")),
 			Set("user_id", 0),
+			Set("address_id", 0),
 		)
 		addrMod = Apply(NewDocument(&Address{}),
 			Set("street", "Grove Street"),

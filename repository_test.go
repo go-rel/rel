@@ -1918,6 +1918,38 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_saveHasMany_deleteError(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, Item: "item1"},
+				{ID: 2, Item: "item2"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"item": "item3"},
+					{"item": "item4"},
+					{"item": "item5"},
+				},
+			},
+		)
+		q   = Build("transactions")
+		err = errors.New("delete all error")
+	)
+
+	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(0, err).Once()
+
+	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_saveHasMany_replace(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

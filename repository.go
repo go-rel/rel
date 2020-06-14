@@ -609,7 +609,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 					muts[i], muts[updateCount] = muts[updateCount], muts[i]
 				}
 
-				if err := r.update(ctx, assocDoc, muts[i], filter); err != nil {
+				if err := r.update(ctx, assocDoc, muts[updateCount], filter); err != nil {
 					return err
 				}
 

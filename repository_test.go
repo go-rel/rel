@@ -1937,6 +1937,49 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{Item: "item1"}, // new record not appended, but prepended/inserted
+				{ID: 1, BuyerID: 1, Item: "item2"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Mutation{}
+		q        = Build("transactions")
+		mutates  = []map[string]Mutate{
+			{"item": Set("item", "update")},
+			{"user_id": Set("user_id", user.ID), "item": Set("item", "new")},
+		}
+	)
+
+	// insert first, so internally rel needs to reorder the assoc.
+	mutation.SetAssoc("transactions",
+		Apply(NewDocument(&user.Transactions[0]), Set("item", "new")),
+		Apply(NewDocument(&user.Transactions[1]), Set("item", "update")),
+	)
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
+	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
+
+	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Equal(t, User{
+		ID: 1,
+		Transactions: []Transaction{
+			{ID: 1, BuyerID: 1, Item: "update"},
+			{ID: 2, BuyerID: 1, Item: "new"},
+		},
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

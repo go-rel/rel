@@ -1830,6 +1830,37 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_saveHasMany_updateInconsistentReferences(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID: 1,
+			Transactions: []Transaction{
+				{ID: 1, BuyerID: 2, Item: "item1"},
+			},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc,
+			Map{
+				"transactions": []Map{
+					{"id": 1, "item": "item1 updated"},
+				},
+			},
+		)
+	)
+
+	mutation.SetDeletedIDs("transactions", []interface{}{})
+
+	assert.Equal(t, ConstraintError{
+		Key:  "user_id",
+		Type: ForeignKeyConstraint,
+		Err:  errors.New("rel: inconsistent has many ref and fk"),
+	}, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_saveHasMany_updateError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

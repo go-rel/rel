@@ -9,7 +9,6 @@ import (
 )
 
 // Repository defines sets of available database operations.
-// TODO: support update all.
 type Repository interface {
 	Adapter() Adapter
 	Instrumentation(instrumenter Instrumenter)
@@ -31,6 +30,8 @@ type Repository interface {
 	MustInsertAll(ctx context.Context, records interface{})
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
+	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error
+	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate)
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
 	DeleteAll(ctx context.Context, query Query) error
@@ -351,9 +352,6 @@ func (r repository) insertAll(ctx context.Context, col *Collection, mutation []M
 
 // Update an record in database.
 // It'll panic if any error occurred.
-// not supported:
-// - update has many (will be replaced by default)
-// - replacing has one or belongs to assoc may cause duplicate record, please ensure database level unique constraint enabled.
 func (r repository) Update(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrument(ctx, "rel-update", "updating a record")
 	defer finish(nil)
@@ -643,6 +641,30 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 	return nil
 }
 
+func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error {
+	finish := r.instrument(ctx, "rel-update-all", "updating multiple records")
+	defer finish(nil)
+
+	var (
+		err  error
+		muts = make(map[string]Mutate, len(mutates))
+	)
+
+	for _, mut := range mutates {
+		muts[mut.Field] = mut
+	}
+
+	if len(muts) > 0 {
+		_, err = r.adapter.Update(ctx, query, muts)
+	}
+
+	return err
+}
+
+func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) {
+	must(r.UpdateAll(ctx, query, mutates...))
+}
+
 // Delete single entry.
 func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
 	finish := r.instrument(ctx, "rel-delete", "deleting a record")
@@ -782,6 +804,7 @@ func (r repository) MustDelete(ctx context.Context, record interface{}, options 
 	must(r.Delete(ctx, record, options...))
 }
 
+// DeleteAll records athat matches query.
 func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	finish := r.instrument(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
@@ -789,6 +812,8 @@ func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	return r.deleteAll(ctx, Invalid, query)
 }
 
+// MustDeleteAll records athat matches query.
+// It'll panic if any error eccured.
 func (r repository) MustDeleteAll(ctx context.Context, query Query) {
 	must(r.DeleteAll(ctx, query))
 }

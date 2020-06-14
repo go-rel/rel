@@ -373,15 +373,15 @@ func TestDocument_Association(t *testing.T) {
 	}
 }
 
-// func TestDocument_Association_interface(t *testing.T) {
-// 	var (
-// 		doc = NewDocument(&Item{})
-// 	)
+func TestDocument_Association_notFOund(t *testing.T) {
+	var (
+		doc = NewDocument(&Item{})
+	)
 
-// 	assert.NotPanics(t, func() {
-// 		assert.Nil(t, doc.Association("empty"))
-// 	})
-// }
+	assert.Panics(t, func() {
+		doc.Association("empty")
+	})
+}
 
 func TestDocument(t *testing.T) {
 	tests := []struct {

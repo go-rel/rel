@@ -11,12 +11,12 @@ type MutateAll struct {
 }
 
 // Unsafe allows for unsafe operation that doesn't contains where clause.
-func (eda *MutateAll) Unsafe() {
-	eda.RunFn = nil // clear validation
+func (ema *MutateAll) Unsafe() {
+	ema.RunFn = nil // clear validation
 }
 
 func expectMutateAll(r *Repository, methodName string, args ...interface{}) *MutateAll {
-	eda := &MutateAll{
+	ema := &MutateAll{
 		Expect: newExpect(r, methodName,
 			args,
 			[]interface{}{nil},
@@ -24,7 +24,7 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 	}
 
 	// validation
-	eda.Run(func(args mock.Arguments) {
+	ema.Run(func(args mock.Arguments) {
 		query := args[0].(rel.Query)
 
 		if query.Table == "" {
@@ -36,7 +36,7 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 		}
 	})
 
-	return eda
+	return ema
 }
 
 // ExpectUpdateAll to be called.

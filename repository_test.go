@@ -38,17 +38,18 @@ func createCursor(row int) *testCursor {
 
 func TestNew(t *testing.T) {
 	var (
+		ctx     = context.TODO()
 		adapter = &testAdapter{}
 		repo    = New(adapter)
 	)
 
 	assert.NotNil(t, repo)
-	assert.Equal(t, adapter, repo.Adapter())
+	assert.Equal(t, adapter, repo.Adapter(ctx))
 }
 
 func TestRepository_Instrumentation(t *testing.T) {
 	var (
-		repo = repository{adapter: &testAdapter{}}
+		repo = repository{rootAdapter: &testAdapter{}}
 	)
 
 	assert.Nil(t, repo.instrumenter)
@@ -1400,6 +1401,7 @@ func TestRepository_Update_error(t *testing.T) {
 func TestRepository_saveBelongsTo_update(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		transaction = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
 		doc         = NewDocument(&transaction)
@@ -1422,7 +1424,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 
 	adapter.On("Update", q, mutates).Return(1, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation))
+	assert.Nil(t, repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Equal(t, Transaction{
 		BuyerID: 1,
 		Buyer: User{
@@ -1439,6 +1441,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		transaction = Transaction{BuyerID: 1, Buyer: User{ID: 1}}
 		doc         = NewDocument(&transaction)
@@ -1461,7 +1464,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 
 	adapter.On("Update", q, mutates).Return(0, errors.New("update error")).Once()
 
-	err := repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation)
+	err := repo.(*repository).saveBelongsTo(cw, doc, &mutation)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -1470,6 +1473,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 func TestRepository_saveBelongsTo_updateInconsistentAssoc(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		transaction = Transaction{Buyer: User{ID: 1}}
 		doc         = NewDocument(&transaction)
@@ -1488,7 +1492,7 @@ func TestRepository_saveBelongsTo_updateInconsistentAssoc(t *testing.T) {
 		Key:  "user_id",
 		Type: ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-	}, repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation))
+	}, repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 
 	adapter.AssertExpectations(t)
 }
@@ -1497,6 +1501,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 	var (
 		transaction Transaction
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		doc         = NewDocument(&transaction)
 		mutation    = Apply(doc,
@@ -1516,7 +1521,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 
 	adapter.On("Insert", q, mutates).Return(1, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation))
+	assert.Nil(t, repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Equal(t, Set("user_id", 1), mutation.Mutates["user_id"])
 	assert.Equal(t, Transaction{
 		Buyer: User{
@@ -1533,6 +1538,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		transaction = Transaction{}
 		doc         = NewDocument(&transaction)
@@ -1557,7 +1563,7 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, mutates).Return(0, errors.New("insert error")).Once()
 
-	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation))
+	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Zero(t, mutation.Mutates["user_id"])
 
 	adapter.AssertExpectations(t)
@@ -1566,13 +1572,14 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
+		cw          = fetchContext(context.TODO(), adapter)
 		repo        = New(adapter)
 		transaction = Transaction{}
 		doc         = NewDocument(&transaction)
 		mutation    = Apply(doc)
 	)
 
-	err := repo.(*repository).saveBelongsTo(context.TODO(), doc, &mutation)
+	err := repo.(*repository).saveBelongsTo(cw, doc, &mutation)
 	assert.Nil(t, err)
 	adapter.AssertExpectations(t)
 }
@@ -1580,6 +1587,7 @@ func TestRepository_saveBelongsTo_notChanged(t *testing.T) {
 func TestRepository_saveHasOne_update(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		userID   = 1
 		user     = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
@@ -1599,13 +1607,14 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 
 	adapter.On("Update", q, mutates).Return(1, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveHasOne(context.TODO(), doc, &mutation))
+	assert.Nil(t, repo.(*repository).saveHasOne(cw, doc, &mutation))
 	adapter.AssertExpectations(t)
 }
 
 func TestRepository_saveHasOne_updateError(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		userID   = 1
 		user     = User{ID: userID, Address: Address{ID: 2, UserID: &userID}}
@@ -1625,7 +1634,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 
 	adapter.On("Update", q, mutates).Return(0, errors.New("update error")).Once()
 
-	err := repo.(*repository).saveHasOne(context.TODO(), doc, &mutation)
+	err := repo.(*repository).saveHasOne(cw, doc, &mutation)
 	assert.Equal(t, errors.New("update error"), err)
 
 	adapter.AssertExpectations(t)
@@ -1634,6 +1643,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		user     = User{ID: 1, Address: Address{ID: 2}}
 		doc      = NewDocument(&user)
@@ -1651,16 +1661,17 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 		Key:  "user_id",
 		Type: ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has one ref and fk"),
-	}, repo.(*repository).saveHasOne(context.TODO(), doc, &mutation))
+	}, repo.(*repository).saveHasOne(cw, doc, &mutation))
 
 	adapter.AssertExpectations(t)
 }
 
 func TestRepository_saveHasOne_insertNew(t *testing.T) {
 	var (
-		user     = User{ID: 1}
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
+		user     = User{ID: 1}
 		doc      = NewDocument(&user)
 		mutation = Apply(doc,
 			Map{
@@ -1678,7 +1689,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 
 	adapter.On("Insert", q, mutates).Return(2, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveHasOne(context.TODO(), doc, &mutation))
+	assert.Nil(t, repo.(*repository).saveHasOne(cw, doc, &mutation))
 	assert.Equal(t, User{
 		ID: 1,
 		Address: Address{
@@ -1694,6 +1705,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		user     = User{ID: 1}
 		doc      = NewDocument(&user)
@@ -1713,7 +1725,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 
 	adapter.On("Insert", q, mutates).Return(nil, errors.New("insert error")).Once()
 
-	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveHasOne(context.TODO(), doc, &mutation))
+	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveHasOne(cw, doc, &mutation))
 
 	adapter.AssertExpectations(t)
 }
@@ -1721,6 +1733,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 func TestRepository_saveHasMany_insert(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		user     = User{ID: 1}
 		doc      = NewDocument(&user)
@@ -1742,7 +1755,7 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates).Return(nil).Return([]interface{}{2, 3}, nil).Maybe()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, true))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, true))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1757,6 +1770,7 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 func TestRepository_saveHasMany_insertError(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		user     = User{ID: 1}
 		doc      = NewDocument(&user)
@@ -1779,7 +1793,7 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates).Return(nil).Return([]interface{}{}, err).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates).Return(nil).Return([]interface{}{}, err).Maybe()
 
-	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, true))
+	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, true))
 
 	adapter.AssertExpectations(t)
 }
@@ -1787,6 +1801,7 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 func TestRepository_saveHasMany_update(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -1818,7 +1833,7 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
 	adapter.On("Update", q.Where(Eq("id", 3).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1833,6 +1848,7 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 func TestRepository_saveHasMany_updateInconsistentReferences(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -1856,7 +1872,7 @@ func TestRepository_saveHasMany_updateInconsistentReferences(t *testing.T) {
 		Key:  "user_id",
 		Type: ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent has many ref and fk"),
-	}, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	}, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -1864,6 +1880,7 @@ func TestRepository_saveHasMany_updateInconsistentReferences(t *testing.T) {
 func TestRepository_saveHasMany_updateError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -1890,7 +1907,7 @@ func TestRepository_saveHasMany_updateError(t *testing.T) {
 
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(0, err).Once()
 
-	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -1898,6 +1915,7 @@ func TestRepository_saveHasMany_updateError(t *testing.T) {
 func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -1925,7 +1943,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1940,6 +1958,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -1968,7 +1987,7 @@ func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates[1:]).Return(nil).Return([]interface{}{2}, nil).Maybe()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -1983,6 +2002,7 @@ func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -2013,7 +2033,7 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	adapter.On("InsertAll", q, []string{"item", "user_id"}, mutates).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "item"}, mutates).Return(nil).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID: 1,
 		Transactions: []Transaction{
@@ -2029,6 +2049,7 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 func TestRepository_saveHasMany_deleteError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -2053,7 +2074,7 @@ func TestRepository_saveHasMany_deleteError(t *testing.T) {
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(0, err).Once()
 
-	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -2061,6 +2082,7 @@ func TestRepository_saveHasMany_deleteError(t *testing.T) {
 func TestRepository_saveHasMany_replace(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -2083,7 +2105,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(1, nil).Once()
 	adapter.On("InsertAll", q, mock.Anything, mutates).Return(nil).Return([]interface{}{3, 4, 5}, nil).Once()
 
-	assert.Nil(t, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID:        1,
 		CreatedAt: now(),
@@ -2101,6 +2123,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
+		cw      = fetchContext(context.TODO(), adapter)
 		repo    = New(adapter)
 		user    = User{
 			ID: 1,
@@ -2117,7 +2140,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(0, err).Once()
 
-	assert.Equal(t, err, repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false))
+	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 
 	adapter.AssertExpectations(t)
 }
@@ -2125,6 +2148,7 @@ func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
 func TestRepository_saveHasMany_invalidMutator(t *testing.T) {
 	var (
 		adapter  = &testAdapter{}
+		cw       = fetchContext(context.TODO(), adapter)
 		repo     = New(adapter)
 		user     = User{ID: 1}
 		doc      = NewDocument(&user)
@@ -2138,7 +2162,7 @@ func TestRepository_saveHasMany_invalidMutator(t *testing.T) {
 	)
 
 	assert.PanicsWithValue(t, "rel: invalid mutator", func() {
-		repo.(*repository).saveHasMany(context.TODO(), doc, &mutation, false)
+		repo.(*repository).saveHasMany(cw, doc, &mutation, false)
 	})
 
 	adapter.AssertExpectations(t)
@@ -3007,12 +3031,10 @@ func TestRepository_Transaction(t *testing.T) {
 
 	repo := New(adapter)
 
-	err := repo.Transaction(context.TODO(), func(repo Repository) error {
-		assert.True(t, repo.(*repository).inTransaction)
+	err := repo.Transaction(context.TODO(), func(ctx context.Context) error {
 		return nil
 	})
 
-	assert.False(t, repo.(*repository).inTransaction)
 	assert.Nil(t, err)
 
 	adapter.AssertExpectations(t)
@@ -3022,7 +3044,7 @@ func TestRepository_Transaction_beginError(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(errors.New("error")).Once()
 
-	err := New(adapter).Transaction(context.TODO(), func(r Repository) error {
+	err := New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 		// doing good things
 		return nil
 	})
@@ -3036,7 +3058,7 @@ func TestRepository_Transaction_commitError(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Commit").Return(errors.New("error")).Once()
 
-	err := New(adapter).Transaction(context.TODO(), func(r Repository) error {
+	err := New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 		// doing good things
 		return nil
 	})
@@ -3050,7 +3072,7 @@ func TestRepository_Transaction_returnErrorAndRollback(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := New(adapter).Transaction(context.TODO(), func(r Repository) error {
+	err := New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 		// doing good things
 		return errors.New("error")
 	})
@@ -3064,7 +3086,7 @@ func TestRepository_Transaction_panicWithErrorAndRollback(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
-	err := New(adapter).Transaction(context.TODO(), func(r Repository) error {
+	err := New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 		// doing good things
 		panic(errors.New("error"))
 	})
@@ -3079,7 +3101,7 @@ func TestRepository_Transaction_panicWithStringAndRollback(t *testing.T) {
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Panics(t, func() {
-		_ = New(adapter).Transaction(context.TODO(), func(r Repository) error {
+		_ = New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 			// doing good things
 			panic("error")
 		})
@@ -3095,7 +3117,7 @@ func TestRepository_Transaction_runtimeError(t *testing.T) {
 
 	var user *User
 	assert.Panics(t, func() {
-		_ = New(adapter).Transaction(context.TODO(), func(r Repository) error {
+		_ = New(adapter).Transaction(context.TODO(), func(ctx context.Context) error {
 			_ = user.ID
 			return nil
 		})

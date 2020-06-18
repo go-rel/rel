@@ -199,9 +199,10 @@ func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 	finish(err)
 
 	return &Adapter{
-		Config:    adapter.Config,
-		Tx:        tx,
-		savepoint: savepoint,
+		Instrumenter: adapter.Instrumenter,
+		Config:       adapter.Config,
+		Tx:           tx,
+		savepoint:    savepoint,
 	}, err
 }
 

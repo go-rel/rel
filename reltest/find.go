@@ -20,7 +20,7 @@ func ExpectFind(r *Repository, queriers []rel.Querier) *Find {
 	return &Find{
 		FindAll: &FindAll{
 			Expect: newExpect(r, "Find",
-				[]interface{}{mock.Anything, queriers},
+				[]interface{}{r.ctxData, mock.Anything, queriers},
 				[]interface{}{nil},
 			),
 		},

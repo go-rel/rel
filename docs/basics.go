@@ -49,17 +49,32 @@ func main() {
 func Example(ctx context.Context, repo rel.Repository) error {
 	var book Book
 
-	// Querying Books.
-	// Find a book with id 1.
+	// Quickly find a book with id 1 using short alias.
 	if err := repo.Find(ctx, &book, where.Eq("id", 1)); err != nil {
 		return err
 	}
 
-	// Preload Book's Author.
+	// Or use chainable query builder.
+	query := rel.Select().Where(where.Eq("id", 1)).Limit(1)
+	if err := repo.Find(ctx, &book, query); err != nil {
+		return err
+	}
+
+	// Convenient method to preload Book's Author.
 	if err := repo.Preload(ctx, &book, "author"); err != nil {
 		return err
 	}
 
-	book.Title = "REL for dummies"
-	return repo.Update(ctx, &book)
+	// Performs updates inside a transaction.
+	return repo.Transaction(ctx, func(ctx context.Context) error {
+		// basic update using struct.
+		book.Title = "REL for dummies"
+		repo.MustUpdate(ctx, &book)
+
+		// update only specific fields.
+		repo.MustUpdate(ctx, &book, rel.Set("discount", false))
+
+		// it even supports atomic inc/dec mutation.
+		return repo.Update(ctx, &book, rel.Dec("stock"))
+	})
 }

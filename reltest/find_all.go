@@ -15,10 +15,10 @@ type FindAll struct {
 
 // Result sets the result of this query.
 func (fa *FindAll) Result(records interface{}) {
-	fa.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
+	fa.Arguments[1] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
 
 	fa.Run(func(args mock.Arguments) {
-		reflect.ValueOf(args[0]).Elem().Set(reflect.ValueOf(records))
+		reflect.ValueOf(args[1]).Elem().Set(reflect.ValueOf(records))
 	})
 }
 
@@ -26,7 +26,7 @@ func (fa *FindAll) Result(records interface{}) {
 func ExpectFindAll(r *Repository, queriers []rel.Querier) *FindAll {
 	return &FindAll{
 		Expect: newExpect(r, "FindAll",
-			[]interface{}{mock.Anything, queriers},
+			[]interface{}{r.ctxData, mock.Anything, queriers},
 			[]interface{}{nil},
 		),
 	}

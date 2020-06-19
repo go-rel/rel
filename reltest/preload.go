@@ -17,9 +17,9 @@ type Preload struct {
 func (p *Preload) Result(records interface{}) {
 	p.Run(func(args mock.Arguments) {
 		var (
-			target = asSlice(args[0], false)
+			target = asSlice(args[1], false)
 			result = asSlice(records, true)
-			path   = strings.Split(args[1].(string), ".")
+			path   = strings.Split(args[2].(string), ".")
 		)
 
 		preload(target, result, path)
@@ -28,7 +28,7 @@ func (p *Preload) Result(records interface{}) {
 
 // For match expect calls for given record.
 func (p *Preload) For(record interface{}) *Preload {
-	p.Arguments[0] = record
+	p.Arguments[1] = record
 	return p
 }
 
@@ -42,7 +42,7 @@ func (p *Preload) ForType(typ string) *Preload {
 func ExpectPreload(r *Repository, field string, queriers []rel.Querier) *Preload {
 	return &Preload{
 		Expect: newExpect(r, "Preload",
-			[]interface{}{mock.Anything, field, queriers},
+			[]interface{}{r.ctxData, mock.Anything, field, queriers},
 			[]interface{}{nil},
 		),
 	}

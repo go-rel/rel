@@ -15,10 +15,10 @@ type FindAndCountAll struct {
 
 // Result sets the result of this query.
 func (fa *FindAndCountAll) Result(records interface{}, count int) {
-	fa.Arguments[0] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
+	fa.Arguments[1] = mock.AnythingOfType(fmt.Sprintf("*%T", records))
 
 	fa.Run(func(args mock.Arguments) {
-		reflect.ValueOf(args[0]).Elem().Set(reflect.ValueOf(records))
+		reflect.ValueOf(args[1]).Elem().Set(reflect.ValueOf(records))
 	}).Return(count, nil)
 }
 
@@ -36,7 +36,7 @@ func (fa *FindAndCountAll) ConnectionClosed() {
 func ExpectFindAndCountAll(r *Repository, queriers []rel.Querier) *FindAndCountAll {
 	return &FindAndCountAll{
 		Expect: newExpect(r, "FindAndCountAll",
-			[]interface{}{mock.Anything, queriers},
+			[]interface{}{r.ctxData, mock.Anything, queriers},
 			[]interface{}{0, nil},
 		),
 	}

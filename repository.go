@@ -10,7 +10,7 @@ import (
 
 // Repository defines sets of available database operations.
 type Repository interface {
-	Adapter() Adapter
+	Adapter(ctx context.Context) Adapter
 	Instrumentation(instrumenter Instrumenter)
 	Ping(ctx context.Context) error
 	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
@@ -38,22 +38,21 @@ type Repository interface {
 	MustDeleteAll(ctx context.Context, query Query)
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
-	Transaction(ctx context.Context, fn func(Repository) error) error
+	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
 type repository struct {
-	adapter       Adapter
-	instrumenter  Instrumenter
-	inTransaction bool
+	rootAdapter  Adapter
+	instrumenter Instrumenter
 }
 
-func (r repository) Adapter() Adapter {
-	return r.adapter
+func (r repository) Adapter(ctx context.Context) Adapter {
+	return fetchContext(ctx, r.rootAdapter).adapter
 }
 
 func (r *repository) Instrumentation(instrumenter Instrumenter) {
 	r.instrumenter = instrumenter
-	r.adapter.Instrumentation(instrumenter)
+	r.rootAdapter.Instrumentation(instrumenter)
 }
 
 // Instrument call instrumenter, if no instrumenter is set, this will be a no op.
@@ -67,14 +66,18 @@ func (r *repository) instrument(ctx context.Context, op string, message string) 
 
 // Ping database.
 func (r *repository) Ping(ctx context.Context) error {
-	return r.adapter.Ping(ctx)
+	return r.rootAdapter.Ping(ctx)
 }
 
 // Iterate through a collection of records from database in batches.
 // This function returns iterator that can be used to loop all records.
 // Limit, Offset and Sort query is automatically ignored.
 func (r repository) Iterate(ctx context.Context, query Query, options ...IteratorOption) Iterator {
-	return newIterator(ctx, r.adapter, query, options)
+	var (
+		cw = fetchContext(ctx, r.rootAdapter)
+	)
+
+	return newIterator(cw.ctx, cw.adapter, query, options)
 }
 
 // Aggregate calculate aggregate over the given field.
@@ -85,16 +88,20 @@ func (r repository) Aggregate(ctx context.Context, query Query, aggregate string
 	finish := r.instrument(ctx, "rel-aggregate", "aggregating records")
 	defer finish(nil)
 
-	return r.aggregate(ctx, query, aggregate, field)
+	var (
+		cw = fetchContext(ctx, r.rootAdapter)
+	)
+
+	return r.aggregate(cw, query, aggregate, field)
 }
 
-func (r repository) aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
+func (r repository) aggregate(cw contextWrapper, query Query, aggregate string, field string) (int, error) {
 	query.GroupQuery = GroupQuery{}
 	query.LimitQuery = 0
 	query.OffsetQuery = 0
 	query.SortQuery = nil
 
-	return r.adapter.Aggregate(ctx, query, aggregate, field)
+	return cw.adapter.Aggregate(cw.ctx, query, aggregate, field)
 }
 
 // MustAggregate calculate aggregate over the given field.
@@ -110,7 +117,11 @@ func (r repository) Count(ctx context.Context, collection string, queriers ...Qu
 	finish := r.instrument(ctx, "rel-count", "aggregating records")
 	defer finish(nil)
 
-	return r.aggregate(ctx, Build(collection, queriers...), "count", "*")
+	var (
+		cw = fetchContext(ctx, r.rootAdapter)
+	)
+
+	return r.aggregate(cw, Build(collection, queriers...), "count", "*")
 }
 
 // MustCount retrieves count of results that match the query.
@@ -128,11 +139,12 @@ func (r repository) Find(ctx context.Context, record interface{}, queriers ...Qu
 	defer finish(nil)
 
 	var (
+		cw    = fetchContext(ctx, r.rootAdapter)
 		doc   = NewDocument(record)
 		query = Build(doc.Table(), queriers...)
 	)
 
-	return r.find(ctx, doc, query)
+	return r.find(cw, doc, query)
 }
 
 // MustFind a record that match the query.
@@ -141,14 +153,14 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 	must(r.Find(ctx, record, queriers...))
 }
 
-func (r repository) find(ctx context.Context, doc *Document, query Query) error {
+func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 	query = r.withDefaultScope(doc.data, query)
-	cur, err := r.adapter.Query(ctx, query.Limit(1))
+	cur, err := cw.adapter.Query(cw.ctx, query.Limit(1))
 	if err != nil {
 		return err
 	}
 
-	finish := r.instrument(ctx, "rel-scan-one", "scanning a record")
+	finish := r.instrument(cw.ctx, "rel-scan-one", "scanning a record")
 	defer finish(nil)
 
 	return scanOne(cur, doc)
@@ -160,13 +172,14 @@ func (r repository) FindAll(ctx context.Context, records interface{}, queriers .
 	defer finish(nil)
 
 	var (
+		cw    = fetchContext(ctx, r.rootAdapter)
 		col   = NewCollection(records)
 		query = Build(col.Table(), queriers...)
 	)
 
 	col.Reset()
 
-	return r.findAll(ctx, col, query)
+	return r.findAll(cw, col, query)
 }
 
 // MustFindAll records that match the query.
@@ -175,14 +188,14 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 	must(r.FindAll(ctx, records, queriers...))
 }
 
-func (r repository) findAll(ctx context.Context, col *Collection, query Query) error {
+func (r repository) findAll(cw contextWrapper, col *Collection, query Query) error {
 	query = r.withDefaultScope(col.data, query)
-	cur, err := r.adapter.Query(ctx, query)
+	cur, err := cw.adapter.Query(cw.ctx, query)
 	if err != nil {
 		return err
 	}
 
-	finish := r.instrument(ctx, "rel-scan-all", "scanning all records")
+	finish := r.instrument(cw.ctx, "rel-scan-all", "scanning all records")
 	defer finish(nil)
 
 	return scanAll(cur, col)
@@ -195,17 +208,18 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 	defer finish(nil)
 
 	var (
+		cw    = fetchContext(ctx, r.rootAdapter)
 		col   = NewCollection(records)
 		query = Build(col.Table(), queriers...)
 	)
 
 	col.Reset()
 
-	if err := r.findAll(ctx, col, query); err != nil {
+	if err := r.findAll(cw, col, query); err != nil {
 		return 0, err
 	}
 
-	return r.aggregate(ctx, query, "count", "*")
+	return r.aggregate(cw, query, "count", "*")
 }
 
 // MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
@@ -228,39 +242,40 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 	}
 
 	var (
+		cw       = fetchContext(ctx, r.rootAdapter)
 		doc      = NewDocument(record)
 		mutation = Apply(doc, mutators...)
 	)
 
 	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
-		return r.Transaction(ctx, func(r Repository) error {
-			return r.(*repository).insert(ctx, doc, mutation)
+		return r.transaction(cw, func(cw contextWrapper) error {
+			return r.insert(cw, doc, mutation)
 		})
 	}
 
-	return r.insert(ctx, doc, mutation)
+	return r.insert(cw, doc, mutation)
 }
 
-func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation) error {
+func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) error {
 	var (
 		pField   = doc.PrimaryField()
 		queriers = Build(doc.Table())
 	)
 
 	if mutation.Cascade {
-		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+		if err := r.saveBelongsTo(cw, doc, &mutation); err != nil {
 			return err
 		}
 	}
 
-	pValue, err := r.Adapter().Insert(ctx, queriers, mutation.Mutates)
+	pValue, err := cw.adapter.Insert(cw.ctx, queriers, mutation.Mutates)
 	if err != nil {
 		return mutation.ErrorFunc.transform(err)
 	}
 
 	if mutation.Reload {
 		// fetch record
-		if err := r.find(ctx, doc, queriers.Where(Eq(pField, pValue))); err != nil {
+		if err := r.find(cw, doc, queriers.Where(Eq(pField, pValue))); err != nil {
 			return err
 		}
 	} else {
@@ -269,11 +284,11 @@ func (r repository) insert(ctx context.Context, doc *Document, mutation Mutation
 	}
 
 	if mutation.Cascade {
-		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+		if err := r.saveHasOne(cw, doc, &mutation); err != nil {
 			return err
 		}
 
-		if err := r.saveHasMany(ctx, doc, &mutation, true); err != nil {
+		if err := r.saveHasMany(cw, doc, &mutation, true); err != nil {
 			return err
 		}
 	}
@@ -296,6 +311,7 @@ func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 	}
 
 	var (
+		cw   = fetchContext(ctx, r.rootAdapter)
 		col  = NewCollection(records)
 		muts = make([]Mutation, col.Len())
 	)
@@ -305,7 +321,7 @@ func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 		muts[i] = Apply(doc, newStructset(doc, false))
 	}
 
-	return r.insertAll(ctx, col, muts)
+	return r.insertAll(cw, col, muts)
 }
 
 func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
@@ -313,7 +329,7 @@ func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
 }
 
 // TODO: support assocs
-func (r repository) insertAll(ctx context.Context, col *Collection, mutation []Mutation) error {
+func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mutation) error {
 	if len(mutation) == 0 {
 		return nil
 	}
@@ -337,7 +353,7 @@ func (r repository) insertAll(ctx context.Context, col *Collection, mutation []M
 		bulkMutates[i] = mutation[i].Mutates
 	}
 
-	ids, err := r.adapter.InsertAll(ctx, queriers, fields, bulkMutates)
+	ids, err := cw.adapter.InsertAll(cw.ctx, queriers, fields, bulkMutates)
 	if err != nil {
 		return mutation[0].ErrorFunc.transform(err)
 	}
@@ -361,6 +377,7 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	}
 
 	var (
+		cw       = fetchContext(ctx, r.rootAdapter)
 		doc      = NewDocument(record)
 		pField   = doc.PrimaryField()
 		pValue   = doc.PrimaryValue()
@@ -368,17 +385,17 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	)
 
 	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
-		return r.Transaction(ctx, func(r Repository) error {
-			return r.(*repository).update(ctx, doc, mutation, Eq(pField, pValue))
+		return r.transaction(cw, func(cw contextWrapper) error {
+			return r.update(cw, doc, mutation, Eq(pField, pValue))
 		})
 	}
 
-	return r.update(ctx, doc, mutation, Eq(pField, pValue))
+	return r.update(cw, doc, mutation, Eq(pField, pValue))
 }
 
-func (r repository) update(ctx context.Context, doc *Document, mutation Mutation, filter FilterQuery) error {
+func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
 	if mutation.Cascade {
-		if err := r.saveBelongsTo(ctx, doc, &mutation); err != nil {
+		if err := r.saveBelongsTo(cw, doc, &mutation); err != nil {
 			return err
 		}
 	}
@@ -388,25 +405,25 @@ func (r repository) update(ctx context.Context, doc *Document, mutation Mutation
 			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped))
 		)
 
-		if updatedCount, err := r.adapter.Update(ctx, query, mutation.Mutates); err != nil {
+		if updatedCount, err := cw.adapter.Update(cw.ctx, query, mutation.Mutates); err != nil {
 			return mutation.ErrorFunc.transform(err)
 		} else if updatedCount == 0 {
 			return NotFoundError{}
 		}
 
 		if mutation.Reload {
-			if err := r.find(ctx, doc, query); err != nil {
+			if err := r.find(cw, doc, query); err != nil {
 				return err
 			}
 		}
 	}
 
 	if mutation.Cascade {
-		if err := r.saveHasOne(ctx, doc, &mutation); err != nil {
+		if err := r.saveHasOne(cw, doc, &mutation); err != nil {
 			return err
 		}
 
-		if err := r.saveHasMany(ctx, doc, &mutation, false); err != nil {
+		if err := r.saveHasMany(cw, doc, &mutation, false); err != nil {
 			return err
 		}
 	}
@@ -421,7 +438,7 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 }
 
 // TODO: support deletion
-func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *Mutation) error {
+func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.BelongsTo() {
 		assocMuts, changed := mutation.Assoc[field]
 		if !changed || len(assocMuts.Mutations) == 0 {
@@ -440,11 +457,11 @@ func (r repository) saveBelongsTo(ctx context.Context, doc *Document, mutation *
 				return err
 			}
 
-			if err := r.update(ctx, assocDoc, assocMut, filter); err != nil {
+			if err := r.update(cw, assocDoc, assocMut, filter); err != nil {
 				return err
 			}
 		} else {
-			if err := r.insert(ctx, assocDoc, assocMut); err != nil {
+			if err := r.insert(cw, assocDoc, assocMut); err != nil {
 				return err
 			}
 
@@ -480,7 +497,7 @@ func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error)
 }
 
 // TODO: suppprt deletion
-func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mutation) error {
+func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
 		assocMuts, changed := mutation.Assoc[field]
 		if !changed || len(assocMuts.Mutations) == 0 {
@@ -499,7 +516,7 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 				return err
 			}
 
-			if err := r.update(ctx, assocDoc, assocMut, filter); err != nil {
+			if err := r.update(cw, assocDoc, assocMut, filter); err != nil {
 				return err
 			}
 		} else {
@@ -511,7 +528,7 @@ func (r repository) saveHasOne(ctx context.Context, doc *Document, mutation *Mut
 			assocMut.Add(Set(fField, rValue))
 			assocDoc.SetValue(fField, rValue)
 
-			if err := r.insert(ctx, assocDoc, assocMut); err != nil {
+			if err := r.insert(cw, assocDoc, assocMut); err != nil {
 				return err
 			}
 		}
@@ -542,7 +559,7 @@ func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (F
 }
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
-func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mutation, insertion bool) error {
+func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Mutation, insertion bool) error {
 	for _, field := range doc.HasMany() {
 		assocMuts, changed := mutation.Assoc[field]
 		if !changed {
@@ -572,11 +589,11 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 
 			if deletedIDs == nil {
 				// if it's nil, then clear old association (used by structset).
-				if _, err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
+				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
-				if _, err := r.deleteAll(ctx, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
 					return err
 				}
 			}
@@ -609,7 +626,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 					muts[i], muts[updateCount] = muts[updateCount], muts[i]
 				}
 
-				if err := r.update(ctx, assocDoc, muts[updateCount], filter); err != nil {
+				if err := r.update(cw, assocDoc, muts[updateCount], filter); err != nil {
 					return err
 				}
 
@@ -631,7 +648,7 @@ func (r repository) saveHasMany(ctx context.Context, doc *Document, mutation *Mu
 				insertCol = col.Slice(updateCount, len(muts))
 			}
 
-			if err := r.insertAll(ctx, insertCol, insertMuts); err != nil {
+			if err := r.insertAll(cw, insertCol, insertMuts); err != nil {
 				return err
 			}
 		}
@@ -647,6 +664,7 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 
 	var (
 		err  error
+		cw   = fetchContext(ctx, r.rootAdapter)
 		muts = make(map[string]Mutate, len(mutates))
 	)
 
@@ -655,7 +673,7 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	}
 
 	if len(muts) > 0 {
-		_, err = r.adapter.Update(ctx, query, muts)
+		_, err = cw.adapter.Update(cw.ctx, query, muts)
 	}
 
 	return err
@@ -671,6 +689,7 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 	defer finish(nil)
 
 	var (
+		cw      = fetchContext(ctx, r.rootAdapter)
 		doc     = NewDocument(record)
 		pField  = doc.PrimaryField()
 		pValue  = doc.PrimaryValue()
@@ -682,37 +701,37 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 	}
 
 	if cascade {
-		return r.Transaction(ctx, func(r Repository) error {
-			return r.(*repository).delete(ctx, doc, Eq(pField, pValue), cascade)
+		return r.transaction(cw, func(cw contextWrapper) error {
+			return r.delete(cw, doc, Eq(pField, pValue), cascade)
 		})
 	}
 
-	return r.delete(ctx, doc, Eq(pField, pValue), cascade)
+	return r.delete(cw, doc, Eq(pField, pValue), cascade)
 }
 
-func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuery, cascade Cascade) error {
+func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery, cascade Cascade) error {
 	var (
 		table = doc.Table()
 		query = Build(table, filter)
 	)
 
 	if cascade {
-		if err := r.deleteHasOne(ctx, doc, cascade); err != nil {
+		if err := r.deleteHasOne(cw, doc, cascade); err != nil {
 			return err
 		}
 
-		if err := r.deleteHasMany(ctx, doc); err != nil {
+		if err := r.deleteHasMany(cw, doc); err != nil {
 			return err
 		}
 	}
 
-	deletedCount, err := r.deleteAll(ctx, doc.data.flag, query)
+	deletedCount, err := r.deleteAll(cw, doc.data.flag, query)
 	if err == nil && deletedCount == 0 {
 		err = NotFoundError{}
 	}
 
 	if err == nil && cascade {
-		if err := r.deleteBelongsTo(ctx, doc, cascade); err != nil {
+		if err := r.deleteBelongsTo(cw, doc, cascade); err != nil {
 			return err
 		}
 	}
@@ -720,7 +739,7 @@ func (r repository) delete(ctx context.Context, doc *Document, filter FilterQuer
 	return err
 }
 
-func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade Cascade) error {
+func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Cascade) error {
 	for _, field := range doc.BelongsTo() {
 		var (
 			assoc            = doc.Association(field)
@@ -733,7 +752,7 @@ func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade 
 				return err
 			}
 
-			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+			if err := r.delete(cw, assocDoc, filter, cascade); err != nil {
 				return err
 			}
 		}
@@ -742,7 +761,7 @@ func (r repository) deleteBelongsTo(ctx context.Context, doc *Document, cascade 
 	return nil
 }
 
-func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cascade) error {
+func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Cascade) error {
 	for _, field := range doc.HasOne() {
 		var (
 			assoc            = doc.Association(field)
@@ -755,7 +774,7 @@ func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cas
 				return err
 			}
 
-			if err := r.delete(ctx, assocDoc, filter, cascade); err != nil {
+			if err := r.delete(cw, assocDoc, filter, cascade); err != nil {
 				return err
 			}
 		}
@@ -764,7 +783,7 @@ func (r repository) deleteHasOne(ctx context.Context, doc *Document, cascade Cas
 	return nil
 }
 
-func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
+func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	for _, field := range doc.HasMany() {
 		var (
 			assoc       = doc.Association(field)
@@ -781,7 +800,7 @@ func (r repository) deleteHasMany(ctx context.Context, doc *Document) error {
 				filter  = Eq(fField, rValue).AndIn(pField, pValues...)
 			)
 
-			if _, err := r.deleteAll(ctx, col.data.flag, Build(table, filter)); err != nil {
+			if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {
 				return err
 			}
 		}
@@ -801,7 +820,11 @@ func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	finish := r.instrument(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
 
-	_, err := r.deleteAll(ctx, Invalid, query)
+	var (
+		cw     = fetchContext(ctx, r.rootAdapter)
+		_, err = r.deleteAll(cw, Invalid, query)
+	)
+
 	return err
 }
 
@@ -811,13 +834,13 @@ func (r repository) MustDeleteAll(ctx context.Context, query Query) {
 	must(r.DeleteAll(ctx, query))
 }
 
-func (r repository) deleteAll(ctx context.Context, flag DocumentFlag, query Query) (int, error) {
+func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {
 	if flag.Is(HasDeletedAt) {
 		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
-		return r.adapter.Update(ctx, query, mutates)
+		return cw.adapter.Update(cw.ctx, query, mutates)
 	}
 
-	return r.adapter.Delete(ctx, query)
+	return cw.adapter.Delete(cw.ctx, query)
 }
 
 // Preload loads association with given query.
@@ -827,6 +850,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		sl   slice
+		cw   = fetchContext(ctx, r.rootAdapter)
 		path = strings.Split(field, ".")
 		rt   = reflect.TypeOf(records)
 	)
@@ -862,7 +886,7 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		query    = Build(table, append(queriers, In(keyField, ids...))...)
-		cur, err = r.adapter.Query(ctx, r.withDefaultScope(ddata, query))
+		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query))
 	)
 
 	if err != nil {
@@ -987,25 +1011,32 @@ func (r repository) withDefaultScope(ddata documentData, query Query) Query {
 }
 
 // Transaction performs transaction with given function argument.
-func (r repository) Transaction(ctx context.Context, fn func(Repository) error) error {
+func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	finish := r.instrument(ctx, "rel-transaction", "transaction")
 	defer finish(nil)
 
-	adp, err := r.adapter.Begin(ctx)
+	var (
+		cw = fetchContext(ctx, r.rootAdapter)
+	)
+
+	return r.transaction(cw, func(cw contextWrapper) error {
+		return fn(cw.ctx)
+	})
+}
+
+func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) error) error {
+	adp, err := cw.adapter.Begin(cw.ctx)
 	if err != nil {
 		return err
 	}
 
-	txRepo := &repository{
-		adapter:       adp,
-		instrumenter:  r.instrumenter,
-		inTransaction: true,
-	}
+	// wrap trx adapter to new context.
+	cw = wrapContext(cw.ctx, adp)
 
 	func() {
 		defer func() {
 			if p := recover(); p != nil {
-				_ = txRepo.adapter.Rollback(ctx)
+				_ = cw.adapter.Rollback(cw.ctx)
 
 				switch e := p.(type) {
 				case runtime.Error:
@@ -1016,13 +1047,13 @@ func (r repository) Transaction(ctx context.Context, fn func(Repository) error) 
 					panic(e)
 				}
 			} else if err != nil {
-				_ = txRepo.adapter.Rollback(ctx)
+				_ = cw.adapter.Rollback(cw.ctx)
 			} else {
-				err = txRepo.adapter.Commit(ctx)
+				err = cw.adapter.Commit(cw.ctx)
 			}
 		}()
 
-		err = fn(txRepo)
+		err = fn(cw)
 	}()
 
 	return err
@@ -1031,7 +1062,7 @@ func (r repository) Transaction(ctx context.Context, fn func(Repository) error) 
 // New create new repo using adapter.
 func New(adapter Adapter) Repository {
 	repo := &repository{
-		adapter:      adapter,
+		rootAdapter:  adapter,
 		instrumenter: DefaultLogger,
 	}
 

@@ -25,7 +25,7 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 
 	// validation
 	ema.Run(func(args mock.Arguments) {
-		query := args[0].(rel.Query)
+		query := args[1].(rel.Query)
 
 		if query.Table == "" {
 			panic("reltest: cannot call " + methodName + " without specifying table name. use rel.From(tableName)")
@@ -41,10 +41,10 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 
 // ExpectUpdateAll to be called.
 func ExpectUpdateAll(r *Repository, query rel.Query, mutates []rel.Mutate) *MutateAll {
-	return expectMutateAll(r, "UpdateAll", query, mutates)
+	return expectMutateAll(r, "UpdateAll", r.ctxData, query, mutates)
 }
 
 // ExpectDeleteAll to be called.
 func ExpectDeleteAll(r *Repository, query rel.Query) *MutateAll {
-	return expectMutateAll(r, "DeleteAll", query)
+	return expectMutateAll(r, "DeleteAll", r.ctxData, query)
 }

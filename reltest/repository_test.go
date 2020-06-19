@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +40,12 @@ type Book struct {
 }
 
 func TestRepository_Adapter(t *testing.T) {
-	assert.Nil(t, (&Repository{}).Adapter())
+	var (
+		ctx  = context.TODO()
+		repo = New()
+	)
+
+	assert.Nil(t, repo.Adapter(ctx))
 }
 
 func TestRepository_Instrumentation(t *testing.T) {
@@ -61,10 +67,26 @@ func TestRepository_Transaction(t *testing.T) {
 
 	repo.ExpectTransaction(func(repo *Repository) {
 		repo.ExpectInsert()
+
+		repo.ExpectTransaction(func(repo *Repository) {
+			repo.ExpectFind(where.Eq("id", 1))
+
+			repo.ExpectTransaction(func(repo *Repository) {
+				repo.ExpectDelete()
+			})
+		})
 	})
 
-	assert.Nil(t, repo.Transaction(context.TODO(), func(repo rel.Repository) error {
-		return repo.Insert(context.TODO(), &result)
+	assert.Nil(t, repo.Transaction(context.TODO(), func(ctx context.Context) error {
+		repo.MustInsert(ctx, &result)
+
+		return repo.Transaction(ctx, func(ctx context.Context) error {
+			repo.MustFind(ctx, &result, where.Eq("id", 1))
+
+			return repo.Transaction(ctx, func(ctx context.Context) error {
+				return repo.Delete(ctx, &result)
+			})
+		})
 	}))
 
 	assert.Equal(t, book, result)
@@ -82,8 +104,8 @@ func TestRepository_Transaction_error(t *testing.T) {
 		repo.ExpectInsert().ConnectionClosed()
 	})
 
-	assert.Equal(t, sql.ErrConnDone, repo.Transaction(context.TODO(), func(repo rel.Repository) error {
-		repo.MustInsert(context.TODO(), &result)
+	assert.Equal(t, sql.ErrConnDone, repo.Transaction(context.TODO(), func(ctx context.Context) error {
+		repo.MustInsert(ctx, &result)
 		return nil
 	}))
 
@@ -100,7 +122,7 @@ func TestRepository_Transaction_panic(t *testing.T) {
 	})
 
 	assert.Panics(t, func() {
-		_ = repo.Transaction(context.TODO(), func(repo rel.Repository) error {
+		_ = repo.Transaction(context.TODO(), func(ctx context.Context) error {
 			panic("error")
 		})
 	})
@@ -118,7 +140,7 @@ func TestRepository_Transaction_runtimerError(t *testing.T) {
 	})
 
 	assert.Panics(t, func() {
-		_ = repo.Transaction(context.TODO(), func(repo rel.Repository) error {
+		_ = repo.Transaction(context.TODO(), func(ctx context.Context) error {
 			_ = book.ID
 			return nil
 		})

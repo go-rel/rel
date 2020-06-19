@@ -26,7 +26,7 @@ func (a *Aggregate) ConnectionClosed() {
 func ExpectAggregate(r *Repository, query rel.Query, aggregate string, field string) *Aggregate {
 	return &Aggregate{
 		Expect: newExpect(r, "Aggregate",
-			[]interface{}{query, aggregate, field},
+			[]interface{}{r.ctxData, query, aggregate, field},
 			[]interface{}{0, nil},
 		),
 	}
@@ -36,7 +36,7 @@ func ExpectAggregate(r *Repository, query rel.Query, aggregate string, field str
 func ExpectCount(r *Repository, collection string, queriers []rel.Querier) *Aggregate {
 	return &Aggregate{
 		Expect: newExpect(r, "Count",
-			[]interface{}{collection, queriers},
+			[]interface{}{r.ctxData, collection, queriers},
 			[]interface{}{0, nil},
 		),
 	}

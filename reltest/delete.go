@@ -14,7 +14,7 @@ type Delete struct {
 
 // For match expect calls for given record.
 func (d *Delete) For(record interface{}) *Delete {
-	d.Arguments[0] = record
+	d.Arguments[1] = record
 	return d
 }
 
@@ -27,6 +27,6 @@ func (d *Delete) ForType(typ string) *Delete {
 // ExpectDelete to be called.
 func ExpectDelete(r *Repository, options []rel.Cascade) *Delete {
 	return &Delete{
-		Expect: newExpect(r, "Delete", []interface{}{mock.Anything, options}, []interface{}{nil}),
+		Expect: newExpect(r, "Delete", []interface{}{r.ctxData, mock.Anything, options}, []interface{}{nil}),
 	}
 }

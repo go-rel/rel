@@ -14,7 +14,7 @@ type Mutate struct {
 
 // For match expect calls for given record.
 func (m *Mutate) For(record interface{}) *Mutate {
-	m.Arguments[0] = record
+	m.Arguments[1] = record
 	return m
 }
 
@@ -40,7 +40,7 @@ func expectMutate(r *Repository, methodName string, mutators []rel.Mutator) *Mut
 
 	em := &Mutate{
 		Expect: newExpect(r, methodName,
-			[]interface{}{mock.Anything, mutatorsArgument},
+			[]interface{}{r.ctxData, mock.Anything, mutatorsArgument},
 			[]interface{}{nil},
 		),
 	}
@@ -62,7 +62,7 @@ func ExpectUpdate(r *Repository, mutators []rel.Mutator) *Mutate {
 func ExpectInsertAll(r *Repository) *Mutate {
 	em := &Mutate{
 		Expect: newExpect(r, "InsertAll",
-			[]interface{}{mock.Anything},
+			[]interface{}{r.ctxData, mock.Anything},
 			[]interface{}{nil},
 		),
 	}

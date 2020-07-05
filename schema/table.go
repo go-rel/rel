@@ -9,8 +9,7 @@ type Table struct {
 
 // Column defines a column with name and type.
 func (t *Table) Column(name string, typ ColumnType, options ...Option) {
-	column := Column{Name: name, Type: typ}
-	t.Columns = append(t.Columns, column)
+	t.Columns = append(t.Columns, addColumn(name, typ, options...))
 }
 
 // Index defines an index for columns.
@@ -74,4 +73,44 @@ func (t *Table) Timestamp(name string, options ...Option) {
 	t.Column(name, Timestamp, options...)
 }
 
-func (t Table) migrate() {}
+// CreateTable Migrator.
+type CreateTable Table
+
+func (ct CreateTable) migrate() {}
+
+// AlterTable Migrator.
+type AlterTable struct {
+	Table
+}
+
+// RenameColumn to a new name.
+func (at *AlterTable) RenameColumn(name string, newName string, options ...Option) {
+	at.Columns = append(at.Columns, renameColumn(name, newName, options...))
+}
+
+// AlterColumn from this table.
+func (at *AlterTable) AlterColumn(name string, typ ColumnType, options ...Option) {
+	at.Columns = append(at.Columns, alterColumn(name, typ, options...))
+}
+
+// DropColumn from this table.
+func (at *AlterTable) DropColumn(name string, options ...Option) {
+	at.Columns = append(at.Columns, dropColumn(name, options...))
+}
+
+func (at AlterTable) migrate() {}
+
+// RenameTable Migrator.
+type RenameTable struct {
+	Name    string
+	NewName string
+}
+
+func (rt RenameTable) migrate() {}
+
+// DropTable Migrator.
+type DropTable struct {
+	Name string
+}
+
+func (dt DropTable) migrate() {}

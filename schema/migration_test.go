@@ -47,7 +47,8 @@ func TestMigration_tables(t *testing.T) {
 	assert.Equal(t, Migration{
 		Version: 20200705164100,
 		Ups: Migrates{
-			CreateTable{
+			Table{
+				Op:   CreateTableOp,
 				Name: "products",
 				Columns: []Column{
 					{Name: "id", Type: Integer},
@@ -55,43 +56,134 @@ func TestMigration_tables(t *testing.T) {
 					{Name: "description", Type: Text},
 				},
 			},
-			AlterTable{
-				Table: Table{
-					Name: "users",
-					Columns: []Column{
-						{Name: "verified", Type: Boolean},
-						{Name: "name", NewName: "fullname", Op: RenameColumn},
-					},
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "verified", Type: Boolean, Op: AddColumnOp},
+					{Name: "name", NewName: "fullname", Op: RenameColumnOp},
 				},
 			},
-			RenameTable{
+			Table{
+				Op:      RenameTableOp,
 				Name:    "trxs",
 				NewName: "transactions",
 			},
-			DropTable{Name: "logs"},
+			Table{
+				Op:   DropTableOp,
+				Name: "logs",
+			},
 		},
 		Downs: Migrates{
-			CreateTable{
+			Table{
+				Op:   CreateTableOp,
 				Name: "logs",
 				Columns: []Column{
 					{Name: "id", Type: Integer},
 					{Name: "value", Type: String},
 				},
 			},
-			RenameTable{
+			Table{
+				Op:      RenameTableOp,
 				Name:    "transactions",
 				NewName: "trxs",
 			},
-			AlterTable{
-				Table: Table{
-					Name: "users",
-					Columns: []Column{
-						{Name: "verified", Op: DropColumn},
-						{Name: "fullname", NewName: "name", Op: RenameColumn},
-					},
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "verified", Op: DropColumnOp},
+					{Name: "fullname", NewName: "name", Op: RenameColumnOp},
 				},
 			},
-			DropTable{Name: "products"},
+			Table{
+				Op:   DropTableOp,
+				Name: "products",
+			},
+		},
+	}, migration)
+}
+
+func TestMigration_columns(t *testing.T) {
+	var (
+		migration = NewMigration(20200805165500)
+	)
+
+	migration.Up(func(m *Migrates) {
+		m.AddColumn("products", "description", String)
+		m.AlterColumn("products", "sale", Boolean)
+		m.RenameColumn("users", "name", "fullname")
+		m.DropColumn("users", "verified")
+	})
+
+	migration.Down(func(m *Migrates) {
+		m.AddColumn("users", "verified", Boolean)
+		m.RenameColumn("users", "fullname", "name")
+		m.AlterColumn("products", "sale", Integer)
+		m.DropColumn("products", "description")
+	})
+
+	assert.Equal(t, Migration{
+		Version: 20200805165500,
+		Ups: Migrates{
+			Table{
+				Op:   AlterTableOp,
+				Name: "products",
+				Columns: []Column{
+					{Name: "description", Type: String, Op: AddColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "products",
+				Columns: []Column{
+					{Name: "sale", Type: Boolean, Op: AlterColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "name", NewName: "fullname", Op: RenameColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "verified", Op: DropColumnOp},
+				},
+			},
+		},
+		Downs: Migrates{
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "verified", Type: Boolean, Op: AddColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "users",
+				Columns: []Column{
+					{Name: "fullname", NewName: "name", Op: RenameColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "products",
+				Columns: []Column{
+					{Name: "sale", Type: Integer, Op: AlterColumnOp},
+				},
+			},
+			Table{
+				Op:   AlterTableOp,
+				Name: "products",
+				Columns: []Column{
+					{Name: "description", Op: DropColumnOp},
+				},
+			},
 		},
 	}, migration)
 }

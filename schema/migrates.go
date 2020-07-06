@@ -1,6 +1,8 @@
 package schema
 
-import "github.com/Fs02/rel"
+import (
+	"github.com/Fs02/rel"
+)
 
 // Migrator private interface.
 type Migrator interface {
@@ -16,47 +18,54 @@ func (m *Migrates) add(migrator Migrator) {
 
 // CreateTable with name and its definition.
 func (m *Migrates) CreateTable(name string, fn func(t *Table), options ...Option) {
-	table := Table{Name: name}
-	fn(&table)
-	m.add(CreateTable(table))
-}
-
-// AlterTable with name and its definition.
-func (m *Migrates) AlterTable(name string, fn func(t *AlterTable), options ...Option) {
-	table := AlterTable{Table: Table{Name: name}}
+	table := createTable(name, options)
 	fn(&table)
 	m.add(table)
 }
 
+// AlterTable with name and its definition.
+func (m *Migrates) AlterTable(name string, fn func(t *AlterTable), options ...Option) {
+	table := alterTable(name, options)
+	fn(&table)
+	m.add(table.Table)
+}
+
 // RenameTable by name.
-func (m *Migrates) RenameTable(name string, newName string) {
-	m.add(RenameTable{Name: name, NewName: newName})
+func (m *Migrates) RenameTable(name string, newName string, options ...Option) {
+	m.add(renameTable(name, newName, options))
 }
 
 // DropTable by name.
-func (m *Migrates) DropTable(name string) {
-	m.add(DropTable{Name: name})
+func (m *Migrates) DropTable(name string, options ...Option) {
+	m.add(dropTable(name, options))
 }
 
 // AddColumn with name and type.
 func (m *Migrates) AddColumn(table string, name string, typ ColumnType, options ...Option) {
-	at := AlterTable{Table: Table{Name: name}}
+	at := alterTable(table, options)
 	at.Column(name, typ, options...)
-	m.add(at)
+	m.add(at.Table)
+}
+
+// AlterColumn by name.
+func (m *Migrates) AlterColumn(table string, name string, typ ColumnType, options ...Option) {
+	at := alterTable(table, options)
+	at.AlterColumn(name, typ, options...)
+	m.add(at.Table)
 }
 
 // RenameColumn by name.
 func (m *Migrates) RenameColumn(table string, name string, newName string, options ...Option) {
-	at := AlterTable{Table: Table{Name: name}}
+	at := alterTable(table, options)
 	at.RenameColumn(name, newName, options...)
-	m.add(at)
+	m.add(at.Table)
 }
 
 // DropColumn by name.
 func (m *Migrates) DropColumn(table string, name string, options ...Option) {
-	at := AlterTable{Table: Table{Name: name}}
+	at := alterTable(table, options)
 	at.DropColumn(name, options...)
-	m.add(at)
+	m.add(at.Table)
 }
 
 // AddIndex for columns.

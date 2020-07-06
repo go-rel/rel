@@ -4,14 +4,14 @@ package schema
 type ColumnOp uint8
 
 const (
-	// AddColumn operation.
-	AddColumn ColumnOp = iota
-	// AlterColumn operation.
-	AlterColumn
-	// RenameColumn operation.
-	RenameColumn
-	// DropColumn operation.
-	DropColumn
+	// AddColumnOp operation.
+	AddColumnOp ColumnOp = iota
+	// AlterColumnOp operation.
+	AlterColumnOp
+	// RenameColumnOp operation.
+	RenameColumnOp
+	// DropColumnOp operation.
+	DropColumnOp
 )
 
 // ColumnType definition.
@@ -44,39 +44,45 @@ const (
 
 // Column definition.
 type Column struct {
-	Op      ColumnOp
-	Name    string
-	Type    ColumnType
-	NewName string
+	Op        ColumnOp
+	Name      string
+	Type      ColumnType
+	NewName   string
+	Limit     int
+	Default   interface{}
+	Null      bool
+	Precision int
+	Scale     int
+	Comment   string
 }
 
-func addColumn(name string, typ ColumnType, options ...Option) Column {
+func addColumn(name string, typ ColumnType, options []Option) Column {
 	return Column{
-		Op:   AddColumn,
+		Op:   AddColumnOp,
 		Name: name,
 		Type: typ,
 	}
 }
 
-func alterColumn(name string, typ ColumnType, options ...Option) Column {
+func alterColumn(name string, typ ColumnType, options []Option) Column {
 	return Column{
-		Op:   AlterColumn,
+		Op:   AlterColumnOp,
 		Name: name,
 		Type: typ,
 	}
 }
 
-func renameColumn(name string, newName string, options ...Option) Column {
+func renameColumn(name string, newName string, options []Option) Column {
 	return Column{
-		Op:      RenameColumn,
+		Op:      RenameColumnOp,
 		Name:    name,
 		NewName: newName,
 	}
 }
 
-func dropColumn(name string, options ...Option) Column {
+func dropColumn(name string, options []Option) Column {
 	return Column{
-		Op:   DropColumn,
+		Op:   DropColumnOp,
 		Name: name,
 	}
 }

@@ -1,15 +1,32 @@
 package schema
 
+// TableOp definition.
+type TableOp uint8
+
+const (
+	// CreateTableOp operation.
+	CreateTableOp TableOp = iota
+	// AlterTableOp operation.
+	AlterTableOp
+	// RenameTableOp operation.
+	RenameTableOp
+	// DropTableOp operation.
+	DropTableOp
+)
+
 // Table definition.
 type Table struct {
+	Op      TableOp
 	Name    string
+	NewName string
 	Columns []Column
 	Indices []Index
+	Options string
 }
 
 // Column defines a column with name and type.
 func (t *Table) Column(name string, typ ColumnType, options ...Option) {
-	t.Columns = append(t.Columns, addColumn(name, typ, options...))
+	t.Columns = append(t.Columns, addColumn(name, typ, options))
 }
 
 // Index defines an index for columns.
@@ -73,10 +90,7 @@ func (t *Table) Timestamp(name string, options ...Option) {
 	t.Column(name, Timestamp, options...)
 }
 
-// CreateTable Migrator.
-type CreateTable Table
-
-func (ct CreateTable) migrate() {}
+func (t Table) migrate() {}
 
 // AlterTable Migrator.
 type AlterTable struct {
@@ -85,32 +99,46 @@ type AlterTable struct {
 
 // RenameColumn to a new name.
 func (at *AlterTable) RenameColumn(name string, newName string, options ...Option) {
-	at.Columns = append(at.Columns, renameColumn(name, newName, options...))
+	at.Columns = append(at.Columns, renameColumn(name, newName, options))
 }
 
 // AlterColumn from this table.
 func (at *AlterTable) AlterColumn(name string, typ ColumnType, options ...Option) {
-	at.Columns = append(at.Columns, alterColumn(name, typ, options...))
+	at.Columns = append(at.Columns, alterColumn(name, typ, options))
 }
 
 // DropColumn from this table.
 func (at *AlterTable) DropColumn(name string, options ...Option) {
-	at.Columns = append(at.Columns, dropColumn(name, options...))
+	at.Columns = append(at.Columns, dropColumn(name, options))
 }
 
-func (at AlterTable) migrate() {}
-
-// RenameTable Migrator.
-type RenameTable struct {
-	Name    string
-	NewName string
+func createTable(name string, options []Option) Table {
+	return Table{
+		Op:   CreateTableOp,
+		Name: name,
+	}
 }
 
-func (rt RenameTable) migrate() {}
-
-// DropTable Migrator.
-type DropTable struct {
-	Name string
+func alterTable(name string, options []Option) AlterTable {
+	return AlterTable{
+		Table: Table{
+			Op:   AlterTableOp,
+			Name: name,
+		},
+	}
 }
 
-func (dt DropTable) migrate() {}
+func renameTable(name string, newName string, options []Option) Table {
+	return Table{
+		Op:      RenameTableOp,
+		Name:    name,
+		NewName: newName,
+	}
+}
+
+func dropTable(name string, options []Option) Table {
+	return Table{
+		Op:   DropTableOp,
+		Name: name,
+	}
+}

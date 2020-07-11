@@ -120,6 +120,8 @@ func TestMigration_columns(t *testing.T) {
 		m.AlterColumn("products", "sale", Boolean)
 		m.RenameColumn("users", "name", "fullname")
 		m.DropColumn("users", "verified")
+		m.AddIndex("products", []string{"sale"}, SimpleIndex)
+		m.RenameIndex("products", "store_id", "fk_store_id")
 	})
 
 	migration.Down(func(m *Migrates) {
@@ -127,6 +129,8 @@ func TestMigration_columns(t *testing.T) {
 		m.RenameColumn("users", "fullname", "name")
 		m.AlterColumn("products", "sale", Integer)
 		m.DropColumn("products", "description")
+		m.DropIndex("products", "sale")
+		m.RenameIndex("products", "fk_store_id", "store_id")
 	})
 
 	assert.Equal(t, Migration{
@@ -160,6 +164,20 @@ func TestMigration_columns(t *testing.T) {
 					Column{Name: "verified", Op: Drop},
 				},
 			},
+			Table{
+				Op:   Alter,
+				Name: "products",
+				Definitions: []interface{}{
+					Index{Columns: []string{"sale"}, Type: SimpleIndex, Op: Add},
+				},
+			},
+			Table{
+				Op:   Alter,
+				Name: "products",
+				Definitions: []interface{}{
+					Index{Name: "store_id", NewName: "fk_store_id", Op: Rename},
+				},
+			},
 		},
 		Downs: Migrates{
 			Table{
@@ -188,6 +206,20 @@ func TestMigration_columns(t *testing.T) {
 				Name: "products",
 				Definitions: []interface{}{
 					Column{Name: "description", Op: Drop},
+				},
+			},
+			Table{
+				Op:   Alter,
+				Name: "products",
+				Definitions: []interface{}{
+					Index{Name: "sale", Op: Drop},
+				},
+			},
+			Table{
+				Op:   Alter,
+				Name: "products",
+				Definitions: []interface{}{
+					Index{Name: "fk_store_id", NewName: "store_id", Op: Rename},
 				},
 			},
 		},

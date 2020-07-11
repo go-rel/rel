@@ -1,9 +1,5 @@
 package schema
 
-import (
-	"github.com/Fs02/rel"
-)
-
 // Migrator private interface.
 type Migrator interface {
 	migrate()
@@ -91,5 +87,5 @@ func (m *Migrates) DropIndex(table string, name string, options ...IndexOption) 
 
 // Exec queries using repo.
 // Useful for data migration.
-func (m *Migrates) Exec(func(repo rel.Repository) error) {
-}
+// func (m *Migrates) Exec(func(repo rel.Repository) error) {
+// }

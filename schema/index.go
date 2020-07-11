@@ -4,8 +4,8 @@ package schema
 type IndexType string
 
 const (
-	// Simple IndexType.
-	Simple IndexType = "index"
+	// SimpleIndex IndexType.
+	SimpleIndex IndexType = "index"
 	// UniqueIndex IndexType.
 	UniqueIndex IndexType = "unique"
 	// PrimaryKey IndexType.
@@ -16,22 +16,15 @@ const (
 
 // Index definition.
 type Index struct {
-	Op        Op
-	Name      string
-	Type      IndexType
-	Columns   []string
-	Reference Reference
-	NewName   string
-	Comment   string
-	Options   string
-}
-
-// Reference definition.
-type Reference struct {
-	Table    string
-	Column   string
+	Op       Op
+	Name     string
+	Type     IndexType
+	Columns  []string // when fk: [column, fk table, fk column]
+	NewName  string
 	OnDelete string
 	OnUpdate string
+	Comment  string
+	Options  string
 }
 
 func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
@@ -48,12 +41,8 @@ func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
 func addForeignKey(column string, refTable string, refColumn string, options []IndexOption) Index {
 	index := Index{
 		Op:      Add,
-		Columns: []string{column},
-		Reference: Reference{
-			Table:  refTable,
-			Column: refColumn,
-		},
-		Type: ForeignKey,
+		Columns: []string{column, refTable, refColumn},
+		Type:    ForeignKey,
 	}
 
 	applyIndexOptions(&index, options)

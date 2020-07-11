@@ -106,7 +106,7 @@ type defaultValue struct {
 }
 
 func (d defaultValue) applyColumn(column *Column) {
-	column.Default = d
+	column.Default = d.value
 }
 
 // Default allows to set a default value on the column.).
@@ -125,12 +125,12 @@ func (n Name) applyIndex(index *Index) {
 type OnDelete string
 
 func (od OnDelete) applyIndex(index *Index) {
-	index.Reference.OnDelete = string(od)
+	index.OnDelete = string(od)
 }
 
 // OnUpdate option for foreign key index.
 type OnUpdate string
 
 func (ou OnUpdate) applyIndex(index *Index) {
-	index.Reference.OnUpdate = string(ou)
+	index.OnUpdate = string(ou)
 }

@@ -16,6 +16,8 @@ func TestMigration_tables(t *testing.T) {
 			t.Integer("id")
 			t.String("name")
 			t.Text("description")
+
+			t.PrimaryKey("id")
 		})
 
 		m.AlterTable("users", func(t *AlterTable) {
@@ -32,6 +34,8 @@ func TestMigration_tables(t *testing.T) {
 		m.CreateTable("logs", func(t *Table) {
 			t.Integer("id")
 			t.String("value")
+
+			t.PrimaryKey("id")
 		})
 
 		m.RenameTable("transactions", "trxs")
@@ -48,56 +52,58 @@ func TestMigration_tables(t *testing.T) {
 		Version: 20200705164100,
 		Ups: Migrates{
 			Table{
-				Op:   CreateTableOp,
+				Op:   Add,
 				Name: "products",
-				Columns: []Column{
-					{Name: "id", Type: Integer},
-					{Name: "name", Type: String},
-					{Name: "description", Type: Text},
+				Definitions: []interface{}{
+					Column{Name: "id", Type: Integer},
+					Column{Name: "name", Type: String},
+					Column{Name: "description", Type: Text},
+					Index{Columns: []string{"id"}, Type: PrimaryKey},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "verified", Type: Boolean, Op: AddColumnOp},
-					{Name: "name", NewName: "fullname", Op: RenameColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "verified", Type: Boolean, Op: Add},
+					Column{Name: "name", NewName: "fullname", Op: Rename},
 				},
 			},
 			Table{
-				Op:      RenameTableOp,
+				Op:      Rename,
 				Name:    "trxs",
 				NewName: "transactions",
 			},
 			Table{
-				Op:   DropTableOp,
+				Op:   Drop,
 				Name: "logs",
 			},
 		},
 		Downs: Migrates{
 			Table{
-				Op:   CreateTableOp,
+				Op:   Add,
 				Name: "logs",
-				Columns: []Column{
-					{Name: "id", Type: Integer},
-					{Name: "value", Type: String},
+				Definitions: []interface{}{
+					Column{Name: "id", Type: Integer},
+					Column{Name: "value", Type: String},
+					Index{Columns: []string{"id"}, Type: PrimaryKey},
 				},
 			},
 			Table{
-				Op:      RenameTableOp,
+				Op:      Rename,
 				Name:    "transactions",
 				NewName: "trxs",
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "verified", Op: DropColumnOp},
-					{Name: "fullname", NewName: "name", Op: RenameColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "verified", Op: Drop},
+					Column{Name: "fullname", NewName: "name", Op: Rename},
 				},
 			},
 			Table{
-				Op:   DropTableOp,
+				Op:   Drop,
 				Name: "products",
 			},
 		},
@@ -127,61 +133,61 @@ func TestMigration_columns(t *testing.T) {
 		Version: 20200805165500,
 		Ups: Migrates{
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "products",
-				Columns: []Column{
-					{Name: "description", Type: String, Op: AddColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "description", Type: String, Op: Add},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "products",
-				Columns: []Column{
-					{Name: "sale", Type: Boolean, Op: AlterColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "sale", Type: Boolean, Op: Alter},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "name", NewName: "fullname", Op: RenameColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "name", NewName: "fullname", Op: Rename},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "verified", Op: DropColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "verified", Op: Drop},
 				},
 			},
 		},
 		Downs: Migrates{
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "verified", Type: Boolean, Op: AddColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "verified", Type: Boolean, Op: Add},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "users",
-				Columns: []Column{
-					{Name: "fullname", NewName: "name", Op: RenameColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "fullname", NewName: "name", Op: Rename},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "products",
-				Columns: []Column{
-					{Name: "sale", Type: Integer, Op: AlterColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "sale", Type: Integer, Op: Alter},
 				},
 			},
 			Table{
-				Op:   AlterTableOp,
+				Op:   Alter,
 				Name: "products",
-				Columns: []Column{
-					{Name: "description", Op: DropColumnOp},
+				Definitions: []interface{}{
+					Column{Name: "description", Op: Drop},
 				},
 			},
 		},

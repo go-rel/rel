@@ -1,38 +1,18 @@
 package schema
 
-// TableOp definition.
-type TableOp uint8
-
-const (
-	// CreateTableOp operation.
-	CreateTableOp TableOp = iota
-	// AlterTableOp operation.
-	AlterTableOp
-	// RenameTableOp operation.
-	RenameTableOp
-	// DropTableOp operation.
-	DropTableOp
-)
-
 // Table definition.
 type Table struct {
-	Op      TableOp
-	Name    string
-	NewName string
-	Columns []Column
-	Indices []Index
-	Options string
+	Op          Op
+	Name        string
+	NewName     string
+	Definitions []interface{}
+	Comment     string
+	Options     string
 }
 
 // Column defines a column with name and type.
 func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
-	t.Columns = append(t.Columns, addColumn(name, typ, options))
-}
-
-// Index defines an index for columns.
-func (t *Table) Index(columns []string, options ...ColumnOption) {
-	index := Index{Columns: columns}
-	t.Indices = append(t.Indices, index)
+	t.Definitions = append(t.Definitions, addColumn(name, typ, options))
 }
 
 // Boolean defines a column with name and Boolean type.
@@ -95,6 +75,26 @@ func (t *Table) Timestamp(name string, options ...ColumnOption) {
 	t.Column(name, Timestamp, options...)
 }
 
+// Index defines an index for columns.
+func (t *Table) Index(columns []string, typ IndexType, options ...IndexOption) {
+	t.Definitions = append(t.Definitions, addIndex(columns, typ, options))
+}
+
+// Unique defines an unique index for columns.
+func (t *Table) Unique(columns []string, options ...IndexOption) {
+	t.Index(columns, UniqueIndex, options...)
+}
+
+// PrimaryKey defines an primary key for table.
+func (t *Table) PrimaryKey(column string, options ...IndexOption) {
+	t.Index([]string{column}, PrimaryKey, options...)
+}
+
+// ForeignKey defines foreign key index.
+func (t *Table) ForeignKey(column string, refTable string, refColumn string, options ...IndexOption) {
+	t.Definitions = append(t.Definitions, addForeignKey(column, refTable, refColumn, options))
+}
+
 func (t Table) migrate() {}
 
 // AlterTable Migrator.
@@ -104,22 +104,32 @@ type AlterTable struct {
 
 // RenameColumn to a new name.
 func (at *AlterTable) RenameColumn(name string, newName string, options ...ColumnOption) {
-	at.Columns = append(at.Columns, renameColumn(name, newName, options))
+	at.Definitions = append(at.Definitions, renameColumn(name, newName, options))
 }
 
 // AlterColumn from this table.
 func (at *AlterTable) AlterColumn(name string, typ ColumnType, options ...ColumnOption) {
-	at.Columns = append(at.Columns, alterColumn(name, typ, options))
+	at.Definitions = append(at.Definitions, alterColumn(name, typ, options))
 }
 
 // DropColumn from this table.
 func (at *AlterTable) DropColumn(name string, options ...ColumnOption) {
-	at.Columns = append(at.Columns, dropColumn(name, options))
+	at.Definitions = append(at.Definitions, dropColumn(name, options))
+}
+
+// RenameIndex to a new name.
+func (at *AlterTable) RenameIndex(name string, newName string, options ...IndexOption) {
+	at.Definitions = append(at.Definitions, renameIndex(name, newName, options))
+}
+
+// DropIndex from this table.
+func (at *AlterTable) DropIndex(name string, options ...IndexOption) {
+	at.Definitions = append(at.Definitions, dropIndex(name, options))
 }
 
 func createTable(name string, options []TableOption) Table {
 	table := Table{
-		Op:   CreateTableOp,
+		Op:   Add,
 		Name: name,
 	}
 
@@ -129,7 +139,7 @@ func createTable(name string, options []TableOption) Table {
 
 func alterTable(name string, options []TableOption) AlterTable {
 	table := Table{
-		Op:   AlterTableOp,
+		Op:   Alter,
 		Name: name,
 	}
 
@@ -139,7 +149,7 @@ func alterTable(name string, options []TableOption) AlterTable {
 
 func renameTable(name string, newName string, options []TableOption) Table {
 	table := Table{
-		Op:      RenameTableOp,
+		Op:      Rename,
 		Name:    name,
 		NewName: newName,
 	}
@@ -150,26 +160,10 @@ func renameTable(name string, newName string, options []TableOption) Table {
 
 func dropTable(name string, options []TableOption) Table {
 	table := Table{
-		Op:   DropTableOp,
+		Op:   Drop,
 		Name: name,
 	}
 
 	applyTableOptions(&table, options)
 	return table
-}
-
-// TableOption functor.
-type TableOption func(table *Table)
-
-// Options allow additional SQL fragment to be used when creating a table.
-func Options(options string) TableOption {
-	return func(table *Table) {
-		table.Options = options
-	}
-}
-
-func applyTableOptions(table *Table, options []TableOption) {
-	for i := range options {
-		options[i](table)
-	}
 }

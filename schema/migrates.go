@@ -69,15 +69,24 @@ func (m *Migrates) DropColumn(table string, name string, options ...ColumnOption
 }
 
 // AddIndex for columns.
-func (m *Migrates) AddIndex(table string, column []string) {
+func (m *Migrates) AddIndex(table string, column []string, typ IndexType, options ...IndexOption) {
+	at := alterTable(table, nil)
+	at.Index(column, typ, options...)
+	m.add(at.Table)
 }
 
 // RenameIndex by name.
-func (m *Migrates) RenameIndex(table string, name string, newName string) {
+func (m *Migrates) RenameIndex(table string, name string, newName string, options ...IndexOption) {
+	at := alterTable(table, nil)
+	at.RenameIndex(name, newName, options...)
+	m.add(at.Table)
 }
 
 // DropIndex by name.
-func (m *Migrates) DropIndex(table string, name string) {
+func (m *Migrates) DropIndex(table string, name string, options ...IndexOption) {
+	at := alterTable(table, nil)
+	at.DropIndex(name, options...)
+	m.add(at.Table)
 }
 
 // Exec queries using repo.

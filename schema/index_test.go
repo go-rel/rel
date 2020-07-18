@@ -38,13 +38,17 @@ func TestAddForeignKey(t *testing.T) {
 	)
 
 	assert.Equal(t, Index{
-		Type:     ForeignKey,
-		Name:     "fk",
-		Columns:  []string{"table_id", "table", "id"},
-		OnDelete: "cascade",
-		OnUpdate: "cascade",
-		Comment:  "comment",
-		Options:  "options",
+		Type:    ForeignKey,
+		Name:    "fk",
+		Columns: []string{"table_id"},
+		Reference: ForeignKeyReference{
+			Table:    "table",
+			Columns:  []string{"id"},
+			OnDelete: "cascade",
+			OnUpdate: "cascade",
+		},
+		Comment: "comment",
+		Options: "options",
 	}, index)
 }
 

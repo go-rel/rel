@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/schema"
 	"github.com/Fs02/rel/sort"
 	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,88 @@ func BenchmarkBuilder_Find(b *testing.B) {
 			Offset(10).Limit(10)
 
 		builder.Find(query)
+	}
+}
+
+func TestBuilder_Table(t *testing.T) {
+	var (
+		config = &Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
+	tests := []struct {
+		result string
+		table  schema.Table
+	}{
+		{
+			result: "CREATE TABLE `products` (`id` INT, `name` VARCHAR(255), `description` TEXT, PRIMARY KEY (`id`));",
+			table: schema.Table{
+				Op:   schema.Add,
+				Name: "products",
+				Definitions: []interface{}{
+					schema.Column{Name: "id", Type: schema.Int},
+					schema.Column{Name: "name", Type: schema.String},
+					schema.Column{Name: "description", Type: schema.Text},
+					schema.Index{Columns: []string{"id"}, Type: schema.PrimaryKey},
+				},
+			},
+		},
+		{
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `binary` BINARY(255), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE INDEX `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) COMMENT 'TEST' Engine=InnoDB;",
+			table: schema.Table{
+				Op:   schema.Add,
+				Name: "columns",
+				Definitions: []interface{}{
+					schema.Column{Name: "bool", Type: schema.Bool, Required: true, Default: false},
+					schema.Column{Name: "int", Type: schema.Int, Limit: 11, Unsigned: true},
+					schema.Column{Name: "bigint", Type: schema.BigInt, Limit: 20, Unsigned: true},
+					schema.Column{Name: "float", Type: schema.Float, Precision: 24, Unsigned: true},
+					schema.Column{Name: "decimal", Type: schema.Decimal, Precision: 6, Scale: 2, Unsigned: true},
+					schema.Column{Name: "string", Type: schema.String, Limit: 144},
+					schema.Column{Name: "text", Type: schema.Text, Limit: 1000},
+					schema.Column{Name: "binary", Type: schema.Binary, Limit: 255},
+					schema.Column{Name: "date", Type: schema.Date},
+					schema.Column{Name: "datetime", Type: schema.DateTime},
+					schema.Column{Name: "time", Type: schema.Time},
+					schema.Column{Name: "timestamp", Type: schema.Timestamp},
+					schema.Column{Name: "blob", Type: "blob"},
+					schema.Index{Columns: []string{"int"}, Type: schema.PrimaryKey},
+					schema.Index{Columns: []string{"date"}, Type: schema.UniqueIndex, Name: "date_unique"},
+					schema.Index{Columns: []string{"datetime"}, Type: schema.SimpleIndex},
+					schema.Index{Columns: []string{"int", "string"}, Type: schema.ForeignKey, Reference: schema.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
+				},
+				Options: "Engine=InnoDB",
+				Comment: "TEST",
+			},
+		},
+		{
+			result: "RENAME TABLE `columns` TO `definitions`;",
+			table: schema.Table{
+				Op:      schema.Rename,
+				Name:    "columns",
+				NewName: "definitions",
+			},
+		},
+		{
+			result: "DROP TABLE `columns`;",
+			table: schema.Table{
+				Op:   schema.Drop,
+				Name: "columns",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.result, func(t *testing.T) {
+			var (
+				builder = NewBuilder(config)
+				result  = builder.Table(test.table)
+			)
+
+			assert.Equal(t, test.result, result)
+		})
 	}
 }
 

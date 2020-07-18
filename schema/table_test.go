@@ -18,20 +18,20 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
-	t.Run("Boolean", func(t *testing.T) {
-		table.Boolean("boolean", Comment("boolean"))
+	t.Run("Bool", func(t *testing.T) {
+		table.Bool("boolean", Comment("boolean"))
 		assert.Equal(t, Column{
 			Name:    "boolean",
-			Type:    Boolean,
+			Type:    Bool,
 			Comment: "boolean",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
-	t.Run("Integer", func(t *testing.T) {
-		table.Integer("integer", Comment("integer"))
+	t.Run("Int", func(t *testing.T) {
+		table.Int("integer", Comment("integer"))
 		assert.Equal(t, Column{
 			Name:    "integer",
-			Type:    Integer,
+			Type:    Int,
 			Comment: "integer",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
@@ -156,8 +156,12 @@ func TestTable(t *testing.T) {
 	t.Run("ForeignKey", func(t *testing.T) {
 		table.ForeignKey("user_id", "users", "id", Comment("foreign key"))
 		assert.Equal(t, Index{
-			Columns: []string{"user_id", "users", "id"},
+			Columns: []string{"user_id"},
 			Type:    ForeignKey,
+			Reference: ForeignKeyReference{
+				Table:   "users",
+				Columns: []string{"id"},
+			},
 			Comment: "foreign key",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
@@ -176,11 +180,11 @@ func TestAlterTable(t *testing.T) {
 	})
 
 	t.Run("AlterColumn", func(t *testing.T) {
-		table.AlterColumn("column", Boolean, Comment("column"))
+		table.AlterColumn("column", Bool, Comment("column"))
 		assert.Equal(t, Column{
 			Op:      Alter,
 			Name:    "column",
-			Type:    Boolean,
+			Type:    Bool,
 			Comment: "column",
 		}, table.Definitions[len(table.Definitions)-1])
 	})

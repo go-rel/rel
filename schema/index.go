@@ -5,26 +5,33 @@ type IndexType string
 
 const (
 	// SimpleIndex IndexType.
-	SimpleIndex IndexType = "index"
+	SimpleIndex IndexType = "INDEX"
 	// UniqueIndex IndexType.
-	UniqueIndex IndexType = "unique"
+	UniqueIndex IndexType = "UNIQUE INDEX"
 	// PrimaryKey IndexType.
-	PrimaryKey IndexType = "primary key"
+	PrimaryKey IndexType = "PRIMARY KEY"
 	// ForeignKey IndexType.
-	ForeignKey IndexType = "foreign key"
+	ForeignKey IndexType = "FOREIGN KEY"
 )
+
+// ForeignKeyReference definition.
+type ForeignKeyReference struct {
+	Table    string
+	Columns  []string
+	OnDelete string
+	OnUpdate string
+}
 
 // Index definition.
 type Index struct {
-	Op       Op
-	Name     string
-	Type     IndexType
-	Columns  []string // when fk: [column, fk table, fk column]
-	NewName  string
-	OnDelete string
-	OnUpdate string
-	Comment  string
-	Options  string
+	Op        Op
+	Name      string
+	Type      IndexType
+	Columns   []string
+	NewName   string
+	Reference ForeignKeyReference
+	Comment   string
+	Options   string
 }
 
 func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
@@ -38,11 +45,16 @@ func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
 	return index
 }
 
+// TODO: support multi columns
 func addForeignKey(column string, refTable string, refColumn string, options []IndexOption) Index {
 	index := Index{
 		Op:      Add,
-		Columns: []string{column, refTable, refColumn},
 		Type:    ForeignKey,
+		Columns: []string{column},
+		Reference: ForeignKeyReference{
+			Table:   refTable,
+			Columns: []string{refColumn},
+		},
 	}
 
 	applyIndexOptions(&index, options)

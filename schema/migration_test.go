@@ -13,7 +13,7 @@ func TestMigration_tables(t *testing.T) {
 
 	migration.Up(func(m *Migrates) {
 		m.CreateTable("products", func(t *Table) {
-			t.Integer("id")
+			t.Int("id")
 			t.String("name")
 			t.Text("description")
 
@@ -21,7 +21,7 @@ func TestMigration_tables(t *testing.T) {
 		})
 
 		m.AlterTable("users", func(t *AlterTable) {
-			t.Boolean("verified")
+			t.Bool("verified")
 			t.RenameColumn("name", "fullname")
 		})
 
@@ -32,7 +32,7 @@ func TestMigration_tables(t *testing.T) {
 
 	migration.Down(func(m *Migrates) {
 		m.CreateTable("logs", func(t *Table) {
-			t.Integer("id")
+			t.Int("id")
 			t.String("value")
 
 			t.PrimaryKey("id")
@@ -55,7 +55,7 @@ func TestMigration_tables(t *testing.T) {
 				Op:   Add,
 				Name: "products",
 				Definitions: []interface{}{
-					Column{Name: "id", Type: Integer},
+					Column{Name: "id", Type: Int},
 					Column{Name: "name", Type: String},
 					Column{Name: "description", Type: Text},
 					Index{Columns: []string{"id"}, Type: PrimaryKey},
@@ -65,7 +65,7 @@ func TestMigration_tables(t *testing.T) {
 				Op:   Alter,
 				Name: "users",
 				Definitions: []interface{}{
-					Column{Name: "verified", Type: Boolean, Op: Add},
+					Column{Name: "verified", Type: Bool, Op: Add},
 					Column{Name: "name", NewName: "fullname", Op: Rename},
 				},
 			},
@@ -84,7 +84,7 @@ func TestMigration_tables(t *testing.T) {
 				Op:   Add,
 				Name: "logs",
 				Definitions: []interface{}{
-					Column{Name: "id", Type: Integer},
+					Column{Name: "id", Type: Int},
 					Column{Name: "value", Type: String},
 					Index{Columns: []string{"id"}, Type: PrimaryKey},
 				},
@@ -117,7 +117,7 @@ func TestMigration_columns(t *testing.T) {
 
 	migration.Up(func(m *Migrates) {
 		m.AddColumn("products", "description", String)
-		m.AlterColumn("products", "sale", Boolean)
+		m.AlterColumn("products", "sale", Bool)
 		m.RenameColumn("users", "name", "fullname")
 		m.DropColumn("users", "verified")
 		m.AddIndex("products", []string{"sale"}, SimpleIndex)
@@ -125,9 +125,9 @@ func TestMigration_columns(t *testing.T) {
 	})
 
 	migration.Down(func(m *Migrates) {
-		m.AddColumn("users", "verified", Boolean)
+		m.AddColumn("users", "verified", Bool)
 		m.RenameColumn("users", "fullname", "name")
-		m.AlterColumn("products", "sale", Integer)
+		m.AlterColumn("products", "sale", Int)
 		m.DropColumn("products", "description")
 		m.DropIndex("products", "sale")
 		m.RenameIndex("products", "fk_store_id", "store_id")
@@ -147,7 +147,7 @@ func TestMigration_columns(t *testing.T) {
 				Op:   Alter,
 				Name: "products",
 				Definitions: []interface{}{
-					Column{Name: "sale", Type: Boolean, Op: Alter},
+					Column{Name: "sale", Type: Bool, Op: Alter},
 				},
 			},
 			Table{
@@ -184,7 +184,7 @@ func TestMigration_columns(t *testing.T) {
 				Op:   Alter,
 				Name: "users",
 				Definitions: []interface{}{
-					Column{Name: "verified", Type: Boolean, Op: Add},
+					Column{Name: "verified", Type: Bool, Op: Add},
 				},
 			},
 			Table{
@@ -198,7 +198,7 @@ func TestMigration_columns(t *testing.T) {
 				Op:   Alter,
 				Name: "products",
 				Definitions: []interface{}{
-					Column{Name: "sale", Type: Integer, Op: Alter},
+					Column{Name: "sale", Type: Int, Op: Alter},
 				},
 			},
 			Table{

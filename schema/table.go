@@ -15,14 +15,14 @@ func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
 	t.Definitions = append(t.Definitions, addColumn(name, typ, options))
 }
 
-// Boolean defines a column with name and Boolean type.
-func (t *Table) Boolean(name string, options ...ColumnOption) {
-	t.Column(name, Boolean, options...)
+// Bool defines a column with name and Bool type.
+func (t *Table) Bool(name string, options ...ColumnOption) {
+	t.Column(name, Bool, options...)
 }
 
-// Integer defines a column with name and Integer type.
-func (t *Table) Integer(name string, options ...ColumnOption) {
-	t.Column(name, Integer, options...)
+// Int defines a column with name and Int type.
+func (t *Table) Int(name string, options ...ColumnOption) {
+	t.Column(name, Int, options...)
 }
 
 // BigInt defines a column with name and BigInt type.

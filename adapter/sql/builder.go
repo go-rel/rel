@@ -1,11 +1,13 @@
 package sql
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/Fs02/rel"
+	"github.com/Fs02/rel/schema"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -18,6 +20,256 @@ type Builder struct {
 	config      *Config
 	returnField string
 	count       int
+}
+
+// Table generates query for table creation and modification.
+func (b *Builder) Table(table schema.Table) string {
+	var buffer Buffer
+
+	switch table.Op {
+	case schema.Add:
+		b.createTable(&buffer, table)
+	case schema.Alter:
+		b.alterTable(&buffer, table)
+	case schema.Rename:
+		buffer.WriteString("RENAME TABLE ")
+		buffer.WriteString(b.escape(table.Name))
+		buffer.WriteString(" TO ")
+		buffer.WriteString(b.escape(table.NewName))
+		buffer.WriteByte(';')
+	case schema.Drop:
+		buffer.WriteString("DROP TABLE ")
+		buffer.WriteString(b.escape(table.Name))
+		buffer.WriteByte(';')
+	}
+
+	return buffer.String()
+}
+
+func (b *Builder) createTable(buffer *Buffer, table schema.Table) {
+	buffer.WriteString("CREATE TABLE ")
+	buffer.WriteString(b.escape(table.Name))
+	buffer.WriteString(" (")
+
+	for i, def := range table.Definitions {
+		if i > 0 {
+			buffer.WriteString(", ")
+		}
+		switch v := def.(type) {
+		case schema.Column:
+			b.column(buffer, v)
+		case schema.Index:
+			b.index(buffer, v)
+		}
+	}
+
+	buffer.WriteByte(')')
+	b.comment(buffer, table.Comment)
+	b.options(buffer, table.Options)
+	buffer.WriteByte(';')
+}
+
+func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
+	buffer.WriteString("ALTER TABLE ")
+	buffer.WriteString(b.escape(table.Name))
+	buffer.WriteByte(' ')
+
+	for i, def := range table.Definitions {
+		if i > 0 {
+			buffer.WriteString(", ")
+		}
+
+		switch v := def.(type) {
+		case schema.Column:
+			switch v.Op {
+			case schema.Add:
+				buffer.WriteString("ADD ")
+				b.column(buffer, v)
+			case schema.Alter: // TODO: use modify keyword?
+				buffer.WriteString("MODIFY ")
+				b.column(buffer, v)
+			case schema.Rename:
+				buffer.WriteString("RENAME COLUMN ")
+				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(" TO ")
+				buffer.WriteString(b.escape(v.NewName))
+			case schema.Drop:
+				buffer.WriteString("DROP COLUMN ")
+				buffer.WriteString(b.escape(v.Name))
+			}
+		case schema.Index:
+			switch v.Op {
+			case schema.Add:
+				buffer.WriteString("ADD ")
+				b.index(buffer, v)
+			case schema.Rename:
+				buffer.WriteString("RENAME INDEX ")
+				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(" TO ")
+				buffer.WriteString(b.escape(v.NewName))
+			case schema.Drop:
+				buffer.WriteString("DROP INDEX ")
+				buffer.WriteString(b.escape(v.Name))
+			}
+		}
+	}
+
+	b.options(buffer, table.Options)
+	buffer.WriteByte(';')
+}
+
+func (b *Builder) column(buffer *Buffer, column schema.Column) {
+	var (
+		m, n int
+		typ  string
+	)
+
+	// TODO: type mapping
+
+	switch column.Type {
+	case schema.Bool:
+		typ = "BOOL"
+	case schema.Int:
+		typ = "INT"
+		m = column.Limit
+	case schema.BigInt:
+		typ = "BIGINT"
+		m = column.Limit
+	case schema.Float:
+		typ = "FLOAT"
+		m = column.Precision
+	case schema.Decimal:
+		typ = "DECIMAL"
+		m = column.Precision
+		n = column.Scale
+	case schema.String:
+		typ = "VARCHAR"
+		m = column.Limit
+		if m == 0 {
+			m = 255
+		}
+	case schema.Text:
+		typ = "TEXT"
+		m = column.Limit
+	case schema.Binary:
+		typ = "BINARY"
+		m = column.Limit
+	case schema.Date:
+		typ = "DATE"
+	case schema.DateTime:
+		typ = "DATETIME"
+	case schema.Time:
+		typ = "TIME"
+	case schema.Timestamp:
+		// TODO: mysql automatically add on update options.
+		typ = "TIMESTAMP"
+	default:
+		typ = string(column.Type)
+	}
+
+	buffer.WriteString(b.escape(column.Name))
+	buffer.WriteByte(' ')
+	buffer.WriteString(typ)
+
+	if m != 0 {
+		buffer.WriteByte('(')
+		buffer.WriteString(strconv.Itoa(m))
+
+		if n != 0 {
+			buffer.WriteByte(',')
+			buffer.WriteString(strconv.Itoa(n))
+		}
+
+		buffer.WriteByte(')')
+	}
+
+	if column.Unsigned {
+		buffer.WriteString(" UNSIGNED")
+	}
+
+	if column.Required {
+		buffer.WriteString(" NOT NULL")
+	}
+
+	if column.Default != nil {
+		buffer.WriteString(" DEFAULT ")
+		// TODO: improve
+		bytes, _ := json.Marshal(column.Default)
+		buffer.Write(bytes)
+	}
+
+	b.comment(buffer, column.Comment)
+	b.options(buffer, column.Options)
+}
+
+func (b *Builder) index(buffer *Buffer, index schema.Index) {
+	var (
+		typ = string(index.Type)
+	)
+
+	// TODO: type mapping
+
+	buffer.WriteString(typ)
+
+	if index.Name != "" {
+		buffer.WriteByte(' ')
+		buffer.WriteString(b.escape(index.Name))
+	}
+
+	buffer.WriteString(" (")
+	for i, col := range index.Columns {
+		if i > 0 {
+			buffer.WriteString(", ")
+		}
+		buffer.WriteString(b.escape(col))
+	}
+	buffer.WriteString(")")
+
+	if index.Type == schema.ForeignKey {
+		buffer.WriteString(" REFERENCES ")
+		buffer.WriteString(b.escape(index.Reference.Table))
+
+		buffer.WriteString(" (")
+		for i, col := range index.Reference.Columns {
+			if i > 0 {
+				buffer.WriteString(", ")
+			}
+			buffer.WriteString(b.escape(col))
+		}
+		buffer.WriteString(")")
+
+		if onDelete := index.Reference.OnDelete; onDelete != "" {
+			buffer.WriteString(" ON DELETE ")
+			buffer.WriteString(onDelete)
+		}
+
+		if onUpdate := index.Reference.OnUpdate; onUpdate != "" {
+			buffer.WriteString(" ON UPDATE ")
+			buffer.WriteString(onUpdate)
+		}
+	}
+
+	b.comment(buffer, index.Comment)
+	b.options(buffer, index.Options)
+}
+
+func (b *Builder) comment(buffer *Buffer, comment string) {
+	if comment == "" {
+		return
+	}
+
+	buffer.WriteString(" COMMENT '")
+	buffer.WriteString(comment)
+	buffer.WriteByte('\'')
+}
+
+func (b *Builder) options(buffer *Buffer, options string) {
+	if options == "" {
+		return
+	}
+
+	buffer.WriteByte(' ')
+	buffer.WriteString(options)
 }
 
 // Find generates query for select.

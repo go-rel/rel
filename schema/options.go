@@ -125,12 +125,12 @@ func (n Name) applyIndex(index *Index) {
 type OnDelete string
 
 func (od OnDelete) applyIndex(index *Index) {
-	index.OnDelete = string(od)
+	index.Reference.OnDelete = string(od)
 }
 
 // OnUpdate option for foreign key index.
 type OnUpdate string
 
 func (ou OnUpdate) applyIndex(index *Index) {
-	index.OnUpdate = string(ou)
+	index.Reference.OnUpdate = string(ou)
 }

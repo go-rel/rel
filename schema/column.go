@@ -4,30 +4,30 @@ package schema
 type ColumnType string
 
 const (
-	// Boolean ColumnType.
-	Boolean ColumnType = "boolean"
-	// Integer ColumnType.
-	Integer ColumnType = "integer"
+	// Bool ColumnType.
+	Bool ColumnType = "BOOL"
+	// Int ColumnType.
+	Int ColumnType = "INT"
 	// BigInt ColumnType.
-	BigInt ColumnType = "bigint"
+	BigInt ColumnType = "BIGINT"
 	// Float ColumnType.
-	Float ColumnType = "float"
+	Float ColumnType = "FLOAT"
 	// Decimal ColumnType.
-	Decimal ColumnType = "decimal"
+	Decimal ColumnType = "DECIMAL"
 	// String ColumnType.
-	String ColumnType = "string"
+	String ColumnType = "STRING"
 	// Text ColumnType.
-	Text ColumnType = "text"
+	Text ColumnType = "TEXT"
 	// Binary ColumnType.
-	Binary ColumnType = "binary"
+	Binary ColumnType = "BINARY"
 	// Date ColumnType.
-	Date ColumnType = "date"
+	Date ColumnType = "DATE"
 	// DateTime ColumnType.
-	DateTime ColumnType = "datetime"
+	DateTime ColumnType = "DATETIME"
 	// Time ColumnType.
-	Time ColumnType = "time"
+	Time ColumnType = "TIME"
 	// Timestamp ColumnType.
-	Timestamp ColumnType = "timestamp"
+	Timestamp ColumnType = "TIMESTAMP"
 )
 
 // Column definition.

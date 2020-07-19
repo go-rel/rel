@@ -121,11 +121,49 @@ func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
 
 func (b *Builder) column(buffer *Buffer, column schema.Column) {
 	var (
-		m, n int
-		typ  string
+		typ, m, n = b.mapColumnType(column)
 	)
 
-	// TODO: type mapping
+	buffer.WriteString(b.escape(column.Name))
+	buffer.WriteByte(' ')
+	buffer.WriteString(typ)
+
+	if m != 0 {
+		buffer.WriteByte('(')
+		buffer.WriteString(strconv.Itoa(m))
+
+		if n != 0 {
+			buffer.WriteByte(',')
+			buffer.WriteString(strconv.Itoa(n))
+		}
+
+		buffer.WriteByte(')')
+	}
+
+	if column.Unsigned {
+		buffer.WriteString(" UNSIGNED")
+	}
+
+	if column.Required {
+		buffer.WriteString(" NOT NULL")
+	}
+
+	if column.Default != nil {
+		buffer.WriteString(" DEFAULT ")
+		// TODO: improve
+		bytes, _ := json.Marshal(column.Default)
+		buffer.Write(bytes)
+	}
+
+	b.comment(buffer, column.Comment)
+	b.options(buffer, column.Options)
+}
+
+func (b *Builder) mapColumnType(column schema.Column) (string, int, int) {
+	var (
+		typ  string
+		m, n int
+	)
 
 	switch column.Type {
 	case schema.Bool:
@@ -168,39 +206,7 @@ func (b *Builder) column(buffer *Buffer, column schema.Column) {
 		typ = string(column.Type)
 	}
 
-	buffer.WriteString(b.escape(column.Name))
-	buffer.WriteByte(' ')
-	buffer.WriteString(typ)
-
-	if m != 0 {
-		buffer.WriteByte('(')
-		buffer.WriteString(strconv.Itoa(m))
-
-		if n != 0 {
-			buffer.WriteByte(',')
-			buffer.WriteString(strconv.Itoa(n))
-		}
-
-		buffer.WriteByte(')')
-	}
-
-	if column.Unsigned {
-		buffer.WriteString(" UNSIGNED")
-	}
-
-	if column.Required {
-		buffer.WriteString(" NOT NULL")
-	}
-
-	if column.Default != nil {
-		buffer.WriteString(" DEFAULT ")
-		// TODO: improve
-		bytes, _ := json.Marshal(column.Default)
-		buffer.Write(bytes)
-	}
-
-	b.comment(buffer, column.Comment)
-	b.options(buffer, column.Options)
+	return typ, m, n
 }
 
 func (b *Builder) index(buffer *Buffer, index schema.Index) {

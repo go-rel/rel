@@ -83,12 +83,13 @@ func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
 		case schema.Column:
 			switch v.Op {
 			case schema.Add:
-				buffer.WriteString("ADD ")
+				buffer.WriteString("ADD COLUMN ")
 				b.column(buffer, v)
 			case schema.Alter: // TODO: use modify keyword?
-				buffer.WriteString("MODIFY ")
+				buffer.WriteString("MODIFY COLUMN ")
 				b.column(buffer, v)
 			case schema.Rename:
+				// Add Change
 				buffer.WriteString("RENAME COLUMN ")
 				buffer.WriteString(b.escape(v.Name))
 				buffer.WriteString(" TO ")

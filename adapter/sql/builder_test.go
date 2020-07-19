@@ -87,6 +87,49 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
+			result: "ALTER TABLE `columns` ADD COLUMN `verified` BOOL, RENAME COLUMN `string` TO `name`, MODIFY COLUMN `bool` INT, DROP COLUMN `blob`;",
+			table: schema.Table{
+				Op:   schema.Alter,
+				Name: "columns",
+				Definitions: []interface{}{
+					schema.Column{Name: "verified", Type: schema.Bool, Op: schema.Add},
+					schema.Column{Name: "string", NewName: "name", Op: schema.Rename},
+					schema.Column{Name: "bool", Type: schema.Int, Op: schema.Alter},
+					schema.Column{Name: "blob", Op: schema.Drop},
+				},
+			},
+		},
+		{
+			result: "ALTER TABLE `columns` ADD INDEX `verified_int` (`verified`, `int`);",
+			table: schema.Table{
+				Op:   schema.Alter,
+				Name: "columns",
+				Definitions: []interface{}{
+					schema.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: schema.SimpleIndex, Op: schema.Add},
+				},
+			},
+		},
+		{
+			result: "ALTER TABLE `columns` RENAME INDEX `verified_int` TO `verified_int_index`;",
+			table: schema.Table{
+				Op:   schema.Alter,
+				Name: "columns",
+				Definitions: []interface{}{
+					schema.Index{Name: "verified_int", NewName: "verified_int_index", Op: schema.Rename},
+				},
+			},
+		},
+		{
+			result: "ALTER TABLE `columns` DROP INDEX `verified_int_index`;",
+			table: schema.Table{
+				Op:   schema.Alter,
+				Name: "columns",
+				Definitions: []interface{}{
+					schema.Index{Name: "verified_int_index", Op: schema.Drop},
+				},
+			},
+		},
+		{
 			result: "RENAME TABLE `columns` TO `definitions`;",
 			table: schema.Table{
 				Op:      schema.Rename,

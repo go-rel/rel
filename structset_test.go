@@ -41,6 +41,27 @@ func TestStructset(t *testing.T) {
 		mutation = Mutation{
 			Cascade: true,
 			Mutates: map[string]Mutate{
+				"id":         Set("id", 1),
+				"name":       Set("name", "Luffy"),
+				"age":        Set("age", 0),
+				"created_at": Set("created_at", now()),
+				"updated_at": Set("updated_at", now()),
+			},
+		}
+	)
+
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, false)))
+}
+
+func TestStructset_skipZeroPrimaryKey(t *testing.T) {
+	var (
+		user = User{
+			Name: "Luffy",
+		}
+		doc      = NewDocument(&user)
+		mutation = Mutation{
+			Cascade: true,
+			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
 				"created_at": Set("created_at", now()),
@@ -62,6 +83,7 @@ func TestStructset_skipZero(t *testing.T) {
 		mutation = Mutation{
 			Cascade: true,
 			Mutates: map[string]Mutate{
+				"id":         Set("id", 1),
 				"name":       Set("name", "Luffy"),
 				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
@@ -91,24 +113,28 @@ func TestStructset_withAssoc(t *testing.T) {
 		}
 		doc     = NewDocument(&user)
 		userMod = Apply(NewDocument(&User{}),
+			Set("id", 1),
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", createdAt),
 			Set("updated_at", now()),
 		)
 		trx1Mod = Apply(NewDocument(&Transaction{}),
+			Set("id", 1),
 			Set("item", "Sword"),
 			Set("status", Status("")),
 			Set("user_id", 0),
 			Set("address_id", 0),
 		)
 		trx2Mod = Apply(NewDocument(&Transaction{}),
+			Set("id", 2),
 			Set("item", "Shield"),
 			Set("status", Status("")),
 			Set("user_id", 0),
 			Set("address_id", 0),
 		)
 		addrMod = Apply(NewDocument(&Address{}),
+			Set("id", 1),
 			Set("street", "Grove Street"),
 			Set("notes", Notes("")),
 			Set("user_id", nil),

@@ -53,7 +53,7 @@ func TestStructset(t *testing.T) {
 	assert.Equal(t, mutation, Apply(doc, NewStructset(&user, false)))
 }
 
-func TestStructsetSkipZeroPrimaryKey(t *testing.T) {
+func TestStructset_skipZeroPrimaryKey(t *testing.T) {
 	var (
 		user = User{
 			Name: "Luffy",

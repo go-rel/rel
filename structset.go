@@ -27,7 +27,9 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 	for _, field := range s.doc.Fields() {
 		switch field {
 		case pField:
-			continue
+			if v, ok := doc.Value(field); ok && isZero(v) {
+				continue // skip zero primary key value so it can be populated by database
+			}
 		case "created_at", "inserted_at":
 			if doc.Flag(HasCreatedAt) {
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {

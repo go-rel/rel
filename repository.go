@@ -844,6 +844,8 @@ func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query)
 }
 
 // Preload loads association with given query.
+// If association is already loaded, this will do nothing.
+// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
 	finish := r.instrument(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
@@ -867,25 +869,16 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	var (
-		targets, table, keyField, keyType, ddata = r.mapPreloadTargets(sl, path)
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
+		ids                                              = r.targetIDs(targets)
+		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)
 
-	if len(targets) == 0 {
+	if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
 		return nil
 	}
 
 	var (
-		ids = make([]interface{}, len(targets))
-		i   = 0
-	)
-
-	for key := range targets {
-		ids[i] = key
-		i++
-	}
-
-	var (
-		query    = Build(table, append(queriers, In(keyField, ids...))...)
 		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query))
 	)
 
@@ -905,7 +898,7 @@ func (r repository) MustPreload(ctx context.Context, records interface{}, field 
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData, bool) {
 	type frame struct {
 		index int
 		doc   *Document
@@ -916,6 +909,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		keyField  string
 		keyType   reflect.Type
 		ddata     documentData
+		loaded    = true
 		mapTarget = make(map[interface{}][]slice)
 		stack     = make([]frame, sl.Len())
 	)
@@ -936,8 +930,9 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 		if top.index == len(path)-1 {
 			var (
-				target slice
-				ref    = assocs.ReferenceValue()
+				target       slice
+				targetLoaded bool
+				ref          = assocs.ReferenceValue()
 			)
 
 			if ref == nil {
@@ -945,13 +940,14 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 			}
 
 			if assocs.Type() == HasMany {
-				target, _ = assocs.Collection()
+				target, targetLoaded = assocs.Collection()
 			} else {
-				target, _ = assocs.Document()
+				target, targetLoaded = assocs.Document()
 			}
 
 			target.Reset()
 			mapTarget[ref] = append(mapTarget[ref], target)
+			loaded = loaded && targetLoaded
 
 			if table == "" {
 				table = target.Table()
@@ -995,7 +991,21 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	}
 
-	return mapTarget, table, keyField, keyType, ddata
+	return mapTarget, table, keyField, keyType, ddata, loaded
+}
+
+func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
+	var (
+		ids = make([]interface{}, len(targets))
+		i   = 0
+	)
+
+	for key := range targets {
+		ids[i] = key
+		i++
+	}
+
+	return ids
 }
 
 func (r repository) withDefaultScope(ddata documentData, query Query) Query {

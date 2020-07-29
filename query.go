@@ -36,6 +36,8 @@ func Build(table string, queriers ...Querier) Query {
 			q.Build(&query)
 		case Unscoped:
 			q.Build(&query)
+		case Reload:
+			q.Build(&query)
 		case SQLQuery:
 			q.Build(&query)
 		}
@@ -61,6 +63,7 @@ type Query struct {
 	LimitQuery    Limit
 	LockQuery     Lock
 	UnscopedQuery Unscoped
+	ReloadQuery   Reload
 	SQLQuery      SQLQuery
 }
 
@@ -101,6 +104,8 @@ func (q Query) Build(query *Query) {
 		if q.LockQuery != "" {
 			query.LockQuery = q.LockQuery
 		}
+
+		query.ReloadQuery = q.ReloadQuery
 	}
 }
 
@@ -254,6 +259,12 @@ func (q Query) Lock(lock string) Query {
 // Unscoped allows soft-delete to be ignored.
 func (q Query) Unscoped() Query {
 	q.UnscopedQuery = true
+	return q
+}
+
+// Reload force reloading association on preload.
+func (q Query) Reload() Query {
+	q.ReloadQuery = true
 	return q
 }
 

@@ -218,6 +218,11 @@ func (r Reload) Apply(doc *Document, mutation *Mutation) {
 	mutation.Reload = r
 }
 
+// Build query.
+func (r Reload) Build(query *Query) {
+	query.ReloadQuery = r
+}
+
 // Cascade enable or disable updating associations.
 // Default to true.
 type Cascade bool

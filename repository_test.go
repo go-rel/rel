@@ -2970,6 +2970,45 @@ func TestRepository_Preload_sliceNestedBelongsTo(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Preload_alreadyLoaded(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		userID  = 1
+		address = Address{
+			UserID: &userID,
+			User:   &User{ID: userID},
+		}
+	)
+
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user"))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Preload_alreadyLoadedForceReload(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		userID  = 1
+		address = Address{
+			UserID: &userID,
+			User:   &User{ID: userID},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("users").Where(In("id", 1)).Reload()).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(userID, "Del Piero").Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user", Reload(true)))
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Preload_emptySlice(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}

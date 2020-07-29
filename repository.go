@@ -844,6 +844,8 @@ func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query)
 }
 
 // Preload loads association with given query.
+// If association is already loaded, this will do nothing.
+// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
 	finish := r.instrument(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)

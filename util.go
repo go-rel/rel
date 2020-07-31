@@ -7,8 +7,8 @@ import (
 
 func filterDocument(doc *Document) FilterQuery {
 	var (
-		pFields = doc.PrimaryField()
-		pValues = doc.PrimaryValue()
+		pFields = doc.PrimaryFields()
+		pValues = doc.PrimaryValues()
 	)
 
 	return filterDocumentPrimary(pFields, pValues, FilterEqOp)
@@ -31,8 +31,8 @@ func filterDocumentPrimary(pFields []string, pValues []interface{}, op FilterOp)
 
 func filterCollection(col *Collection) FilterQuery {
 	var (
-		pFields = col.PrimaryField()
-		pValues = col.PrimaryValue()
+		pFields = col.PrimaryFields()
+		pValues = col.PrimaryValues()
 		length  = col.Len()
 	)
 

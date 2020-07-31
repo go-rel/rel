@@ -258,7 +258,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 
 func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) error {
 	var (
-		pField   = doc.PrimaryField()
+		pFields  = doc.PrimaryFields()
 		queriers = Build(doc.Table())
 	)
 
@@ -273,22 +273,17 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 		return mutation.ErrorFunc.transform(err)
 	}
 
+	// update primary value
+	if len(pFields) == 1 {
+		doc.SetValue(pFields[0], pValue)
+	}
+
 	if mutation.Reload {
-		var filter FilterQuery
-		if len(pField) == 1 {
-			filter = Eq(pField[0], pValue)
-		} else {
-			filter = filterDocument(doc)
-		}
+		var filter = filterDocument(doc)
 
 		// fetch record
 		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {
 			return err
-		}
-	} else {
-		// update primary value
-		if len(pField) != 1 {
-			doc.SetValue(pField[0], pValue)
 		}
 	}
 
@@ -344,7 +339,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	var (
-		pField      = col.PrimaryField()
+		pFields     = col.PrimaryFields()
 		queriers    = Build(col.Table())
 		fields      = make([]string, 0, len(mutation[0].Mutates))
 		fieldMap    = make(map[string]struct{}, len(mutation[0].Mutates))
@@ -368,9 +363,9 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	// apply ids
-	if len(pField) == 1 {
+	if len(pFields) == 1 {
 		for i, id := range ids {
-			col.Get(i).SetValue(pField[0], id)
+			col.Get(i).SetValue(pFields[0], id)
 		}
 	}
 
@@ -801,7 +796,7 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 				table  = col.Table()
 				fField = assoc.ForeignField()
 				rValue = assoc.ReferenceValue()
-				filter = filterCollection(col).AndEq(fField, rValue)
+				filter = Eq(fField, rValue).And(filterCollection(col))
 			)
 
 			if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {

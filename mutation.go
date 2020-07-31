@@ -42,7 +42,7 @@ func Apply(doc *Document, mutators ...Mutator) Mutation {
 // AssocMutation represents mutation for association.
 type AssocMutation struct {
 	Mutations  []Mutation
-	DeletedIDs []interface{}
+	DeletedIDs []interface{} // This is array of single id, and doesn't support composite primary key.
 }
 
 // Mutation represents value to be inserted or updated to database.

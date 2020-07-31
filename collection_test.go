@@ -14,11 +14,11 @@ func (it *Items) Table() string {
 	return "_items"
 }
 
-func (it *Items) PrimaryField() string {
-	return "_uuid"
+func (it *Items) PrimaryFields() []string {
+	return []string{"_uuid"}
 }
 
-func (it *Items) PrimaryValue() interface{} {
+func (it *Items) PrimaryValue() []interface{} {
 	var (
 		ids = make([]interface{}, len(*it))
 	)
@@ -27,7 +27,7 @@ func (it *Items) PrimaryValue() interface{} {
 		ids[i] = (*it)[i].UUID
 	}
 
-	return ids
+	return []interface{}{ids}
 }
 
 func TestCollection_ReflectValue(t *testing.T) {

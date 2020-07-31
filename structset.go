@@ -20,7 +20,7 @@ type Structset struct {
 // Apply mutation.
 func (s Structset) Apply(doc *Document, mut *Mutation) {
 	var (
-		pField = s.doc.PrimaryField()
+		pField = s.doc.PrimaryFields()
 		t      = now().Truncate(time.Second)
 	)
 
@@ -107,7 +107,7 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 
 	var (
 		col, _ = assoc.Collection()
-		pField = col.PrimaryField()
+		pField = col.PrimaryFields()
 		muts   = make([]Mutation, col.Len())
 	)
 

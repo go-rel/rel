@@ -19,12 +19,12 @@ func (i Item) Table() string {
 	return "_items"
 }
 
-func (i Item) PrimaryField() string {
-	return "_uuid"
+func (i Item) PrimaryFields() []string {
+	return []string{"_uuid"}
 }
 
-func (i Item) PrimaryValue() interface{} {
-	return i.UUID
+func (i Item) PrimaryValues() []interface{} {
+	return []interface{}{i.UUID}
 }
 
 func TestDocument_ReflectValue(t *testing.T) {

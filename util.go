@@ -5,66 +5,6 @@ import (
 	"reflect"
 )
 
-func filterDocument(doc *Document) FilterQuery {
-	var (
-		pFields = doc.PrimaryFields()
-		pValues = doc.PrimaryValues()
-	)
-
-	return filterDocumentPrimary(pFields, pValues, FilterEqOp)
-}
-
-func filterDocumentPrimary(pFields []string, pValues []interface{}, op FilterOp) FilterQuery {
-	var filter FilterQuery
-
-	for i := range pFields {
-		filter = filter.And(FilterQuery{
-			Type:  op,
-			Field: pFields[i],
-			Value: pValues[i],
-		})
-	}
-
-	return filter
-
-}
-
-func filterCollection(col *Collection) FilterQuery {
-	var (
-		pFields = col.PrimaryFields()
-		pValues = col.PrimaryValues()
-		length  = col.Len()
-	)
-
-	return filterCollectionPrimary(pFields, pValues, length)
-}
-
-func filterCollectionPrimary(pFields []string, pValues []interface{}, length int) FilterQuery {
-	var filter FilterQuery
-
-	if len(pFields) == 1 {
-		filter = In(pFields[0], pValues[0].([]interface{})...)
-	} else {
-		var (
-			andFilters = make([]FilterQuery, length)
-		)
-
-		for i := range pValues {
-			var (
-				values = pValues[i].([]interface{})
-			)
-
-			for j := range values {
-				andFilters[j] = andFilters[j].AndEq(pFields[i], values[j])
-			}
-		}
-
-		filter = Or(andFilters...)
-	}
-
-	return filter
-}
-
 func indirect(rv reflect.Value) interface{} {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {

@@ -457,7 +457,7 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 		)
 
 		if loaded {
-			filter, err := r.buildBelongsToFilter(assoc)
+			filter, err := filterBelongsTo(assoc)
 			if err != nil {
 				return err
 			}
@@ -483,24 +483,6 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 	return nil
 }
 
-func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error) {
-	var (
-		rValue = assoc.ReferenceValue()
-		fValue = assoc.ForeignValue()
-		filter = Eq(assoc.ForeignField(), fValue)
-	)
-
-	if rValue != fValue {
-		return filter, ConstraintError{
-			Key:  assoc.ReferenceField(),
-			Type: ForeignKeyConstraint,
-			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-		}
-	}
-
-	return filter, nil
-}
-
 // TODO: suppprt deletion
 func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
@@ -516,7 +498,7 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 		)
 
 		if loaded {
-			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err
 			}
@@ -540,25 +522,6 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 	}
 
 	return nil
-}
-
-func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (FilterQuery, error) {
-	var (
-		fField = assoc.ForeignField()
-		fValue = assoc.ForeignValue()
-		rValue = assoc.ReferenceValue()
-		filter = filterDocument(asssocDoc).AndEq(fField, rValue)
-	)
-
-	if rValue != fValue {
-		return filter, ConstraintError{
-			Key:  fField,
-			Type: ForeignKeyConstraint,
-			Err:  errors.New("rel: inconsistent has one ref and fk"),
-		}
-	}
-
-	return filter, nil
 }
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
@@ -748,7 +711,7 @@ func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Ca
 		)
 
 		if loaded {
-			filter, err := r.buildBelongsToFilter(assoc)
+			filter, err := filterBelongsTo(assoc)
 			if err != nil {
 				return err
 			}
@@ -770,7 +733,7 @@ func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Casca
 		)
 
 		if loaded {
-			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err
 			}

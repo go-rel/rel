@@ -13,9 +13,13 @@ type Map map[string]interface{}
 
 // Apply mutation.
 func (m Map) Apply(doc *Document, mutation *Mutation) {
+	if len(doc.PrimaryField()) != 1 {
+		panic("rel: map mutator only supports 1 primary key")
+	}
+
 	var (
-		pField = doc.PrimaryField()
-		pValue = doc.PrimaryValue()
+		pField = doc.PrimaryField()[0]
+		pValue = doc.PrimaryValue()[0]
 	)
 
 	for field, value := range m {
@@ -73,9 +77,16 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 		deletedIDs []interface{}
 		muts       = make([]Mutation, len(maps))
 		col, _     = assoc.Collection()
-		pField     = col.PrimaryField()
-		pIndex     = make(map[interface{}]int)
-		pValues    = col.PrimaryValue().([]interface{})
+	)
+
+	if len(col.PrimaryField()) != 1 {
+		panic("rel: map mutator only supports assoc with 1 primary key")
+	}
+
+	var (
+		pField  = col.PrimaryField()[0]
+		pIndex  = make(map[interface{}]int)
+		pValues = col.PrimaryValue()[0].([]interface{})
 	)
 
 	for i, v := range pValues {

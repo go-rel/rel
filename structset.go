@@ -26,10 +26,6 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 
 	for _, field := range s.doc.Fields() {
 		switch field {
-		case pField:
-			if v, ok := doc.Value(field); ok && isZero(v) {
-				continue // skip zero primary key value so it can be populated by database
-			}
 		case "created_at", "inserted_at":
 			if doc.Flag(HasCreatedAt) {
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
@@ -41,6 +37,12 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 			if doc.Flag(HasUpdatedAt) {
 				s.set(doc, mut, field, t, true)
 				continue
+			}
+		}
+
+		if len(pField) == 1 && pField[0] == field {
+			if v, ok := doc.Value(field); ok && isZero(v) {
+				continue // skip zero primary key value so it can be populated by database
 			}
 		}
 
@@ -115,7 +117,9 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 		)
 
 		muts[i] = Apply(doc, newStructset(doc, s.skipZero))
-		doc.SetValue(pField, nil) // reset id, since it'll be reinserted.
+		if len(pField) == 1 {
+			doc.SetValue(pField[0], nil) // reset id, since it'll be reinserted.
+		}
 	}
 
 	mut.SetAssoc(field, muts...)

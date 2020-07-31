@@ -59,12 +59,12 @@ func (c Collection) tableName() string {
 }
 
 // PrimaryField column name of this collection.
-func (c Collection) PrimaryField() string {
+func (c Collection) PrimaryField() []string {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryField()
 	}
 
-	if c.data.primaryField == "" {
+	if len(c.data.primaryField) == 0 {
 		panic("rel: failed to infer primary key for type " + c.rt.String())
 	}
 
@@ -73,30 +73,29 @@ func (c Collection) PrimaryField() string {
 
 // PrimaryValue of collection.
 // Returned value will be interface of slice interface.
-func (c Collection) PrimaryValue() interface{} {
+func (c Collection) PrimaryValue() []interface{} {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryValue()
 	}
 
 	var (
-		index = c.data.primaryIndex
-		ids   = make([]interface{}, c.rv.Len())
+		index   = c.data.primaryIndex
+		pValues = make([]interface{}, len(index))
 	)
 
-	for i := 0; i < len(ids); i++ {
+	for i := range index {
 		var (
-			fv = c.rv.Index(i)
+			values = make([]interface{}, c.rv.Len())
 		)
 
-		if index == -2 {
-			// using interface
-			ids[i] = fv.Interface().(primary).PrimaryValue()
-		} else {
-			ids[i] = fv.Field(index).Interface()
+		for j := range values {
+			values[j] = c.rv.Index(j).Field(index[i]).Interface()
 		}
+
+		pValues[i] = values
 	}
 
-	return ids
+	return pValues
 }
 
 // Get an element from the underlying slice as a document.

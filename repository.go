@@ -274,13 +274,22 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	}
 
 	if mutation.Reload {
+		var filter FilterQuery
+		if len(pField) == 1 {
+			filter = Eq(pField[0], pValue)
+		} else {
+			filter = filterDocument(doc)
+		}
+
 		// fetch record
-		if err := r.find(cw, doc, queriers.Where(Eq(pField, pValue))); err != nil {
+		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {
 			return err
 		}
 	} else {
 		// update primary value
-		doc.SetValue(pField, pValue)
+		if len(pField) != 1 {
+			doc.SetValue(pField[0], pValue)
+		}
 	}
 
 	if mutation.Cascade {
@@ -359,8 +368,10 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	// apply ids
-	for i, id := range ids {
-		col.Get(i).SetValue(pField, id)
+	if len(pField) == 1 {
+		for i, id := range ids {
+			col.Get(i).SetValue(pField[0], id)
+		}
 	}
 
 	return nil
@@ -379,18 +390,17 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
 		doc      = NewDocument(record)
-		pField   = doc.PrimaryField()
-		pValue   = doc.PrimaryValue()
+		filter   = filterDocument(doc)
 		mutation = Apply(doc, mutators...)
 	)
 
 	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
 		return r.transaction(cw, func(cw contextWrapper) error {
-			return r.update(cw, doc, mutation, Eq(pField, pValue))
+			return r.update(cw, doc, mutation, filter)
 		})
 	}
 
-	return r.update(cw, doc, mutation, Eq(pField, pValue))
+	return r.update(cw, doc, mutation, filter)
 }
 
 func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
@@ -542,9 +552,7 @@ func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (F
 		fField = assoc.ForeignField()
 		fValue = assoc.ForeignValue()
 		rValue = assoc.ReferenceValue()
-		pField = asssocDoc.PrimaryField()
-		pValue = asssocDoc.PrimaryValue()
-		filter = Eq(pField, pValue).AndEq(fField, rValue)
+		filter = filterDocument(asssocDoc).AndEq(fField, rValue)
 	)
 
 	if rValue != fValue {
@@ -610,7 +618,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 			if !isZero(pValue) {
 				var (
 					fValue, _ = assocDoc.Value(fField)
-					filter    = Eq(pField, pValue).AndEq(fField, rValue)
+					filter    = filterDocument(assocDoc).AndEq(fField, rValue)
 				)
 
 				if rValue != fValue {
@@ -691,8 +699,6 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 	var (
 		cw      = fetchContext(ctx, r.rootAdapter)
 		doc     = NewDocument(record)
-		pField  = doc.PrimaryField()
-		pValue  = doc.PrimaryValue()
 		cascade = Cascade(false)
 	)
 
@@ -702,11 +708,11 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 
 	if cascade {
 		return r.transaction(cw, func(cw contextWrapper) error {
-			return r.delete(cw, doc, Eq(pField, pValue), cascade)
+			return r.delete(cw, doc, filterDocument(doc), cascade)
 		})
 	}
 
-	return r.delete(cw, doc, Eq(pField, pValue), cascade)
+	return r.delete(cw, doc, filterDocument(doc), cascade)
 }
 
 func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery, cascade Cascade) error {
@@ -792,12 +798,10 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 
 		if loaded {
 			var (
-				table   = col.Table()
-				pField  = col.PrimaryField()
-				pValues = col.PrimaryValue().([]interface{})
-				fField  = assoc.ForeignField()
-				rValue  = assoc.ReferenceValue()
-				filter  = Eq(fField, rValue).AndIn(pField, pValues...)
+				table  = col.Table()
+				fField = assoc.ForeignField()
+				rValue = assoc.ReferenceValue()
+				filter = filterCollection(col).AndEq(fField, rValue)
 			)
 
 			if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {

@@ -46,13 +46,13 @@ type table interface {
 }
 
 type primary interface {
-	PrimaryField() string
-	PrimaryValue() interface{}
+	PrimaryField() []string
+	PrimaryValue() []interface{}
 }
 
 type primaryData struct {
-	field string
-	index int
+	field []string
+	index []int
 }
 
 type documentData struct {
@@ -61,8 +61,8 @@ type documentData struct {
 	belongsTo    []string
 	hasOne       []string
 	hasMany      []string
-	primaryField string
-	primaryIndex int
+	primaryField []string
+	primaryIndex []int
 	flag         DocumentFlag
 }
 
@@ -90,12 +90,12 @@ func (d Document) Table() string {
 }
 
 // PrimaryField column name of this document.
-func (d Document) PrimaryField() string {
+func (d Document) PrimaryField() []string {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryField()
 	}
 
-	if d.data.primaryField == "" {
+	if len(d.data.primaryField) == 0 {
 		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
@@ -103,16 +103,39 @@ func (d Document) PrimaryField() string {
 }
 
 // PrimaryValue of this document.
-func (d Document) PrimaryValue() interface{} {
+func (d Document) PrimaryValue() []interface{} {
 	if p, ok := d.v.(primary); ok {
 		return p.PrimaryValue()
 	}
 
-	if d.data.primaryIndex < 0 {
+	if len(d.data.primaryIndex) == 0 {
 		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
 
-	return d.rv.Field(d.data.primaryIndex).Interface()
+	var (
+		pValues = make([]interface{}, len(d.data.primaryIndex))
+	)
+
+	for i := range pValues {
+		pValues[i] = d.rv.Field(d.data.primaryIndex[i]).Interface()
+	}
+
+	return pValues
+}
+
+// Persisted returns true if document primary key is not zero.
+func (d Document) Persisted() bool {
+	var (
+		pValue = d.PrimaryValue()
+	)
+
+	for i := range pValue {
+		if !isZero(pValue[i]) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Index returns map of column name and it's struct index.
@@ -393,7 +416,7 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 
 		// struct without primary key is a field
 		// TODO: test by scanner/valuer instead?
-		if pk, _ := searchPrimary(typ); pk == "" {
+		if pk, _ := searchPrimary(typ); len(pk) == 0 {
 			data.fields = append(data.fields, name)
 			continue
 		}
@@ -453,15 +476,16 @@ func fieldName(sf reflect.StructField) string {
 	return snakecase.SnakeCase(sf.Name)
 }
 
-func searchPrimary(rt reflect.Type) (string, int) {
+func searchPrimary(rt reflect.Type) ([]string, []int) {
 	if result, cached := primariesCache.Load(rt); cached {
 		p := result.(primaryData)
 		return p.field, p.index
 	}
 
 	var (
-		field = ""
-		index = -1
+		field         []string
+		index         []int
+		fallbackIndex = -1
 	)
 
 	if rt.Implements(rtPrimary) {
@@ -470,23 +494,27 @@ func searchPrimary(rt reflect.Type) (string, int) {
 		)
 
 		field = v.PrimaryField()
-		index = -2 // special index to mark interface usage
+		// index = -2 // special index to mark interface usage
 	} else {
 		for i := 0; i < rt.NumField(); i++ {
 			sf := rt.Field(i)
 
 			if tag := sf.Tag.Get("db"); strings.HasSuffix(tag, ",primary") {
-				index = i
-				field = fieldName(sf)
+				index = append(index, i)
+				field = append(field, fieldName(sf))
 				continue
 			}
 
 			// check fallback for id field
 			if strings.EqualFold("id", sf.Name) {
-				index = i
-				field = "id"
+				fallbackIndex = i
 			}
 		}
+	}
+
+	if len(field) == 0 && fallbackIndex >= 0 {
+		field = []string{"id"}
+		index = []int{fallbackIndex}
 	}
 
 	primariesCache.Store(rt, primaryData{

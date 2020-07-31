@@ -27,20 +27,20 @@ func (bs BatchSize) apply(i *iterator) {
 type Start int
 
 func (s Start) apply(i *iterator) {
-	i.start = int(s)
+	i.start = []interface{}{s}
 }
 
 // Finish specfies the primary value to finish at (inclusive).
 type Finish int
 
 func (f Finish) apply(i *iterator) {
-	i.finish = int(f)
+	i.finish = []interface{}{f}
 }
 
 type iterator struct {
 	ctx       context.Context
-	start     interface{}
-	finish    interface{}
+	start     []interface{}
+	finish    []interface{}
 	batchSize int
 	current   int
 	query     Query
@@ -114,14 +114,14 @@ func (i *iterator) init(record interface{}) {
 	}
 
 	if i.start != nil {
-		i.query = i.query.Where(Gte(doc.PrimaryField(), i.start))
+		i.query = i.query.Where(filterDocumentPrimary(doc.PrimaryField(), i.start, FilterGteOp))
 	}
 
 	if i.finish != nil {
-		i.query = i.query.Where(Lte(doc.PrimaryField(), i.finish))
+		i.query = i.query.Where(filterDocumentPrimary(doc.PrimaryField(), i.finish, FilterLteOp))
 	}
 
-	i.query = i.query.SortAsc(doc.PrimaryField())
+	i.query = i.query.SortAsc(doc.PrimaryField()...)
 }
 
 func newIterator(ctx context.Context, adapter Adapter, query Query, options []IteratorOption) Iterator {

@@ -186,6 +186,7 @@ func TestStructset_differentStruct(t *testing.T) {
 		}
 		doc      = NewDocument(&usertmp)
 		mutation = Apply(NewDocument(&user),
+			Set("id", 1),
 			Set("name", "Luffy"),
 			Set("age", 20),
 		)

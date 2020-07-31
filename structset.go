@@ -20,8 +20,8 @@ type Structset struct {
 // Apply mutation.
 func (s Structset) Apply(doc *Document, mut *Mutation) {
 	var (
-		pField = s.doc.PrimaryFields()
-		t      = now().Truncate(time.Second)
+		pFields = s.doc.PrimaryFields()
+		t       = now().Truncate(time.Second)
 	)
 
 	for _, field := range s.doc.Fields() {
@@ -40,13 +40,12 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 			}
 		}
 
-		if len(pField) == 1 && pField[0] == field {
-			if v, ok := doc.Value(field); ok && isZero(v) {
-				continue // skip zero primary key value so it can be populated by database
-			}
+		if len(pFields) == 1 && pFields[0] == field {
+			// allow setting primary key as long as it's not zero.
+			s.applyValue(doc, mut, field, true)
+		} else {
+			s.applyValue(doc, mut, field, s.skipZero)
 		}
-
-		s.applyValue(doc, mut, field)
 	}
 
 	if mut.Cascade {
@@ -62,9 +61,9 @@ func (s Structset) set(doc *Document, mut *Mutation, field string, value interfa
 	mut.Add(Set(field, value))
 }
 
-func (s Structset) applyValue(doc *Document, mut *Mutation, field string) {
+func (s Structset) applyValue(doc *Document, mut *Mutation, field string, skipZero bool) {
 	if value, ok := s.doc.Value(field); ok {
-		if s.skipZero && isZero(value) {
+		if skipZero && isZero(value) {
 			return
 		}
 
@@ -106,9 +105,9 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 	}
 
 	var (
-		col, _ = assoc.Collection()
-		pField = col.PrimaryFields()
-		muts   = make([]Mutation, col.Len())
+		col, _  = assoc.Collection()
+		pFields = col.PrimaryFields()
+		muts    = make([]Mutation, col.Len())
 	)
 
 	for i := range muts {
@@ -117,8 +116,8 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 		)
 
 		muts[i] = Apply(doc, newStructset(doc, s.skipZero))
-		if len(pField) == 1 {
-			doc.SetValue(pField[0], nil) // reset id, since it'll be reinserted.
+		if len(pFields) == 1 {
+			doc.SetValue(pFields[0], nil) // reset id, since it'll be reinserted.
 		}
 	}
 

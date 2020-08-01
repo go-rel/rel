@@ -258,7 +258,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 
 func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) error {
 	var (
-		pField   = doc.PrimaryField()
+		pFields  = doc.PrimaryFields()
 		queriers = Build(doc.Table())
 	)
 
@@ -273,14 +273,20 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 		return mutation.ErrorFunc.transform(err)
 	}
 
+	// update primary value
+	if len(pFields) == 1 {
+		doc.SetValue(pFields[0], pValue)
+	}
+
 	if mutation.Reload {
+		var (
+			filter = filterDocument(doc)
+		)
+
 		// fetch record
-		if err := r.find(cw, doc, queriers.Where(Eq(pField, pValue))); err != nil {
+		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {
 			return err
 		}
-	} else {
-		// update primary value
-		doc.SetValue(pField, pValue)
 	}
 
 	if mutation.Cascade {
@@ -335,7 +341,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	var (
-		pField      = col.PrimaryField()
+		pFields     = col.PrimaryFields()
 		queriers    = Build(col.Table())
 		fields      = make([]string, 0, len(mutation[0].Mutates))
 		fieldMap    = make(map[string]struct{}, len(mutation[0].Mutates))
@@ -359,8 +365,10 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	// apply ids
-	for i, id := range ids {
-		col.Get(i).SetValue(pField, id)
+	if len(pFields) == 1 {
+		for i, id := range ids {
+			col.Get(i).SetValue(pFields[0], id)
+		}
 	}
 
 	return nil
@@ -379,18 +387,17 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
 		doc      = NewDocument(record)
-		pField   = doc.PrimaryField()
-		pValue   = doc.PrimaryValue()
+		filter   = filterDocument(doc)
 		mutation = Apply(doc, mutators...)
 	)
 
 	if !mutation.IsAssocEmpty() && mutation.Cascade == true {
 		return r.transaction(cw, func(cw contextWrapper) error {
-			return r.update(cw, doc, mutation, Eq(pField, pValue))
+			return r.update(cw, doc, mutation, filter)
 		})
 	}
 
-	return r.update(cw, doc, mutation, Eq(pField, pValue))
+	return r.update(cw, doc, mutation, filter)
 }
 
 func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
@@ -452,7 +459,7 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 		)
 
 		if loaded {
-			filter, err := r.buildBelongsToFilter(assoc)
+			filter, err := filterBelongsTo(assoc)
 			if err != nil {
 				return err
 			}
@@ -478,24 +485,6 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 	return nil
 }
 
-func (r repository) buildBelongsToFilter(assoc Association) (FilterQuery, error) {
-	var (
-		rValue = assoc.ReferenceValue()
-		fValue = assoc.ForeignValue()
-		filter = Eq(assoc.ForeignField(), fValue)
-	)
-
-	if rValue != fValue {
-		return filter, ConstraintError{
-			Key:  assoc.ReferenceField(),
-			Type: ForeignKeyConstraint,
-			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
-		}
-	}
-
-	return filter, nil
-}
-
 // TODO: suppprt deletion
 func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
@@ -511,7 +500,7 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 		)
 
 		if loaded {
-			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err
 			}
@@ -535,27 +524,6 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 	}
 
 	return nil
-}
-
-func (r repository) buildHasOneFilter(assoc Association, asssocDoc *Document) (FilterQuery, error) {
-	var (
-		fField = assoc.ForeignField()
-		fValue = assoc.ForeignValue()
-		rValue = assoc.ReferenceValue()
-		pField = asssocDoc.PrimaryField()
-		pValue = asssocDoc.PrimaryValue()
-		filter = Eq(pField, pValue).AndEq(fField, rValue)
-	)
-
-	if rValue != fValue {
-		return filter, ConstraintError{
-			Key:  fField,
-			Type: ForeignKeyConstraint,
-			Err:  errors.New("rel: inconsistent has one ref and fk"),
-		}
-	}
-
-	return filter, nil
 }
 
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
@@ -604,13 +572,14 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 		for i := range muts {
 			var (
 				assocDoc = col.Get(i)
-				pValue   = assocDoc.PrimaryValue()
 			)
 
-			if !isZero(pValue) {
+			// When deleted IDs is nil, it's assumed that association will be replaced.
+			// hence any update request is ignored here.
+			if deletedIDs != nil && !isZero(assocDoc.PrimaryValue()) {
 				var (
 					fValue, _ = assocDoc.Value(fField)
-					filter    = Eq(pField, pValue).AndEq(fField, rValue)
+					filter    = filterDocument(assocDoc).AndEq(fField, rValue)
 				)
 
 				if rValue != fValue {
@@ -691,8 +660,6 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 	var (
 		cw      = fetchContext(ctx, r.rootAdapter)
 		doc     = NewDocument(record)
-		pField  = doc.PrimaryField()
-		pValue  = doc.PrimaryValue()
 		cascade = Cascade(false)
 	)
 
@@ -702,11 +669,11 @@ func (r repository) Delete(ctx context.Context, record interface{}, options ...C
 
 	if cascade {
 		return r.transaction(cw, func(cw contextWrapper) error {
-			return r.delete(cw, doc, Eq(pField, pValue), cascade)
+			return r.delete(cw, doc, filterDocument(doc), cascade)
 		})
 	}
 
-	return r.delete(cw, doc, Eq(pField, pValue), cascade)
+	return r.delete(cw, doc, filterDocument(doc), cascade)
 }
 
 func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery, cascade Cascade) error {
@@ -747,7 +714,7 @@ func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Ca
 		)
 
 		if loaded {
-			filter, err := r.buildBelongsToFilter(assoc)
+			filter, err := filterBelongsTo(assoc)
 			if err != nil {
 				return err
 			}
@@ -769,7 +736,7 @@ func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Casca
 		)
 
 		if loaded {
-			filter, err := r.buildHasOneFilter(assoc, assocDoc)
+			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err
 			}
@@ -792,12 +759,10 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 
 		if loaded {
 			var (
-				table   = col.Table()
-				pField  = col.PrimaryField()
-				pValues = col.PrimaryValue().([]interface{})
-				fField  = assoc.ForeignField()
-				rValue  = assoc.ReferenceValue()
-				filter  = Eq(fField, rValue).AndIn(pField, pValues...)
+				table  = col.Table()
+				fField = assoc.ForeignField()
+				rValue = assoc.ReferenceValue()
+				filter = Eq(fField, rValue).And(filterCollection(col))
 			)
 
 			if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {
@@ -844,6 +809,8 @@ func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query)
 }
 
 // Preload loads association with given query.
+// If association is already loaded, this will do nothing.
+// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
 	finish := r.instrument(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
@@ -867,25 +834,16 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	var (
-		targets, table, keyField, keyType, ddata = r.mapPreloadTargets(sl, path)
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
+		ids                                              = r.targetIDs(targets)
+		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)
 
-	if len(targets) == 0 {
+	if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
 		return nil
 	}
 
 	var (
-		ids = make([]interface{}, len(targets))
-		i   = 0
-	)
-
-	for key := range targets {
-		ids[i] = key
-		i++
-	}
-
-	var (
-		query    = Build(table, append(queriers, In(keyField, ids...))...)
 		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query))
 	)
 
@@ -905,7 +863,7 @@ func (r repository) MustPreload(ctx context.Context, records interface{}, field 
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData, bool) {
 	type frame struct {
 		index int
 		doc   *Document
@@ -916,6 +874,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		keyField  string
 		keyType   reflect.Type
 		ddata     documentData
+		loaded    = true
 		mapTarget = make(map[interface{}][]slice)
 		stack     = make([]frame, sl.Len())
 	)
@@ -936,8 +895,9 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 		if top.index == len(path)-1 {
 			var (
-				target slice
-				ref    = assocs.ReferenceValue()
+				target       slice
+				targetLoaded bool
+				ref          = assocs.ReferenceValue()
 			)
 
 			if ref == nil {
@@ -945,13 +905,14 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 			}
 
 			if assocs.Type() == HasMany {
-				target, _ = assocs.Collection()
+				target, targetLoaded = assocs.Collection()
 			} else {
-				target, _ = assocs.Document()
+				target, targetLoaded = assocs.Document()
 			}
 
 			target.Reset()
 			mapTarget[ref] = append(mapTarget[ref], target)
+			loaded = loaded && targetLoaded
 
 			if table == "" {
 				table = target.Table()
@@ -995,7 +956,21 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	}
 
-	return mapTarget, table, keyField, keyType, ddata
+	return mapTarget, table, keyField, keyType, ddata, loaded
+}
+
+func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
+	var (
+		ids = make([]interface{}, len(targets))
+		i   = 0
+	)
+
+	for key := range targets {
+		ids[i] = key
+		i++
+	}
+
+	return ids
 }
 
 func (r repository) withDefaultScope(ddata documentData, query Query) Query {

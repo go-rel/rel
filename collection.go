@@ -58,45 +58,81 @@ func (c Collection) tableName() string {
 	return tableName(rt)
 }
 
-// PrimaryField column name of this collection.
-func (c Collection) PrimaryField() string {
+// PrimaryFields column name of this collection.
+func (c Collection) PrimaryFields() []string {
 	if p, ok := c.v.(primary); ok {
-		return p.PrimaryField()
+		return p.PrimaryFields()
 	}
 
-	if c.data.primaryField == "" {
+	if len(c.data.primaryField) == 0 {
 		panic("rel: failed to infer primary key for type " + c.rt.String())
 	}
 
 	return c.data.primaryField
 }
 
-// PrimaryValue of collection.
+// PrimaryField column name of this document.
+// panic if document uses composite key.
+func (c Collection) PrimaryField() string {
+	if fields := c.PrimaryFields(); len(fields) == 1 {
+		return fields[0]
+	}
+
+	panic("rel: composite primary key is not supported")
+}
+
+// PrimaryValues of collection.
 // Returned value will be interface of slice interface.
-func (c Collection) PrimaryValue() interface{} {
+func (c Collection) PrimaryValues() []interface{} {
 	if p, ok := c.v.(primary); ok {
-		return p.PrimaryValue()
+		return p.PrimaryValues()
 	}
 
 	var (
-		index = c.data.primaryIndex
-		ids   = make([]interface{}, c.rv.Len())
+		index   = c.data.primaryIndex
+		pValues = make([]interface{}, len(c.PrimaryFields()))
 	)
 
-	for i := 0; i < len(ids); i++ {
+	if index != nil {
+		for i := range index {
+			var (
+				values = make([]interface{}, c.rv.Len())
+			)
+
+			for j := range values {
+				values[j] = c.rv.Index(j).Field(index[i]).Interface()
+			}
+
+			pValues[i] = values
+		}
+	} else {
+		// using interface.
 		var (
-			fv = c.rv.Index(i)
+			tmp = make([][]interface{}, len(pValues))
 		)
 
-		if index == -2 {
-			// using interface
-			ids[i] = fv.Interface().(primary).PrimaryValue()
-		} else {
-			ids[i] = fv.Field(index).Interface()
+		for i := 0; i < c.rv.Len(); i++ {
+			for j, id := range c.rv.Index(i).Interface().(primary).PrimaryValues() {
+				tmp[j] = append(tmp[j], id)
+			}
+		}
+
+		for i := range tmp {
+			pValues[i] = tmp[i]
 		}
 	}
 
-	return ids
+	return pValues
+}
+
+// PrimaryValue of this document.
+// panic if document uses composite key.
+func (c Collection) PrimaryValue() interface{} {
+	if values := c.PrimaryValues(); len(values) == 1 {
+		return values[0]
+	}
+
+	panic("rel: composite primary key is not supported")
 }
 
 // Get an element from the underlying slice as a document.

@@ -453,6 +453,59 @@ func TestRepository_MustFindAndCountAll(t *testing.T) {
 
 func TestRepository_Insert(t *testing.T) {
 	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			Name: "name",
+		}
+		mutates = map[string]Mutate{
+			"name":       Set("name", "name"),
+			"age":        Set("age", 0),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
+	)
+
+	adapter.On("Insert", From("users"), mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_compositePrimaryFields(t *testing.T) {
+	var (
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		userRole = UserRole{
+			UserID: 1,
+			RoleID: 2,
+		}
+		mutates = map[string]Mutate{
+			"user_id": Set("user_id", 1),
+			"role_id": Set("role_id", 2),
+		}
+	)
+
+	adapter.On("Insert", From("user_roles"), mutates).Return(0, nil).Once()
+
+	assert.Nil(t, repo.Insert(context.TODO(), &userRole))
+	assert.Equal(t, UserRole{
+		UserID: 1,
+		RoleID: 2,
+	}, userRole)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Insert_sets(t *testing.T) {
+	var (
 		user     User
 		adapter  = &testAdapter{}
 		repo     = New(adapter)
@@ -908,6 +961,37 @@ func TestRepository_InsertAll(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_InsertAll_compositePrimaryFields(t *testing.T) {
+	var (
+		userRoles = []UserRole{
+			{UserID: 1, RoleID: 2},
+			{UserID: 1, RoleID: 3},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		mutates = []map[string]Mutate{
+			{
+				"user_id": Set("user_id", 1),
+				"role_id": Set("role_id", 2),
+			},
+			{
+				"user_id": Set("user_id", 1),
+				"role_id": Set("role_id", 3),
+			},
+		}
+	)
+
+	adapter.On("InsertAll", From("user_roles"), mock.Anything, mutates).Return([]interface{}{0, 0}, nil).Once()
+
+	assert.Nil(t, repo.InsertAll(context.TODO(), &userRoles))
+	assert.Equal(t, []UserRole{
+		{UserID: 1, RoleID: 2},
+		{UserID: 1, RoleID: 3},
+	}, userRoles)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_InsertAll_empty(t *testing.T) {
 	var (
 		users   []User
@@ -933,6 +1017,65 @@ func TestRepository_InsertAll_nothing(t *testing.T) {
 }
 
 func TestRepository_Update(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID:        1,
+			Name:      "name",
+			CreatedAt: now(),
+			UpdatedAt: now(),
+		}
+		mutates = map[string]Mutate{
+			"id":         Set("id", 1),
+			"name":       Set("name", "name"),
+			"age":        Set("age", 0),
+			"created_at": Set("created_at", now()),
+			"updated_at": Set("updated_at", now()),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
+	)
+
+	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		CreatedAt: now(),
+		UpdatedAt: now(),
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_compositePrimaryKeys(t *testing.T) {
+	var (
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		userRole = UserRole{
+			UserID: 1,
+			RoleID: 2,
+		}
+		mutates = map[string]Mutate{
+			"user_id": Set("user_id", 1),
+			"role_id": Set("role_id", 2),
+		}
+		queries = From("user_roles").Where(Eq("user_id", userRole.UserID).AndEq("role_id", userRole.RoleID))
+	)
+
+	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &userRole))
+	assert.Equal(t, UserRole{
+		UserID: 1,
+		RoleID: 2,
+	}, userRole)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_sets(t *testing.T) {
 	var (
 		user     = User{ID: 1}
 		adapter  = &testAdapter{}
@@ -2218,6 +2361,20 @@ func TestRepository_Delete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Delete_compositePrimaryKey(t *testing.T) {
+	var (
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		userRole = UserRole{UserID: 1, RoleID: 2}
+	)
+
+	adapter.On("Delete", From("user_roles").Where(Eq("user_id", userRole.UserID).AndEq("role_id", userRole.RoleID))).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &userRole))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Delete_notFound(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
@@ -2968,6 +3125,45 @@ func TestRepository_Preload_sliceNestedBelongsTo(t *testing.T) {
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_alreadyLoaded(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		userID  = 1
+		address = Address{
+			UserID: &userID,
+			User:   &User{ID: userID},
+		}
+	)
+
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user"))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Preload_alreadyLoadedForceReload(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		userID  = 1
+		address = Address{
+			UserID: &userID,
+			User:   &User{ID: userID},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("users").Where(In("id", 1)).Reload()).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(userID, "Del Piero").Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user", Reload(true)))
+	adapter.AssertExpectations(t)
 }
 
 func TestRepository_Preload_emptySlice(t *testing.T) {

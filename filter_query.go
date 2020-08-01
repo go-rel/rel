@@ -1,5 +1,9 @@
 package rel
 
+import (
+	"errors"
+)
+
 // FilterOp defines enumeration of all supported filter types.
 type FilterOp int
 
@@ -495,4 +499,101 @@ func FilterFragment(expr string, values ...interface{}) FilterQuery {
 		Field: expr,
 		Value: values,
 	}
+}
+
+func filterDocument(doc *Document) FilterQuery {
+	var (
+		pFields = doc.PrimaryFields()
+		pValues = doc.PrimaryValues()
+	)
+
+	return filterDocumentPrimary(pFields, pValues, FilterEqOp)
+}
+
+func filterDocumentPrimary(pFields []string, pValues []interface{}, op FilterOp) FilterQuery {
+	var filter FilterQuery
+
+	for i := range pFields {
+		filter = filter.And(FilterQuery{
+			Type:  op,
+			Field: pFields[i],
+			Value: pValues[i],
+		})
+	}
+
+	return filter
+
+}
+
+func filterCollection(col *Collection) FilterQuery {
+	var (
+		pFields = col.PrimaryFields()
+		pValues = col.PrimaryValues()
+		length  = col.Len()
+	)
+
+	return filterCollectionPrimary(pFields, pValues, length)
+}
+
+func filterCollectionPrimary(pFields []string, pValues []interface{}, length int) FilterQuery {
+	var filter FilterQuery
+
+	if len(pFields) == 1 {
+		filter = In(pFields[0], pValues[0].([]interface{})...)
+	} else {
+		var (
+			andFilters = make([]FilterQuery, length)
+		)
+
+		for i := range pValues {
+			var (
+				values = pValues[i].([]interface{})
+			)
+
+			for j := range values {
+				andFilters[j] = andFilters[j].AndEq(pFields[i], values[j])
+			}
+		}
+
+		filter = Or(andFilters...)
+	}
+
+	return filter
+}
+
+func filterBelongsTo(assoc Association) (FilterQuery, error) {
+	var (
+		rValue = assoc.ReferenceValue()
+		fValue = assoc.ForeignValue()
+		filter = Eq(assoc.ForeignField(), fValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  assoc.ReferenceField(),
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent belongs to ref and fk"),
+		}
+	}
+
+	return filter, nil
+}
+
+func filterHasOne(assoc Association, asssocDoc *Document) (FilterQuery, error) {
+	var (
+		fField = assoc.ForeignField()
+		fValue = assoc.ForeignValue()
+		rValue = assoc.ReferenceValue()
+		filter = filterDocument(asssocDoc).AndEq(fField, rValue)
+	)
+
+	if rValue != fValue {
+		return filter, ConstraintError{
+			Key:  fField,
+			Type: ForeignKeyConstraint,
+			Err:  errors.New("rel: inconsistent has one ref and fk"),
+		}
+	}
+
+	return filter, nil
 }

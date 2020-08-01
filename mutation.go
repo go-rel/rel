@@ -42,7 +42,7 @@ func Apply(doc *Document, mutators ...Mutator) Mutation {
 // AssocMutation represents mutation for association.
 type AssocMutation struct {
 	Mutations  []Mutation
-	DeletedIDs []interface{}
+	DeletedIDs []interface{} // This is array of single id, and doesn't support composite primary key.
 }
 
 // Mutation represents value to be inserted or updated to database.
@@ -216,6 +216,11 @@ type Reload bool
 // Apply mutation.
 func (r Reload) Apply(doc *Document, mutation *Mutation) {
 	mutation.Reload = r
+}
+
+// Build query.
+func (r Reload) Build(query *Query) {
+	query.ReloadQuery = r
 }
 
 // Cascade enable or disable updating associations.

@@ -242,7 +242,7 @@ func TestChangeset_belongsTo(t *testing.T) {
 		assert.Equal(t, Mutation{
 			Cascade: true,
 			Assoc: map[string]AssocMutation{
-				"user": AssocMutation{
+				"user": {
 					Mutations: []Mutation{
 						{
 							Cascade: true,
@@ -300,7 +300,7 @@ func TestChangeset_belongsTo_new(t *testing.T) {
 		assert.Equal(t, Mutation{
 			Cascade: true,
 			Assoc: map[string]AssocMutation{
-				"user": AssocMutation{
+				"user": {
 					Mutations: []Mutation{
 						{
 							Cascade: true,
@@ -363,7 +363,7 @@ func TestChangeset_hasOne(t *testing.T) {
 		assert.Equal(t, Mutation{
 			Cascade: true,
 			Assoc: map[string]AssocMutation{
-				"address": AssocMutation{
+				"address": {
 					Mutations: []Mutation{
 						{
 							Cascade: true,
@@ -422,7 +422,7 @@ func TestChangeset_hasOne_new(t *testing.T) {
 		assert.Equal(t, Mutation{
 			Cascade: true,
 			Assoc: map[string]AssocMutation{
-				"address": AssocMutation{
+				"address": {
 					Mutations: []Mutation{
 						{
 							Cascade: true,
@@ -503,7 +503,7 @@ func TestChangeset_hasMany(t *testing.T) {
 		assert.Equal(t, Mutation{
 			Cascade: true,
 			Assoc: map[string]AssocMutation{
-				"transactions": AssocMutation{
+				"transactions": {
 					Mutations: []Mutation{
 						{
 							Cascade: true,

@@ -106,8 +106,7 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 
 	var (
 		col, _ = assoc.Collection()
-		// pFields = col.PrimaryFields()
-		muts = make([]Mutation, col.Len())
+		muts   = make([]Mutation, col.Len())
 	)
 
 	for i := range muts {
@@ -116,9 +115,6 @@ func (s Structset) buildAssocMany(field string, mut *Mutation) {
 		)
 
 		muts[i] = Apply(doc, newStructset(doc, s.skipZero))
-		// if len(pFields) == 1 {
-		// 	doc.SetValue(pFields[0], nil) // reset id, since it'll be reinserted.
-		// }
 	}
 
 	mut.SetAssoc(field, muts...)

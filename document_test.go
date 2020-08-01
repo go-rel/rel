@@ -148,6 +148,24 @@ func TestDocument_Primary_notFound(t *testing.T) {
 	})
 }
 
+func TestDocument_Primary_composite(t *testing.T) {
+	var (
+		userRole = UserRole{UserID: 1, RoleID: 2}
+		doc      = NewDocument(&userRole)
+	)
+
+	assert.Panics(t, func() {
+		doc.PrimaryField()
+	})
+
+	assert.Panics(t, func() {
+		doc.PrimaryValue()
+	})
+
+	assert.Equal(t, []string{"user_id", "role_id"}, doc.PrimaryFields())
+	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValues())
+}
+
 func TestDocument_Fields(t *testing.T) {
 	var (
 		record = struct {
@@ -377,13 +395,13 @@ func TestDocument_Association(t *testing.T) {
 			name:    "User",
 			record:  &User{},
 			hasOne:  []string{"address"},
-			hasMany: []string{"transactions"},
+			hasMany: []string{"transactions", "user_roles"},
 		},
 		{
 			name:    "User Cached",
 			record:  &User{},
 			hasOne:  []string{"address"},
-			hasMany: []string{"transactions"},
+			hasMany: []string{"transactions", "user_roles"},
 		},
 		{
 			name:      "Transaction",

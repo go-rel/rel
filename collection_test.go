@@ -18,7 +18,7 @@ func (it *Items) PrimaryFields() []string {
 	return []string{"_uuid"}
 }
 
-func (it *Items) PrimaryValue() []interface{} {
+func (it *Items) PrimaryValues() []interface{} {
 	var (
 		ids = make([]interface{}, len(*it))
 	)
@@ -156,12 +156,37 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 			{ExternalID: 1},
 			{ExternalID: 2},
 		}
-		doc = NewCollection(&records)
+		col = NewCollection(&records)
 	)
 
 	// infer primary key
-	assert.Equal(t, "external_id", doc.PrimaryField())
-	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValue())
+	assert.Equal(t, "external_id", col.PrimaryField())
+	assert.Equal(t, []interface{}{1, 2}, col.PrimaryValue())
+}
+
+func TestCollection_Primary_composite(t *testing.T) {
+	var (
+		userRole = []UserRole{
+			{UserID: 1, RoleID: 2},
+			{UserID: 3, RoleID: 4},
+			{UserID: 5, RoleID: 6},
+		}
+		col = NewCollection(&userRole)
+	)
+
+	assert.Panics(t, func() {
+		col.PrimaryField()
+	})
+
+	assert.Panics(t, func() {
+		col.PrimaryValue()
+	})
+
+	assert.Equal(t, []string{"user_id", "role_id"}, col.PrimaryFields())
+	assert.Equal(t, []interface{}{
+		[]interface{}{1, 3, 5},
+		[]interface{}{2, 4, 6},
+	}, col.PrimaryValues())
 }
 
 func TestCollection_Primary_notFound(t *testing.T) {
@@ -170,11 +195,11 @@ func TestCollection_Primary_notFound(t *testing.T) {
 			ExternalID int
 			Name       string
 		}{}
-		doc = NewCollection(&records)
+		col = NewCollection(&records)
 	)
 
 	assert.Panics(t, func() {
-		doc.PrimaryField()
+		col.PrimaryField()
 	})
 }
 

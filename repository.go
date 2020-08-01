@@ -279,7 +279,9 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	}
 
 	if mutation.Reload {
-		var filter = filterDocument(doc)
+		var (
+			filter = filterDocument(doc)
+		)
 
 		// fetch record
 		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {

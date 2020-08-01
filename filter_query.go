@@ -1,6 +1,8 @@
 package rel
 
-import "errors"
+import (
+	"errors"
+)
 
 // FilterOp defines enumeration of all supported filter types.
 type FilterOp int

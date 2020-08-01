@@ -514,7 +514,7 @@ func searchPrimary(rt reflect.Type) ([]string, []int) {
 		)
 
 		field = v.PrimaryFields()
-		// index = -2 // special index to mark interface usage
+		// index kept nil to mark interface usage
 	} else {
 		for i := 0; i < rt.NumField(); i++ {
 			sf := rt.Field(i)

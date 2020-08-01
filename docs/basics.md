@@ -66,7 +66,7 @@ type Book struct {
 
 ### Primary Key
 
-REL requires every struct to have at least `primary` key. by default field named `id` will be used as primary key. to use other field as primary key. you may define it as `primary` using `db` tag.
+REL requires every struct to have at least `primary` key. by default field named `id` will be used as primary key. To use other field as primary key, you may define it as `primary` using `db` tag. Defining multiple field as primary will forms composite primary key.
 
 
 ```go

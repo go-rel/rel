@@ -12,6 +12,7 @@ type User struct {
 	Age          int
 	Transactions []Transaction `ref:"id" fk:"user_id"`
 	Address      Address
+	UserRoles    []UserRole
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -54,4 +55,15 @@ type Address struct {
 type Owner struct {
 	User   *User
 	UserID *int
+}
+
+type Role struct {
+	ID        int
+	Name      string
+	UserRoles []UserRole
+}
+
+type UserRole struct {
+	UserID int `db:",primary"`
+	RoleID int `db:",primary"`
 }

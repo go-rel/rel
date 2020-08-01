@@ -62,17 +62,15 @@ func (a Association) Document() (*Document, bool) {
 
 		var (
 			doc = NewDocument(rv)
-			id  = doc.PrimaryValue()
 		)
 
-		return doc, !isZero(id)
+		return doc, doc.Persisted()
 	default:
 		var (
 			doc = NewDocument(rv.Addr())
-			id  = doc.PrimaryValue()
 		)
 
-		return doc, !isZero(id)
+		return doc, doc.Persisted()
 	}
 }
 

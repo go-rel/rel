@@ -73,9 +73,12 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 		deletedIDs []interface{}
 		muts       = make([]Mutation, len(maps))
 		col, _     = assoc.Collection()
-		pField     = col.PrimaryField()
-		pIndex     = make(map[interface{}]int)
-		pValues    = col.PrimaryValue().([]interface{})
+	)
+
+	var (
+		pField  = col.PrimaryField()
+		pIndex  = make(map[interface{}]int)
+		pValues = col.PrimaryValue().([]interface{})
 	)
 
 	for i, v := range pValues {

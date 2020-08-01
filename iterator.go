@@ -16,25 +16,37 @@ type IteratorOption interface {
 	apply(*iterator)
 }
 
-// BatchSize specifies the size of iterator batch. Defaults to 1000.
-type BatchSize int
+type batchSize int
 
-func (bs BatchSize) apply(i *iterator) {
+func (bs batchSize) apply(i *iterator) {
 	i.batchSize = int(bs)
 }
 
-// Start specfies the primary value to start from (inclusive).
-type Start int
+// BatchSize specifies the size of iterator batch. Defaults to 1000.
+func BatchSize(size int) IteratorOption {
+	return batchSize(size)
+}
 
-func (s Start) apply(i *iterator) {
-	i.start = []interface{}{int(s)}
+type start []interface{}
+
+func (s start) apply(i *iterator) {
+	i.start = s
+}
+
+// Start specfies the primary value to start from (inclusive).
+func Start(id ...interface{}) IteratorOption {
+	return start(id)
+}
+
+type finish []interface{}
+
+func (f finish) apply(i *iterator) {
+	i.finish = f
 }
 
 // Finish specfies the primary value to finish at (inclusive).
-type Finish int
-
-func (f Finish) apply(i *iterator) {
-	i.finish = []interface{}{int(f)}
+func Finish(id ...interface{}) IteratorOption {
+	return finish(id)
 }
 
 type iterator struct {
@@ -113,11 +125,11 @@ func (i *iterator) init(record interface{}) {
 		i.query.Table = doc.Table()
 	}
 
-	if i.start != nil {
+	if len(i.start) > 0 {
 		i.query = i.query.Where(filterDocumentPrimary(doc.PrimaryFields(), i.start, FilterGteOp))
 	}
 
-	if i.finish != nil {
+	if len(i.finish) > 0 {
 		i.query = i.query.Where(filterDocumentPrimary(doc.PrimaryFields(), i.finish, FilterLteOp))
 	}
 

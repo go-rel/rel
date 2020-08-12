@@ -149,10 +149,13 @@ func Inserts(t *testing.T, repo rel.Repository) {
 		&User{Name: "insert", Age: 100},
 		&User{Name: "insert", Age: 100, Note: &note},
 		&User{Note: &note},
+		&User{ID: 123, Name: "insert", Age: 100, Note: &note},
 		&Address{},
 		&Address{Name: "work"},
 		&Address{UserID: &user.ID},
 		&Address{Name: "work", UserID: &user.ID},
+		&Address{ID: 123, Name: "work", UserID: &user.ID},
+		&Composite{Primary1: 1, Primary2: 2, Data: "data-1-2"},
 	}
 
 	for _, record := range tests {
@@ -172,6 +175,10 @@ func assertRecord(t *testing.T, repo rel.Repository, record interface{}) {
 	case *Address:
 		var found Address
 		repo.MustFind(ctx, &found, where.Eq("id", v.ID))
+		assert.Equal(t, found, *v)
+	case *Composite:
+		var found Composite
+		repo.MustFind(ctx, &found, where.Eq("primary1", v.Primary1).AndEq("primary2", v.Primary2))
 		assert.Equal(t, found, *v)
 	}
 }

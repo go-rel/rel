@@ -53,7 +53,7 @@ func Open(dsn string) (*Adapter, error) {
 func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (interface{}, error) {
 	var (
 		id              int64
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, mutates)
+		statement, args = sql.NewBuilder(adapter.Config).Returning(primaryField).Insert(query.Table, mutates)
 		rows, err       = adapter.query(ctx, statement, args)
 	)
 

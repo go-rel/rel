@@ -45,6 +45,13 @@ type Extra struct {
 	UserID int64
 }
 
+// Composite primaries example.
+type Composite struct {
+	Primary1 int `db:",primary"`
+	Primary2 int `db:",primary"`
+	Data     string
+}
+
 var (
 	config = &sql.Config{
 		Placeholder: "?",

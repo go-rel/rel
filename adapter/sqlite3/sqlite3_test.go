@@ -25,6 +25,8 @@ func init() {
 	paranoid.Panic(err, "failed when dropping addresses table")
 	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err, "failed when dropping users table")
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
+	paranoid.Panic(err, "failed when dropping users table")
 
 	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
 		id INTEGER PRIMARY KEY,
@@ -56,6 +58,14 @@ func init() {
 		score INTEGER DEFAULT 0,
 		FOREIGN KEY (user_id) REFERENCES users(id),
 		CONSTRAINT extras_score_check CHECK (score>=0 AND score<=100)
+	);`, nil)
+	paranoid.Panic(err, "failed when creating extras table")
+
+	_, _, err = adapter.Exec(ctx, `CREATE TABLE composites (
+		primary1 INTEGER,
+		primary2 INTEGER,
+		data VARCHAR(255) DEFAULT NULL,
+		PRIMARY KEY (primary1, primary2)
 	);`, nil)
 	paranoid.Panic(err, "failed when creating extras table")
 }

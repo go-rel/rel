@@ -26,6 +26,8 @@ func init() {
 	paranoid.Panic(err, "failed dropping addresses table")
 	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err, "failed dropping users table")
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
+	paranoid.Panic(err, "failed dropping composites table")
 
 	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
 		id SERIAL NOT NULL PRIMARY KEY,
@@ -56,6 +58,14 @@ func init() {
 		score INTEGER DEFAULT 0 CHECK (score>=0 AND score<=100)
 	);`, nil)
 	paranoid.Panic(err, "failed creating extras table")
+
+	_, _, err = adapter.Exec(ctx, `CREATE TABLE composites (
+		primary1 SERIAL NOT NULL,
+		primary2 SERIAL NOT NULL,
+		data VARCHAR(255) DEFAULT NULL,
+		PRIMARY KEY (primary1, primary2)
+	);`, nil)
+	paranoid.Panic(err, "failed creating composites table")
 
 	// hack to make sure location it has the same location object as returned by pq driver.
 	time.Local, err = time.LoadLocation("Asia/Jakarta")

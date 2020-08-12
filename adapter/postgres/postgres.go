@@ -50,7 +50,7 @@ func Open(dsn string) (*Adapter, error) {
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (interface{}, error) {
+func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (interface{}, error) {
 	var (
 		id              int64
 		statement, args = sql.NewBuilder(adapter.Config).Returning("id").Insert(query.Table, mutates)
@@ -66,10 +66,10 @@ func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, mutates map
 }
 
 // InsertAll inserts multiple records to database and returns its ids.
-func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
+func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryField string, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
 	var (
 		ids             []interface{}
-		statement, args = sql.NewBuilder(adapter.Config).Returning("id").InsertAll(query.Table, fields, bulkMutates)
+		statement, args = sql.NewBuilder(adapter.Config).Returning(primaryField).InsertAll(query.Table, fields, bulkMutates)
 		rows, err       = adapter.query(ctx, statement, args)
 	)
 

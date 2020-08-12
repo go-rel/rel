@@ -108,6 +108,7 @@ func TestAdapter_specs(t *testing.T) {
 	specs.InsertBelongsTo(t, repo)
 	specs.Inserts(t, repo)
 	specs.InsertAll(t, repo)
+	specs.InsertAllPartialCustomPrimary(t, repo)
 
 	// Update Specs
 	specs.Update(t, repo)

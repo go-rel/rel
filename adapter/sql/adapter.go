@@ -151,8 +151,18 @@ func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryF
 		inc *= -1
 	}
 
-	for i := range ids {
-		ids[i] = id + int64(i*inc)
+	if primaryField != "" {
+		counter := 0
+		for i := range ids {
+			if mut, ok := bulkMutates[i][primaryField]; ok {
+				ids[i] = mut.Value
+				id = toInt64(ids[i])
+				counter = 1
+			} else {
+				ids[i] = id + int64(counter*inc)
+				counter++
+			}
+		}
 	}
 
 	return ids, nil

@@ -26,7 +26,7 @@ func Update(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
@@ -77,12 +77,12 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 
 	assert.Len(t, user.Addresses, 2)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
-	assert.NotEqual(t, 0, user.Addresses[1].ID)
+	assert.NotZero(t, user.Addresses[0].ID)
+	assert.NotZero(t, user.Addresses[1].ID)
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, user.ID, *user.Addresses[1].UserID)
 	assert.Equal(t, "primary", user.Addresses[0].Name)
@@ -107,17 +107,17 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	)
 
 	repo.MustInsert(ctx, &user)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
+	assert.NotZero(t, user.Addresses[0].ID)
 
 	user.Name = "update insert has many"
 	user.Addresses[0].Name = "new address"
 
 	assert.Nil(t, repo.Update(ctx, &user))
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 
 	assert.Len(t, user.Addresses, 1)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
+	assert.NotZero(t, user.Addresses[0].ID)
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, "new address", user.Addresses[0].Name)
 
@@ -149,12 +149,12 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update insert has many", user.Name)
 
 	assert.Len(t, user.Addresses, 2)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
-	assert.NotEqual(t, 0, user.Addresses[1].ID)
+	assert.NotZero(t, user.Addresses[0].ID)
+	assert.NotZero(t, user.Addresses[1].ID)
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, user.ID, *user.Addresses[1].UserID)
 	assert.Equal(t, "primary", user.Addresses[0].Name)
@@ -182,10 +182,10 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update insert has one", user.Name)
 
-	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
+	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 
@@ -212,10 +212,10 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update update has one", user.Name)
 
-	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
+	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "updated primary", user.PrimaryAddress.Name)
 
@@ -242,10 +242,10 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "update replace has one", user.Name)
 
-	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
+	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "replaced primary", user.PrimaryAddress.Name)
 
@@ -269,10 +269,10 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &address)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, address.ID)
+	assert.NotZero(t, address.ID)
 	assert.Equal(t, "update address belongs to", address.Name)
 
-	assert.NotEqual(t, 0, address.User.ID)
+	assert.NotZero(t, address.User.ID)
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "inserted user", address.User.Name)
 
@@ -299,10 +299,10 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 
 	err := repo.Update(ctx, &address)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, address.ID)
+	assert.NotZero(t, address.ID)
 	assert.Equal(t, "update address belongs to", address.Name)
 
-	assert.NotEqual(t, 0, address.User.ID)
+	assert.NotZero(t, address.User.ID)
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "updated user", address.User.Name)
 

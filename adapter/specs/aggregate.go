@@ -51,11 +51,11 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 		t.Run("Aggregate", func(t *testing.T) {
 			count, err := repo.Aggregate(ctx, query, "count", "id")
 			assert.Nil(t, err)
-			assert.True(t, count >= 0)
+			assert.NotZero(t, count)
 
 			sum, err := repo.Aggregate(ctx, query, "sum", "id")
 			assert.Nil(t, err)
-			assert.True(t, sum >= 0)
+			assert.NotZero(t, sum)
 		})
 	}
 }

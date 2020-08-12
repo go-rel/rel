@@ -26,6 +26,8 @@ func init() {
 	paranoid.Panic(err, "failed dropping addresses table")
 	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
 	paranoid.Panic(err, "failed dropping users table")
+	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
+	paranoid.Panic(err, "failed dropping composites table")
 
 	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
 		id SERIAL NOT NULL PRIMARY KEY,

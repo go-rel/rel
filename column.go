@@ -4,6 +4,8 @@ package rel
 type ColumnType string
 
 const (
+	// ID ColumnType.
+	ID ColumnType = "ID"
 	// Bool ColumnType.
 	Bool ColumnType = "BOOL"
 	// Int ColumnType.

@@ -23,6 +23,8 @@ func MapColumnType(column rel.Column) (string, int, int) {
 	)
 
 	switch column.Type {
+	case rel.ID:
+		typ = "INT UNSIGNED AUTO_INCREMENT PRIMARY KEY"
 	case rel.Bool:
 		typ = "BOOL"
 	case rel.Int:

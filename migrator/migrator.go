@@ -59,12 +59,11 @@ func (m *Migrator) RegisterVersion(v int, up func(schema *rel.Schema), down func
 func (m Migrator) buildVersionTableDefinition() rel.Table {
 	var schema rel.Schema
 	schema.CreateTable(versionTable, func(t *rel.Table) {
-		t.Int("id")
+		t.ID("id")
 		t.Int("version")
 		t.DateTime("created_at")
 		t.DateTime("updated_at")
 
-		t.PrimaryKey("id")
 		t.Unique([]string{"version"})
 	}, rel.Optional(true))
 

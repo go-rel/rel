@@ -21,8 +21,7 @@ func TestMigrator(t *testing.T) {
 		migrator.RegisterVersion(20200829084000,
 			func(schema *rel.Schema) {
 				schema.CreateTable("users", func(t *rel.Table) {
-					t.Int("id")
-					t.PrimaryKey("id")
+					t.ID("id")
 				})
 			},
 			func(schema *rel.Schema) {
@@ -33,8 +32,7 @@ func TestMigrator(t *testing.T) {
 		migrator.RegisterVersion(20200828100000,
 			func(schema *rel.Schema) {
 				schema.CreateTable("tags", func(t *rel.Table) {
-					t.Int("id")
-					t.PrimaryKey("id")
+					t.ID("id")
 				})
 			},
 			func(schema *rel.Schema) {
@@ -45,8 +43,7 @@ func TestMigrator(t *testing.T) {
 		migrator.RegisterVersion(20200829115100,
 			func(schema *rel.Schema) {
 				schema.CreateTable("books", func(t *rel.Table) {
-					t.Int("id")
-					t.PrimaryKey("id")
+					t.ID("id")
 				})
 			},
 			func(schema *rel.Schema) {

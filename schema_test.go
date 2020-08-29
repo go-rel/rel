@@ -10,21 +10,18 @@ func TestSchema_CreateTable(t *testing.T) {
 	var schema Schema
 
 	schema.CreateTable("products", func(t *Table) {
-		t.Int("id")
+		t.ID("id")
 		t.String("name")
 		t.Text("description")
-
-		t.PrimaryKey("id")
 	})
 
 	assert.Equal(t, Table{
 		Op:   SchemaAdd,
 		Name: "products",
 		Definitions: []interface{}{
-			Column{Name: "id", Type: Int},
+			Column{Name: "id", Type: ID},
 			Column{Name: "name", Type: String},
 			Column{Name: "description", Type: Text},
-			Index{Columns: []string{"id"}, Type: PrimaryKey},
 		},
 	}, schema.Pending[0])
 }

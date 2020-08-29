@@ -16,6 +16,12 @@ func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
 	t.Definitions = append(t.Definitions, addColumn(name, typ, options))
 }
 
+// ID defines a column with name and ID type.
+// the resulting database type will depends on database.
+func (t *Table) ID(name string, options ...ColumnOption) {
+	t.Column(name, ID, options...)
+}
+
 // Bool defines a column with name and Bool type.
 func (t *Table) Bool(name string, options ...ColumnOption) {
 	t.Column(name, Bool, options...)
@@ -87,8 +93,8 @@ func (t *Table) Unique(columns []string, options ...IndexOption) {
 }
 
 // PrimaryKey defines an primary key for table.
-func (t *Table) PrimaryKey(column string, options ...IndexOption) {
-	t.Index([]string{column}, PrimaryKey, options...)
+func (t *Table) PrimaryKey(columns []string, options ...IndexOption) {
+	t.Index(columns, PrimaryKey, options...)
 }
 
 // ForeignKey defines foreign key index.

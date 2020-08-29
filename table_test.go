@@ -145,7 +145,7 @@ func TestTable(t *testing.T) {
 	})
 
 	t.Run("PrimaryKey", func(t *testing.T) {
-		table.PrimaryKey("id", Comment("primary key"))
+		table.PrimaryKey([]string{"id"}, Comment("primary key"))
 		assert.Equal(t, Index{
 			Columns: []string{"id"},
 			Type:    PrimaryKey,

@@ -32,10 +32,11 @@ func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
 			Config: &sql.Config{
-				Placeholder:   "?",
-				EscapeChar:    "`",
-				IncrementFunc: incrementFunc,
-				ErrorFunc:     errorFunc,
+				Placeholder:       "?",
+				EscapeChar:        "`",
+				IncrementFunc:     incrementFunc,
+				ErrorFunc:         errorFunc,
+				MapColumnTypeFunc: sql.MapColumnType,
 			},
 			DB: database,
 		},

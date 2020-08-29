@@ -14,7 +14,7 @@ func Migrate(ctx context.Context, adapter rel.Adapter, rollback bool) {
 	m.RegisterVersion(1,
 		func(schema *rel.Schema) {
 			schema.CreateTable("users", func(t *rel.Table) {
-				t.Int("id")
+				t.ID("id")
 				t.String("slug", rel.Limit(30))
 				t.String("name", rel.Limit(30), rel.Default(""))
 				t.String("gender", rel.Limit(10), rel.Default(""))
@@ -23,7 +23,6 @@ func Migrate(ctx context.Context, adapter rel.Adapter, rollback bool) {
 				t.DateTime("created_at")
 				t.DateTime("updated_at")
 
-				t.PrimaryKey("id")
 				t.Unique([]string{"slug"})
 			})
 		},
@@ -35,13 +34,12 @@ func Migrate(ctx context.Context, adapter rel.Adapter, rollback bool) {
 	m.RegisterVersion(2,
 		func(schema *rel.Schema) {
 			schema.CreateTable("addresses", func(t *rel.Table) {
-				t.Int("id")
-				t.Int("user_id")
+				t.ID("id")
+				t.Int("user_id", rel.Unsigned(true))
 				t.String("name", rel.Limit(60), rel.Required(true), rel.Default(""))
 				t.DateTime("created_at")
 				t.DateTime("updated_at")
 
-				t.PrimaryKey("id")
 				t.ForeignKey("user_id", "users", "id")
 			})
 		},
@@ -53,12 +51,11 @@ func Migrate(ctx context.Context, adapter rel.Adapter, rollback bool) {
 	m.RegisterVersion(3,
 		func(schema *rel.Schema) {
 			schema.CreateTable("extras", func(t *rel.Table) {
-				t.Int("id")
-				t.Int("user_id")
+				t.ID("id")
+				t.Int("user_id", rel.Unsigned(true))
 				t.String("slug", rel.Limit(30))
 				t.Int("score", rel.Default(0))
 
-				t.PrimaryKey("id")
 				t.ForeignKey("user_id", "users", "id")
 				t.Unique([]string{"slug"})
 				t.Fragment("CONSTRAINT extras_score_check CHECK (score>=0 AND score<=100)")
@@ -76,7 +73,7 @@ func Migrate(ctx context.Context, adapter rel.Adapter, rollback bool) {
 				t.Int("primary2")
 				t.String("data")
 
-				t.Index([]string{"primary1", "primary2"}, rel.PrimaryKey)
+				t.PrimaryKey([]string{"primary1", "primary2"})
 			})
 		},
 		func(schema *rel.Schema) {

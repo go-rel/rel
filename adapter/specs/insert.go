@@ -22,7 +22,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 
 	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "insert", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
@@ -55,14 +55,14 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 
 	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "insert has many", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 
 	assert.Len(t, user.Addresses, 2)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
-	assert.NotEqual(t, 0, user.Addresses[1].ID)
+	assert.NotZero(t, user.Addresses[0].ID)
+	assert.NotZero(t, user.Addresses[1].ID)
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, user.ID, *user.Addresses[1].UserID)
 	assert.Equal(t, "primary", user.Addresses[0].Name)
@@ -88,12 +88,12 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 
 	err := repo.Insert(ctx, &user)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, user.ID)
+	assert.NotZero(t, user.ID)
 	assert.Equal(t, "insert has one", user.Name)
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 
-	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
+	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
 
@@ -120,11 +120,11 @@ func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	err := repo.Insert(ctx, &address)
 	assert.Nil(t, err)
 
-	assert.NotEqual(t, 0, address.ID)
+	assert.NotZero(t, address.ID)
 	assert.Equal(t, address.User.ID, *address.UserID)
 	assert.Equal(t, "insert belongs to", address.Name)
 
-	assert.NotEqual(t, 0, address.User.ID)
+	assert.NotZero(t, address.User.ID)
 	assert.Equal(t, "zoro", address.User.Name)
 	assert.Equal(t, "male", address.User.Gender)
 	assert.Equal(t, 23, address.User.Age)
@@ -149,10 +149,13 @@ func Inserts(t *testing.T, repo rel.Repository) {
 		&User{Name: "insert", Age: 100},
 		&User{Name: "insert", Age: 100, Note: &note},
 		&User{Note: &note},
+		&User{ID: 123, Name: "insert", Age: 100, Note: &note},
 		&Address{},
 		&Address{Name: "work"},
 		&Address{UserID: &user.ID},
 		&Address{Name: "work", UserID: &user.ID},
+		&Address{ID: 123, Name: "work", UserID: &user.ID},
+		&Composite{Primary1: 1, Primary2: 2, Data: "data-1-2"},
 	}
 
 	for _, record := range tests {
@@ -173,6 +176,10 @@ func assertRecord(t *testing.T, repo rel.Repository, record interface{}) {
 		var found Address
 		repo.MustFind(ctx, &found, where.Eq("id", v.ID))
 		assert.Equal(t, found, *v)
+	case *Composite:
+		var found Composite
+		repo.MustFind(ctx, &found, where.Eq("primary1", v.Primary1).AndEq("primary2", v.Primary2))
+		assert.Equal(t, found, *v)
 	}
 }
 
@@ -191,43 +198,64 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
 		&[]User{{Name: "insert", Age: 100}, {Name: "insert too"}},
+		&[]User{{ID: 224, Name: "insert", Age: 100}, {ID: 234, Name: "insert too"}},
 		&[]Address{{}},
 		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
 		&[]Address{{Name: "work", UserID: &user.ID}},
 		&[]Address{{Name: "work"}, {Name: "home"}},
+		&[]Address{{ID: 233, Name: "work"}, {ID: 235, Name: "home"}},
 	}
 
 	for _, record := range tests {
 		t.Run("InsertAll", func(t *testing.T) {
 			assert.Nil(t, repo.InsertAll(ctx, record))
-
-			switch v := record.(type) {
-			case *[]User:
-				var (
-					found []User
-					ids   = make([]int, len(*v))
-				)
-
-				for i := range *v {
-					ids[i] = int((*v)[i].ID)
-				}
-
-				repo.MustFindAll(ctx, &found, where.InInt("id", ids))
-				assert.Equal(t, found, *v)
-			case *[]Address:
-				var (
-					found []Address
-					ids   = make([]int, len(*v))
-				)
-
-				for i := range *v {
-					ids[i] = int((*v)[i].ID)
-				}
-
-				repo.MustFindAll(ctx, &found, where.InInt("id", ids))
-				assert.Equal(t, found, *v)
-			}
+			assertRecords(t, repo, record)
 		})
+	}
+}
+
+// InsertAllPartialCustomPrimary tests insert multiple specifications.
+func InsertAllPartialCustomPrimary(t *testing.T, repo rel.Repository) {
+	tests := []interface{}{
+		&[]User{{ID: 300, Name: "insert 300", Age: 100}, {Name: "insert 300+?"}},
+		&[]User{{Name: "insert 305-?", Age: 100}, {ID: 305, Name: "insert 305+?"}},
+		&[]User{{Name: "insert 310-?"}, {ID: 310, Name: "insert 310", Age: 100}, {Name: "insert 300+?"}},
+	}
+
+	for _, record := range tests {
+		t.Run("InsertAll", func(t *testing.T) {
+			assert.Nil(t, repo.InsertAll(ctx, record))
+			assertRecords(t, repo, record)
+		})
+	}
+}
+
+func assertRecords(t *testing.T, repo rel.Repository, records interface{}) {
+	switch v := records.(type) {
+	case *[]User:
+		var (
+			found []User
+			ids   = make([]int, len(*v))
+		)
+
+		for i := range *v {
+			ids[i] = int((*v)[i].ID)
+		}
+
+		repo.MustFindAll(ctx, &found, where.InInt("id", ids))
+		assert.Equal(t, found, *v)
+	case *[]Address:
+		var (
+			found []Address
+			ids   = make([]int, len(*v))
+		)
+
+		for i := range *v {
+			ids[i] = int((*v)[i].ID)
+		}
+
+		repo.MustFindAll(ctx, &found, where.InInt("id", ids))
+		assert.Equal(t, found, *v)
 	}
 }

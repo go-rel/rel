@@ -156,6 +156,25 @@ func TestAdapter_InsertAll(t *testing.T) {
 	assert.Equal(t, "Zoro", names[1].Name)
 }
 
+func TestAdapter_InsertAll_customPrimary(t *testing.T) {
+	var (
+		adapter = open(t)
+		repo    = rel.New(adapter)
+		names   = []Name{
+			{ID: 20, Name: "Luffy"},
+			{ID: 21, Name: "Zoro"},
+		}
+	)
+	defer adapter.Close()
+
+	assert.Nil(t, repo.InsertAll(context.TODO(), &names))
+	assert.Len(t, names, 2)
+	assert.Equal(t, 20, names[0].ID)
+	assert.Equal(t, 21, names[1].ID)
+	assert.Equal(t, "Luffy", names[0].Name)
+	assert.Equal(t, "Zoro", names[1].Name)
+}
+
 func TestAdapter_Update(t *testing.T) {
 	var (
 		adapter = open(t)
@@ -275,7 +294,7 @@ func TestAdapter_InsertAll_error(t *testing.T) {
 		{"notexist": rel.Set("notexist", "12")},
 	}
 
-	ids, err := adapter.InsertAll(context.TODO(), rel.Query{}, fields, mutations)
+	ids, err := adapter.InsertAll(context.TODO(), rel.Query{}, "id", fields, mutations)
 	assert.NotNil(t, err)
 	assert.Nil(t, ids)
 }

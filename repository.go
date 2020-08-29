@@ -258,6 +258,7 @@ func (r repository) Insert(ctx context.Context, record interface{}, mutators ...
 
 func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) error {
 	var (
+		pField   string
 		pFields  = doc.PrimaryFields()
 		queriers = Build(doc.Table())
 	)
@@ -268,14 +269,18 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 		}
 	}
 
-	pValue, err := cw.adapter.Insert(cw.ctx, queriers, mutation.Mutates)
+	if len(pFields) == 1 {
+		pField = pFields[0]
+	}
+
+	pValue, err := cw.adapter.Insert(cw.ctx, queriers, pField, mutation.Mutates)
 	if err != nil {
 		return mutation.ErrorFunc.transform(err)
 	}
 
 	// update primary value
-	if len(pFields) == 1 {
-		doc.SetValue(pFields[0], pValue)
+	if pField != "" {
+		doc.SetValue(pField, pValue)
 	}
 
 	if mutation.Reload {
@@ -341,6 +346,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	}
 
 	var (
+		pField      string
 		pFields     = col.PrimaryFields()
 		queriers    = Build(col.Table())
 		fields      = make([]string, 0, len(mutation[0].Mutates))
@@ -359,15 +365,19 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 		bulkMutates[i] = mutation[i].Mutates
 	}
 
-	ids, err := cw.adapter.InsertAll(cw.ctx, queriers, fields, bulkMutates)
+	if len(pFields) == 1 {
+		pField = pFields[0]
+	}
+
+	ids, err := cw.adapter.InsertAll(cw.ctx, queriers, pField, fields, bulkMutates)
 	if err != nil {
 		return mutation[0].ErrorFunc.transform(err)
 	}
 
 	// apply ids
-	if len(pFields) == 1 {
+	if pField != "" {
 		for i, id := range ids {
-			col.Get(i).SetValue(pFields[0], id)
+			col.Get(i).SetValue(pField, id)
 		}
 	}
 

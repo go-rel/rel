@@ -59,7 +59,7 @@ Retrieve a book with id 1.
 
 [crud.go](crud.go ':include :fragment=find')
 
-Retrieve a book with iid 1 using syntactic sugar.
+Retrieve a book with id 1 using syntactic sugar.
 
 [crud.go](crud.go ':include :fragment=find-alias')
 

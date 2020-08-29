@@ -14,62 +14,6 @@ import (
 
 var ctx = context.TODO()
 
-func init() {
-	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
-	defer adapter.Close()
-
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS extras;`, nil)
-	paranoid.Panic(err, "failed when dropping extras table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS addresses;`, nil)
-	paranoid.Panic(err, "failed when dropping addresses table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
-	paranoid.Panic(err, "failed when dropping users table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
-	paranoid.Panic(err, "failed when dropping users table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
-		id INTEGER PRIMARY KEY,
-		slug VARCHAR(30) DEFAULT NULL,
-		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT '',
-		age INTEGER NOT NULL DEFAULT 0,
-		note varchar(50),
-		created_at DATETIME,
-		updated_at DATETIME,
-		UNIQUE (slug)
-	);`, nil)
-	paranoid.Panic(err, "failed when creating users table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE addresses (
-		id INTEGER PRIMARY KEY,
-		user_id INTEGER,
-		name VARCHAR(60) NOT NULL DEFAULT '',
-		created_at DATETIME,
-		updated_at DATETIME,
-		FOREIGN KEY (user_id) REFERENCES users(id)
-	);`, nil)
-	paranoid.Panic(err, "failed when creating addresses table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE extras (
-		id INTEGER PRIMARY KEY,
-		slug VARCHAR(30) DEFAULT NULL UNIQUE,
-		user_id INTEGER,
-		score INTEGER DEFAULT 0,
-		FOREIGN KEY (user_id) REFERENCES users(id),
-		CONSTRAINT extras_score_check CHECK (score>=0 AND score<=100)
-	);`, nil)
-	paranoid.Panic(err, "failed when creating extras table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE composites (
-		primary1 INTEGER,
-		primary2 INTEGER,
-		data VARCHAR(255) DEFAULT NULL,
-		PRIMARY KEY (primary1, primary2)
-	);`, nil)
-	paranoid.Panic(err, "failed when creating extras table")
-}
-
 func dsn() string {
 	if os.Getenv("SQLITE3_DATABASE") != "" {
 		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1&_loc=Local"
@@ -84,6 +28,9 @@ func TestAdapter_specs(t *testing.T) {
 	defer adapter.Close()
 
 	repo := rel.New(adapter)
+
+	// Prepare tables
+	specs.Migrate(ctx, adapter, false)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -138,6 +85,9 @@ func TestAdapter_specs(t *testing.T) {
 	// - foreign key constraint is not supported because of lack of information in the error message.
 	specs.UniqueConstraint(t, repo)
 	specs.CheckConstraint(t, repo)
+
+	// Cleanup tables
+	specs.Migrate(ctx, adapter, true)
 }
 
 // func TestAdapter_InsertAll_error(t *testing.T) {

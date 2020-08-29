@@ -6,7 +6,7 @@ type Table struct {
 	Name        string
 	NewName     string
 	Definitions []interface{}
-	IfNotExists bool
+	Optional    bool
 	Comment     string
 	Options     string
 }
@@ -94,6 +94,11 @@ func (t *Table) PrimaryKey(column string, options ...IndexOption) {
 // ForeignKey defines foreign key index.
 func (t *Table) ForeignKey(column string, refTable string, refColumn string, options ...IndexOption) {
 	t.Definitions = append(t.Definitions, addForeignKey(column, refTable, refColumn, options))
+}
+
+// Fragment defines anything using sql fragment.
+func (t *Table) Fragment(fragment string) {
+	t.Definitions = append(t.Definitions, fragment)
 }
 
 func (t Table) migrate() {}

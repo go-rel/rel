@@ -7,7 +7,7 @@ const (
 	// SimpleIndex IndexType.
 	SimpleIndex IndexType = "INDEX"
 	// UniqueIndex IndexType.
-	UniqueIndex IndexType = "UNIQUE INDEX"
+	UniqueIndex IndexType = "UNIQUE"
 	// PrimaryKey IndexType.
 	PrimaryKey IndexType = "PRIMARY KEY"
 	// ForeignKey IndexType.

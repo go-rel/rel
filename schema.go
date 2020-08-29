@@ -198,9 +198,11 @@ func (ou OnUpdate) applyIndex(index *Index) {
 	index.Reference.OnUpdate = string(ou)
 }
 
-// IfNotExists option for table creation.
-type IfNotExists bool
+// Optional option.
+// when used with create table, will create table only if it's not exists.
+// when used with drop table, will drop table only if it's exists.
+type Optional bool
 
-func (ine IfNotExists) applyTable(table *Table) {
-	table.IfNotExists = bool(ine)
+func (o Optional) applyTable(table *Table) {
+	table.Optional = bool(o)
 }

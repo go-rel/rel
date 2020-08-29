@@ -10,16 +10,6 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// Config holds configuration for adapter.
-type Config struct {
-	Placeholder         string
-	Ordinal             bool
-	InsertDefaultValues bool
-	EscapeChar          string
-	ErrorFunc           func(error) error
-	IncrementFunc       func(Adapter) int
-}
-
 // Adapter definition for database database.
 type Adapter struct {
 	Instrumenter rel.Instrumenter
@@ -256,7 +246,12 @@ func (a *Adapter) Rollback(ctx context.Context) error {
 
 // Apply table.
 func (a *Adapter) Apply(ctx context.Context, table rel.Table) error {
-	return nil
+	var (
+		statement = NewBuilder(a.Config).Table(table)
+		_, _, err = a.Exec(ctx, statement, nil)
+	)
+
+	return err
 }
 
 // New initialize adapter without db.

@@ -38,6 +38,11 @@ func (b *Builder) Table(table rel.Table) string {
 		buffer.WriteByte(';')
 	case rel.SchemaDrop:
 		buffer.WriteString("DROP TABLE ")
+
+		if table.Optional {
+			buffer.WriteString("IF EXISTS ")
+		}
+
 		buffer.WriteString(b.escape(table.Name))
 		buffer.WriteByte(';')
 	}
@@ -48,7 +53,7 @@ func (b *Builder) Table(table rel.Table) string {
 func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 	buffer.WriteString("CREATE TABLE ")
 
-	if table.IfNotExists {
+	if table.Optional {
 		buffer.WriteString("IF NOT EXISTS ")
 	}
 
@@ -64,6 +69,8 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 			b.column(buffer, v)
 		case rel.Index:
 			b.index(buffer, v)
+		case string:
+			buffer.WriteString(v)
 		}
 	}
 
@@ -125,7 +132,7 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 
 func (b *Builder) column(buffer *Buffer, column rel.Column) {
 	var (
-		typ, m, n = b.mapColumnType(column)
+		typ, m, n = b.config.MapColumnTypeFunc(column)
 	)
 
 	buffer.WriteString(b.escape(column.Name))
@@ -163,62 +170,10 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 	b.options(buffer, column.Options)
 }
 
-func (b *Builder) mapColumnType(column rel.Column) (string, int, int) {
-	var (
-		typ  string
-		m, n int
-	)
-
-	switch column.Type {
-	case rel.Bool:
-		typ = "BOOL"
-	case rel.Int:
-		typ = "INT"
-		m = column.Limit
-	case rel.BigInt:
-		typ = "BIGINT"
-		m = column.Limit
-	case rel.Float:
-		typ = "FLOAT"
-		m = column.Precision
-	case rel.Decimal:
-		typ = "DECIMAL"
-		m = column.Precision
-		n = column.Scale
-	case rel.String:
-		typ = "VARCHAR"
-		m = column.Limit
-		if m == 0 {
-			m = 255
-		}
-	case rel.Text:
-		typ = "TEXT"
-		m = column.Limit
-	case rel.Binary:
-		typ = "BINARY"
-		m = column.Limit
-	case rel.Date:
-		typ = "DATE"
-	case rel.DateTime:
-		typ = "DATETIME"
-	case rel.Time:
-		typ = "TIME"
-	case rel.Timestamp:
-		// TODO: mysql automatically add on update options.
-		typ = "TIMESTAMP"
-	default:
-		typ = string(column.Type)
-	}
-
-	return typ, m, n
-}
-
 func (b *Builder) index(buffer *Buffer, index rel.Index) {
 	var (
 		typ = string(index.Type)
 	)
-
-	// TODO: type mapping
 
 	buffer.WriteString(typ)
 

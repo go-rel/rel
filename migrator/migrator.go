@@ -15,7 +15,7 @@ type version struct {
 	ID        int
 	Version   int
 	CreatedAt time.Time
-	DeletedAt time.Time
+	UpdatedAt time.Time
 
 	up      rel.Schema
 	down    rel.Schema
@@ -66,7 +66,7 @@ func (m Migrator) buildVersionTableDefinition() rel.Table {
 
 		t.PrimaryKey("id")
 		t.Unique([]string{"version"})
-	}, rel.IfNotExists(true))
+	}, rel.Optional(true))
 
 	return schema.Pending[0].(rel.Table)
 }
@@ -106,7 +106,7 @@ func (m *Migrator) Migrate(ctx context.Context) {
 			continue
 		}
 
-		m.repo.Transaction(ctx, func(ctx context.Context) error {
+		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustInsert(ctx, &version{Version: step.Version})
 
 			adapter := m.repo.Adapter(ctx).(rel.Adapter)
@@ -120,6 +120,8 @@ func (m *Migrator) Migrate(ctx context.Context) {
 
 			return nil
 		})
+
+		check(err)
 	}
 }
 
@@ -133,7 +135,7 @@ func (m *Migrator) Rollback(ctx context.Context) {
 			continue
 		}
 
-		m.repo.Transaction(ctx, func(ctx context.Context) error {
+		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustDelete(ctx, &v)
 
 			adapter := m.repo.Adapter(ctx).(rel.Adapter)
@@ -147,6 +149,9 @@ func (m *Migrator) Rollback(ctx context.Context) {
 			return nil
 		})
 
+		check(err)
+
+		// only rollback one version.
 		return
 	}
 }

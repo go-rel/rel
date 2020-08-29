@@ -37,6 +37,7 @@ func New(database *db.DB) *Adapter {
 				InsertDefaultValues: true,
 				IncrementFunc:       incrementFunc,
 				ErrorFunc:           errorFunc,
+				MapColumnTypeFunc:   mapColumnTypeFunc,
 			},
 			DB: database,
 		},
@@ -86,4 +87,21 @@ func errorFunc(err error) error {
 	default:
 		return err
 	}
+}
+
+func mapColumnTypeFunc(column rel.Column) (string, int, int) {
+	var (
+		typ  string
+		m, n int
+	)
+
+	switch column.Type {
+	case rel.Int:
+		typ = "INTEGER"
+		m = column.Limit
+	default:
+		typ, m, n = sql.MapColumnType(column)
+	}
+
+	return typ, m, n
 }

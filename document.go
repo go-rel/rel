@@ -413,7 +413,7 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			name = fieldName(sf)
 		)
 
-		if name == "" {
+		if c := sf.Name[0]; c < 'A' || c > 'Z' || name == "" {
 			continue
 		}
 

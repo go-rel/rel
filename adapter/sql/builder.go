@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/schema"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.
@@ -23,21 +22,21 @@ type Builder struct {
 }
 
 // Table generates query for table creation and modification.
-func (b *Builder) Table(table schema.Table) string {
+func (b *Builder) Table(table rel.Table) string {
 	var buffer Buffer
 
 	switch table.Op {
-	case schema.Add:
+	case rel.SchemaAdd:
 		b.createTable(&buffer, table)
-	case schema.Alter:
+	case rel.SchemaAlter:
 		b.alterTable(&buffer, table)
-	case schema.Rename:
+	case rel.SchemaRename:
 		buffer.WriteString("RENAME TABLE ")
 		buffer.WriteString(b.escape(table.Name))
 		buffer.WriteString(" TO ")
 		buffer.WriteString(b.escape(table.NewName))
 		buffer.WriteByte(';')
-	case schema.Drop:
+	case rel.SchemaDrop:
 		buffer.WriteString("DROP TABLE ")
 		buffer.WriteString(b.escape(table.Name))
 		buffer.WriteByte(';')
@@ -46,8 +45,13 @@ func (b *Builder) Table(table schema.Table) string {
 	return buffer.String()
 }
 
-func (b *Builder) createTable(buffer *Buffer, table schema.Table) {
+func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 	buffer.WriteString("CREATE TABLE ")
+
+	if table.IfNotExists {
+		buffer.WriteString("IF NOT EXISTS ")
+	}
+
 	buffer.WriteString(b.escape(table.Name))
 	buffer.WriteString(" (")
 
@@ -56,9 +60,9 @@ func (b *Builder) createTable(buffer *Buffer, table schema.Table) {
 			buffer.WriteString(", ")
 		}
 		switch v := def.(type) {
-		case schema.Column:
+		case rel.Column:
 			b.column(buffer, v)
-		case schema.Index:
+		case rel.Index:
 			b.index(buffer, v)
 		}
 	}
@@ -69,7 +73,7 @@ func (b *Builder) createTable(buffer *Buffer, table schema.Table) {
 	buffer.WriteByte(';')
 }
 
-func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
+func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 	buffer.WriteString("ALTER TABLE ")
 	buffer.WriteString(b.escape(table.Name))
 	buffer.WriteByte(' ')
@@ -80,35 +84,35 @@ func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
 		}
 
 		switch v := def.(type) {
-		case schema.Column:
+		case rel.Column:
 			switch v.Op {
-			case schema.Add:
+			case rel.SchemaAdd:
 				buffer.WriteString("ADD COLUMN ")
 				b.column(buffer, v)
-			case schema.Alter: // TODO: use modify keyword?
+			case rel.SchemaAlter: // TODO: use modify keyword?
 				buffer.WriteString("MODIFY COLUMN ")
 				b.column(buffer, v)
-			case schema.Rename:
+			case rel.SchemaRename:
 				// Add Change
 				buffer.WriteString("RENAME COLUMN ")
 				buffer.WriteString(b.escape(v.Name))
 				buffer.WriteString(" TO ")
 				buffer.WriteString(b.escape(v.NewName))
-			case schema.Drop:
+			case rel.SchemaDrop:
 				buffer.WriteString("DROP COLUMN ")
 				buffer.WriteString(b.escape(v.Name))
 			}
-		case schema.Index:
+		case rel.Index:
 			switch v.Op {
-			case schema.Add:
+			case rel.SchemaAdd:
 				buffer.WriteString("ADD ")
 				b.index(buffer, v)
-			case schema.Rename:
+			case rel.SchemaRename:
 				buffer.WriteString("RENAME INDEX ")
 				buffer.WriteString(b.escape(v.Name))
 				buffer.WriteString(" TO ")
 				buffer.WriteString(b.escape(v.NewName))
-			case schema.Drop:
+			case rel.SchemaDrop:
 				buffer.WriteString("DROP INDEX ")
 				buffer.WriteString(b.escape(v.Name))
 			}
@@ -119,7 +123,7 @@ func (b *Builder) alterTable(buffer *Buffer, table schema.Table) {
 	buffer.WriteByte(';')
 }
 
-func (b *Builder) column(buffer *Buffer, column schema.Column) {
+func (b *Builder) column(buffer *Buffer, column rel.Column) {
 	var (
 		typ, m, n = b.mapColumnType(column)
 	)
@@ -159,47 +163,47 @@ func (b *Builder) column(buffer *Buffer, column schema.Column) {
 	b.options(buffer, column.Options)
 }
 
-func (b *Builder) mapColumnType(column schema.Column) (string, int, int) {
+func (b *Builder) mapColumnType(column rel.Column) (string, int, int) {
 	var (
 		typ  string
 		m, n int
 	)
 
 	switch column.Type {
-	case schema.Bool:
+	case rel.Bool:
 		typ = "BOOL"
-	case schema.Int:
+	case rel.Int:
 		typ = "INT"
 		m = column.Limit
-	case schema.BigInt:
+	case rel.BigInt:
 		typ = "BIGINT"
 		m = column.Limit
-	case schema.Float:
+	case rel.Float:
 		typ = "FLOAT"
 		m = column.Precision
-	case schema.Decimal:
+	case rel.Decimal:
 		typ = "DECIMAL"
 		m = column.Precision
 		n = column.Scale
-	case schema.String:
+	case rel.String:
 		typ = "VARCHAR"
 		m = column.Limit
 		if m == 0 {
 			m = 255
 		}
-	case schema.Text:
+	case rel.Text:
 		typ = "TEXT"
 		m = column.Limit
-	case schema.Binary:
+	case rel.Binary:
 		typ = "BINARY"
 		m = column.Limit
-	case schema.Date:
+	case rel.Date:
 		typ = "DATE"
-	case schema.DateTime:
+	case rel.DateTime:
 		typ = "DATETIME"
-	case schema.Time:
+	case rel.Time:
 		typ = "TIME"
-	case schema.Timestamp:
+	case rel.Timestamp:
 		// TODO: mysql automatically add on update options.
 		typ = "TIMESTAMP"
 	default:
@@ -209,7 +213,7 @@ func (b *Builder) mapColumnType(column schema.Column) (string, int, int) {
 	return typ, m, n
 }
 
-func (b *Builder) index(buffer *Buffer, index schema.Index) {
+func (b *Builder) index(buffer *Buffer, index rel.Index) {
 	var (
 		typ = string(index.Type)
 	)
@@ -232,7 +236,7 @@ func (b *Builder) index(buffer *Buffer, index schema.Index) {
 	}
 	buffer.WriteString(")")
 
-	if index.Type == schema.ForeignKey {
+	if index.Type == rel.ForeignKey {
 		buffer.WriteString(" REFERENCES ")
 		buffer.WriteString(b.escape(index.Reference.Table))
 

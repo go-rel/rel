@@ -1,4 +1,4 @@
-package schema
+package rel
 
 import (
 	"testing"
@@ -173,7 +173,7 @@ func TestAlterTable(t *testing.T) {
 	t.Run("RenameColumn", func(t *testing.T) {
 		table.RenameColumn("column", "new_column")
 		assert.Equal(t, Column{
-			Op:      Rename,
+			Op:      SchemaRename,
 			Name:    "column",
 			NewName: "new_column",
 		}, table.Definitions[len(table.Definitions)-1])
@@ -182,7 +182,7 @@ func TestAlterTable(t *testing.T) {
 	t.Run("AlterColumn", func(t *testing.T) {
 		table.AlterColumn("column", Bool, Comment("column"))
 		assert.Equal(t, Column{
-			Op:      Alter,
+			Op:      SchemaAlter,
 			Name:    "column",
 			Type:    Bool,
 			Comment: "column",
@@ -192,7 +192,7 @@ func TestAlterTable(t *testing.T) {
 	t.Run("DropColumn", func(t *testing.T) {
 		table.DropColumn("column")
 		assert.Equal(t, Column{
-			Op:   Drop,
+			Op:   SchemaDrop,
 			Name: "column",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
@@ -200,7 +200,7 @@ func TestAlterTable(t *testing.T) {
 	t.Run("RenameIndex", func(t *testing.T) {
 		table.RenameIndex("index", "new_index")
 		assert.Equal(t, Index{
-			Op:      Rename,
+			Op:      SchemaRename,
 			Name:    "index",
 			NewName: "new_index",
 		}, table.Definitions[len(table.Definitions)-1])
@@ -209,7 +209,7 @@ func TestAlterTable(t *testing.T) {
 	t.Run("DropIndex", func(t *testing.T) {
 		table.DropIndex("index")
 		assert.Equal(t, Index{
-			Op:   Drop,
+			Op:   SchemaDrop,
 			Name: "index",
 		}, table.Definitions[len(table.Definitions)-1])
 	})

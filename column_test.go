@@ -1,4 +1,4 @@
-package schema
+package rel
 
 import (
 	"testing"
@@ -51,7 +51,7 @@ func TestAlterColumn(t *testing.T) {
 	)
 
 	assert.Equal(t, Column{
-		Op:        Alter,
+		Op:        SchemaAlter,
 		Name:      "alter",
 		Type:      Decimal,
 		Required:  true,
@@ -81,7 +81,7 @@ func TestRenameColumn(t *testing.T) {
 	)
 
 	assert.Equal(t, Column{
-		Op:        Rename,
+		Op:        SchemaRename,
 		Name:      "add",
 		NewName:   "rename",
 		Required:  true,
@@ -111,7 +111,7 @@ func TestDropColumn(t *testing.T) {
 	)
 
 	assert.Equal(t, Column{
-		Op:        Drop,
+		Op:        SchemaDrop,
 		Name:      "drop",
 		Required:  true,
 		Unsigned:  true,

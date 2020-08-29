@@ -1,4 +1,4 @@
-package schema
+package rel
 
 import (
 	"testing"
@@ -62,7 +62,7 @@ func TestRenameIndex(t *testing.T) {
 	)
 
 	assert.Equal(t, Index{
-		Op:      Rename,
+		Op:      SchemaRename,
 		Name:    "add",
 		NewName: "rename",
 		Comment: "comment",
@@ -80,7 +80,7 @@ func TestDropIndex(t *testing.T) {
 	)
 
 	assert.Equal(t, Index{
-		Op:      Drop,
+		Op:      SchemaDrop,
 		Name:    "drop",
 		Comment: "comment",
 		Options: "options",

@@ -1,4 +1,4 @@
-package schema
+package rel
 
 // ColumnType definition.
 type ColumnType string
@@ -32,7 +32,7 @@ const (
 
 // Column definition.
 type Column struct {
-	Op        Op
+	Op        SchemaOp
 	Name      string
 	Type      ColumnType
 	NewName   string
@@ -48,7 +48,7 @@ type Column struct {
 
 func addColumn(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
-		Op:   Add,
+		Op:   SchemaAdd,
 		Name: name,
 		Type: typ,
 	}
@@ -59,7 +59,7 @@ func addColumn(name string, typ ColumnType, options []ColumnOption) Column {
 
 func alterColumn(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
-		Op:   Alter,
+		Op:   SchemaAlter,
 		Name: name,
 		Type: typ,
 	}
@@ -70,7 +70,7 @@ func alterColumn(name string, typ ColumnType, options []ColumnOption) Column {
 
 func renameColumn(name string, newName string, options []ColumnOption) Column {
 	column := Column{
-		Op:      Rename,
+		Op:      SchemaRename,
 		Name:    name,
 		NewName: newName,
 	}
@@ -81,10 +81,22 @@ func renameColumn(name string, newName string, options []ColumnOption) Column {
 
 func dropColumn(name string, options []ColumnOption) Column {
 	column := Column{
-		Op:   Drop,
+		Op:   SchemaDrop,
 		Name: name,
 	}
 
 	applyColumnOptions(&column, options)
 	return column
+}
+
+// ColumnOption interface.
+// Available options are: Nil, Unsigned, Limit, Precision, Scale, Default, Comment, Options.
+type ColumnOption interface {
+	applyColumn(column *Column)
+}
+
+func applyColumnOptions(column *Column, options []ColumnOption) {
+	for i := range options {
+		options[i].applyColumn(column)
+	}
 }

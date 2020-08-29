@@ -1,11 +1,12 @@
-package schema
+package rel
 
 // Table definition.
 type Table struct {
-	Op          Op
+	Op          SchemaOp
 	Name        string
 	NewName     string
 	Definitions []interface{}
+	IfNotExists bool
 	Comment     string
 	Options     string
 }
@@ -129,7 +130,7 @@ func (at *AlterTable) DropIndex(name string, options ...IndexOption) {
 
 func createTable(name string, options []TableOption) Table {
 	table := Table{
-		Op:   Add,
+		Op:   SchemaAdd,
 		Name: name,
 	}
 
@@ -139,7 +140,7 @@ func createTable(name string, options []TableOption) Table {
 
 func alterTable(name string, options []TableOption) AlterTable {
 	table := Table{
-		Op:   Alter,
+		Op:   SchemaAlter,
 		Name: name,
 	}
 
@@ -149,7 +150,7 @@ func alterTable(name string, options []TableOption) AlterTable {
 
 func renameTable(name string, newName string, options []TableOption) Table {
 	table := Table{
-		Op:      Rename,
+		Op:      SchemaRename,
 		Name:    name,
 		NewName: newName,
 	}
@@ -160,10 +161,22 @@ func renameTable(name string, newName string, options []TableOption) Table {
 
 func dropTable(name string, options []TableOption) Table {
 	table := Table{
-		Op:   Drop,
+		Op:   SchemaDrop,
 		Name: name,
 	}
 
 	applyTableOptions(&table, options)
 	return table
+}
+
+// TableOption interface.
+// Available options are: Comment, Options.
+type TableOption interface {
+	applyTable(table *Table)
+}
+
+func applyTableOptions(table *Table, options []TableOption) {
+	for i := range options {
+		options[i].applyTable(table)
+	}
 }

@@ -1,4 +1,4 @@
-package schema
+package migration
 
 import (
 	"context"
@@ -18,67 +18,68 @@ func (schemaVersion) Table() string {
 	return schemaVersionTable
 }
 
-// MigrationStep definition.
-type MigrationStep struct {
+// Step definition.
+type Step struct {
 	Version int
-	Up      Schema
-	Down    Schema
+	Up      rel.Schema
+	Down    rel.Schema
 	Applied bool
 }
 
-// MigrationSteps definition.
-type MigrationSteps []MigrationStep
+// Steps definition.
+type Steps []Step
 
-func (ms MigrationSteps) Len() int {
-	return len(ms)
+func (s Steps) Len() int {
+	return len(s)
 }
 
-func (ms MigrationSteps) Less(i, j int) bool {
-	return ms[i].Version < ms[j].Version
+func (s Steps) Less(i, j int) bool {
+	return s[i].Version < s[j].Version
 }
 
-func (ms MigrationSteps) Swap(i, j int) {
-	ms[i], ms[j] = ms[j], ms[i]
+func (s Steps) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
 
 // Migration manager definition.
 type Migration struct {
-	Adapter    Adapter
 	Repository rel.Repository
-	Steps      MigrationSteps
+	Steps      Steps
 }
 
 // AddVersion adds a migration with explicit version.
-func (m *Migration) AddVersion(version int, up func(schema *Schema), down func(schema *Schema)) {
-	var upSchema, downSchema Schema
+func (m *Migration) AddVersion(version int, up func(schema *rel.Schema), down func(schema *rel.Schema)) {
+	var upSchema, downSchema rel.Schema
 
 	up(&upSchema)
 	down(&downSchema)
 
-	m.Steps = append(m.Steps, MigrationStep{Version: version, Up: upSchema, Down: downSchema})
+	m.Steps = append(m.Steps, Step{Version: version, Up: upSchema, Down: downSchema})
 }
 
-func (m Migration) buildVersionTableDefinition() Table {
-	var versionTable = createTable(schemaVersionTable, nil) // TODO: create if not exists
+func (m Migration) buildVersionTableDefinition() rel.Table {
+	var schema rel.Schema
+	schema.CreateTable(schemaVersionTable, func(t *rel.Table) {
+		t.Int("id")
+		t.Int("version")
+		t.DateTime("created_at")
+		t.DateTime("updated_at")
 
-	versionTable.Int("id")
-	versionTable.Int("version")
-	versionTable.DateTime("created_at")
-	versionTable.DateTime("updated_at")
+		t.PrimaryKey("id")
+		t.Unique([]string{"version"})
+	}, rel.IfNotExists(true))
 
-	versionTable.PrimaryKey("id")
-	versionTable.Unique([]string{"version"})
-
-	return versionTable
+	return schema.Pending[0].(rel.Table)
 }
 
 func (m *Migration) sync(ctx context.Context) {
 	var (
 		versions []schemaVersion
 		vi       int
+		adapter  = m.Repository.Adapter(ctx).(rel.Adapter)
 	)
 
-	check(m.Adapter.Apply(ctx, m.buildVersionTableDefinition()))
+	check(adapter.Apply(ctx, m.buildVersionTableDefinition()))
 	m.Repository.MustFindAll(ctx, &versions, rel.NewSortAsc("version"))
 	sort.Sort(m.Steps)
 
@@ -110,10 +111,11 @@ func (m *Migration) Up(ctx context.Context) {
 		m.Repository.Transaction(ctx, func(ctx context.Context) error {
 			m.Repository.MustInsert(ctx, &schemaVersion{Version: step.Version})
 
-			adapter := m.Repository.Adapter(ctx).(Adapter)
+			adapter := m.Repository.Adapter(ctx).(rel.Adapter)
 			for _, migrator := range step.Up.Pending {
+				// TODO: exec script
 				switch v := migrator.(type) {
-				case Table:
+				case rel.Table:
 					check(adapter.Apply(ctx, v))
 				}
 			}
@@ -136,10 +138,10 @@ func (m *Migration) Down(ctx context.Context) {
 		m.Repository.Transaction(ctx, func(ctx context.Context) error {
 			m.Repository.MustInsert(ctx, &schemaVersion{Version: step.Version})
 
-			adapter := m.Repository.Adapter(ctx).(Adapter)
+			adapter := m.Repository.Adapter(ctx).(rel.Adapter)
 			for _, migrator := range step.Down.Pending {
 				switch v := migrator.(type) {
-				case Table:
+				case rel.Table:
 					check(adapter.Apply(ctx, v))
 				}
 			}

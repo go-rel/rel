@@ -61,6 +61,10 @@ func (na *nopAdapter) Update(ctx context.Context, query rel.Query, mutates map[s
 	return 1, nil
 }
 
+func (na *nopAdapter) Apply(ctx context.Context, table rel.Table) error {
+	return nil
+}
+
 type nopCursor struct {
 	count int
 }

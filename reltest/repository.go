@@ -20,7 +20,7 @@ var _ rel.Repository = (*Repository)(nil)
 
 // Adapter provides a mock function with given fields:
 func (r *Repository) Adapter(ctx context.Context) rel.Adapter {
-	return nil
+	return r.repo.Adapter(ctx)
 }
 
 // Instrumentation provides a mock function with given fields: instrumenter

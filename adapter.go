@@ -18,4 +18,6 @@ type Adapter interface {
 	Begin(ctx context.Context) (Adapter, error)
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
+
+	Apply(ctx context.Context, table Table) error
 }

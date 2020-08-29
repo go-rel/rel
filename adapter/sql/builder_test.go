@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/schema"
 	"github.com/Fs02/rel/sort"
 	"github.com/Fs02/rel/where"
 	"github.com/stretchr/testify/assert"
@@ -43,44 +42,44 @@ func TestBuilder_Table(t *testing.T) {
 
 	tests := []struct {
 		result string
-		table  schema.Table
+		table  rel.Table
 	}{
 		{
 			result: "CREATE TABLE `products` (`id` INT, `name` VARCHAR(255), `description` TEXT, PRIMARY KEY (`id`));",
-			table: schema.Table{
-				Op:   schema.Add,
+			table: rel.Table{
+				Op:   rel.SchemaAdd,
 				Name: "products",
 				Definitions: []interface{}{
-					schema.Column{Name: "id", Type: schema.Int},
-					schema.Column{Name: "name", Type: schema.String},
-					schema.Column{Name: "description", Type: schema.Text},
-					schema.Index{Columns: []string{"id"}, Type: schema.PrimaryKey},
+					rel.Column{Name: "id", Type: rel.Int},
+					rel.Column{Name: "name", Type: rel.String},
+					rel.Column{Name: "description", Type: rel.Text},
+					rel.Index{Columns: []string{"id"}, Type: rel.PrimaryKey},
 				},
 			},
 		},
 		{
 			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `binary` BINARY(255), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE INDEX `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) COMMENT 'TEST' Engine=InnoDB;",
-			table: schema.Table{
-				Op:   schema.Add,
+			table: rel.Table{
+				Op:   rel.SchemaAdd,
 				Name: "columns",
 				Definitions: []interface{}{
-					schema.Column{Name: "bool", Type: schema.Bool, Required: true, Default: false},
-					schema.Column{Name: "int", Type: schema.Int, Limit: 11, Unsigned: true},
-					schema.Column{Name: "bigint", Type: schema.BigInt, Limit: 20, Unsigned: true},
-					schema.Column{Name: "float", Type: schema.Float, Precision: 24, Unsigned: true},
-					schema.Column{Name: "decimal", Type: schema.Decimal, Precision: 6, Scale: 2, Unsigned: true},
-					schema.Column{Name: "string", Type: schema.String, Limit: 144},
-					schema.Column{Name: "text", Type: schema.Text, Limit: 1000},
-					schema.Column{Name: "binary", Type: schema.Binary, Limit: 255},
-					schema.Column{Name: "date", Type: schema.Date},
-					schema.Column{Name: "datetime", Type: schema.DateTime},
-					schema.Column{Name: "time", Type: schema.Time},
-					schema.Column{Name: "timestamp", Type: schema.Timestamp},
-					schema.Column{Name: "blob", Type: "blob"},
-					schema.Index{Columns: []string{"int"}, Type: schema.PrimaryKey},
-					schema.Index{Columns: []string{"date"}, Type: schema.UniqueIndex, Name: "date_unique"},
-					schema.Index{Columns: []string{"datetime"}, Type: schema.SimpleIndex},
-					schema.Index{Columns: []string{"int", "string"}, Type: schema.ForeignKey, Reference: schema.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
+					rel.Column{Name: "bool", Type: rel.Bool, Required: true, Default: false},
+					rel.Column{Name: "int", Type: rel.Int, Limit: 11, Unsigned: true},
+					rel.Column{Name: "bigint", Type: rel.BigInt, Limit: 20, Unsigned: true},
+					rel.Column{Name: "float", Type: rel.Float, Precision: 24, Unsigned: true},
+					rel.Column{Name: "decimal", Type: rel.Decimal, Precision: 6, Scale: 2, Unsigned: true},
+					rel.Column{Name: "string", Type: rel.String, Limit: 144},
+					rel.Column{Name: "text", Type: rel.Text, Limit: 1000},
+					rel.Column{Name: "binary", Type: rel.Binary, Limit: 255},
+					rel.Column{Name: "date", Type: rel.Date},
+					rel.Column{Name: "datetime", Type: rel.DateTime},
+					rel.Column{Name: "time", Type: rel.Time},
+					rel.Column{Name: "timestamp", Type: rel.Timestamp},
+					rel.Column{Name: "blob", Type: "blob"},
+					rel.Index{Columns: []string{"int"}, Type: rel.PrimaryKey},
+					rel.Index{Columns: []string{"date"}, Type: rel.UniqueIndex, Name: "date_unique"},
+					rel.Index{Columns: []string{"datetime"}, Type: rel.SimpleIndex},
+					rel.Index{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
 				},
 				Options: "Engine=InnoDB",
 				Comment: "TEST",
@@ -88,59 +87,59 @@ func TestBuilder_Table(t *testing.T) {
 		},
 		{
 			result: "ALTER TABLE `columns` ADD COLUMN `verified` BOOL, RENAME COLUMN `string` TO `name`, MODIFY COLUMN `bool` INT, DROP COLUMN `blob`;",
-			table: schema.Table{
-				Op:   schema.Alter,
+			table: rel.Table{
+				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					schema.Column{Name: "verified", Type: schema.Bool, Op: schema.Add},
-					schema.Column{Name: "string", NewName: "name", Op: schema.Rename},
-					schema.Column{Name: "bool", Type: schema.Int, Op: schema.Alter},
-					schema.Column{Name: "blob", Op: schema.Drop},
+					rel.Column{Name: "verified", Type: rel.Bool, Op: rel.SchemaAdd},
+					rel.Column{Name: "string", NewName: "name", Op: rel.SchemaRename},
+					rel.Column{Name: "bool", Type: rel.Int, Op: rel.SchemaAlter},
+					rel.Column{Name: "blob", Op: rel.SchemaDrop},
 				},
 			},
 		},
 		{
 			result: "ALTER TABLE `columns` ADD INDEX `verified_int` (`verified`, `int`);",
-			table: schema.Table{
-				Op:   schema.Alter,
+			table: rel.Table{
+				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					schema.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: schema.SimpleIndex, Op: schema.Add},
+					rel.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: rel.SimpleIndex, Op: rel.SchemaAdd},
 				},
 			},
 		},
 		{
 			result: "ALTER TABLE `columns` RENAME INDEX `verified_int` TO `verified_int_index`;",
-			table: schema.Table{
-				Op:   schema.Alter,
+			table: rel.Table{
+				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					schema.Index{Name: "verified_int", NewName: "verified_int_index", Op: schema.Rename},
+					rel.Index{Name: "verified_int", NewName: "verified_int_index", Op: rel.SchemaRename},
 				},
 			},
 		},
 		{
 			result: "ALTER TABLE `columns` DROP INDEX `verified_int_index`;",
-			table: schema.Table{
-				Op:   schema.Alter,
+			table: rel.Table{
+				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					schema.Index{Name: "verified_int_index", Op: schema.Drop},
+					rel.Index{Name: "verified_int_index", Op: rel.SchemaDrop},
 				},
 			},
 		},
 		{
 			result: "RENAME TABLE `columns` TO `definitions`;",
-			table: schema.Table{
-				Op:      schema.Rename,
+			table: rel.Table{
+				Op:      rel.SchemaRename,
 				Name:    "columns",
 				NewName: "definitions",
 			},
 		},
 		{
 			result: "DROP TABLE `columns`;",
-			table: schema.Table{
-				Op:   schema.Drop,
+			table: rel.Table{
+				Op:   rel.SchemaDrop,
 				Name: "columns",
 			},
 		},

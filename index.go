@@ -1,4 +1,4 @@
-package schema
+package rel
 
 // IndexType definition.
 type IndexType string
@@ -24,7 +24,7 @@ type ForeignKeyReference struct {
 
 // Index definition.
 type Index struct {
-	Op        Op
+	Op        SchemaOp
 	Name      string
 	Type      IndexType
 	Columns   []string
@@ -36,7 +36,7 @@ type Index struct {
 
 func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
 	index := Index{
-		Op:      Add,
+		Op:      SchemaAdd,
 		Columns: columns,
 		Type:    typ,
 	}
@@ -48,7 +48,7 @@ func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
 // TODO: support multi columns
 func addForeignKey(column string, refTable string, refColumn string, options []IndexOption) Index {
 	index := Index{
-		Op:      Add,
+		Op:      SchemaAdd,
 		Type:    ForeignKey,
 		Columns: []string{column},
 		Reference: ForeignKeyReference{
@@ -63,7 +63,7 @@ func addForeignKey(column string, refTable string, refColumn string, options []I
 
 func renameIndex(name string, newName string, options []IndexOption) Index {
 	index := Index{
-		Op:      Rename,
+		Op:      SchemaRename,
 		Name:    name,
 		NewName: newName,
 	}
@@ -74,10 +74,22 @@ func renameIndex(name string, newName string, options []IndexOption) Index {
 
 func dropIndex(name string, options []IndexOption) Index {
 	index := Index{
-		Op:   Drop,
+		Op:   SchemaDrop,
 		Name: name,
 	}
 
 	applyIndexOptions(&index, options)
 	return index
+}
+
+// IndexOption interface.
+// Available options are: Comment, Options.
+type IndexOption interface {
+	applyIndex(index *Index)
+}
+
+func applyIndexOptions(index *Index, options []IndexOption) {
+	for i := range options {
+		options[i].applyIndex(index)
+	}
 }

@@ -35,8 +35,9 @@ func BenchmarkBuilder_Find(b *testing.B) {
 func TestBuilder_Table(t *testing.T) {
 	var (
 		config = &Config{
-			Placeholder: "?",
-			EscapeChar:  "`",
+			Placeholder:   "?",
+			EscapeChar:    "`",
+			MapColumnFunc: MapColumn,
 		}
 	)
 
@@ -58,7 +59,7 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `binary` BINARY(255), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE INDEX `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) COMMENT 'TEST' Engine=InnoDB;",
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `binary` BINARY(255), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) COMMENT 'TEST' Engine=InnoDB;",
 			table: rel.Table{
 				Op:   rel.SchemaAdd,
 				Name: "columns",

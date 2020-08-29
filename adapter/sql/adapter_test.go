@@ -20,6 +20,7 @@ func open(t *testing.T) *Adapter {
 			InsertDefaultValues: true,
 			ErrorFunc:           func(err error) error { return err },
 			IncrementFunc:       func(Adapter) int { return -1 },
+			MapColumnFunc:       MapColumn,
 		}
 		adapter = New(config)
 	)

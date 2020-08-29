@@ -132,7 +132,7 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 
 func (b *Builder) column(buffer *Buffer, column rel.Column) {
 	var (
-		typ, m, n = b.config.MapColumnTypeFunc(column)
+		typ, m, n = b.config.MapColumnFunc(&column)
 	)
 
 	buffer.WriteString(b.escape(column.Name))

@@ -12,11 +12,11 @@ type Config struct {
 	EscapeChar          string
 	ErrorFunc           func(error) error
 	IncrementFunc       func(Adapter) int
-	MapColumnTypeFunc   func(column rel.Column) (string, int, int)
+	MapColumnFunc       func(column *rel.Column) (string, int, int)
 }
 
-// MapColumnType func.
-func MapColumnType(column rel.Column) (string, int, int) {
+// MapColumn func.
+func MapColumn(column *rel.Column) (string, int, int) {
 	var (
 		typ  string
 		m, n int

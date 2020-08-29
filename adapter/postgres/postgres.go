@@ -37,6 +37,7 @@ func New(database *db.DB) *Adapter {
 				Ordinal:             true,
 				InsertDefaultValues: true,
 				ErrorFunc:           errorFunc,
+				MapColumnFunc:       mapColumnFunc,
 			},
 			DB: database,
 		},
@@ -143,4 +144,28 @@ func errorFunc(err error) error {
 	default:
 		return err
 	}
+}
+
+func mapColumnFunc(column *rel.Column) (string, int, int) {
+	var (
+		typ  string
+		m, n int
+	)
+
+	// postgres specific
+	column.Unsigned = false
+	if column.Default == "" {
+		column.Default = nil
+	}
+
+	switch column.Type {
+	case rel.ID:
+		typ = "SERIAL NOT NULL PRIMARY KEY"
+	case rel.DateTime:
+		typ = "TIMESTAMPTZ"
+	default:
+		typ, m, n = sql.MapColumn(column)
+	}
+
+	return typ, m, n
 }

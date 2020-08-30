@@ -12,22 +12,24 @@ const (
 
 // Index definition.
 type Index struct {
-	Op      SchemaOp
-	Table   string
-	Name    string
-	Type    IndexType
-	Columns []string
-	Options string
+	Op       SchemaOp
+	Table    string
+	Name     string
+	Type     IndexType
+	Columns  []string
+	Optional bool
+	Options  string
 }
 
 func (Index) internalMigration() {}
 
-func createIndex(table string, columns []string, typ IndexType, options []IndexOption) Index {
+func createIndex(table string, name string, columns []string, options []IndexOption) Index {
 	index := Index{
 		Op:      SchemaCreate,
 		Table:   table,
+		Name:    name,
 		Columns: columns,
-		Type:    typ,
+		Type:    SimpleIndex,
 	}
 
 	applyIndexOptions(&index, options)

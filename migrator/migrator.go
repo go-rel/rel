@@ -67,7 +67,7 @@ func (m Migrator) buildVersionTableDefinition() rel.Table {
 		t.Unique([]string{"version"})
 	}, rel.Optional(true))
 
-	return schema.Migration[0].(rel.Table)
+	return schema.Migrations[0].(rel.Table)
 }
 
 func (m *Migrator) sync(ctx context.Context) {
@@ -100,23 +100,14 @@ func (m *Migrator) sync(ctx context.Context) {
 func (m *Migrator) Migrate(ctx context.Context) {
 	m.sync(ctx)
 
-	for _, step := range m.versions {
-		if step.applied {
+	for _, v := range m.versions {
+		if v.applied {
 			continue
 		}
 
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
-			m.repo.MustInsert(ctx, &version{Version: step.Version})
-
-			adapter := m.repo.Adapter(ctx).(rel.Adapter)
-			for _, migration := range step.up.Migration {
-				// TODO: exec script
-				switch v := migration.(type) {
-				case rel.Table:
-					check(adapter.Apply(ctx, v))
-				}
-			}
-
+			m.repo.MustInsert(ctx, &version{Version: v.Version})
+			m.run(ctx, v.up.Migrations)
 			return nil
 		})
 
@@ -136,15 +127,7 @@ func (m *Migrator) Rollback(ctx context.Context) {
 
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustDelete(ctx, &v)
-
-			adapter := m.repo.Adapter(ctx).(rel.Adapter)
-			for _, migration := range v.down.Migration {
-				switch v := migration.(type) {
-				case rel.Table:
-					check(adapter.Apply(ctx, v))
-				}
-			}
-
+			m.run(ctx, v.down.Migrations)
 			return nil
 		})
 
@@ -153,6 +136,15 @@ func (m *Migrator) Rollback(ctx context.Context) {
 		// only rollback one version.
 		return
 	}
+}
+
+func (m *Migrator) run(ctx context.Context, migrations []rel.Migration) {
+	adapter := m.repo.Adapter(ctx).(rel.Adapter)
+	for _, migration := range migrations {
+		// TODO: exec script
+		check(adapter.Apply(ctx, migration))
+	}
+
 }
 
 // New migrationr.

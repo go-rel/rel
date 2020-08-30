@@ -19,5 +19,5 @@ type Adapter interface {
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
 
-	Apply(ctx context.Context, table Table) error
+	Apply(ctx context.Context, migration Migration) error
 }

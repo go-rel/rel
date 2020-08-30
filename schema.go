@@ -21,11 +21,11 @@ type Migration interface {
 
 // Schema builder.
 type Schema struct {
-	Migration []Migration
+	Migrations []Migration
 }
 
 func (s *Schema) add(migration Migration) {
-	s.Migration = append(s.Migration, migration)
+	s.Migrations = append(s.Migrations, migration)
 }
 
 // CreateTable with name and its definition.
@@ -81,8 +81,8 @@ func (s *Schema) DropColumn(table string, name string, options ...ColumnOption) 
 }
 
 // CreateIndex for columns on a table.
-func (s *Schema) CreateIndex(table string, column []string, typ IndexType, options ...IndexOption) {
-	s.add(createIndex(table, column, typ, options))
+func (s *Schema) CreateIndex(table string, name string, column []string, options ...IndexOption) {
+	s.add(createIndex(table, name, column, options))
 }
 
 // DropIndex by name.
@@ -162,6 +162,10 @@ type Optional bool
 
 func (o Optional) applyTable(table *Table) {
 	table.Optional = bool(o)
+}
+
+func (o Optional) applyIndex(index *Index) {
+	index.Optional = bool(o)
 }
 
 // Raw string

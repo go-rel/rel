@@ -46,15 +46,14 @@ func TestBuilder_Table(t *testing.T) {
 		table  rel.Table
 	}{
 		{
-			result: "CREATE TABLE `products` (`id` INT, `name` VARCHAR(255), `description` TEXT, PRIMARY KEY (`id`));",
+			result: "CREATE TABLE `products` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(255), `description` TEXT);",
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "products",
 				Definitions: []rel.TableDefinition{
-					rel.Column{Name: "id", Type: rel.Int},
+					rel.Column{Name: "id", Type: rel.ID},
 					rel.Column{Name: "name", Type: rel.String},
 					rel.Column{Name: "description", Type: rel.Text},
-					rel.Key{Columns: []string{"id"}, Type: rel.PrimaryKey},
 				},
 			},
 		},

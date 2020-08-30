@@ -245,12 +245,20 @@ func (a *Adapter) Rollback(ctx context.Context) error {
 }
 
 // Apply table.
-func (a *Adapter) Apply(ctx context.Context, table rel.Table) error {
+func (a *Adapter) Apply(ctx context.Context, migration rel.Migration) error {
 	var (
-		statement = NewBuilder(a.Config).Table(table)
-		_, _, err = a.Exec(ctx, statement, nil)
+		statement string
+		builder   = NewBuilder(a.Config)
 	)
 
+	switch v := migration.(type) {
+	case rel.Table:
+		statement = builder.Table(v)
+	case rel.Index:
+		statement = builder.Index(v)
+	}
+
+	_, _, err := a.Exec(ctx, statement, nil)
 	return err
 }
 

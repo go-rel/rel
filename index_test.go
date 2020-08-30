@@ -7,18 +7,18 @@ import (
 )
 
 func TestCreateIndex(t *testing.T) {
+	// TODO: unique option
 	var (
 		options = []IndexOption{
-			Name("simple"),
 			Options("options"),
 		}
-		index = createIndex("table", []string{"add"}, SimpleIndex, options)
+		index = createIndex("table", "add_idx", []string{"add"}, options)
 	)
 
 	assert.Equal(t, Index{
 		Type:    SimpleIndex,
 		Table:   "table",
-		Name:    "simple",
+		Name:    "add_idx",
 		Columns: []string{"add"},
 		Options: "options",
 	}, index)

@@ -23,7 +23,7 @@ func TestSchema_CreateTable(t *testing.T) {
 			Column{Name: "name", Type: String},
 			Column{Name: "description", Type: Text},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_AlterTable(t *testing.T) {
@@ -41,7 +41,7 @@ func TestSchema_AlterTable(t *testing.T) {
 			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
 			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_RenameTable(t *testing.T) {
@@ -53,7 +53,7 @@ func TestSchema_RenameTable(t *testing.T) {
 		Op:      SchemaRename,
 		Name:    "trxs",
 		NewName: "transactions",
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_DropTable(t *testing.T) {
@@ -64,7 +64,7 @@ func TestSchema_DropTable(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaDrop,
 		Name: "logs",
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_AddColumn(t *testing.T) {
@@ -78,7 +78,7 @@ func TestSchema_AddColumn(t *testing.T) {
 		Definitions: []TableDefinition{
 			Column{Name: "description", Type: String, Op: SchemaCreate},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_AlterColumn(t *testing.T) {
@@ -92,7 +92,7 @@ func TestSchema_AlterColumn(t *testing.T) {
 		Definitions: []TableDefinition{
 			Column{Name: "sale", Type: Bool, Op: SchemaAlter},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_RenameColumn(t *testing.T) {
@@ -106,7 +106,7 @@ func TestSchema_RenameColumn(t *testing.T) {
 		Definitions: []TableDefinition{
 			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_DropColumn(t *testing.T) {
@@ -120,20 +120,21 @@ func TestSchema_DropColumn(t *testing.T) {
 		Definitions: []TableDefinition{
 			Column{Name: "verified", Op: SchemaDrop},
 		},
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_CreateIndex(t *testing.T) {
 	var schema Schema
 
-	schema.CreateIndex("products", []string{"sale"}, SimpleIndex)
+	schema.CreateIndex("products", "sale_idx", []string{"sale"})
 
 	assert.Equal(t, Index{
 		Table:   "products",
+		Name:    "sale_idx",
 		Columns: []string{"sale"},
 		Type:    SimpleIndex,
 		Op:      SchemaCreate,
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }
 
 func TestSchema_DropIndex(t *testing.T) {
@@ -145,5 +146,5 @@ func TestSchema_DropIndex(t *testing.T) {
 		Table: "products",
 		Name:  "sale",
 		Op:    SchemaDrop,
-	}, schema.Migration[0])
+	}, schema.Migrations[0])
 }

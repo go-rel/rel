@@ -61,7 +61,7 @@ func (na *nopAdapter) Update(ctx context.Context, query rel.Query, mutates map[s
 	return 1, nil
 }
 
-func (na *nopAdapter) Apply(ctx context.Context, table rel.Table) error {
+func (na *nopAdapter) Apply(ctx context.Context, migration rel.Migration) error {
 	return nil
 }
 

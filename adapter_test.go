@@ -76,8 +76,8 @@ func (ta *testAdapter) Rollback(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (ta *testAdapter) Apply(ctx context.Context, table Table) error {
-	args := ta.Called(table)
+func (ta *testAdapter) Apply(ctx context.Context, migration Migration) error {
+	args := ta.Called(migration)
 	return args.Error(0)
 }
 

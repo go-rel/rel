@@ -223,6 +223,48 @@ func (b *Builder) key(buffer *Buffer, key rel.Key) {
 	b.options(buffer, key.Options)
 }
 
+// Index generates query for index.
+func (b *Builder) Index(index rel.Index) string {
+	var buffer Buffer
+
+	switch index.Op {
+	case rel.SchemaCreate:
+		buffer.WriteString("CREATE ")
+		buffer.WriteString(string(index.Type))
+		buffer.WriteByte(' ')
+		buffer.WriteString(Escape(b.config, index.Name))
+		buffer.WriteString(" ON ")
+		buffer.WriteString(Escape(b.config, index.Table))
+
+		buffer.WriteString(" (")
+		for i, col := range index.Columns {
+			if i > 0 {
+				buffer.WriteString(", ")
+			}
+			buffer.WriteString(Escape(b.config, col))
+		}
+		buffer.WriteString(")")
+	case rel.SchemaDrop:
+		buffer.WriteString("DROP INDEX ")
+
+		if index.Optional {
+			buffer.WriteString("IF EXISTS ")
+		}
+
+		buffer.WriteString(Escape(b.config, index.Name))
+
+		if b.config.DropIndexOnTable {
+			buffer.WriteString(" ON ")
+			buffer.WriteString(Escape(b.config, index.Table))
+		}
+	}
+
+	b.options(&buffer, index.Options)
+	buffer.WriteByte(';')
+
+	return buffer.String()
+}
+
 func (b *Builder) options(buffer *Buffer, options string) {
 	if options == "" {
 		return

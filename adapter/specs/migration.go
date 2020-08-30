@@ -121,14 +121,16 @@ func MigrateTable(t *testing.T, repo rel.Repository) {
 				t.Timestamp("timestamp1")
 				t.Timestamp("timestamp2", rel.Default(time.Now()))
 
-				// t.Index([]string{"int1"}, rel.SimpleIndex)
-				// t.Index([]string{"string1", "string2"}, rel.SimpleIndex)
-
 				t.Unique([]string{"int2"})
 				t.Unique([]string{"bigint1", "bigint2"})
 			})
+
+			schema.CreateIndex("dummies", "int1_idx", []string{"int1"})
+			schema.CreateIndex("dummies", "string1_string2_idx", []string{"string1", "string2"})
 		},
 		func(schema *rel.Schema) {
+			schema.DropIndex("dummies", "int1_idx")
+			schema.DropIndex("dummies", "string1_string2_idx")
 			schema.DropTable("dummies")
 		},
 	)

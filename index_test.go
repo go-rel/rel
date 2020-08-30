@@ -10,7 +10,6 @@ func TestAddIndex(t *testing.T) {
 	var (
 		options = []IndexOption{
 			Name("simple"),
-			Comment("comment"),
 			Options("options"),
 		}
 		index = addIndex([]string{"add"}, SimpleIndex, options)
@@ -20,7 +19,6 @@ func TestAddIndex(t *testing.T) {
 		Type:    SimpleIndex,
 		Name:    "simple",
 		Columns: []string{"add"},
-		Comment: "comment",
 		Options: "options",
 	}, index)
 }
@@ -31,7 +29,6 @@ func TestAddForeignKey(t *testing.T) {
 			OnDelete("cascade"),
 			OnUpdate("cascade"),
 			Name("fk"),
-			Comment("comment"),
 			Options("options"),
 		}
 		index = addForeignKey("table_id", "table", "id", options)
@@ -47,7 +44,6 @@ func TestAddForeignKey(t *testing.T) {
 			OnDelete: "cascade",
 			OnUpdate: "cascade",
 		},
-		Comment: "comment",
 		Options: "options",
 	}, index)
 }
@@ -55,7 +51,6 @@ func TestAddForeignKey(t *testing.T) {
 func TestRenameIndex(t *testing.T) {
 	var (
 		options = []IndexOption{
-			Comment("comment"),
 			Options("options"),
 		}
 		index = renameIndex("add", "rename", options)
@@ -65,7 +60,6 @@ func TestRenameIndex(t *testing.T) {
 		Op:      SchemaRename,
 		Name:    "add",
 		NewName: "rename",
-		Comment: "comment",
 		Options: "options",
 	}, index)
 }
@@ -73,7 +67,6 @@ func TestRenameIndex(t *testing.T) {
 func TestDropIndex(t *testing.T) {
 	var (
 		options = []IndexOption{
-			Comment("comment"),
 			Options("options"),
 		}
 		index = dropIndex("drop", options)
@@ -82,7 +75,6 @@ func TestDropIndex(t *testing.T) {
 	assert.Equal(t, Index{
 		Op:      SchemaDrop,
 		Name:    "drop",
-		Comment: "comment",
 		Options: "options",
 	}, index)
 }

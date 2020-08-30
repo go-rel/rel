@@ -46,8 +46,8 @@ type Migrator struct {
 	versions versions
 }
 
-// RegisterVersion registers a migration with an explicit version.
-func (m *Migrator) RegisterVersion(v int, up func(schema *rel.Schema), down func(schema *rel.Schema)) {
+// Register a migration.
+func (m *Migrator) Register(v int, up func(schema *rel.Schema), down func(schema *rel.Schema)) {
 	var upSchema, downSchema rel.Schema
 
 	up(&upSchema)

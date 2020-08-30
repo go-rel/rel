@@ -1,6 +1,8 @@
 package sql
 
 import (
+	"time"
+
 	"github.com/Fs02/rel"
 )
 
@@ -49,18 +51,27 @@ func MapColumn(column *rel.Column) (string, int, int) {
 	case rel.Text:
 		typ = "TEXT"
 		m = column.Limit
-	case rel.Binary:
-		typ = "BINARY"
-		m = column.Limit
 	case rel.Date:
 		typ = "DATE"
+		if t, ok := column.Default.(time.Time); ok {
+			column.Default = t.Format("2006-01-02")
+		}
 	case rel.DateTime:
 		typ = "DATETIME"
+		if t, ok := column.Default.(time.Time); ok {
+			column.Default = t.Format("2006-01-02 15:04:05")
+		}
 	case rel.Time:
 		typ = "TIME"
+		if t, ok := column.Default.(time.Time); ok {
+			column.Default = t.Format("15:04:05")
+		}
 	case rel.Timestamp:
 		// TODO: mysql automatically add on update options.
 		typ = "TIMESTAMP"
+		if t, ok := column.Default.(time.Time); ok {
+			column.Default = t.Format("2006-01-02 15:04:05")
+		}
 	default:
 		typ = string(column.Type)
 	}

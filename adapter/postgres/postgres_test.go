@@ -36,7 +36,11 @@ func TestAdapter_specs(t *testing.T) {
 	repo := rel.New(adapter)
 
 	// Prepare tables
-	specs.Migrate(ctx, adapter, false)
+	specs.Migrate(t, repo, false)
+	defer specs.Migrate(t, repo, true)
+
+	// Migration Specs
+	specs.MigrateTable(t, repo)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -91,9 +95,6 @@ func TestAdapter_specs(t *testing.T) {
 	specs.UniqueConstraint(t, repo)
 	specs.ForeignKeyConstraint(t, repo)
 	specs.CheckConstraint(t, repo)
-
-	// Cleanup tables
-	specs.Migrate(ctx, adapter, true)
 }
 
 // func TestAdapter_InsertAll_error(t *testing.T) {

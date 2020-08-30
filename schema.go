@@ -106,21 +106,6 @@ func (s *Schema) DropIndex(table string, name string, options ...IndexOption) {
 // func (s *Schema) Exec(func(repo rel.Repository) error) {
 // }
 
-// Comment options for table, column and index.
-type Comment string
-
-func (c Comment) applyTable(table *Table) {
-	table.Comment = string(c)
-}
-
-func (c Comment) applyColumn(column *Column) {
-	column.Comment = string(c)
-}
-
-func (c Comment) applyIndex(index *Index) {
-	index.Comment = string(c)
-}
-
 // Options options for table, column and index.
 type Options string
 

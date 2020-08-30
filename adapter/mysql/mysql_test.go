@@ -31,7 +31,11 @@ func TestAdapter_specs(t *testing.T) {
 	repo := rel.New(adapter)
 
 	// Prepare tables
-	specs.Migrate(ctx, adapter, false)
+	specs.Migrate(t, repo, false)
+	defer specs.Migrate(t, repo, true)
+
+	// Migration Specs
+	specs.MigrateTable(t, repo)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -86,9 +90,6 @@ func TestAdapter_specs(t *testing.T) {
 	// - Check constraint is not supported by mysql
 	specs.UniqueConstraint(t, repo)
 	specs.ForeignKeyConstraint(t, repo)
-
-	// Cleanup tables
-	specs.Migrate(ctx, adapter, true)
 }
 
 func TestAdapter_Open(t *testing.T) {

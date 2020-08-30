@@ -91,9 +91,12 @@ func errorFunc(err error) error {
 
 func mapColumnFunc(column *rel.Column) (string, int, int) {
 	var (
-		typ  string
-		m, n int
+		typ      string
+		m, n     int
+		unsigned = column.Unsigned
 	)
+
+	column.Unsigned = false
 
 	switch column.Type {
 	case rel.ID:
@@ -103,6 +106,10 @@ func mapColumnFunc(column *rel.Column) (string, int, int) {
 		m = column.Limit
 	default:
 		typ, m, n = sql.MapColumn(column)
+	}
+
+	if unsigned {
+		typ = "UNSIGNED " + typ
 	}
 
 	return typ, m, n

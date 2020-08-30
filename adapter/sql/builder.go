@@ -75,7 +75,6 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 	}
 
 	buffer.WriteByte(')')
-	b.comment(buffer, table.Comment)
 	b.options(buffer, table.Options)
 	buffer.WriteByte(';')
 }
@@ -161,12 +160,18 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 
 	if column.Default != nil {
 		buffer.WriteString(" DEFAULT ")
-		// TODO: improve
-		bytes, _ := json.Marshal(column.Default)
-		buffer.Write(bytes)
+		switch v := column.Default.(type) {
+		case string:
+			buffer.WriteByte('\'')
+			buffer.WriteString(v)
+			buffer.WriteByte('\'')
+		default:
+			// TODO: improve
+			bytes, _ := json.Marshal(column.Default)
+			buffer.Write(bytes)
+		}
 	}
 
-	b.comment(buffer, column.Comment)
 	b.options(buffer, column.Options)
 }
 
@@ -215,18 +220,7 @@ func (b *Builder) index(buffer *Buffer, index rel.Index) {
 		}
 	}
 
-	b.comment(buffer, index.Comment)
 	b.options(buffer, index.Options)
-}
-
-func (b *Builder) comment(buffer *Buffer, comment string) {
-	if comment == "" {
-		return
-	}
-
-	buffer.WriteString(" COMMENT '")
-	buffer.WriteString(comment)
-	buffer.WriteByte('\'')
 }
 
 func (b *Builder) options(buffer *Buffer, options string) {

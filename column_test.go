@@ -15,7 +15,6 @@ func TestAddColumn(t *testing.T) {
 			Precision(5),
 			Scale(2),
 			Default(0),
-			Comment("comment"),
 			Options("options"),
 		}
 		column = addColumn("add", Decimal, options)
@@ -30,7 +29,6 @@ func TestAddColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Comment:   "comment",
 		Options:   "options",
 	}, column)
 }
@@ -44,7 +42,6 @@ func TestAlterColumn(t *testing.T) {
 			Precision(5),
 			Scale(2),
 			Default(0),
-			Comment("comment"),
 			Options("options"),
 		}
 		column = alterColumn("alter", Decimal, options)
@@ -60,7 +57,6 @@ func TestAlterColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Comment:   "comment",
 		Options:   "options",
 	}, column)
 }
@@ -74,7 +70,6 @@ func TestRenameColumn(t *testing.T) {
 			Precision(5),
 			Scale(2),
 			Default(0),
-			Comment("comment"),
 			Options("options"),
 		}
 		column = renameColumn("add", "rename", options)
@@ -90,7 +85,6 @@ func TestRenameColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Comment:   "comment",
 		Options:   "options",
 	}, column)
 }
@@ -104,7 +98,6 @@ func TestDropColumn(t *testing.T) {
 			Precision(5),
 			Scale(2),
 			Default(0),
-			Comment("comment"),
 			Options("options"),
 		}
 		column = dropColumn("drop", options)
@@ -119,7 +112,6 @@ func TestDropColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Comment:   "comment",
 		Options:   "options",
 	}, column)
 }

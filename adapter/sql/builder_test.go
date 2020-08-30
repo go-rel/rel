@@ -71,7 +71,6 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "decimal", Type: rel.Decimal, Precision: 6, Scale: 2, Unsigned: true},
 					rel.Column{Name: "string", Type: rel.String, Limit: 144},
 					rel.Column{Name: "text", Type: rel.Text, Limit: 1000},
-					rel.Column{Name: "binary", Type: rel.Binary, Limit: 255},
 					rel.Column{Name: "date", Type: rel.Date},
 					rel.Column{Name: "datetime", Type: rel.DateTime},
 					rel.Column{Name: "time", Type: rel.Time},
@@ -83,7 +82,6 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Index{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
 				},
 				Options: "Engine=InnoDB",
-				Comment: "TEST",
 			},
 		},
 		{

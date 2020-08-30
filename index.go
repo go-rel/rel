@@ -30,7 +30,6 @@ type Index struct {
 	Columns   []string
 	NewName   string
 	Reference ForeignKeyReference
-	Comment   string
 	Options   string
 }
 

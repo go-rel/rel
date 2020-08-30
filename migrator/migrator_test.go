@@ -17,8 +17,8 @@ func TestMigrator(t *testing.T) {
 		migrator = New(repo)
 	)
 
-	t.Run("RegisterVersion", func(t *testing.T) {
-		migrator.RegisterVersion(20200829084000,
+	t.Run("Register", func(t *testing.T) {
+		migrator.Register(20200829084000,
 			func(schema *rel.Schema) {
 				schema.CreateTable("users", func(t *rel.Table) {
 					t.ID("id")
@@ -29,7 +29,7 @@ func TestMigrator(t *testing.T) {
 			},
 		)
 
-		migrator.RegisterVersion(20200828100000,
+		migrator.Register(20200828100000,
 			func(schema *rel.Schema) {
 				schema.CreateTable("tags", func(t *rel.Table) {
 					t.ID("id")
@@ -40,7 +40,7 @@ func TestMigrator(t *testing.T) {
 			},
 		)
 
-		migrator.RegisterVersion(20200829115100,
+		migrator.Register(20200829115100,
 			func(schema *rel.Schema) {
 				schema.CreateTable("books", func(t *rel.Table) {
 					t.ID("id")
@@ -180,9 +180,9 @@ func TestMigrator_Sync(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			migrator := New(repo)
-			migrator.RegisterVersion(3, nfn, nfn)
-			migrator.RegisterVersion(2, nfn, nfn)
-			migrator.RegisterVersion(1, nfn, nfn)
+			migrator.Register(3, nfn, nfn)
+			migrator.Register(2, nfn, nfn)
+			migrator.Register(1, nfn, nfn)
 
 			repo.ExpectFindAll(rel.NewSortAsc("version")).Result(test.applied)
 

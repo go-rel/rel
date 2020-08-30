@@ -20,8 +20,6 @@ const (
 	String ColumnType = "STRING"
 	// Text ColumnType.
 	Text ColumnType = "TEXT"
-	// Binary ColumnType.
-	Binary ColumnType = "BINARY"
 	// Date ColumnType.
 	Date ColumnType = "DATE"
 	// DateTime ColumnType.
@@ -44,7 +42,6 @@ type Column struct {
 	Precision int
 	Scale     int
 	Default   interface{}
-	Comment   string
 	Options   string
 }
 

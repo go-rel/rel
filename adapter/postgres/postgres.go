@@ -15,6 +15,7 @@ package postgres
 import (
 	"context"
 	db "database/sql"
+	"time"
 
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/adapter/sql"
@@ -163,6 +164,12 @@ func mapColumnFunc(column *rel.Column) (string, int, int) {
 		typ = "SERIAL NOT NULL PRIMARY KEY"
 	case rel.DateTime:
 		typ = "TIMESTAMPTZ"
+		if t, ok := column.Default.(time.Time); ok {
+			column.Default = t.Format("2006-01-02 15:04:05")
+		}
+	case rel.Int, rel.BigInt, rel.Text:
+		column.Limit = 0
+		typ, m, n = sql.MapColumn(column)
 	default:
 		typ, m, n = sql.MapColumn(column)
 	}

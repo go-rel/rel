@@ -7,7 +7,6 @@ type Table struct {
 	NewName     string
 	Definitions []interface{}
 	Optional    bool
-	Comment     string
 	Options     string
 }
 
@@ -55,11 +54,6 @@ func (t *Table) String(name string, options ...ColumnOption) {
 // Text defines a column with name and Text type.
 func (t *Table) Text(name string, options ...ColumnOption) {
 	t.Column(name, Text, options...)
-}
-
-// Binary defines a column with name and Binary type.
-func (t *Table) Binary(name string, options ...ColumnOption) {
-	t.Column(name, Binary, options...)
 }
 
 // Date defines a column with name and Date type.

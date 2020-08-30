@@ -30,7 +30,11 @@ func TestAdapter_specs(t *testing.T) {
 	repo := rel.New(adapter)
 
 	// Prepare tables
-	specs.Migrate(ctx, adapter, false)
+	specs.Migrate(t, repo, false)
+	defer specs.Migrate(t, repo, true)
+
+	// Migration Specs
+	specs.MigrateTable(t, repo)
 
 	// Query Specs
 	specs.Query(t, repo)
@@ -85,9 +89,6 @@ func TestAdapter_specs(t *testing.T) {
 	// - foreign key constraint is not supported because of lack of information in the error message.
 	specs.UniqueConstraint(t, repo)
 	specs.CheckConstraint(t, repo)
-
-	// Cleanup tables
-	specs.Migrate(ctx, adapter, true)
 }
 
 // func TestAdapter_InsertAll_error(t *testing.T) {

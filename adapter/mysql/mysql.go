@@ -25,21 +25,26 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ rel.Adapter = (*Adapter)(nil)
+var (
+	_ rel.Adapter = (*Adapter)(nil)
+
+	// Config for mysql adapter.
+	Config = sql.Config{
+		DropIndexOnTable: true,
+		Placeholder:      "?",
+		EscapeChar:       "`",
+		IncrementFunc:    incrementFunc,
+		ErrorFunc:        errorFunc,
+		MapColumnFunc:    sql.MapColumn,
+	}
+)
 
 // New is mysql adapter constructor.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
-			Config: sql.Config{
-				DropIndexOnTable: true,
-				Placeholder:      "?",
-				EscapeChar:       "`",
-				IncrementFunc:    incrementFunc,
-				ErrorFunc:        errorFunc,
-				MapColumnFunc:    sql.MapColumn,
-			},
-			DB: database,
+			Config: Config,
+			DB:     database,
 		},
 	}
 }

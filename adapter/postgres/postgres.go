@@ -26,21 +26,26 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ rel.Adapter = (*Adapter)(nil)
+var (
+	_ rel.Adapter = (*Adapter)(nil)
+
+	// Config for postgres adapter.
+	Config = sql.Config{
+		Placeholder:         "$",
+		EscapeChar:          "\"",
+		Ordinal:             true,
+		InsertDefaultValues: true,
+		ErrorFunc:           errorFunc,
+		MapColumnFunc:       mapColumnFunc,
+	}
+)
 
 // New is postgres adapter constructor.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
-			Config: sql.Config{
-				Placeholder:         "$",
-				EscapeChar:          "\"",
-				Ordinal:             true,
-				InsertDefaultValues: true,
-				ErrorFunc:           errorFunc,
-				MapColumnFunc:       mapColumnFunc,
-			},
-			DB: database,
+			Config: Config,
+			DB:     database,
 		},
 	}
 }

@@ -45,9 +45,9 @@ type Column struct {
 	Options   string
 }
 
-func addColumn(name string, typ ColumnType, options []ColumnOption) Column {
+func createColumn(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
-		Op:   SchemaAdd,
+		Op:   SchemaCreate,
 		Name: name,
 		Type: typ,
 	}

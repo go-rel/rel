@@ -14,7 +14,7 @@ import (
 func open(t *testing.T) *Adapter {
 	var (
 		err    error
-		config = &Config{
+		config = Config{
 			Placeholder:         "?",
 			EscapeChar:          "`",
 			InsertDefaultValues: true,
@@ -44,7 +44,7 @@ type Name struct {
 }
 
 func TestNew(t *testing.T) {
-	assert.NotNil(t, New(nil))
+	assert.NotNil(t, New(Config{}))
 }
 
 func TestAdapter_Ping(t *testing.T) {

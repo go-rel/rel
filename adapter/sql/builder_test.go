@@ -12,7 +12,7 @@ import (
 
 func BenchmarkBuilder_Find(b *testing.B) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -34,7 +34,7 @@ func BenchmarkBuilder_Find(b *testing.B) {
 
 func TestBuilder_Table(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:   "?",
 			EscapeChar:    "`",
 			MapColumnFunc: MapColumn,
@@ -48,20 +48,20 @@ func TestBuilder_Table(t *testing.T) {
 		{
 			result: "CREATE TABLE `products` (`id` INT, `name` VARCHAR(255), `description` TEXT, PRIMARY KEY (`id`));",
 			table: rel.Table{
-				Op:   rel.SchemaAdd,
+				Op:   rel.SchemaCreate,
 				Name: "products",
 				Definitions: []interface{}{
 					rel.Column{Name: "id", Type: rel.Int},
 					rel.Column{Name: "name", Type: rel.String},
 					rel.Column{Name: "description", Type: rel.Text},
-					rel.Index{Columns: []string{"id"}, Type: rel.PrimaryKey},
+					rel.Key{Columns: []string{"id"}, Type: rel.PrimaryKey},
 				},
 			},
 		},
 		{
 			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) Engine=InnoDB;",
 			table: rel.Table{
-				Op:   rel.SchemaAdd,
+				Op:   rel.SchemaCreate,
 				Name: "columns",
 				Definitions: []interface{}{
 					rel.Column{Name: "bool", Type: rel.Bool, Required: true, Default: false},
@@ -76,10 +76,8 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "time", Type: rel.Time},
 					rel.Column{Name: "timestamp", Type: rel.Timestamp},
 					rel.Column{Name: "blob", Type: "blob"},
-					rel.Index{Columns: []string{"int"}, Type: rel.PrimaryKey},
-					rel.Index{Columns: []string{"date"}, Type: rel.UniqueIndex, Name: "date_unique"},
-					rel.Index{Columns: []string{"datetime"}, Type: rel.SimpleIndex},
-					rel.Index{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
+					rel.Key{Columns: []string{"int"}, Type: rel.PrimaryKey},
+					rel.Key{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
 				},
 				Options: "Engine=InnoDB",
 			},
@@ -90,7 +88,7 @@ func TestBuilder_Table(t *testing.T) {
 				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					rel.Column{Name: "verified", Type: rel.Bool, Op: rel.SchemaAdd},
+					rel.Column{Name: "verified", Type: rel.Bool, Op: rel.SchemaCreate},
 					rel.Column{Name: "string", NewName: "name", Op: rel.SchemaRename},
 					rel.Column{Name: "bool", Type: rel.Int, Op: rel.SchemaAlter},
 					rel.Column{Name: "blob", Op: rel.SchemaDrop},
@@ -103,7 +101,7 @@ func TestBuilder_Table(t *testing.T) {
 				Op:   rel.SchemaAlter,
 				Name: "columns",
 				Definitions: []interface{}{
-					rel.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: rel.SimpleIndex, Op: rel.SchemaAdd},
+					rel.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: rel.SimpleIndex, Op: rel.SchemaCreate},
 				},
 			},
 		},
@@ -158,7 +156,7 @@ func TestBuilder_Table(t *testing.T) {
 
 func TestBuilder_Find(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -242,7 +240,7 @@ func TestBuilder_Find(t *testing.T) {
 
 func TestBuilder_Find_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -323,7 +321,7 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 
 func TestBuilder_Find_SQLQuery(t *testing.T) {
 	var (
-		config   = &Config{}
+		config   = Config{}
 		builder  = NewBuilder(config)
 		query    = rel.Build("", rel.SQL("SELECT * FROM `users` WHERE id=?;", 1))
 		qs, args = builder.Find(query)
@@ -335,7 +333,7 @@ func TestBuilder_Find_SQLQuery(t *testing.T) {
 
 func BenchmarkBuilder_Aggregate(b *testing.B) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -349,7 +347,7 @@ func BenchmarkBuilder_Aggregate(b *testing.B) {
 
 func TestBuilder_Aggregate(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -372,7 +370,7 @@ func TestBuilder_Aggregate(t *testing.T) {
 
 func BenchmarkBuilder_Insert(b *testing.B) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -391,7 +389,7 @@ func BenchmarkBuilder_Insert(b *testing.B) {
 
 func TestBuilder_Insert(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -413,7 +411,7 @@ func TestBuilder_Insert(t *testing.T) {
 
 func TestBuilder_Insert_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -437,7 +435,7 @@ func TestBuilder_Insert_ordinal(t *testing.T) {
 
 func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "?",
 			EscapeChar:          "`",
 			InsertDefaultValues: false,
@@ -453,7 +451,7 @@ func TestBuilder_Insert_defaultValuesDisabled(t *testing.T) {
 
 func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "?",
 			InsertDefaultValues: true,
 			EscapeChar:          "`",
@@ -469,7 +467,7 @@ func TestBuilder_Insert_defaultValuesEnabled(t *testing.T) {
 
 func BenchmarkBuilder_InsertAll(b *testing.B) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -495,7 +493,7 @@ func BenchmarkBuilder_InsertAll(b *testing.B) {
 
 func TestBuilder_InsertAll(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -526,7 +524,7 @@ func TestBuilder_InsertAll(t *testing.T) {
 
 func TestBuilder_InsertAll_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -560,7 +558,7 @@ func TestBuilder_InsertAll_ordinal(t *testing.T) {
 
 func TestBuilder_Update(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -583,7 +581,7 @@ func TestBuilder_Update(t *testing.T) {
 
 func TestBuilder_Update_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -609,7 +607,7 @@ func TestBuilder_Update_ordinal(t *testing.T) {
 
 func TestBuilder_Update_incDecAndFragment(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -627,7 +625,7 @@ func TestBuilder_Update_incDecAndFragment(t *testing.T) {
 
 func TestBuilder_Delete(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -645,7 +643,7 @@ func TestBuilder_Delete(t *testing.T) {
 
 func TestBuilder_Delete_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -665,7 +663,7 @@ func TestBuilder_Delete_ordinal(t *testing.T) {
 
 func TestBuilder_Select(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -727,7 +725,7 @@ func TestBuilder_Select(t *testing.T) {
 func TestBuilder_From(t *testing.T) {
 	var (
 		buffer Buffer
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -740,7 +738,7 @@ func TestBuilder_From(t *testing.T) {
 
 func TestBuilder_Join(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -790,7 +788,7 @@ func TestBuilder_Join(t *testing.T) {
 
 func TestBuilder_Where(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -830,7 +828,7 @@ func TestBuilder_Where(t *testing.T) {
 
 func TestBuilder_Where_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -873,7 +871,7 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 func TestBuilder_GroupBy(t *testing.T) {
 	var (
 		buffer Buffer
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -890,7 +888,7 @@ func TestBuilder_GroupBy(t *testing.T) {
 
 func TestBuilder_Having(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -930,7 +928,7 @@ func TestBuilder_Having(t *testing.T) {
 
 func TestBuilder_Having_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -973,7 +971,7 @@ func TestBuilder_Having_ordinal(t *testing.T) {
 func TestBuilder_OrderBy(t *testing.T) {
 	var (
 		buffer Buffer
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -991,7 +989,7 @@ func TestBuilder_OrderBy(t *testing.T) {
 func TestBuilder_LimitOffset(t *testing.T) {
 	var (
 		buffer Buffer
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -1008,7 +1006,7 @@ func TestBuilder_LimitOffset(t *testing.T) {
 
 func TestBuilder_Filter(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}
@@ -1193,7 +1191,7 @@ func TestBuilder_Filter(t *testing.T) {
 
 func TestBuilder_Filter_ordinal(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder:         "$",
 			EscapeChar:          "\"",
 			Ordinal:             true,
@@ -1380,7 +1378,7 @@ func TestBuilder_Filter_ordinal(t *testing.T) {
 
 func TestBuilder_Lock(t *testing.T) {
 	var (
-		config = &Config{
+		config = Config{
 			Placeholder: "?",
 			EscapeChar:  "`",
 		}

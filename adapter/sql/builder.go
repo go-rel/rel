@@ -16,7 +16,7 @@ var fieldCache sync.Map
 
 // Builder defines information of query b.
 type Builder struct {
-	config      *Config
+	config      Config
 	returnField string
 	count       int
 }
@@ -26,15 +26,15 @@ func (b *Builder) Table(table rel.Table) string {
 	var buffer Buffer
 
 	switch table.Op {
-	case rel.SchemaAdd:
+	case rel.SchemaCreate:
 		b.createTable(&buffer, table)
 	case rel.SchemaAlter:
 		b.alterTable(&buffer, table)
 	case rel.SchemaRename:
 		buffer.WriteString("RENAME TABLE ")
-		buffer.WriteString(b.escape(table.Name))
+		buffer.WriteString(Escape(b.config, table.Name))
 		buffer.WriteString(" TO ")
-		buffer.WriteString(b.escape(table.NewName))
+		buffer.WriteString(Escape(b.config, table.NewName))
 		buffer.WriteByte(';')
 	case rel.SchemaDrop:
 		buffer.WriteString("DROP TABLE ")
@@ -43,7 +43,7 @@ func (b *Builder) Table(table rel.Table) string {
 			buffer.WriteString("IF EXISTS ")
 		}
 
-		buffer.WriteString(b.escape(table.Name))
+		buffer.WriteString(Escape(b.config, table.Name))
 		buffer.WriteByte(';')
 	}
 
@@ -57,7 +57,7 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 		buffer.WriteString("IF NOT EXISTS ")
 	}
 
-	buffer.WriteString(b.escape(table.Name))
+	buffer.WriteString(Escape(b.config, table.Name))
 	buffer.WriteString(" (")
 
 	for i, def := range table.Definitions {
@@ -67,8 +67,8 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 		switch v := def.(type) {
 		case rel.Column:
 			b.column(buffer, v)
-		case rel.Index:
-			b.index(buffer, v)
+		case rel.Key:
+			b.key(buffer, v)
 		case string:
 			buffer.WriteString(v)
 		}
@@ -81,7 +81,7 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 
 func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 	buffer.WriteString("ALTER TABLE ")
-	buffer.WriteString(b.escape(table.Name))
+	buffer.WriteString(Escape(b.config, table.Name))
 	buffer.WriteByte(' ')
 
 	for i, def := range table.Definitions {
@@ -92,7 +92,7 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 		switch v := def.(type) {
 		case rel.Column:
 			switch v.Op {
-			case rel.SchemaAdd:
+			case rel.SchemaCreate:
 				buffer.WriteString("ADD COLUMN ")
 				b.column(buffer, v)
 			case rel.SchemaAlter: // TODO: use modify keyword?
@@ -101,26 +101,26 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 			case rel.SchemaRename:
 				// Add Change
 				buffer.WriteString("RENAME COLUMN ")
-				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(Escape(b.config, v.Name))
 				buffer.WriteString(" TO ")
-				buffer.WriteString(b.escape(v.NewName))
+				buffer.WriteString(Escape(b.config, v.NewName))
 			case rel.SchemaDrop:
 				buffer.WriteString("DROP COLUMN ")
-				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(Escape(b.config, v.Name))
 			}
-		case rel.Index:
+		case rel.Key:
 			switch v.Op {
-			case rel.SchemaAdd:
+			case rel.SchemaCreate:
 				buffer.WriteString("ADD ")
-				b.index(buffer, v)
+				b.key(buffer, v)
 			case rel.SchemaRename:
 				buffer.WriteString("RENAME INDEX ")
-				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(Escape(b.config, v.Name))
 				buffer.WriteString(" TO ")
-				buffer.WriteString(b.escape(v.NewName))
+				buffer.WriteString(Escape(b.config, v.NewName))
 			case rel.SchemaDrop:
 				buffer.WriteString("DROP INDEX ")
-				buffer.WriteString(b.escape(v.Name))
+				buffer.WriteString(Escape(b.config, v.Name))
 			}
 		}
 	}
@@ -134,7 +134,7 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 		typ, m, n = b.config.MapColumnFunc(&column)
 	)
 
-	buffer.WriteString(b.escape(column.Name))
+	buffer.WriteString(Escape(b.config, column.Name))
 	buffer.WriteByte(' ')
 	buffer.WriteString(typ)
 
@@ -175,52 +175,52 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 	b.options(buffer, column.Options)
 }
 
-func (b *Builder) index(buffer *Buffer, index rel.Index) {
+func (b *Builder) key(buffer *Buffer, key rel.Key) {
 	var (
-		typ = string(index.Type)
+		typ = string(key.Type)
 	)
 
 	buffer.WriteString(typ)
 
-	if index.Name != "" {
+	if key.Name != "" {
 		buffer.WriteByte(' ')
-		buffer.WriteString(b.escape(index.Name))
+		buffer.WriteString(Escape(b.config, key.Name))
 	}
 
 	buffer.WriteString(" (")
-	for i, col := range index.Columns {
+	for i, col := range key.Columns {
 		if i > 0 {
 			buffer.WriteString(", ")
 		}
-		buffer.WriteString(b.escape(col))
+		buffer.WriteString(Escape(b.config, col))
 	}
 	buffer.WriteString(")")
 
-	if index.Type == rel.ForeignKey {
+	if key.Type == rel.ForeignKey {
 		buffer.WriteString(" REFERENCES ")
-		buffer.WriteString(b.escape(index.Reference.Table))
+		buffer.WriteString(Escape(b.config, key.Reference.Table))
 
 		buffer.WriteString(" (")
-		for i, col := range index.Reference.Columns {
+		for i, col := range key.Reference.Columns {
 			if i > 0 {
 				buffer.WriteString(", ")
 			}
-			buffer.WriteString(b.escape(col))
+			buffer.WriteString(Escape(b.config, col))
 		}
 		buffer.WriteString(")")
 
-		if onDelete := index.Reference.OnDelete; onDelete != "" {
+		if onDelete := key.Reference.OnDelete; onDelete != "" {
 			buffer.WriteString(" ON DELETE ")
 			buffer.WriteString(onDelete)
 		}
 
-		if onUpdate := index.Reference.OnUpdate; onUpdate != "" {
+		if onUpdate := key.Reference.OnUpdate; onUpdate != "" {
 			buffer.WriteString(" ON UPDATE ")
 			buffer.WriteString(onUpdate)
 		}
 	}
 
-	b.options(buffer, index.Options)
+	b.options(buffer, key.Options)
 }
 
 func (b *Builder) options(buffer *Buffer, options string) {
@@ -259,13 +259,13 @@ func (b *Builder) Aggregate(query rel.Query, mode string, field string) (string,
 	buffer.WriteString("SELECT ")
 	buffer.WriteString(mode)
 	buffer.WriteByte('(')
-	buffer.WriteString(b.escape(field))
+	buffer.WriteString(Escape(b.config, field))
 	buffer.WriteString(") AS ")
 	buffer.WriteString(mode)
 
 	for _, f := range query.GroupQuery.Fields {
 		buffer.WriteByte(',')
-		buffer.WriteString(b.escape(f))
+		buffer.WriteString(Escape(b.config, f))
 	}
 
 	b.query(&buffer, query)
@@ -302,7 +302,7 @@ func (b *Builder) Insert(table string, mutates map[string]rel.Mutate) (string, [
 	)
 
 	buffer.WriteString("INSERT INTO ")
-	buffer.WriteString(b.escape(table))
+	buffer.WriteString(Escape(b.config, table))
 
 	if count == 0 && b.config.InsertDefaultValues {
 		buffer.WriteString(" DEFAULT VALUES")
@@ -431,14 +431,14 @@ func (b *Builder) Update(table string, mutates map[string]rel.Mutate, filter rel
 	for field, mut := range mutates {
 		switch mut.Type {
 		case rel.ChangeSetOp:
-			buffer.WriteString(b.escape(field))
+			buffer.WriteString(Escape(b.config, field))
 			buffer.WriteByte('=')
 			buffer.WriteString(b.ph())
 			buffer.Append(mut.Value)
 		case rel.ChangeIncOp:
-			buffer.WriteString(b.escape(field))
+			buffer.WriteString(Escape(b.config, field))
 			buffer.WriteByte('=')
-			buffer.WriteString(b.escape(field))
+			buffer.WriteString(Escape(b.config, field))
 			buffer.WriteByte('+')
 			buffer.WriteString(b.ph())
 			buffer.Append(mut.Value)
@@ -496,7 +496,7 @@ func (b *Builder) fields(buffer *Buffer, distinct bool, fields []string) {
 
 	l := len(fields) - 1
 	for i, f := range fields {
-		buffer.WriteString(b.escape(f))
+		buffer.WriteString(Escape(b.config, f))
 
 		if i < l {
 			buffer.WriteByte(',')
@@ -518,8 +518,8 @@ func (b *Builder) join(buffer *Buffer, table string, joins []rel.JoinQuery) {
 
 	for _, join := range joins {
 		var (
-			from = b.escape(join.From)
-			to   = b.escape(join.To)
+			from = Escape(b.config, join.From)
+			to   = Escape(b.config, join.To)
 		)
 
 		// TODO: move this to core functionality, and infer join condition using assoc data.
@@ -562,7 +562,7 @@ func (b *Builder) groupBy(buffer *Buffer, fields []string) {
 
 	l := len(fields) - 1
 	for i, f := range fields {
-		buffer.WriteString(b.escape(f))
+		buffer.WriteString(Escape(b.config, f))
 
 		if i < l {
 			buffer.WriteByte(',')
@@ -591,7 +591,7 @@ func (b *Builder) orderBy(buffer *Buffer, orders []rel.SortQuery) {
 	buffer.WriteString(" ORDER BY")
 	for i, order := range orders {
 		buffer.WriteByte(' ')
-		buffer.WriteString(b.escape(order.Field))
+		buffer.WriteString(Escape(b.config, order.Field))
 
 		if order.Asc() {
 			buffer.WriteString(" ASC")
@@ -634,21 +634,21 @@ func (b *Builder) filter(buffer *Buffer, filter rel.FilterQuery) {
 		rel.FilterGteOp:
 		b.buildComparison(buffer, filter)
 	case rel.FilterNilOp:
-		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(Escape(b.config, filter.Field))
 		buffer.WriteString(" IS NULL")
 	case rel.FilterNotNilOp:
-		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(Escape(b.config, filter.Field))
 		buffer.WriteString(" IS NOT NULL")
 	case rel.FilterInOp,
 		rel.FilterNinOp:
 		b.buildInclusion(buffer, filter)
 	case rel.FilterLikeOp:
-		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(Escape(b.config, filter.Field))
 		buffer.WriteString(" LIKE ")
 		buffer.WriteString(b.ph())
 		buffer.Append(filter.Value)
 	case rel.FilterNotLikeOp:
-		buffer.WriteString(b.escape(filter.Field))
+		buffer.WriteString(Escape(b.config, filter.Field))
 		buffer.WriteString(" NOT LIKE ")
 		buffer.WriteString(b.ph())
 		buffer.Append(filter.Value)
@@ -683,7 +683,7 @@ func (b *Builder) build(buffer *Buffer, op string, inner []rel.FilterQuery) {
 }
 
 func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
-	buffer.WriteString(b.escape(filter.Field))
+	buffer.WriteString(Escape(b.config, filter.Field))
 
 	switch filter.Type {
 	case rel.FilterEqOp:
@@ -709,7 +709,7 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 		values = filter.Value.([]interface{})
 	)
 
-	buffer.WriteString(b.escape(filter.Field))
+	buffer.WriteString(Escape(b.config, filter.Field))
 
 	if filter.Type == rel.FilterInOp {
 		buffer.WriteString(" IN (")
@@ -735,38 +735,6 @@ func (b *Builder) ph() string {
 	return b.config.Placeholder
 }
 
-type fieldCacheKey struct {
-	field  string
-	escape string
-}
-
-func (b *Builder) escape(field string) string {
-	if b.config.EscapeChar == "" || field == "*" {
-		return field
-	}
-
-	key := fieldCacheKey{field: field, escape: b.config.EscapeChar}
-	escapedField, ok := fieldCache.Load(key)
-	if ok {
-		return escapedField.(string)
-	}
-
-	if len(field) > 0 && field[0] == UnescapeCharacter {
-		escapedField = field[1:]
-	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
-		escapedField = field[:start+1] + b.escape(field[start+1:end]) + field[end:]
-	} else if strings.HasSuffix(field, "*") {
-		escapedField = b.config.EscapeChar + strings.Replace(field, ".", b.config.EscapeChar+".", 1)
-	} else {
-		escapedField = b.config.EscapeChar +
-			strings.Replace(field, ".", b.config.EscapeChar+"."+b.config.EscapeChar, 1) +
-			b.config.EscapeChar
-	}
-
-	fieldCache.Store(key, escapedField)
-	return escapedField.(string)
-}
-
 // Returning append returning to insert rel.
 func (b *Builder) Returning(field string) *Builder {
 	b.returnField = field
@@ -774,7 +742,7 @@ func (b *Builder) Returning(field string) *Builder {
 }
 
 // NewBuilder create new SQL builder.
-func NewBuilder(config *Config) *Builder {
+func NewBuilder(config Config) *Builder {
 	return &Builder{
 		config: config,
 	}

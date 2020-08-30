@@ -13,7 +13,7 @@ import (
 // Adapter definition for database database.
 type Adapter struct {
 	Instrumenter rel.Instrumenter
-	Config       *Config
+	Config       Config
 	DB           *sql.DB
 	Tx           *sql.Tx
 	savepoint    int
@@ -255,7 +255,7 @@ func (a *Adapter) Apply(ctx context.Context, table rel.Table) error {
 }
 
 // New initialize adapter without db.
-func New(config *Config) *Adapter {
+func New(config Config) *Adapter {
 	adapter := &Adapter{
 		Config: config,
 	}

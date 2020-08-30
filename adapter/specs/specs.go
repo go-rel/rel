@@ -53,7 +53,7 @@ type Composite struct {
 }
 
 var (
-	config = &sql.Config{
+	config = sql.Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}

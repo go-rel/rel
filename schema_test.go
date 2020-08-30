@@ -16,7 +16,7 @@ func TestSchema_CreateTable(t *testing.T) {
 	})
 
 	assert.Equal(t, Table{
-		Op:   SchemaAdd,
+		Op:   SchemaCreate,
 		Name: "products",
 		Definitions: []interface{}{
 			Column{Name: "id", Type: ID},
@@ -38,7 +38,7 @@ func TestSchema_AlterTable(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "users",
 		Definitions: []interface{}{
-			Column{Name: "verified", Type: Bool, Op: SchemaAdd},
+			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
 			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
 		},
 	}, schema.Pending[0])
@@ -76,7 +76,7 @@ func TestSchema_AddColumn(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []interface{}{
-			Column{Name: "description", Type: String, Op: SchemaAdd},
+			Column{Name: "description", Type: String, Op: SchemaCreate},
 		},
 	}, schema.Pending[0])
 }
@@ -132,7 +132,7 @@ func TestSchema_AddIndex(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []interface{}{
-			Index{Columns: []string{"sale"}, Type: SimpleIndex, Op: SchemaAdd},
+			Index{Columns: []string{"sale"}, Type: SimpleIndex, Op: SchemaCreate},
 		},
 	}, schema.Pending[0])
 }

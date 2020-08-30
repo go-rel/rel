@@ -12,7 +12,7 @@ type Table struct {
 
 // Column defines a column with name and type.
 func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
-	t.Definitions = append(t.Definitions, addColumn(name, typ, options))
+	t.Definitions = append(t.Definitions, createColumn(name, typ, options))
 }
 
 // ID defines a column with name and ID type.
@@ -76,24 +76,29 @@ func (t *Table) Timestamp(name string, options ...ColumnOption) {
 	t.Column(name, Timestamp, options...)
 }
 
-// Index defines an index for columns.
-func (t *Table) Index(columns []string, typ IndexType, options ...IndexOption) {
-	t.Definitions = append(t.Definitions, addIndex(columns, typ, options))
+// // Index defines an index for columns.
+// func (t *Table) Index(columns []string, typ IndexType, options ...IndexOption) {
+// 	t.Definitions = append(t.Definitions, createIndex(columns, typ, options))
+// }
+
+// PrimaryKey defines a primary key for table.
+func (t *Table) PrimaryKey(column string, options ...KeyOption) {
+	t.PrimaryKeys([]string{column}, options...)
 }
 
-// Unique defines an unique index for columns.
-func (t *Table) Unique(columns []string, options ...IndexOption) {
-	t.Index(columns, UniqueIndex, options...)
-}
-
-// PrimaryKey defines an primary key for table.
-func (t *Table) PrimaryKey(columns []string, options ...IndexOption) {
-	t.Index(columns, PrimaryKey, options...)
+// PrimaryKeys defines composite primary keys for table.
+func (t *Table) PrimaryKeys(columns []string, options ...KeyOption) {
+	t.Definitions = append(t.Definitions, createPrimaryKeys(columns, options))
 }
 
 // ForeignKey defines foreign key index.
-func (t *Table) ForeignKey(column string, refTable string, refColumn string, options ...IndexOption) {
-	t.Definitions = append(t.Definitions, addForeignKey(column, refTable, refColumn, options))
+func (t *Table) ForeignKey(column string, refTable string, refColumn string, options ...KeyOption) {
+	t.Definitions = append(t.Definitions, createForeignKey(column, refTable, refColumn, options))
+}
+
+// Unique defines an unique key for columns.
+func (t *Table) Unique(columns []string, options ...KeyOption) {
+	t.Definitions = append(t.Definitions, createKeys(columns, UniqueKey, options))
 }
 
 // Fragment defines anything using sql fragment.
@@ -135,7 +140,7 @@ func (at *AlterTable) DropIndex(name string, options ...IndexOption) {
 
 func createTable(name string, options []TableOption) Table {
 	table := Table{
-		Op:   SchemaAdd,
+		Op:   SchemaCreate,
 		Name: name,
 	}
 

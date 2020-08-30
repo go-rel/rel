@@ -105,25 +105,9 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
-	t.Run("Index", func(t *testing.T) {
-		table.Index([]string{"id"}, PrimaryKey)
-		assert.Equal(t, Index{
-			Columns: []string{"id"},
-			Type:    PrimaryKey,
-		}, table.Definitions[len(table.Definitions)-1])
-	})
-
-	t.Run("Unique", func(t *testing.T) {
-		table.Unique([]string{"username"})
-		assert.Equal(t, Index{
-			Columns: []string{"username"},
-			Type:    UniqueIndex,
-		}, table.Definitions[len(table.Definitions)-1])
-	})
-
 	t.Run("PrimaryKey", func(t *testing.T) {
-		table.PrimaryKey([]string{"id"})
-		assert.Equal(t, Index{
+		table.PrimaryKey("id")
+		assert.Equal(t, Key{
 			Columns: []string{"id"},
 			Type:    PrimaryKey,
 		}, table.Definitions[len(table.Definitions)-1])
@@ -131,7 +115,7 @@ func TestTable(t *testing.T) {
 
 	t.Run("ForeignKey", func(t *testing.T) {
 		table.ForeignKey("user_id", "users", "id")
-		assert.Equal(t, Index{
+		assert.Equal(t, Key{
 			Columns: []string{"user_id"},
 			Type:    ForeignKey,
 			Reference: ForeignKeyReference{

@@ -14,6 +14,7 @@ type Config struct {
 	EscapeChar          string
 	ErrorFunc           func(error) error
 	IncrementFunc       func(Adapter) int
+	IndexToSQL          func(config Config, buffer *Buffer, index rel.Index) bool
 	MapColumnFunc       func(column *rel.Column) (string, int, int)
 }
 

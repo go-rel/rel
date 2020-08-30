@@ -12,38 +12,13 @@ func TestAddIndex(t *testing.T) {
 			Name("simple"),
 			Options("options"),
 		}
-		index = addIndex([]string{"add"}, SimpleIndex, options)
+		index = createIndex([]string{"add"}, SimpleIndex, options)
 	)
 
 	assert.Equal(t, Index{
 		Type:    SimpleIndex,
 		Name:    "simple",
 		Columns: []string{"add"},
-		Options: "options",
-	}, index)
-}
-
-func TestAddForeignKey(t *testing.T) {
-	var (
-		options = []IndexOption{
-			OnDelete("cascade"),
-			OnUpdate("cascade"),
-			Name("fk"),
-			Options("options"),
-		}
-		index = addForeignKey("table_id", "table", "id", options)
-	)
-
-	assert.Equal(t, Index{
-		Type:    ForeignKey,
-		Name:    "fk",
-		Columns: []string{"table_id"},
-		Reference: ForeignKeyReference{
-			Table:    "table",
-			Columns:  []string{"id"},
-			OnDelete: "cascade",
-			OnUpdate: "cascade",
-		},
 		Options: "options",
 	}, index)
 }

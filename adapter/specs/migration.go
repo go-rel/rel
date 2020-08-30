@@ -82,7 +82,7 @@ func Migrate(t *testing.T, repo rel.Repository, rollback bool) {
 				t.Int("primary2")
 				t.String("data")
 
-				t.PrimaryKey([]string{"primary1", "primary2"})
+				t.PrimaryKeys([]string{"primary1", "primary2"})
 			})
 		},
 		func(schema *rel.Schema) {
@@ -121,7 +121,10 @@ func MigrateTable(t *testing.T, repo rel.Repository) {
 				t.Timestamp("timestamp1")
 				t.Timestamp("timestamp2", rel.Default(time.Now()))
 
-				t.Unique([]string{"int1"})
+				// t.Index([]string{"int1"}, rel.SimpleIndex)
+				// t.Index([]string{"string1", "string2"}, rel.SimpleIndex)
+
+				t.Unique([]string{"int2"})
 				t.Unique([]string{"bigint1", "bigint2"})
 			})
 		},

@@ -4,8 +4,8 @@ package rel
 type SchemaOp uint8
 
 const (
-	// SchemaAdd operation.
-	SchemaAdd SchemaOp = iota
+	// SchemaCreate operation.
+	SchemaCreate SchemaOp = iota
 	// SchemaAlter operation.
 	SchemaAlter
 	// SchemaRename operation.
@@ -83,7 +83,7 @@ func (s *Schema) DropColumn(table string, name string, options ...ColumnOption) 
 // AddIndex for columns.
 func (s *Schema) AddIndex(table string, column []string, typ IndexType, options ...IndexOption) {
 	at := alterTable(table, nil)
-	at.Index(column, typ, options...)
+	// at.Index(column, typ, options...)
 	s.add(at.Table)
 }
 
@@ -119,6 +119,10 @@ func (o Options) applyColumn(column *Column) {
 
 func (o Options) applyIndex(index *Index) {
 	index.Options = string(o)
+}
+
+func (o Options) applyKey(key *Key) {
+	key.Options = string(o)
 }
 
 // Required disallows nil values in the column.
@@ -160,27 +164,6 @@ func (d defaultValue) applyColumn(column *Column) {
 // Default allows to set a default value on the column.).
 func Default(def interface{}) ColumnOption {
 	return defaultValue{value: def}
-}
-
-// Name option for defining custom index name.
-type Name string
-
-func (n Name) applyIndex(index *Index) {
-	index.Name = string(n)
-}
-
-// OnDelete option for foreign key index.
-type OnDelete string
-
-func (od OnDelete) applyIndex(index *Index) {
-	index.Reference.OnDelete = string(od)
-}
-
-// OnUpdate option for foreign key index.
-type OnUpdate string
-
-func (ou OnUpdate) applyIndex(index *Index) {
-	index.Reference.OnUpdate = string(ou)
 }
 
 // Optional option.

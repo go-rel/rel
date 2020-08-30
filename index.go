@@ -8,52 +8,23 @@ const (
 	SimpleIndex IndexType = "INDEX"
 	// UniqueIndex IndexType.
 	UniqueIndex IndexType = "UNIQUE"
-	// PrimaryKey IndexType.
-	PrimaryKey IndexType = "PRIMARY KEY"
-	// ForeignKey IndexType.
-	ForeignKey IndexType = "FOREIGN KEY"
 )
-
-// ForeignKeyReference definition.
-type ForeignKeyReference struct {
-	Table    string
-	Columns  []string
-	OnDelete string
-	OnUpdate string
-}
 
 // Index definition.
 type Index struct {
-	Op        SchemaOp
-	Name      string
-	Type      IndexType
-	Columns   []string
-	NewName   string
-	Reference ForeignKeyReference
-	Options   string
+	Op      SchemaOp
+	Name    string
+	Type    IndexType
+	Columns []string
+	NewName string
+	Options string
 }
 
-func addIndex(columns []string, typ IndexType, options []IndexOption) Index {
+func createIndex(columns []string, typ IndexType, options []IndexOption) Index {
 	index := Index{
-		Op:      SchemaAdd,
+		Op:      SchemaCreate,
 		Columns: columns,
 		Type:    typ,
-	}
-
-	applyIndexOptions(&index, options)
-	return index
-}
-
-// TODO: support multi columns
-func addForeignKey(column string, refTable string, refColumn string, options []IndexOption) Index {
-	index := Index{
-		Op:      SchemaAdd,
-		Type:    ForeignKey,
-		Columns: []string{column},
-		Reference: ForeignKeyReference{
-			Table:   refTable,
-			Columns: []string{refColumn},
-		},
 	}
 
 	applyIndexOptions(&index, options)
@@ -91,4 +62,15 @@ func applyIndexOptions(index *Index, options []IndexOption) {
 	for i := range options {
 		options[i].applyIndex(index)
 	}
+}
+
+// Name option for defining custom index name.
+type Name string
+
+func (n Name) applyIndex(index *Index) {
+	index.Name = string(n)
+}
+
+func (n Name) applyKey(key *Key) {
+	key.Name = string(n)
 }

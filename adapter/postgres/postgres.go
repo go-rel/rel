@@ -32,7 +32,7 @@ var _ rel.Adapter = (*Adapter)(nil)
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
-			Config: &sql.Config{
+			Config: sql.Config{
 				Placeholder:         "$",
 				EscapeChar:          "\"",
 				Ordinal:             true,

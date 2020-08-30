@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddColumn(t *testing.T) {
+func TestCreateColumn(t *testing.T) {
 	var (
 		options = []ColumnOption{
 			Required(true),
@@ -17,7 +17,7 @@ func TestAddColumn(t *testing.T) {
 			Default(0),
 			Options("options"),
 		}
-		column = addColumn("add", Decimal, options)
+		column = createColumn("add", Decimal, options)
 	)
 
 	assert.Equal(t, Column{

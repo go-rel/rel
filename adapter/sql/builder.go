@@ -69,8 +69,8 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 			b.column(buffer, v)
 		case rel.Key:
 			b.key(buffer, v)
-		case string:
-			buffer.WriteString(v)
+		case rel.Raw:
+			buffer.WriteString(string(v))
 		}
 	}
 

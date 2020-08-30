@@ -154,23 +154,6 @@ func TestAlterTable(t *testing.T) {
 			Name: "column",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
-
-	t.Run("RenameIndex", func(t *testing.T) {
-		table.RenameIndex("index", "new_index")
-		assert.Equal(t, Index{
-			Op:      SchemaRename,
-			Name:    "index",
-			NewName: "new_index",
-		}, table.Definitions[len(table.Definitions)-1])
-	})
-
-	t.Run("DropIndex", func(t *testing.T) {
-		table.DropIndex("index")
-		assert.Equal(t, Index{
-			Op:   SchemaDrop,
-			Name: "index",
-		}, table.Definitions[len(table.Definitions)-1])
-	})
 }
 
 func TestCreateTable(t *testing.T) {

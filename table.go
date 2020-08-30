@@ -1,11 +1,16 @@
 package rel
 
+// TableDefinition interface.
+type TableDefinition interface {
+	internalTableDefinition()
+}
+
 // Table definition.
 type Table struct {
 	Op          SchemaOp
 	Name        string
 	NewName     string
-	Definitions []interface{}
+	Definitions []TableDefinition
 	Optional    bool
 	Options     string
 }
@@ -103,10 +108,10 @@ func (t *Table) Unique(columns []string, options ...KeyOption) {
 
 // Fragment defines anything using sql fragment.
 func (t *Table) Fragment(fragment string) {
-	t.Definitions = append(t.Definitions, fragment)
+	t.Definitions = append(t.Definitions, Raw(fragment))
 }
 
-func (t Table) migrate() {}
+func (t Table) internalMigration() {}
 
 // AlterTable Migrator.
 type AlterTable struct {
@@ -126,16 +131,6 @@ func (at *AlterTable) AlterColumn(name string, typ ColumnType, options ...Column
 // DropColumn from this table.
 func (at *AlterTable) DropColumn(name string, options ...ColumnOption) {
 	at.Definitions = append(at.Definitions, dropColumn(name, options))
-}
-
-// RenameIndex to a new name.
-func (at *AlterTable) RenameIndex(name string, newName string, options ...IndexOption) {
-	at.Definitions = append(at.Definitions, renameIndex(name, newName, options))
-}
-
-// DropIndex from this table.
-func (at *AlterTable) DropIndex(name string, options ...IndexOption) {
-	at.Definitions = append(at.Definitions, dropIndex(name, options))
 }
 
 func createTable(name string, options []TableOption) Table {

@@ -50,7 +50,7 @@ func TestBuilder_Table(t *testing.T) {
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "products",
-				Definitions: []interface{}{
+				Definitions: []rel.TableDefinition{
 					rel.Column{Name: "id", Type: rel.Int},
 					rel.Column{Name: "name", Type: rel.String},
 					rel.Column{Name: "description", Type: rel.Text},
@@ -59,11 +59,11 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), UNIQUE `date_unique` (`date`), INDEX (`datetime`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE) Engine=InnoDB;",
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE (`date`)) Engine=InnoDB;",
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "columns",
-				Definitions: []interface{}{
+				Definitions: []rel.TableDefinition{
 					rel.Column{Name: "bool", Type: rel.Bool, Required: true, Default: false},
 					rel.Column{Name: "int", Type: rel.Int, Limit: 11, Unsigned: true},
 					rel.Column{Name: "bigint", Type: rel.BigInt, Limit: 20, Unsigned: true},
@@ -78,6 +78,7 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "blob", Type: "blob"},
 					rel.Key{Columns: []string{"int"}, Type: rel.PrimaryKey},
 					rel.Key{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
+					rel.Key{Columns: []string{"date"}, Type: rel.UniqueKey},
 				},
 				Options: "Engine=InnoDB",
 			},
@@ -87,7 +88,7 @@ func TestBuilder_Table(t *testing.T) {
 			table: rel.Table{
 				Op:   rel.SchemaAlter,
 				Name: "columns",
-				Definitions: []interface{}{
+				Definitions: []rel.TableDefinition{
 					rel.Column{Name: "verified", Type: rel.Bool, Op: rel.SchemaCreate},
 					rel.Column{Name: "string", NewName: "name", Op: rel.SchemaRename},
 					rel.Column{Name: "bool", Type: rel.Int, Op: rel.SchemaAlter},
@@ -96,32 +97,12 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "ALTER TABLE `columns` ADD INDEX `verified_int` (`verified`, `int`);",
+			result: "ALTER TABLE `transactions` ADD FOREIGN KEY (`user_id`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE;",
 			table: rel.Table{
 				Op:   rel.SchemaAlter,
-				Name: "columns",
-				Definitions: []interface{}{
-					rel.Index{Name: "verified_int", Columns: []string{"verified", "int"}, Type: rel.SimpleIndex, Op: rel.SchemaCreate},
-				},
-			},
-		},
-		{
-			result: "ALTER TABLE `columns` RENAME INDEX `verified_int` TO `verified_int_index`;",
-			table: rel.Table{
-				Op:   rel.SchemaAlter,
-				Name: "columns",
-				Definitions: []interface{}{
-					rel.Index{Name: "verified_int", NewName: "verified_int_index", Op: rel.SchemaRename},
-				},
-			},
-		},
-		{
-			result: "ALTER TABLE `columns` DROP INDEX `verified_int_index`;",
-			table: rel.Table{
-				Op:   rel.SchemaAlter,
-				Name: "columns",
-				Definitions: []interface{}{
-					rel.Index{Name: "verified_int_index", Op: rel.SchemaDrop},
+				Name: "transactions",
+				Definitions: []rel.TableDefinition{
+					rel.Key{Columns: []string{"user_id"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
 				},
 			},
 		},

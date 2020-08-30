@@ -14,18 +14,18 @@ const (
 	SchemaDrop
 )
 
-// Migrator private interface.
-type Migrator interface {
-	migrate()
+// Migration definition.
+type Migration interface {
+	internalMigration()
 }
 
 // Schema builder.
 type Schema struct {
-	Pending []Migrator
+	Migration []Migration
 }
 
-func (s *Schema) add(migrator Migrator) {
-	s.Pending = append(s.Pending, migrator)
+func (s *Schema) add(migration Migration) {
+	s.Migration = append(s.Migration, migration)
 }
 
 // CreateTable with name and its definition.
@@ -80,25 +80,14 @@ func (s *Schema) DropColumn(table string, name string, options ...ColumnOption) 
 	s.add(at.Table)
 }
 
-// AddIndex for columns.
-func (s *Schema) AddIndex(table string, column []string, typ IndexType, options ...IndexOption) {
-	at := alterTable(table, nil)
-	// at.Index(column, typ, options...)
-	s.add(at.Table)
-}
-
-// RenameIndex by name.
-func (s *Schema) RenameIndex(table string, name string, newName string, options ...IndexOption) {
-	at := alterTable(table, nil)
-	at.RenameIndex(name, newName, options...)
-	s.add(at.Table)
+// CreateIndex for columns on a table.
+func (s *Schema) CreateIndex(table string, column []string, typ IndexType, options ...IndexOption) {
+	s.add(createIndex(table, column, typ, options))
 }
 
 // DropIndex by name.
 func (s *Schema) DropIndex(table string, name string, options ...IndexOption) {
-	at := alterTable(table, nil)
-	at.DropIndex(name, options...)
-	s.add(at.Table)
+	s.add(dropIndex(table, name, options))
 }
 
 // Exec queries using repo.
@@ -174,3 +163,8 @@ type Optional bool
 func (o Optional) applyTable(table *Table) {
 	table.Optional = bool(o)
 }
+
+// Raw string
+type Raw string
+
+func (r Raw) internalTableDefinition() {}

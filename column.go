@@ -45,6 +45,8 @@ type Column struct {
 	Options   string
 }
 
+func (Column) internalTableDefinition() {}
+
 func createColumn(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
 		Op:   SchemaCreate,

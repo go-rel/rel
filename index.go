@@ -13,16 +13,19 @@ const (
 // Index definition.
 type Index struct {
 	Op      SchemaOp
+	Table   string
 	Name    string
 	Type    IndexType
 	Columns []string
-	NewName string
 	Options string
 }
 
-func createIndex(columns []string, typ IndexType, options []IndexOption) Index {
+func (Index) internalMigration() {}
+
+func createIndex(table string, columns []string, typ IndexType, options []IndexOption) Index {
 	index := Index{
 		Op:      SchemaCreate,
+		Table:   table,
 		Columns: columns,
 		Type:    typ,
 	}
@@ -31,21 +34,11 @@ func createIndex(columns []string, typ IndexType, options []IndexOption) Index {
 	return index
 }
 
-func renameIndex(name string, newName string, options []IndexOption) Index {
+func dropIndex(table string, name string, options []IndexOption) Index {
 	index := Index{
-		Op:      SchemaRename,
-		Name:    name,
-		NewName: newName,
-	}
-
-	applyIndexOptions(&index, options)
-	return index
-}
-
-func dropIndex(name string, options []IndexOption) Index {
-	index := Index{
-		Op:   SchemaDrop,
-		Name: name,
+		Op:    SchemaDrop,
+		Table: table,
+		Name:  name,
 	}
 
 	applyIndexOptions(&index, options)

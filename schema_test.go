@@ -18,12 +18,12 @@ func TestSchema_CreateTable(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaCreate,
 		Name: "products",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "id", Type: ID},
 			Column{Name: "name", Type: String},
 			Column{Name: "description", Type: Text},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_AlterTable(t *testing.T) {
@@ -37,11 +37,11 @@ func TestSchema_AlterTable(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "users",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
 			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_RenameTable(t *testing.T) {
@@ -53,7 +53,7 @@ func TestSchema_RenameTable(t *testing.T) {
 		Op:      SchemaRename,
 		Name:    "trxs",
 		NewName: "transactions",
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_DropTable(t *testing.T) {
@@ -64,7 +64,7 @@ func TestSchema_DropTable(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaDrop,
 		Name: "logs",
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_AddColumn(t *testing.T) {
@@ -75,10 +75,10 @@ func TestSchema_AddColumn(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "products",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "description", Type: String, Op: SchemaCreate},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_AlterColumn(t *testing.T) {
@@ -89,10 +89,10 @@ func TestSchema_AlterColumn(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "products",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "sale", Type: Bool, Op: SchemaAlter},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_RenameColumn(t *testing.T) {
@@ -103,10 +103,10 @@ func TestSchema_RenameColumn(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "users",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
 func TestSchema_DropColumn(t *testing.T) {
@@ -117,38 +117,23 @@ func TestSchema_DropColumn(t *testing.T) {
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "users",
-		Definitions: []interface{}{
+		Definitions: []TableDefinition{
 			Column{Name: "verified", Op: SchemaDrop},
 		},
-	}, schema.Pending[0])
+	}, schema.Migration[0])
 }
 
-func TestSchema_AddIndex(t *testing.T) {
+func TestSchema_CreateIndex(t *testing.T) {
 	var schema Schema
 
-	schema.AddIndex("products", []string{"sale"}, SimpleIndex)
+	schema.CreateIndex("products", []string{"sale"}, SimpleIndex)
 
-	assert.Equal(t, Table{
-		Op:   SchemaAlter,
-		Name: "products",
-		Definitions: []interface{}{
-			Index{Columns: []string{"sale"}, Type: SimpleIndex, Op: SchemaCreate},
-		},
-	}, schema.Pending[0])
-}
-
-func TestSchema_RenameIndex(t *testing.T) {
-	var schema Schema
-
-	schema.RenameIndex("products", "store_id", "fk_store_id")
-
-	assert.Equal(t, Table{
-		Op:   SchemaAlter,
-		Name: "products",
-		Definitions: []interface{}{
-			Index{Name: "store_id", NewName: "fk_store_id", Op: SchemaRename},
-		},
-	}, schema.Pending[0])
+	assert.Equal(t, Index{
+		Table:   "products",
+		Columns: []string{"sale"},
+		Type:    SimpleIndex,
+		Op:      SchemaCreate,
+	}, schema.Migration[0])
 }
 
 func TestSchema_DropIndex(t *testing.T) {
@@ -156,11 +141,9 @@ func TestSchema_DropIndex(t *testing.T) {
 
 	schema.DropIndex("products", "sale")
 
-	assert.Equal(t, Table{
-		Op:   SchemaAlter,
-		Name: "products",
-		Definitions: []interface{}{
-			Index{Name: "sale", Op: SchemaDrop},
-		},
-	}, schema.Pending[0])
+	assert.Equal(t, Index{
+		Table: "products",
+		Name:  "sale",
+		Op:    SchemaDrop,
+	}, schema.Migration[0])
 }

@@ -67,7 +67,7 @@ func (m Migrator) buildVersionTableDefinition() rel.Table {
 		t.Unique([]string{"version"})
 	}, rel.Optional(true))
 
-	return schema.Pending[0].(rel.Table)
+	return schema.Migration[0].(rel.Table)
 }
 
 func (m *Migrator) sync(ctx context.Context) {
@@ -109,9 +109,9 @@ func (m *Migrator) Migrate(ctx context.Context) {
 			m.repo.MustInsert(ctx, &version{Version: step.Version})
 
 			adapter := m.repo.Adapter(ctx).(rel.Adapter)
-			for _, migrator := range step.up.Pending {
+			for _, migration := range step.up.Migration {
 				// TODO: exec script
-				switch v := migrator.(type) {
+				switch v := migration.(type) {
 				case rel.Table:
 					check(adapter.Apply(ctx, v))
 				}
@@ -138,8 +138,8 @@ func (m *Migrator) Rollback(ctx context.Context) {
 			m.repo.MustDelete(ctx, &v)
 
 			adapter := m.repo.Adapter(ctx).(rel.Adapter)
-			for _, migrator := range v.down.Pending {
-				switch v := migrator.(type) {
+			for _, migration := range v.down.Migration {
+				switch v := migration.(type) {
 				case rel.Table:
 					check(adapter.Apply(ctx, v))
 				}

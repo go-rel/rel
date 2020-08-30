@@ -31,6 +31,8 @@ type Key struct {
 	Options   string
 }
 
+func (Key) internalTableDefinition() {}
+
 func createKeys(columns []string, typ KeyType, options []KeyOption) Key {
 	key := Key{
 		Op:      SchemaCreate,

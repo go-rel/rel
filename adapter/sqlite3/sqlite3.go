@@ -39,7 +39,7 @@ var (
 	}
 )
 
-// New is mysql adapter constructor.
+// New sqlite adapter using existing connection.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
@@ -49,7 +49,7 @@ func New(database *db.DB) *Adapter {
 	}
 }
 
-// Open mysql connection using dsn.
+// Open sqlite connection using dsn.
 func Open(dsn string) (*Adapter, error) {
 	var database, err = db.Open("sqlite3", dsn)
 	return New(database), err

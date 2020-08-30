@@ -39,7 +39,7 @@ var (
 	}
 )
 
-// New is mysql adapter constructor.
+// New mysql adapter using existing connection.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

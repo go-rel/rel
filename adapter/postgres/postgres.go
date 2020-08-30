@@ -40,7 +40,7 @@ var (
 	}
 )
 
-// New is postgres adapter constructor.
+// New postgres adapter using existing connection.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

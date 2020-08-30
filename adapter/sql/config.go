@@ -20,8 +20,9 @@ type Config struct {
 // MapColumn func.
 func MapColumn(column *rel.Column) (string, int, int) {
 	var (
-		typ  string
-		m, n int
+		typ        string
+		m, n       int
+		timeLayout = "2006-01-02 15:04:05"
 	)
 
 	switch column.Type {
@@ -53,27 +54,20 @@ func MapColumn(column *rel.Column) (string, int, int) {
 		m = column.Limit
 	case rel.Date:
 		typ = "DATE"
-		if t, ok := column.Default.(time.Time); ok {
-			column.Default = t.Format("2006-01-02")
-		}
+		timeLayout = "2006-01-02"
 	case rel.DateTime:
 		typ = "DATETIME"
-		if t, ok := column.Default.(time.Time); ok {
-			column.Default = t.Format("2006-01-02 15:04:05")
-		}
 	case rel.Time:
 		typ = "TIME"
-		if t, ok := column.Default.(time.Time); ok {
-			column.Default = t.Format("15:04:05")
-		}
+		timeLayout = "15:04:05"
 	case rel.Timestamp:
-		// TODO: mysql automatically add on update options.
 		typ = "TIMESTAMP"
-		if t, ok := column.Default.(time.Time); ok {
-			column.Default = t.Format("2006-01-02 15:04:05")
-		}
 	default:
 		typ = string(column.Type)
+	}
+
+	if t, ok := column.Default.(time.Time); ok {
+		column.Default = t.Format(timeLayout)
 	}
 
 	return typ, m, n

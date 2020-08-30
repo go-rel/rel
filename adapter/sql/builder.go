@@ -154,6 +154,10 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 		buffer.WriteString(" UNSIGNED")
 	}
 
+	if column.Unique {
+		buffer.WriteString(" UNIQUE")
+	}
+
 	if column.Required {
 		buffer.WriteString(" NOT NULL")
 	}
@@ -230,8 +234,10 @@ func (b *Builder) Index(index rel.Index) string {
 	switch index.Op {
 	case rel.SchemaCreate:
 		buffer.WriteString("CREATE ")
-		buffer.WriteString(string(index.Type))
-		buffer.WriteByte(' ')
+		if index.Unique {
+			buffer.WriteString("UNIQUE ")
+		}
+		buffer.WriteString("INDEX ")
 		buffer.WriteString(Escape(b.config, index.Name))
 		buffer.WriteString(" ON ")
 		buffer.WriteString(Escape(b.config, index.Table))

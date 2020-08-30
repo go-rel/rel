@@ -7,7 +7,6 @@ import (
 )
 
 func TestCreateIndex(t *testing.T) {
-	// TODO: unique option
 	var (
 		options = []IndexOption{
 			Options("options"),
@@ -16,9 +15,25 @@ func TestCreateIndex(t *testing.T) {
 	)
 
 	assert.Equal(t, Index{
-		Type:    SimpleIndex,
 		Table:   "table",
 		Name:    "add_idx",
+		Columns: []string{"add"},
+		Options: "options",
+	}, index)
+}
+
+func TestCreateUniqueIndex(t *testing.T) {
+	var (
+		options = []IndexOption{
+			Options("options"),
+		}
+		index = createUniqueIndex("table", "add_idx", []string{"add"}, options)
+	)
+
+	assert.Equal(t, Index{
+		Table:   "table",
+		Name:    "add_idx",
+		Unique:  true,
 		Columns: []string{"add"},
 		Options: "options",
 	}, index)

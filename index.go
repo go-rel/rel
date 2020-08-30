@@ -1,21 +1,11 @@
 package rel
 
-// IndexType definition.
-type IndexType string
-
-const (
-	// SimpleIndex IndexType.
-	SimpleIndex IndexType = "INDEX"
-	// UniqueIndex IndexType.
-	UniqueIndex IndexType = "UNIQUE"
-)
-
 // Index definition.
 type Index struct {
 	Op       SchemaOp
 	Table    string
 	Name     string
-	Type     IndexType
+	Unique   bool
 	Columns  []string
 	Optional bool
 	Options  string
@@ -29,7 +19,19 @@ func createIndex(table string, name string, columns []string, options []IndexOpt
 		Table:   table,
 		Name:    name,
 		Columns: columns,
-		Type:    SimpleIndex,
+	}
+
+	applyIndexOptions(&index, options)
+	return index
+}
+
+func createUniqueIndex(table string, name string, columns []string, options []IndexOption) Index {
+	index := Index{
+		Op:      SchemaCreate,
+		Table:   table,
+		Name:    name,
+		Unique:  true,
+		Columns: columns,
 	}
 
 	applyIndexOptions(&index, options)

@@ -132,7 +132,33 @@ func TestSchema_CreateIndex(t *testing.T) {
 		Table:   "products",
 		Name:    "sale_idx",
 		Columns: []string{"sale"},
-		Type:    SimpleIndex,
+		Op:      SchemaCreate,
+	}, schema.Migrations[0])
+}
+
+func TestSchema_CreateIndex_unique(t *testing.T) {
+	var schema Schema
+
+	schema.CreateIndex("products", "sale_idx", []string{"sale"}, Unique(true))
+
+	assert.Equal(t, Index{
+		Table:   "products",
+		Name:    "sale_idx",
+		Unique:  true,
+		Columns: []string{"sale"},
+		Op:      SchemaCreate,
+	}, schema.Migrations[0])
+}
+
+func TestSchema_CreateUniqueIndex(t *testing.T) {
+	var schema Schema
+
+	schema.CreateUniqueIndex("products", "sale_idx", []string{"sale"})
+	assert.Equal(t, Index{
+		Table:   "products",
+		Name:    "sale_idx",
+		Unique:  true,
+		Columns: []string{"sale"},
 		Op:      SchemaCreate,
 	}, schema.Migrations[0])
 }

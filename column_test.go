@@ -9,6 +9,7 @@ import (
 func TestCreateColumn(t *testing.T) {
 	var (
 		options = []ColumnOption{
+			Unique(true),
 			Required(true),
 			Unsigned(true),
 			Limit(1000),
@@ -23,6 +24,7 @@ func TestCreateColumn(t *testing.T) {
 	assert.Equal(t, Column{
 		Name:      "add",
 		Type:      Decimal,
+		Unique:    true,
 		Required:  true,
 		Unsigned:  true,
 		Limit:     1000,

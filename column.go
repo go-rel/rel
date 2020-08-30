@@ -36,6 +36,7 @@ type Column struct {
 	Name      string
 	Type      ColumnType
 	NewName   string
+	Unique    bool
 	Required  bool
 	Unsigned  bool
 	Limit     int
@@ -100,4 +101,56 @@ func applyColumnOptions(column *Column, options []ColumnOption) {
 	for i := range options {
 		options[i].applyColumn(column)
 	}
+}
+
+// Unique set column as unique.
+type Unique bool
+
+func (r Unique) applyColumn(column *Column) {
+	column.Unique = bool(r)
+}
+
+func (r Unique) applyIndex(index *Index) {
+	index.Unique = bool(r)
+}
+
+// Required disallows nil values in the column.
+type Required bool
+
+func (r Required) applyColumn(column *Column) {
+	column.Required = bool(r)
+}
+
+// Unsigned sets integer column to be unsigned.
+type Unsigned bool
+
+func (u Unsigned) applyColumn(column *Column) {
+	column.Unsigned = bool(u)
+}
+
+// Precision defines the precision for the decimal fields, representing the total number of digits in the number.
+type Precision int
+
+func (p Precision) applyColumn(column *Column) {
+	column.Precision = int(p)
+}
+
+// Scale Defines the scale for the decimal fields, representing the number of digits after the decimal point.
+type Scale int
+
+func (s Scale) applyColumn(column *Column) {
+	column.Scale = int(s)
+}
+
+type defaultValue struct {
+	value interface{}
+}
+
+func (d defaultValue) applyColumn(column *Column) {
+	column.Default = d.value
+}
+
+// Default allows to set a default value on the column.).
+func Default(def interface{}) ColumnOption {
+	return defaultValue{value: def}
 }

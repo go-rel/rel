@@ -231,6 +231,11 @@ func (b *Builder) Index(index rel.Index) string {
 			buffer.WriteString("UNIQUE ")
 		}
 		buffer.WriteString("INDEX ")
+
+		if index.Optional {
+			buffer.WriteString("IF NOT EXISTS ")
+		}
+
 		buffer.WriteString(Escape(b.config, index.Name))
 		buffer.WriteString(" ON ")
 		buffer.WriteString(Escape(b.config, index.Table))

@@ -10,15 +10,17 @@ func TestCreateIndex(t *testing.T) {
 	var (
 		options = []IndexOption{
 			Options("options"),
+			Optional(true),
 		}
 		index = createIndex("table", "add_idx", []string{"add"}, options)
 	)
 
 	assert.Equal(t, Index{
-		Table:   "table",
-		Name:    "add_idx",
-		Columns: []string{"add"},
-		Options: "options",
+		Table:    "table",
+		Name:     "add_idx",
+		Columns:  []string{"add"},
+		Optional: true,
+		Options:  "options",
 	}, index)
 }
 

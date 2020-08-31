@@ -35,6 +35,13 @@ func (s *Schema) CreateTable(name string, fn func(t *Table), options ...TableOpt
 	s.add(table)
 }
 
+// CreateTableIfNotExists with name and its definition.
+func (s *Schema) CreateTableIfNotExists(name string, fn func(t *Table), options ...TableOption) {
+	table := createTableIfNotExists(name, options)
+	fn(&table)
+	s.add(table)
+}
+
 // AlterTable with name and its definition.
 func (s *Schema) AlterTable(name string, fn func(t *AlterTable), options ...TableOption) {
 	table := alterTable(name, options)
@@ -50,6 +57,11 @@ func (s *Schema) RenameTable(name string, newName string, options ...TableOption
 // DropTable by name.
 func (s *Schema) DropTable(name string, options ...TableOption) {
 	s.add(dropTable(name, options))
+}
+
+// DropTableIfExists by name.
+func (s *Schema) DropTableIfExists(name string, options ...TableOption) {
+	s.add(dropTableIfExists(name, options))
 }
 
 // AddColumn with name and type.

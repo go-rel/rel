@@ -26,15 +26,8 @@ func createIndex(table string, name string, columns []string, options []IndexOpt
 }
 
 func createUniqueIndex(table string, name string, columns []string, options []IndexOption) Index {
-	index := Index{
-		Op:      SchemaCreate,
-		Table:   table,
-		Name:    name,
-		Unique:  true,
-		Columns: columns,
-	}
-
-	applyIndexOptions(&index, options)
+	index := createIndex(table, name, columns, options)
+	index.Unique = true
 	return index
 }
 

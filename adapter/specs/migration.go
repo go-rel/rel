@@ -102,6 +102,7 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 				t.Bool("bool2", rel.Default(true))
 				t.Int("int1")
 				t.Int("int2", rel.Default(8), rel.Unsigned(true), rel.Limit(10))
+				t.Int("int3", rel.Unique(true))
 				t.BigInt("bigint1")
 				t.BigInt("bigint2", rel.Default(8), rel.Unsigned(true), rel.Limit(200))
 				t.Float("float1")
@@ -186,6 +187,32 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 		},
 		func(schema *rel.Schema) {
 			schema.RenameTable("new_dummies", "dummies")
+		},
+	)
+	defer m.Rollback(ctx)
+
+	m.Register(10,
+		func(schema *rel.Schema) {
+			schema.CreateTableIfNotExists("dummies2", func(t *rel.Table) {
+				t.ID("id")
+			})
+		},
+		func(schema *rel.Schema) {
+			schema.DropTableIfExists("dummies2")
+		},
+	)
+	defer m.Rollback(ctx)
+
+	m.Register(11,
+		func(schema *rel.Schema) {
+			schema.CreateTableIfNotExists("dummies2", func(t *rel.Table) {
+				t.ID("id")
+				t.Int("field1")
+				t.Int("field2")
+			})
+		},
+		func(schema *rel.Schema) {
+			schema.DropTableIfExists("dummies2")
 		},
 	)
 	defer m.Rollback(ctx)

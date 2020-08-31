@@ -24,6 +24,19 @@ func TestSchema_CreateTable(t *testing.T) {
 			Column{Name: "description", Type: Text},
 		},
 	}, schema.Migrations[0])
+
+	schema.CreateTableIfNotExists("products", func(t *Table) {
+		t.ID("id")
+	})
+
+	assert.Equal(t, Table{
+		Op:       SchemaCreate,
+		Name:     "products",
+		Optional: true,
+		Definitions: []TableDefinition{
+			Column{Name: "id", Type: ID},
+		},
+	}, schema.Migrations[1])
 }
 
 func TestSchema_AlterTable(t *testing.T) {
@@ -65,6 +78,14 @@ func TestSchema_DropTable(t *testing.T) {
 		Op:   SchemaDrop,
 		Name: "logs",
 	}, schema.Migrations[0])
+
+	schema.DropTableIfExists("logs")
+
+	assert.Equal(t, Table{
+		Op:       SchemaDrop,
+		Name:     "logs",
+		Optional: true,
+	}, schema.Migrations[1])
 }
 
 func TestSchema_AddColumn(t *testing.T) {

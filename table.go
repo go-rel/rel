@@ -81,11 +81,6 @@ func (t *Table) Timestamp(name string, options ...ColumnOption) {
 	t.Column(name, Timestamp, options...)
 }
 
-// // Index defines an index for columns.
-// func (t *Table) Index(columns []string, typ IndexType, options ...IndexOption) {
-// 	t.Definitions = append(t.Definitions, createIndex(columns, typ, options))
-// }
-
 // PrimaryKey defines a primary key for table.
 func (t *Table) PrimaryKey(column string, options ...KeyOption) {
 	t.PrimaryKeys([]string{column}, options...)
@@ -138,6 +133,12 @@ func createTable(name string, options []TableOption) Table {
 	return table
 }
 
+func createTableIfNotExists(name string, options []TableOption) Table {
+	table := createTable(name, options)
+	table.Optional = true
+	return table
+}
+
 func alterTable(name string, options []TableOption) AlterTable {
 	table := Table{
 		Op:   SchemaAlter,
@@ -166,6 +167,12 @@ func dropTable(name string, options []TableOption) Table {
 	}
 
 	applyTableOptions(&table, options)
+	return table
+}
+
+func dropTableIfExists(name string, options []TableOption) Table {
+	table := dropTable(name, options)
+	table.Optional = true
 	return table
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateForeignKey(t *testing.T) {
+func TestCreateForeignKey(t *testing.T) {
 	var (
 		options = []KeyOption{
 			OnDelete("cascade"),

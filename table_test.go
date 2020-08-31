@@ -124,6 +124,19 @@ func TestTable(t *testing.T) {
 			},
 		}, table.Definitions[len(table.Definitions)-1])
 	})
+
+	t.Run("Unique", func(t *testing.T) {
+		table.Unique([]string{"username"})
+		assert.Equal(t, Key{
+			Columns: []string{"username"},
+			Type:    UniqueKey,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
+	t.Run("Fragment", func(t *testing.T) {
+		table.Fragment("SQL")
+		assert.Equal(t, Raw("SQL"), table.Definitions[len(table.Definitions)-1])
+	})
 }
 
 func TestAlterTable(t *testing.T) {
@@ -151,12 +164,14 @@ func TestCreateTable(t *testing.T) {
 	var (
 		options = []TableOption{
 			Options("options"),
+			Optional(true),
 		}
 		table = createTable("table", options)
 	)
 
 	assert.Equal(t, Table{
-		Name:    "table",
-		Options: "options",
+		Name:     "table",
+		Optional: true,
+		Options:  "options",
 	}, table)
 }

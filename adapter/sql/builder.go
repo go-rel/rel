@@ -80,23 +80,16 @@ func (b *Builder) createTable(buffer *Buffer, table rel.Table) {
 }
 
 func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
-	buffer.WriteString("ALTER TABLE ")
-	buffer.WriteString(Escape(b.config, table.Name))
-	buffer.WriteByte(' ')
-
-	for i, def := range table.Definitions {
-		if i > 0 {
-			buffer.WriteString(", ")
-		}
+	for _, def := range table.Definitions {
+		buffer.WriteString("ALTER TABLE ")
+		buffer.WriteString(Escape(b.config, table.Name))
+		buffer.WriteByte(' ')
 
 		switch v := def.(type) {
 		case rel.Column:
 			switch v.Op {
 			case rel.SchemaCreate:
 				buffer.WriteString("ADD COLUMN ")
-				b.column(buffer, v)
-			case rel.SchemaAlter: // TODO: use modify keyword?
-				buffer.WriteString("MODIFY COLUMN ")
 				b.column(buffer, v)
 			case rel.SchemaRename:
 				// Add Change
@@ -123,10 +116,10 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 				buffer.WriteString(Escape(b.config, v.Name))
 			}
 		}
-	}
 
-	b.options(buffer, table.Options)
-	buffer.WriteByte(';')
+		b.options(buffer, table.Options)
+		buffer.WriteByte(';')
+	}
 }
 
 func (b *Builder) column(buffer *Buffer, column rel.Column) {

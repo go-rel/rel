@@ -10,15 +10,8 @@ import (
 
 var m migrator.Migrator
 
-// Migrate database for specs execution.
-func Migrate(t *testing.T, repo rel.Repository, rollback bool) {
-	if rollback {
-		for i := 0; i < 4; i++ {
-			m.Rollback(ctx)
-		}
-		return
-	}
-
+// Setup database for specs execution.
+func Setup(t *testing.T, repo rel.Repository) func() {
 	m = migrator.New(repo)
 	m.Register(1,
 		func(schema *rel.Schema) {
@@ -91,10 +84,16 @@ func Migrate(t *testing.T, repo rel.Repository, rollback bool) {
 	)
 
 	m.Migrate(ctx)
+
+	return func() {
+		for i := 0; i < 4; i++ {
+			m.Rollback(ctx)
+		}
+	}
 }
 
-// MigrateTable specs.
-func MigrateTable(t *testing.T, repo rel.Repository) {
+// Migrate specs.
+func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 	m.Register(5,
 		func(schema *rel.Schema) {
 			schema.CreateTable("dummies", func(t *rel.Table) {
@@ -134,7 +133,41 @@ func MigrateTable(t *testing.T, repo rel.Repository) {
 			schema.DropTable("dummies")
 		},
 	)
+	defer m.Rollback(ctx)
+
+	m.Register(6,
+		func(schema *rel.Schema) {
+			schema.AlterTable("dummies", func(t *rel.AlterTable) {
+				t.Bool("new_column")
+			})
+		},
+		func(schema *rel.Schema) {
+			if SkipDropColumn.enabled(flags) {
+				schema.AlterTable("dummies", func(t *rel.AlterTable) {
+					t.DropColumn("new_column")
+				})
+			}
+		},
+	)
+	defer m.Rollback(ctx)
+
+	if SkipRenameColumn.enabled(flags) {
+		m.Register(7,
+			func(schema *rel.Schema) {
+				schema.AlterTable("dummies", func(t *rel.AlterTable) {
+					t.RenameColumn("text", "teks")
+					t.RenameColumn("date2", "date3")
+				})
+			},
+			func(schema *rel.Schema) {
+				schema.AlterTable("dummies", func(t *rel.AlterTable) {
+					t.RenameColumn("teks", "text")
+					t.RenameColumn("date3", "date2")
+				})
+			},
+		)
+		defer m.Rollback(ctx)
+	}
 
 	m.Migrate(ctx)
-	m.Rollback(ctx)
 }

@@ -31,11 +31,12 @@ func TestAdapter_specs(t *testing.T) {
 	repo := rel.New(adapter)
 
 	// Prepare tables
-	specs.Migrate(t, repo, false)
-	defer specs.Migrate(t, repo, true)
+	teardown := specs.Setup(t, repo)
+	defer teardown()
 
 	// Migration Specs
-	specs.MigrateTable(t, repo)
+	// - Rename column is only supported by MySQL 8.0
+	specs.Migrate(t, repo, specs.SkipRenameColumn)
 
 	// Query Specs
 	specs.Query(t, repo)

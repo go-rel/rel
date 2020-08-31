@@ -59,13 +59,6 @@ func (s *Schema) AddColumn(table string, name string, typ ColumnType, options ..
 	s.add(at.Table)
 }
 
-// AlterColumn by name.
-func (s *Schema) AlterColumn(table string, name string, typ ColumnType, options ...ColumnOption) {
-	at := alterTable(table, nil)
-	at.AlterColumn(name, typ, options...)
-	s.add(at.Table)
-}
-
 // RenameColumn by name.
 func (s *Schema) RenameColumn(table string, name string, newName string, options ...ColumnOption) {
 	at := alterTable(table, nil)

@@ -35,34 +35,6 @@ func TestCreateColumn(t *testing.T) {
 	}, column)
 }
 
-func TestAlterColumn(t *testing.T) {
-	var (
-		options = []ColumnOption{
-			Required(true),
-			Unsigned(true),
-			Limit(1000),
-			Precision(5),
-			Scale(2),
-			Default(0),
-			Options("options"),
-		}
-		column = alterColumn("alter", Decimal, options)
-	)
-
-	assert.Equal(t, Column{
-		Op:        SchemaAlter,
-		Name:      "alter",
-		Type:      Decimal,
-		Required:  true,
-		Unsigned:  true,
-		Limit:     1000,
-		Precision: 5,
-		Scale:     2,
-		Default:   0,
-		Options:   "options",
-	}, column)
-}
-
 func TestRenameColumn(t *testing.T) {
 	var (
 		options = []ColumnOption{

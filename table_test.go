@@ -138,15 +138,6 @@ func TestAlterTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
-	t.Run("AlterColumn", func(t *testing.T) {
-		table.AlterColumn("column", Bool)
-		assert.Equal(t, Column{
-			Op:   SchemaAlter,
-			Name: "column",
-			Type: Bool,
-		}, table.Definitions[len(table.Definitions)-1])
-	})
-
 	t.Run("DropColumn", func(t *testing.T) {
 		table.DropColumn("column")
 		assert.Equal(t, Column{

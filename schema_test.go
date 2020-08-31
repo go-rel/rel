@@ -81,20 +81,6 @@ func TestSchema_AddColumn(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
-func TestSchema_AlterColumn(t *testing.T) {
-	var schema Schema
-
-	schema.AlterColumn("products", "sale", Bool)
-
-	assert.Equal(t, Table{
-		Op:   SchemaAlter,
-		Name: "products",
-		Definitions: []TableDefinition{
-			Column{Name: "sale", Type: Bool, Op: SchemaAlter},
-		},
-	}, schema.Migrations[0])
-}
-
 func TestSchema_RenameColumn(t *testing.T) {
 	var schema Schema
 

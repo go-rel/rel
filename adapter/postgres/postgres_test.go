@@ -36,11 +36,11 @@ func TestAdapter_specs(t *testing.T) {
 	repo := rel.New(adapter)
 
 	// Prepare tables
-	specs.Migrate(t, repo, false)
-	defer specs.Migrate(t, repo, true)
+	teardown := specs.Setup(t, repo)
+	defer teardown()
 
 	// Migration Specs
-	specs.MigrateTable(t, repo)
+	specs.Migrate(t, repo)
 
 	// Query Specs
 	specs.Query(t, repo)

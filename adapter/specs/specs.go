@@ -14,6 +14,20 @@ import (
 
 var ctx = context.TODO()
 
+// Flag for configuration.
+type Flag int
+
+func (f Flag) enabled(flags []Flag) bool {
+	return len(flags) > 0 && f&flags[0] == 0
+}
+
+const (
+	// SkipDropColumn spec.
+	SkipDropColumn Flag = 1 << iota
+	// SkipRenameColumn spec.
+	SkipRenameColumn
+)
+
 // User defines users schema.
 type User struct {
 	ID             int64

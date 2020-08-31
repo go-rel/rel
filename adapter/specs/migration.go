@@ -135,12 +135,14 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 			schema.AlterTable("dummies", func(t *rel.AlterTable) {
 				t.Bool("new_column")
 			})
+			schema.AddColumn("dummies", "new_column1", rel.Int, rel.Unsigned(true))
 		},
 		func(schema *rel.Schema) {
 			if SkipDropColumn.enabled(flags) {
 				schema.AlterTable("dummies", func(t *rel.AlterTable) {
 					t.DropColumn("new_column")
 				})
+				schema.DropColumn("dummies", "new_column1")
 			}
 		},
 	)
@@ -153,12 +155,14 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 					t.RenameColumn("text", "teks")
 					t.RenameColumn("date2", "date3")
 				})
+				schema.RenameColumn("dummies", "decimal1", "decimal0")
 			},
 			func(schema *rel.Schema) {
 				schema.AlterTable("dummies", func(t *rel.AlterTable) {
 					t.RenameColumn("teks", "text")
 					t.RenameColumn("date3", "date2")
 				})
+				schema.RenameColumn("dummies", "decimal0", "decimal1")
 			},
 		)
 		defer m.Rollback(ctx)

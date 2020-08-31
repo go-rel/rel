@@ -106,18 +106,18 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "RENAME TABLE `columns` TO `definitions`;",
+			result: "ALTER TABLE `table` RENAME TO `table1`;",
 			table: rel.Table{
 				Op:      rel.SchemaRename,
-				Name:    "columns",
-				NewName: "definitions",
+				Name:    "table",
+				NewName: "table1",
 			},
 		},
 		{
-			result: "DROP TABLE `columns`;",
+			result: "DROP TABLE `table`;",
 			table: rel.Table{
 				Op:   rel.SchemaDrop,
-				Name: "columns",
+				Name: "table",
 			},
 		},
 	}

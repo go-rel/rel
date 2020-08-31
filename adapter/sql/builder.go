@@ -102,18 +102,11 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 				buffer.WriteString(Escape(b.config, v.Name))
 			}
 		case rel.Key:
+			// TODO: Rename and Drop, PR welcomed.
 			switch v.Op {
 			case rel.SchemaCreate:
 				buffer.WriteString("ADD ")
 				b.key(buffer, v)
-			case rel.SchemaRename:
-				buffer.WriteString("RENAME INDEX ")
-				buffer.WriteString(Escape(b.config, v.Name))
-				buffer.WriteString(" TO ")
-				buffer.WriteString(Escape(b.config, v.NewName))
-			case rel.SchemaDrop:
-				buffer.WriteString("DROP INDEX ")
-				buffer.WriteString(Escape(b.config, v.Name))
 			}
 		}
 

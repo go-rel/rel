@@ -57,10 +57,6 @@ func applyIndexOptions(index *Index, options []IndexOption) {
 // Name option for defining custom index name.
 type Name string
 
-func (n Name) applyIndex(index *Index) {
-	index.Name = string(n)
-}
-
 func (n Name) applyKey(key *Key) {
 	key.Name = string(n)
 }

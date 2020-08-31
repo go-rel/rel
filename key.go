@@ -63,26 +63,7 @@ func createForeignKey(column string, refTable string, refColumn string, options 
 	return key
 }
 
-func renameKey(name string, newName string, options []KeyOption) Key {
-	key := Key{
-		Op:      SchemaRename,
-		Name:    name,
-		NewName: newName,
-	}
-
-	applyKeyOptions(&key, options)
-	return key
-}
-
-func dropKey(name string, options []KeyOption) Key {
-	key := Key{
-		Op:   SchemaDrop,
-		Name: name,
-	}
-
-	applyKeyOptions(&key, options)
-	return key
-}
+// TODO: Rename and Drop, PR welcomed.
 
 // KeyOption interface.
 // Available options are: Comment, Options.

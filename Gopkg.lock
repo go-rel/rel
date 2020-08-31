@@ -54,12 +54,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:ee0845ea64262e3d1a6e2eab768fcb2008a0c8e571b7a3bebea554a1c031aeeb"
+  digest = "1:6a60be4b683dfa1d3e222b6ef96da4d3406280019731c6c1c23bd60cfb7928fe"
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
-  version = "v1.6.0"
+  revision = "862b95943f99f3b40e317a79d41c27ac4b742011"
+  version = "v1.14.2"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"

@@ -123,13 +123,8 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 				t.Unique([]string{"int2"})
 				t.Unique([]string{"bigint1", "bigint2"})
 			})
-
-			schema.CreateIndex("dummies", "int1_idx", []string{"int1"})
-			schema.CreateIndex("dummies", "string1_string2_idx", []string{"string1", "string2"})
 		},
 		func(schema *rel.Schema) {
-			schema.DropIndex("dummies", "int1_idx")
-			schema.DropIndex("dummies", "string1_string2_idx")
 			schema.DropTable("dummies")
 		},
 	)
@@ -168,6 +163,28 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 		)
 		defer m.Rollback(ctx)
 	}
+
+	m.Register(8,
+		func(schema *rel.Schema) {
+			schema.CreateIndex("dummies", "int1_idx", []string{"int1"})
+			schema.CreateIndex("dummies", "string1_string2_idx", []string{"string1", "string2"})
+		},
+		func(schema *rel.Schema) {
+			schema.DropIndex("dummies", "int1_idx")
+			schema.DropIndex("dummies", "string1_string2_idx")
+		},
+	)
+	defer m.Rollback(ctx)
+
+	m.Register(9,
+		func(schema *rel.Schema) {
+			schema.RenameTable("dummies", "new_dummies")
+		},
+		func(schema *rel.Schema) {
+			schema.RenameTable("new_dummies", "dummies")
+		},
+	)
+	defer m.Rollback(ctx)
 
 	m.Migrate(ctx)
 }

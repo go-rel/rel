@@ -31,9 +31,9 @@ func (b *Builder) Table(table rel.Table) string {
 	case rel.SchemaAlter:
 		b.alterTable(&buffer, table)
 	case rel.SchemaRename:
-		buffer.WriteString("RENAME TABLE ")
+		buffer.WriteString("ALTER TABLE ")
 		buffer.WriteString(Escape(b.config, table.Name))
-		buffer.WriteString(" TO ")
+		buffer.WriteString(" RENAME TO ")
 		buffer.WriteString(Escape(b.config, table.NewName))
 		buffer.WriteByte(';')
 	case rel.SchemaDrop:

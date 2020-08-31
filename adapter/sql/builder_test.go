@@ -83,7 +83,7 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "ALTER TABLE `columns` ADD COLUMN `verified` BOOL, RENAME COLUMN `string` TO `name`, MODIFY COLUMN `bool` INT, DROP COLUMN `blob`;",
+			result: "ALTER TABLE `columns` ADD COLUMN `verified` BOOL;ALTER TABLE `columns` RENAME COLUMN `string` TO `name`;ALTER TABLE `columns` ;ALTER TABLE `columns` DROP COLUMN `blob`;",
 			table: rel.Table{
 				Op:   rel.SchemaAlter,
 				Name: "columns",

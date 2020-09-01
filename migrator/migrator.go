@@ -42,8 +42,9 @@ func (v versions) Swap(i, j int) {
 
 // Migrator is a migration manager that handles migration logic.
 type Migrator struct {
-	repo     rel.Repository
-	versions versions
+	repo               rel.Repository
+	versions           versions
+	versionTableExists bool
 }
 
 // Register a migration.
@@ -58,14 +59,12 @@ func (m *Migrator) Register(v int, up func(schema *rel.Schema), down func(schema
 
 func (m Migrator) buildVersionTableDefinition() rel.Table {
 	var schema rel.Schema
-	schema.CreateTable(versionTable, func(t *rel.Table) {
+	schema.CreateTableIfNotExists(versionTable, func(t *rel.Table) {
 		t.ID("id")
-		t.Int("version")
+		t.Int("version", rel.Unique(true))
 		t.DateTime("created_at")
 		t.DateTime("updated_at")
-
-		t.Unique([]string{"version"})
-	}, rel.Optional(true))
+	})
 
 	return schema.Migrations[0].(rel.Table)
 }
@@ -77,9 +76,15 @@ func (m *Migrator) sync(ctx context.Context) {
 		adapter  = m.repo.Adapter(ctx).(rel.Adapter)
 	)
 
-	check(adapter.Apply(ctx, m.buildVersionTableDefinition()))
+	if !m.versionTableExists {
+		check(adapter.Apply(ctx, m.buildVersionTableDefinition()))
+		m.versionTableExists = true
+	}
+
 	m.repo.MustFindAll(ctx, &versions, rel.NewSortAsc("version"))
 	sort.Sort(m.versions)
+
+	fmt.Println(versions)
 
 	for i := range m.versions {
 		if vi < len(versions) && m.versions[i].Version == versions[vi].Version {

@@ -152,6 +152,7 @@ func (b *Builder) column(buffer *Buffer, column rel.Column) {
 		buffer.WriteString(" DEFAULT ")
 		switch v := column.Default.(type) {
 		case string:
+			// TODO: single quote only required by postgres.
 			buffer.WriteByte('\'')
 			buffer.WriteString(v)
 			buffer.WriteByte('\'')

@@ -330,3 +330,32 @@ func TestAdapter_Exec_error(t *testing.T) {
 	_, _, err := adapter.Exec(context.TODO(), "error", nil)
 	assert.NotNil(t, err)
 }
+
+func TestAdapter_Apply(t *testing.T) {
+	var (
+		ctx     = context.TODO()
+		adapter = open(t)
+	)
+
+	defer adapter.Close()
+
+	t.Run("Table", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Table{
+			Name:     "tests",
+			Optional: true,
+			Definitions: []rel.TableDefinition{
+				rel.Column{Name: "ID", Type: rel.ID},
+				rel.Column{Name: "username", Type: rel.String},
+			},
+		})
+	})
+
+	t.Run("Table", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Index{
+			Name:     "username_idx",
+			Optional: true,
+			Table:    "tests",
+			Columns:  []string{"username"},
+		})
+	})
+}

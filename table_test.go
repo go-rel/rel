@@ -145,9 +145,9 @@ func TestAlterTable(t *testing.T) {
 	t.Run("RenameColumn", func(t *testing.T) {
 		table.RenameColumn("column", "new_column")
 		assert.Equal(t, Column{
-			Op:      SchemaRename,
-			Name:    "column",
-			NewName: "new_column",
+			Op:     SchemaRename,
+			Name:   "column",
+			Rename: "new_column",
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 

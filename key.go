@@ -26,7 +26,7 @@ type Key struct {
 	Name      string
 	Type      KeyType
 	Columns   []string
-	NewName   string
+	Rename    string
 	Reference ForeignKeyReference
 	Options   string
 }

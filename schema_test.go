@@ -52,7 +52,7 @@ func TestSchema_AlterTable(t *testing.T) {
 		Name: "users",
 		Definitions: []TableDefinition{
 			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
-			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
+			Column{Name: "name", Rename: "fullname", Op: SchemaRename},
 		},
 	}, schema.Migrations[0])
 }
@@ -63,9 +63,9 @@ func TestSchema_RenameTable(t *testing.T) {
 	schema.RenameTable("trxs", "transactions")
 
 	assert.Equal(t, Table{
-		Op:      SchemaRename,
-		Name:    "trxs",
-		NewName: "transactions",
+		Op:     SchemaRename,
+		Name:   "trxs",
+		Rename: "transactions",
 	}, schema.Migrations[0])
 }
 
@@ -111,7 +111,7 @@ func TestSchema_RenameColumn(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "users",
 		Definitions: []TableDefinition{
-			Column{Name: "name", NewName: "fullname", Op: SchemaRename},
+			Column{Name: "name", Rename: "fullname", Op: SchemaRename},
 		},
 	}, schema.Migrations[0])
 }

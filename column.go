@@ -35,7 +35,7 @@ type Column struct {
 	Op        SchemaOp
 	Name      string
 	Type      ColumnType
-	NewName   string
+	Rename    string
 	Unique    bool
 	Required  bool
 	Unsigned  bool
@@ -61,9 +61,9 @@ func createColumn(name string, typ ColumnType, options []ColumnOption) Column {
 
 func renameColumn(name string, newName string, options []ColumnOption) Column {
 	column := Column{
-		Op:      SchemaRename,
-		Name:    name,
-		NewName: newName,
+		Op:     SchemaRename,
+		Name:   name,
+		Rename: newName,
 	}
 
 	applyColumnOptions(&column, options)

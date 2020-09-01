@@ -102,7 +102,7 @@ func TestBuilder_Table(t *testing.T) {
 				Name: "columns",
 				Definitions: []rel.TableDefinition{
 					rel.Column{Name: "verified", Type: rel.Bool, Op: rel.SchemaCreate},
-					rel.Column{Name: "string", NewName: "name", Op: rel.SchemaRename},
+					rel.Column{Name: "string", Rename: "name", Op: rel.SchemaRename},
 					rel.Column{Name: "bool", Type: rel.Int, Op: rel.SchemaAlter},
 					rel.Column{Name: "blob", Op: rel.SchemaDrop},
 				},
@@ -121,9 +121,9 @@ func TestBuilder_Table(t *testing.T) {
 		{
 			result: "ALTER TABLE `table` RENAME TO `table1`;",
 			table: rel.Table{
-				Op:      rel.SchemaRename,
-				Name:    "table",
-				NewName: "table1",
+				Op:     rel.SchemaRename,
+				Name:   "table",
+				Rename: "table1",
 			},
 		},
 		{

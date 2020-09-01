@@ -34,7 +34,7 @@ func (b *Builder) Table(table rel.Table) string {
 		buffer.WriteString("ALTER TABLE ")
 		buffer.WriteString(Escape(b.config, table.Name))
 		buffer.WriteString(" RENAME TO ")
-		buffer.WriteString(Escape(b.config, table.NewName))
+		buffer.WriteString(Escape(b.config, table.Rename))
 		buffer.WriteByte(';')
 	case rel.SchemaDrop:
 		buffer.WriteString("DROP TABLE ")
@@ -96,7 +96,7 @@ func (b *Builder) alterTable(buffer *Buffer, table rel.Table) {
 				buffer.WriteString("RENAME COLUMN ")
 				buffer.WriteString(Escape(b.config, v.Name))
 				buffer.WriteString(" TO ")
-				buffer.WriteString(Escape(b.config, v.NewName))
+				buffer.WriteString(Escape(b.config, v.Rename))
 			case rel.SchemaDrop:
 				buffer.WriteString("DROP COLUMN ")
 				buffer.WriteString(Escape(b.config, v.Name))

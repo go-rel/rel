@@ -9,7 +9,7 @@ type TableDefinition interface {
 type Table struct {
 	Op          SchemaOp
 	Name        string
-	NewName     string
+	Rename      string
 	Definitions []TableDefinition
 	Optional    bool
 	Options     string
@@ -151,9 +151,9 @@ func alterTable(name string, options []TableOption) AlterTable {
 
 func renameTable(name string, newName string, options []TableOption) Table {
 	table := Table{
-		Op:      SchemaRename,
-		Name:    name,
-		NewName: newName,
+		Op:     SchemaRename,
+		Name:   name,
+		Rename: newName,
 	}
 
 	applyTableOptions(&table, options)

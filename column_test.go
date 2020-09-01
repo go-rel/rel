@@ -52,7 +52,7 @@ func TestRenameColumn(t *testing.T) {
 	assert.Equal(t, Column{
 		Op:        SchemaRename,
 		Name:      "add",
-		NewName:   "rename",
+		Rename:    "rename",
 		Required:  true,
 		Unsigned:  true,
 		Limit:     1000,

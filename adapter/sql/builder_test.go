@@ -58,7 +58,7 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144), `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE (`date`)) Engine=InnoDB;",
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144) UNIQUE, `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP, `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE `date_unique` (`date`)) Engine=InnoDB;",
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "columns",
@@ -68,7 +68,7 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "bigint", Type: rel.BigInt, Limit: 20, Unsigned: true},
 					rel.Column{Name: "float", Type: rel.Float, Precision: 24, Unsigned: true},
 					rel.Column{Name: "decimal", Type: rel.Decimal, Precision: 6, Scale: 2, Unsigned: true},
-					rel.Column{Name: "string", Type: rel.String, Limit: 144},
+					rel.Column{Name: "string", Type: rel.String, Limit: 144, Unique: true},
 					rel.Column{Name: "text", Type: rel.Text, Limit: 1000},
 					rel.Column{Name: "date", Type: rel.Date},
 					rel.Column{Name: "datetime", Type: rel.DateTime},
@@ -77,9 +77,21 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "blob", Type: "blob"},
 					rel.Key{Columns: []string{"int"}, Type: rel.PrimaryKey},
 					rel.Key{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
-					rel.Key{Columns: []string{"date"}, Type: rel.UniqueKey},
+					rel.Key{Columns: []string{"date"}, Name: "date_unique", Type: rel.UniqueKey},
 				},
 				Options: "Engine=InnoDB",
+			},
+		},
+		{
+			result: "CREATE TABLE IF NOT EXISTS `products` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `raw` BOOL);",
+			table: rel.Table{
+				Op:       rel.SchemaCreate,
+				Name:     "products",
+				Optional: true,
+				Definitions: []rel.TableDefinition{
+					rel.Column{Name: "id", Type: rel.ID},
+					rel.Raw("`raw` BOOL"),
+				},
 			},
 		},
 		{
@@ -120,6 +132,14 @@ func TestBuilder_Table(t *testing.T) {
 				Name: "table",
 			},
 		},
+		{
+			result: "DROP TABLE IF EXISTS `table`;",
+			table: rel.Table{
+				Op:       rel.SchemaDrop,
+				Name:     "table",
+				Optional: true,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -127,6 +147,89 @@ func TestBuilder_Table(t *testing.T) {
 			var (
 				builder = NewBuilder(config)
 				result  = builder.Table(test.table)
+			)
+
+			assert.Equal(t, test.result, result)
+		})
+	}
+}
+
+func TestBuilder_Index(t *testing.T) {
+	var (
+		config = Config{
+			Placeholder:      "?",
+			EscapeChar:       "`",
+			MapColumnFunc:    MapColumn,
+			DropIndexOnTable: true,
+		}
+	)
+
+	tests := []struct {
+		result string
+		index  rel.Index
+	}{
+		{
+			result: "CREATE INDEX `index` ON `table` (`column1`);",
+			index: rel.Index{
+				Op:      rel.SchemaCreate,
+				Table:   "table",
+				Name:    "index",
+				Columns: []string{"column1"},
+			},
+		},
+		{
+			result: "CREATE UNIQUE INDEX `index` ON `table` (`column1`);",
+			index: rel.Index{
+				Op:      rel.SchemaCreate,
+				Table:   "table",
+				Name:    "index",
+				Unique:  true,
+				Columns: []string{"column1"},
+			},
+		},
+		{
+			result: "CREATE INDEX `index` ON `table` (`column1`, `column2`);",
+			index: rel.Index{
+				Op:      rel.SchemaCreate,
+				Table:   "table",
+				Name:    "index",
+				Columns: []string{"column1", "column2"},
+			},
+		},
+		{
+			result: "CREATE INDEX IF NOT EXISTS `index` ON `table` (`column1`);",
+			index: rel.Index{
+				Op:       rel.SchemaCreate,
+				Table:    "table",
+				Name:     "index",
+				Optional: true,
+				Columns:  []string{"column1"},
+			},
+		},
+		{
+			result: "DROP INDEX `index` ON `table`;",
+			index: rel.Index{
+				Op:    rel.SchemaDrop,
+				Name:  "index",
+				Table: "table",
+			},
+		},
+		{
+			result: "DROP INDEX IF EXISTS `index` ON `table`;",
+			index: rel.Index{
+				Op:       rel.SchemaDrop,
+				Name:     "index",
+				Table:    "table",
+				Optional: true,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.result, func(t *testing.T) {
+			var (
+				builder = NewBuilder(config)
+				result  = builder.Index(test.index)
 			)
 
 			assert.Equal(t, test.result, result)

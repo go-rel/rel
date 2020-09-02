@@ -175,15 +175,3 @@ func dropTableIfExists(name string, options []TableOption) Table {
 	table.Optional = true
 	return table
 }
-
-// TableOption interface.
-// Available options are: Comment, Options.
-type TableOption interface {
-	applyTable(table *Table)
-}
-
-func applyTableOptions(table *Table, options []TableOption) {
-	for i := range options {
-		options[i].applyTable(table)
-	}
-}

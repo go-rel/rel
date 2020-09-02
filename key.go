@@ -64,29 +64,3 @@ func createForeignKey(column string, refTable string, refColumn string, options 
 }
 
 // TODO: Rename and Drop, PR welcomed.
-
-// KeyOption interface.
-// Available options are: Comment, Options.
-type KeyOption interface {
-	applyKey(key *Key)
-}
-
-func applyKeyOptions(key *Key, options []KeyOption) {
-	for i := range options {
-		options[i].applyKey(key)
-	}
-}
-
-// OnDelete option for foreign key.
-type OnDelete string
-
-func (od OnDelete) applyKey(key *Key) {
-	key.Reference.OnDelete = string(od)
-}
-
-// OnUpdate option for foreign key.
-type OnUpdate string
-
-func (ou OnUpdate) applyKey(key *Key) {
-	key.Reference.OnUpdate = string(ou)
-}

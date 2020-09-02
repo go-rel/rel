@@ -181,3 +181,19 @@ func TestSchema_DropIndex(t *testing.T) {
 		Op:    SchemaDrop,
 	}, schema.Migrations[0])
 }
+
+func TestSchema_Exec(t *testing.T) {
+	var schema Schema
+
+	schema.Exec("RAW SQL")
+	assert.Equal(t, Raw("RAW SQL"), schema.Migrations[0])
+}
+
+func TestSchema_Do(t *testing.T) {
+	var (
+		schema Schema
+	)
+
+	schema.Do(func(repo Repository) error { return nil })
+	assert.NotNil(t, schema.Migrations[0])
+}

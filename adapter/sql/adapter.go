@@ -256,6 +256,8 @@ func (a *Adapter) Apply(ctx context.Context, migration rel.Migration) error {
 		statement = builder.Table(v)
 	case rel.Index:
 		statement = builder.Index(v)
+	case rel.Raw:
+		statement = string(v)
 	}
 
 	_, _, err := a.Exec(ctx, statement, nil)

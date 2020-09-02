@@ -350,12 +350,16 @@ func TestAdapter_Apply(t *testing.T) {
 		})
 	})
 
-	t.Run("Table", func(t *testing.T) {
+	t.Run("Index", func(t *testing.T) {
 		adapter.Apply(ctx, rel.Index{
 			Name:     "username_idx",
 			Optional: true,
 			Table:    "tests",
 			Columns:  []string{"username"},
 		})
+	})
+
+	t.Run("Rw", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Raw("SELECT 1;"))
 	})
 }

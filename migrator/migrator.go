@@ -84,8 +84,6 @@ func (m *Migrator) sync(ctx context.Context) {
 	m.repo.MustFindAll(ctx, &versions, rel.NewSortAsc("version"))
 	sort.Sort(m.versions)
 
-	fmt.Println(versions)
-
 	for i := range m.versions {
 		if vi < len(versions) && m.versions[i].Version == versions[vi].Version {
 			m.versions[i].ID = versions[vi].ID
@@ -146,8 +144,11 @@ func (m *Migrator) Rollback(ctx context.Context) {
 func (m *Migrator) run(ctx context.Context, migrations []rel.Migration) {
 	adapter := m.repo.Adapter(ctx).(rel.Adapter)
 	for _, migration := range migrations {
-		// TODO: exec script
-		check(adapter.Apply(ctx, migration))
+		if fn, ok := migration.(rel.Do); ok {
+			check(fn(m.repo))
+		} else {
+			check(adapter.Apply(ctx, migration))
+		}
 	}
 
 }
@@ -162,3 +163,7 @@ func check(err error) {
 		panic(err)
 	}
 }
+
+type doFn func(rel.Repository)
+
+func (df doFn) internalMigration() {}

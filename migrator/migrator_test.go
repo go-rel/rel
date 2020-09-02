@@ -34,6 +34,11 @@ func TestMigrator(t *testing.T) {
 				schema.CreateTable("tags", func(t *rel.Table) {
 					t.ID("id")
 				})
+
+				schema.Do(func(repo rel.Repository) error {
+					assert.NotNil(t, repo)
+					return nil
+				})
 			},
 			func(schema *rel.Schema) {
 				schema.DropTable("tags")

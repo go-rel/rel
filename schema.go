@@ -100,10 +100,15 @@ func (s *Schema) DropIndex(table string, name string, options ...IndexOption) {
 	s.add(dropIndex(table, name, options))
 }
 
-// Exec queries using repo.
-// Useful for data migration.
-// func (s *Schema) Exec(func(repo rel.Repository) error) {
-// }
+// Exec queries.
+func (s *Schema) Exec(raw Raw) {
+	s.add(raw)
+}
+
+// Do migration using golang codes.
+func (s *Schema) Do(fn Do) {
+	s.add(fn)
+}
 
 // Options options for table, column and index.
 type Options string
@@ -140,4 +145,10 @@ func (o Optional) applyIndex(index *Index) {
 // Raw string
 type Raw string
 
+func (r Raw) internalMigration()       {}
 func (r Raw) internalTableDefinition() {}
+
+// Do used internally for schema migration.
+type Do func(Repository) error
+
+func (d Do) internalMigration() {}

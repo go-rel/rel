@@ -359,7 +359,7 @@ func TestAdapter_Apply(t *testing.T) {
 		})
 	})
 
-	t.Run("Rw", func(t *testing.T) {
+	t.Run("Raw", func(t *testing.T) {
 		adapter.Apply(ctx, rel.Raw("SELECT 1;"))
 	})
 }

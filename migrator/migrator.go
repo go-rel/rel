@@ -61,7 +61,7 @@ func (m Migrator) buildVersionTableDefinition() rel.Table {
 	var schema rel.Schema
 	schema.CreateTableIfNotExists(versionTable, func(t *rel.Table) {
 		t.ID("id")
-		t.Int("version", rel.Unique(true))
+		t.BigInt("version", rel.Unsigned(true), rel.Unique(true))
 		t.DateTime("created_at")
 		t.DateTime("updated_at")
 	})

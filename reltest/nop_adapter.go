@@ -7,7 +7,6 @@ import (
 )
 
 type nopAdapter struct {
-	count int
 }
 
 func (na *nopAdapter) Instrumentation(instrumenter rel.Instrumenter) {

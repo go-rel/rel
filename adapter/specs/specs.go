@@ -71,7 +71,6 @@ var (
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}
-	builder = sql.NewBuilder(config)
 )
 
 func assertConstraint(t *testing.T, err error, ctype rel.ConstraintType, key string) {

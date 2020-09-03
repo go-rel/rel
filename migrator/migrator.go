@@ -163,7 +163,3 @@ func check(err error) {
 		panic(err)
 	}
 }
-
-type doFn func(rel.Repository)
-
-func (df doFn) internalMigration() {}

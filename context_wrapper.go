@@ -6,10 +6,6 @@ import (
 
 type contextKey int8
 
-type contextData struct {
-	adapter Adapter
-}
-
 type contextWrapper struct {
 	ctx     context.Context
 	adapter Adapter

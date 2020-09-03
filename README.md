@@ -20,7 +20,7 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 - Multi adapter.
 - Soft Deletion.
 - Pagination.
-
+- Schema Migration.
 
 ## Install
 

@@ -33,8 +33,6 @@ const (
 var (
 	tablesCache       sync.Map
 	primariesCache    sync.Map
-	fieldsCache       sync.Map
-	typesCache        sync.Map
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
 	rtTable           = reflect.TypeOf((*table)(nil)).Elem()

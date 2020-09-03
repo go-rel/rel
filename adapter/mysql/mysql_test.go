@@ -15,58 +15,6 @@ import (
 
 var ctx = context.TODO()
 
-func init() {
-	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
-
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS extras;`, nil)
-	paranoid.Panic(err, "failed dropping extras table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS addresses;`, nil)
-	paranoid.Panic(err, "failed dropping addresses table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
-	paranoid.Panic(err, "failed dropping users table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
-	paranoid.Panic(err, "failed dropping composites table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
-		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT '',
-		age INT NOT NULL DEFAULT 0,
-		note varchar(50),
-		created_at DATETIME,
-		updated_at DATETIME
-	);`, nil)
-	paranoid.Panic(err, "failed creating users table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE addresses (
-		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		user_id INT UNSIGNED,
-		name VARCHAR(60) NOT NULL DEFAULT '',
-		created_at DATETIME,
-		updated_at DATETIME,
-		FOREIGN KEY (user_id) REFERENCES users(id)
-	);`, nil)
-	paranoid.Panic(err, "failed creating addresses table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE extras (
-		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		slug VARCHAR(30) DEFAULT NULL UNIQUE,
-		user_id INT UNSIGNED,
-		SCORE INT,
-		CONSTRAINT extras_user_id_fk FOREIGN KEY (user_id) REFERENCES users(id)
-	);`, nil)
-	paranoid.Panic(err, "failed creating extras table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE composites (
-		primary1 INT UNSIGNED,
-		primary2 INT UNSIGNED,
-		data VARCHAR(255) DEFAULT NULL,
-		PRIMARY KEY (primary1, primary2)
-	);`, nil)
-	paranoid.Panic(err, "failed creating composites table")
-}
-
 func dsn() string {
 	if os.Getenv("MYSQL_DATABASE") != "" {
 		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True&loc=Local"
@@ -81,6 +29,14 @@ func TestAdapter_specs(t *testing.T) {
 	defer adapter.Close()
 
 	repo := rel.New(adapter)
+
+	// Prepare tables
+	teardown := specs.Setup(t, repo)
+	defer teardown()
+
+	// Migration Specs
+	// - Rename column is only supported by MySQL 8.0
+	specs.Migrate(t, repo, specs.SkipRenameColumn)
 
 	// Query Specs
 	specs.Query(t, repo)

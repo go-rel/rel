@@ -336,12 +336,18 @@ func (o Offset) Build(query *Query) {
 	query.OffsetQuery = o
 }
 
-// Limit query.
+// Limit options.
+// When passed as query, it limits returned result from database.
+// When passed as column option, it sets the maximum size of the string/text/binary/integer columns.
 type Limit int
 
 // Build query.
 func (l Limit) Build(query *Query) {
 	query.LimitQuery = l
+}
+
+func (l Limit) applyColumn(column *Column) {
+	column.Limit = int(l)
 }
 
 // Lock query.

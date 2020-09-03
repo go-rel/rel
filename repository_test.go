@@ -18,8 +18,6 @@ func init() {
 	}
 }
 
-var repo = repository{}
-
 func createCursor(row int) *testCursor {
 	cur := &testCursor{}
 

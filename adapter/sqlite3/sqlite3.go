@@ -25,25 +25,31 @@ type Adapter struct {
 	*sql.Adapter
 }
 
-var _ rel.Adapter = (*Adapter)(nil)
+var (
+	_ rel.Adapter = (*Adapter)(nil)
 
-// New is mysql adapter constructor.
+	// Config for mysql adapter.
+	Config = sql.Config{
+		Placeholder:         "?",
+		EscapeChar:          "`",
+		InsertDefaultValues: true,
+		IncrementFunc:       incrementFunc,
+		ErrorFunc:           errorFunc,
+		MapColumnFunc:       mapColumnFunc,
+	}
+)
+
+// New sqlite adapter using existing connection.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{
-			Config: &sql.Config{
-				Placeholder:         "?",
-				EscapeChar:          "`",
-				InsertDefaultValues: true,
-				IncrementFunc:       incrementFunc,
-				ErrorFunc:           errorFunc,
-			},
-			DB: database,
+			Config: Config,
+			DB:     database,
 		},
 	}
 }
 
-// Open mysql connection using dsn.
+// Open sqlite connection using dsn.
 func Open(dsn string) (*Adapter, error) {
 	var database, err = db.Open("sqlite3", dsn)
 	return New(database), err
@@ -86,4 +92,30 @@ func errorFunc(err error) error {
 	default:
 		return err
 	}
+}
+
+func mapColumnFunc(column *rel.Column) (string, int, int) {
+	var (
+		typ      string
+		m, n     int
+		unsigned = column.Unsigned
+	)
+
+	column.Unsigned = false
+
+	switch column.Type {
+	case rel.ID:
+		typ = "INTEGER PRIMARY KEY"
+	case rel.Int:
+		typ = "INTEGER"
+		m = column.Limit
+	default:
+		typ, m, n = sql.MapColumn(column)
+	}
+
+	if unsigned {
+		typ = "UNSIGNED " + typ
+	}
+
+	return typ, m, n
 }

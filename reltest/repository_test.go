@@ -45,7 +45,7 @@ func TestRepository_Adapter(t *testing.T) {
 		repo = New()
 	)
 
-	assert.Nil(t, repo.Adapter(ctx))
+	assert.NotNil(t, repo.Adapter(ctx))
 }
 
 func TestRepository_Instrumentation(t *testing.T) {

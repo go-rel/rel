@@ -10,20 +10,10 @@ import (
 	"github.com/Fs02/rel"
 )
 
-// Config holds configuration for adapter.
-type Config struct {
-	Placeholder         string
-	Ordinal             bool
-	InsertDefaultValues bool
-	EscapeChar          string
-	ErrorFunc           func(error) error
-	IncrementFunc       func(Adapter) int
-}
-
 // Adapter definition for database database.
 type Adapter struct {
 	Instrumenter rel.Instrumenter
-	Config       *Config
+	Config       Config
 	DB           *sql.DB
 	Tx           *sql.Tx
 	savepoint    int
@@ -32,42 +22,42 @@ type Adapter struct {
 var _ rel.Adapter = (*Adapter)(nil)
 
 // Close database connection.
-func (adapter *Adapter) Close() error {
-	return adapter.DB.Close()
+func (a *Adapter) Close() error {
+	return a.DB.Close()
 }
 
 // Instrumentation set instrumenter for this adapter.
-func (adapter *Adapter) Instrumentation(instrumenter rel.Instrumenter) {
-	adapter.Instrumenter = instrumenter
+func (a *Adapter) Instrumentation(instrumenter rel.Instrumenter) {
+	a.Instrumenter = instrumenter
 }
 
 // Instrument call instrumenter, if no instrumenter is set, this will be a no op.
-func (adapter *Adapter) Instrument(ctx context.Context, op string, message string) func(err error) {
-	if adapter.Instrumenter != nil {
-		return adapter.Instrumenter(ctx, op, message)
+func (a *Adapter) Instrument(ctx context.Context, op string, message string) func(err error) {
+	if a.Instrumenter != nil {
+		return a.Instrumenter(ctx, op, message)
 	}
 
 	return func(err error) {}
 }
 
 // Ping database.
-func (adapter *Adapter) Ping(ctx context.Context) error {
-	return adapter.DB.PingContext(ctx)
+func (a *Adapter) Ping(ctx context.Context) error {
+	return a.DB.PingContext(ctx)
 }
 
 // Aggregate record using given query.
-func (adapter *Adapter) Aggregate(ctx context.Context, query rel.Query, mode string, field string) (int, error) {
+func (a *Adapter) Aggregate(ctx context.Context, query rel.Query, mode string, field string) (int, error) {
 	var (
 		err             error
 		out             sql.NullInt64
-		statement, args = NewBuilder(adapter.Config).Aggregate(query, mode, field)
+		statement, args = NewBuilder(a.Config).Aggregate(query, mode, field)
 	)
 
-	finish := adapter.Instrument(ctx, "adapter-aggregate", statement)
-	if adapter.Tx != nil {
-		err = adapter.Tx.QueryRowContext(ctx, statement, args...).Scan(&out)
+	finish := a.Instrument(ctx, "adapter-aggregate", statement)
+	if a.Tx != nil {
+		err = a.Tx.QueryRowContext(ctx, statement, args...).Scan(&out)
 	} else {
-		err = adapter.DB.QueryRowContext(ctx, statement, args...).Scan(&out)
+		err = a.DB.QueryRowContext(ctx, statement, args...).Scan(&out)
 	}
 	finish(err)
 
@@ -75,34 +65,34 @@ func (adapter *Adapter) Aggregate(ctx context.Context, query rel.Query, mode str
 }
 
 // Query performs query operation.
-func (adapter *Adapter) Query(ctx context.Context, query rel.Query) (rel.Cursor, error) {
+func (a *Adapter) Query(ctx context.Context, query rel.Query) (rel.Cursor, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Find(query)
+		statement, args = NewBuilder(a.Config).Find(query)
 	)
 
-	finish := adapter.Instrument(ctx, "adapter-query", statement)
-	rows, err := adapter.query(ctx, statement, args)
+	finish := a.Instrument(ctx, "adapter-query", statement)
+	rows, err := a.query(ctx, statement, args)
 	finish(err)
 
-	return &Cursor{rows}, adapter.Config.ErrorFunc(err)
+	return &Cursor{rows}, a.Config.ErrorFunc(err)
 }
 
-func (adapter *Adapter) query(ctx context.Context, statement string, args []interface{}) (*sql.Rows, error) {
-	if adapter.Tx != nil {
-		return adapter.Tx.QueryContext(ctx, statement, args...)
+func (a *Adapter) query(ctx context.Context, statement string, args []interface{}) (*sql.Rows, error) {
+	if a.Tx != nil {
+		return a.Tx.QueryContext(ctx, statement, args...)
 	}
 
-	return adapter.DB.QueryContext(ctx, statement, args...)
+	return a.DB.QueryContext(ctx, statement, args...)
 }
 
 // Exec performs exec operation.
-func (adapter *Adapter) Exec(ctx context.Context, statement string, args []interface{}) (int64, int64, error) {
-	finish := adapter.Instrument(ctx, "adapter-exec", statement)
-	res, err := adapter.exec(ctx, statement, args)
+func (a *Adapter) Exec(ctx context.Context, statement string, args []interface{}) (int64, int64, error) {
+	finish := a.Instrument(ctx, "adapter-exec", statement)
+	res, err := a.exec(ctx, statement, args)
 	finish(err)
 
 	if err != nil {
-		return 0, 0, adapter.Config.ErrorFunc(err)
+		return 0, 0, a.Config.ErrorFunc(err)
 	}
 
 	lastID, _ := res.LastInsertId()
@@ -111,28 +101,28 @@ func (adapter *Adapter) Exec(ctx context.Context, statement string, args []inter
 	return lastID, rowCount, nil
 }
 
-func (adapter *Adapter) exec(ctx context.Context, statement string, args []interface{}) (sql.Result, error) {
-	if adapter.Tx != nil {
-		return adapter.Tx.ExecContext(ctx, statement, args...)
+func (a *Adapter) exec(ctx context.Context, statement string, args []interface{}) (sql.Result, error) {
+	if a.Tx != nil {
+		return a.Tx.ExecContext(ctx, statement, args...)
 	}
 
-	return adapter.DB.ExecContext(ctx, statement, args...)
+	return a.DB.ExecContext(ctx, statement, args...)
 }
 
 // Insert inserts a record to database and returns its id.
-func (adapter *Adapter) Insert(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (interface{}, error) {
+func (a *Adapter) Insert(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (interface{}, error) {
 	var (
-		statement, args = NewBuilder(adapter.Config).Insert(query.Table, mutates)
-		id, _, err      = adapter.Exec(ctx, statement, args)
+		statement, args = NewBuilder(a.Config).Insert(query.Table, mutates)
+		id, _, err      = a.Exec(ctx, statement, args)
 	)
 
 	return id, err
 }
 
 // InsertAll inserts all record to database and returns its ids.
-func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryField string, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
-	statement, args := NewBuilder(adapter.Config).InsertAll(query.Table, fields, bulkMutates)
-	id, _, err := adapter.Exec(ctx, statement, args)
+func (a *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryField string, fields []string, bulkMutates []map[string]rel.Mutate) ([]interface{}, error) {
+	statement, args := NewBuilder(a.Config).InsertAll(query.Table, fields, bulkMutates)
+	id, _, err := a.Exec(ctx, statement, args)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +132,8 @@ func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryF
 		inc = 1
 	)
 
-	if adapter.Config.IncrementFunc != nil {
-		inc = adapter.Config.IncrementFunc(*adapter)
+	if a.Config.IncrementFunc != nil {
+		inc = a.Config.IncrementFunc(*a)
 	}
 
 	if inc < 0 {
@@ -169,93 +159,113 @@ func (adapter *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryF
 }
 
 // Update updates a record in database.
-func (adapter *Adapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
+func (a *Adapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
 	var (
-		statement, args      = NewBuilder(adapter.Config).Update(query.Table, mutates, query.WhereQuery)
-		_, updatedCount, err = adapter.Exec(ctx, statement, args)
+		statement, args      = NewBuilder(a.Config).Update(query.Table, mutates, query.WhereQuery)
+		_, updatedCount, err = a.Exec(ctx, statement, args)
 	)
 
 	return int(updatedCount), err
 }
 
 // Delete deletes all results that match the query.
-func (adapter *Adapter) Delete(ctx context.Context, query rel.Query) (int, error) {
+func (a *Adapter) Delete(ctx context.Context, query rel.Query) (int, error) {
 	var (
-		statement, args      = NewBuilder(adapter.Config).Delete(query.Table, query.WhereQuery)
-		_, deletedCount, err = adapter.Exec(ctx, statement, args)
+		statement, args      = NewBuilder(a.Config).Delete(query.Table, query.WhereQuery)
+		_, deletedCount, err = a.Exec(ctx, statement, args)
 	)
 
 	return int(deletedCount), err
 }
 
 // Begin begins a new transaction.
-func (adapter *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
+func (a *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 	var (
 		tx        *sql.Tx
 		savepoint int
 		err       error
 	)
 
-	finish := adapter.Instrument(ctx, "adapter-begin", "begin transaction")
+	finish := a.Instrument(ctx, "adapter-begin", "begin transaction")
 
-	if adapter.Tx != nil {
-		tx = adapter.Tx
-		savepoint = adapter.savepoint + 1
-		_, _, err = adapter.Exec(ctx, "SAVEPOINT s"+strconv.Itoa(savepoint)+";", []interface{}{})
+	if a.Tx != nil {
+		tx = a.Tx
+		savepoint = a.savepoint + 1
+		_, _, err = a.Exec(ctx, "SAVEPOINT s"+strconv.Itoa(savepoint)+";", []interface{}{})
 	} else {
-		tx, err = adapter.DB.BeginTx(ctx, nil)
+		tx, err = a.DB.BeginTx(ctx, nil)
 	}
 
 	finish(err)
 
 	return &Adapter{
-		Instrumenter: adapter.Instrumenter,
-		Config:       adapter.Config,
+		Instrumenter: a.Instrumenter,
+		Config:       a.Config,
 		Tx:           tx,
 		savepoint:    savepoint,
 	}, err
 }
 
 // Commit commits current transaction.
-func (adapter *Adapter) Commit(ctx context.Context) error {
+func (a *Adapter) Commit(ctx context.Context) error {
 	var err error
 
-	finish := adapter.Instrument(ctx, "adapter-commit", "commit transaction")
+	finish := a.Instrument(ctx, "adapter-commit", "commit transaction")
 
-	if adapter.Tx == nil {
+	if a.Tx == nil {
 		err = errors.New("unable to commit outside transaction")
-	} else if adapter.savepoint > 0 {
-		_, _, err = adapter.Exec(ctx, "RELEASE SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+	} else if a.savepoint > 0 {
+		_, _, err = a.Exec(ctx, "RELEASE SAVEPOINT s"+strconv.Itoa(a.savepoint)+";", []interface{}{})
 	} else {
-		err = adapter.Tx.Commit()
+		err = a.Tx.Commit()
 	}
 
 	finish(err)
 
-	return adapter.Config.ErrorFunc(err)
+	return a.Config.ErrorFunc(err)
 }
 
 // Rollback revert current transaction.
-func (adapter *Adapter) Rollback(ctx context.Context) error {
+func (a *Adapter) Rollback(ctx context.Context) error {
 	var err error
 
-	finish := adapter.Instrument(ctx, "adapter-rollback", "rollback transaction")
+	finish := a.Instrument(ctx, "adapter-rollback", "rollback transaction")
 
-	if adapter.Tx == nil {
+	if a.Tx == nil {
 		err = errors.New("unable to rollback outside transaction")
-	} else if adapter.savepoint > 0 {
-		_, _, err = adapter.Exec(ctx, "ROLLBACK TO SAVEPOINT s"+strconv.Itoa(adapter.savepoint)+";", []interface{}{})
+	} else if a.savepoint > 0 {
+		_, _, err = a.Exec(ctx, "ROLLBACK TO SAVEPOINT s"+strconv.Itoa(a.savepoint)+";", []interface{}{})
 	} else {
-		err = adapter.Tx.Rollback()
+		err = a.Tx.Rollback()
 	}
 
 	finish(err)
 
-	return adapter.Config.ErrorFunc(err)
+	return a.Config.ErrorFunc(err)
+}
+
+// Apply table.
+func (a *Adapter) Apply(ctx context.Context, migration rel.Migration) error {
+	var (
+		statement string
+		builder   = NewBuilder(a.Config)
+	)
+
+	switch v := migration.(type) {
+	case rel.Table:
+		statement = builder.Table(v)
+	case rel.Index:
+		statement = builder.Index(v)
+	case rel.Raw:
+		statement = string(v)
+	}
+
+	_, _, err := a.Exec(ctx, statement, nil)
+	return err
 }
 
 // New initialize adapter without db.
-func New(config *Config) *Adapter {
+func New(config Config) *Adapter {
 	adapter := &Adapter{
 		Config: config,
 	}

@@ -1,12 +1,12 @@
 package sql
 
 import (
-	"bytes"
+	"strings"
 )
 
 // Buffer used to strings buffer and argument of the query.
 type Buffer struct {
-	bytes.Buffer
+	strings.Builder
 	Arguments []interface{}
 }
 
@@ -17,6 +17,6 @@ func (b *Buffer) Append(args ...interface{}) {
 
 // Reset buffer.
 func (b *Buffer) Reset() {
-	b.Buffer.Reset()
+	b.Builder.Reset()
 	b.Arguments = nil
 }

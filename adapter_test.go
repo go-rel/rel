@@ -76,6 +76,11 @@ func (ta *testAdapter) Rollback(ctx context.Context) error {
 	return args.Error(0)
 }
 
+func (ta *testAdapter) Apply(ctx context.Context, migration Migration) error {
+	args := ta.Called(migration)
+	return args.Error(0)
+}
+
 func (ta *testAdapter) Result(result interface{}) *testAdapter {
 	ta.result = result
 	return ta

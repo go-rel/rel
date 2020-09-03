@@ -7,7 +7,6 @@ import (
 )
 
 type nopAdapter struct {
-	count int
 }
 
 func (na *nopAdapter) Instrumentation(instrumenter rel.Instrumenter) {
@@ -59,6 +58,10 @@ func (na *nopAdapter) Rollback(ctx context.Context) error {
 
 func (na *nopAdapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
 	return 1, nil
+}
+
+func (na *nopAdapter) Apply(ctx context.Context, migration rel.Migration) error {
+	return nil
 }
 
 type nopCursor struct {

@@ -18,7 +18,6 @@ type Collection struct {
 	rv      reflect.Value
 	rt      reflect.Type
 	data    documentData
-	index   map[interface{}]int
 	swapper func(i, j int)
 }
 

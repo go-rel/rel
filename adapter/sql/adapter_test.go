@@ -14,12 +14,13 @@ import (
 func open(t *testing.T) *Adapter {
 	var (
 		err    error
-		config = &Config{
+		config = Config{
 			Placeholder:         "?",
 			EscapeChar:          "`",
 			InsertDefaultValues: true,
 			ErrorFunc:           func(err error) error { return err },
 			IncrementFunc:       func(Adapter) int { return -1 },
+			MapColumnFunc:       MapColumn,
 		}
 		adapter = New(config)
 	)
@@ -43,7 +44,7 @@ type Name struct {
 }
 
 func TestNew(t *testing.T) {
-	assert.NotNil(t, New(nil))
+	assert.NotNil(t, New(Config{}))
 }
 
 func TestAdapter_Ping(t *testing.T) {
@@ -328,4 +329,37 @@ func TestAdapter_Exec_error(t *testing.T) {
 
 	_, _, err := adapter.Exec(context.TODO(), "error", nil)
 	assert.NotNil(t, err)
+}
+
+func TestAdapter_Apply(t *testing.T) {
+	var (
+		ctx     = context.TODO()
+		adapter = open(t)
+	)
+
+	defer adapter.Close()
+
+	t.Run("Table", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Table{
+			Name:     "tests",
+			Optional: true,
+			Definitions: []rel.TableDefinition{
+				rel.Column{Name: "ID", Type: rel.ID},
+				rel.Column{Name: "username", Type: rel.String},
+			},
+		})
+	})
+
+	t.Run("Index", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Index{
+			Name:     "username_idx",
+			Optional: true,
+			Table:    "tests",
+			Columns:  []string{"username"},
+		})
+	})
+
+	t.Run("Raw", func(t *testing.T) {
+		adapter.Apply(ctx, rel.Raw("SELECT 1;"))
+	})
 }

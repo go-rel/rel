@@ -14,6 +14,20 @@ import (
 
 var ctx = context.TODO()
 
+// Flag for configuration.
+type Flag int
+
+func (f Flag) enabled(flags []Flag) bool {
+	return len(flags) > 0 && f&flags[0] == 0
+}
+
+const (
+	// SkipDropColumn spec.
+	SkipDropColumn Flag = 1 << iota
+	// SkipRenameColumn spec.
+	SkipRenameColumn
+)
+
 // User defines users schema.
 type User struct {
 	ID             int64
@@ -53,11 +67,10 @@ type Composite struct {
 }
 
 var (
-	config = &sql.Config{
+	config = sql.Config{
 		Placeholder: "?",
 		EscapeChar:  "`",
 	}
-	builder = sql.NewBuilder(config)
 )
 
 func assertConstraint(t *testing.T, err error, ctype rel.ConstraintType, key string) {

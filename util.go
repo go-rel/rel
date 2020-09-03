@@ -37,7 +37,7 @@ func isZero(value interface{}) bool {
 	case nil:
 		zero = true
 	case bool:
-		zero = v == false
+		zero = !v
 	case string:
 		zero = v == ""
 	case int:

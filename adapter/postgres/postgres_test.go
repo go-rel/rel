@@ -16,60 +16,8 @@ import (
 var ctx = context.TODO()
 
 func init() {
-	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
-	defer adapter.Close()
-
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS extras;`, nil)
-	paranoid.Panic(err, "failed dropping extras table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS addresses;`, nil)
-	paranoid.Panic(err, "failed dropping addresses table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS users;`, nil)
-	paranoid.Panic(err, "failed dropping users table")
-	_, _, err = adapter.Exec(ctx, `DROP TABLE IF EXISTS composites;`, nil)
-	paranoid.Panic(err, "failed dropping composites table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE users (
-		id SERIAL NOT NULL PRIMARY KEY,
-		slug VARCHAR(30) DEFAULT NULL,
-		name VARCHAR(30) NOT NULL DEFAULT '',
-		gender VARCHAR(10) NOT NULL DEFAULT '',	
-		age INT NOT NULL DEFAULT 0,
-		note varchar(50),
-		created_at TIMESTAMPTZ,
-		updated_at TIMESTAMPTZ,
-		UNIQUE(slug)
-	);`, nil)
-	paranoid.Panic(err, "failed creating users table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE addresses (
-		id SERIAL NOT NULL PRIMARY KEY,
-		user_id INTEGER REFERENCES users(id),
-		name VARCHAR(60) NOT NULL DEFAULT '',
-		created_at TIMESTAMPTZ,
-		updated_at TIMESTAMPTZ
-	);`, nil)
-	paranoid.Panic(err, "failed creating addresses table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE extras (
-		id SERIAL NOT NULL PRIMARY KEY,
-		slug VARCHAR(30) DEFAULT NULL UNIQUE,
-		user_id INTEGER REFERENCES users(id),
-		score INTEGER DEFAULT 0 CHECK (score>=0 AND score<=100)
-	);`, nil)
-	paranoid.Panic(err, "failed creating extras table")
-
-	_, _, err = adapter.Exec(ctx, `CREATE TABLE composites (
-		primary1 SERIAL NOT NULL,
-		primary2 SERIAL NOT NULL,
-		data VARCHAR(255) DEFAULT NULL,
-		PRIMARY KEY (primary1, primary2)
-	);`, nil)
-	paranoid.Panic(err, "failed creating composites table")
-
 	// hack to make sure location it has the same location object as returned by pq driver.
-	time.Local, err = time.LoadLocation("Asia/Jakarta")
-	paranoid.Panic(err, "failed loading time location")
+	time.Local, _ = time.LoadLocation("Asia/Jakarta")
 }
 
 func dsn() string {
@@ -77,7 +25,7 @@ func dsn() string {
 		return os.Getenv("POSTGRESQL_DATABASE") + "?sslmode=disable&timezone=Asia/Jakarta"
 	}
 
-	return "postgres://rel@localhost:9920/rel_test?sslmode=disable&timezone=Asia/Jakarta"
+	return "postgres://rel@localhost:5432/rel_test?sslmode=disable&timezone=Asia/Jakarta"
 }
 
 func TestAdapter_specs(t *testing.T) {
@@ -86,6 +34,13 @@ func TestAdapter_specs(t *testing.T) {
 	defer adapter.Close()
 
 	repo := rel.New(adapter)
+
+	// Prepare tables
+	teardown := specs.Setup(t, repo)
+	defer teardown()
+
+	// Migration Specs
+	specs.Migrate(t, repo)
 
 	// Query Specs
 	specs.Query(t, repo)

@@ -4,7 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
+)
+
+var (
+	reMigrationFile = regexp.MustCompile(`^(\d+)_([a-z_]+)\.go$`)
+	reGomod         = regexp.MustCompile(`module\s(\S+)`)
+	gomod           = "go.mod"
 )
 
 func getDatabaseInfo() (string, string, string) {
@@ -50,7 +57,7 @@ func getModule() string {
 }
 
 func getModuleFromGomod() string {
-	data, err := ioutil.ReadFile("go.mod")
+	data, err := ioutil.ReadFile(gomod)
 	if err != nil {
 		return ""
 	}

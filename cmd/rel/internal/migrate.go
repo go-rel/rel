@@ -3,13 +3,11 @@ package internal
 import (
 	"context"
 	"flag"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 
 	"github.com/serenize/snaker"
 )
@@ -61,11 +59,6 @@ func main() {
 }
 `
 
-var (
-	reMigrationFile = regexp.MustCompile(`^(\d+)_([a-z_]+)\.go$`)
-	reGomod         = regexp.MustCompile(`module\s(\S+)`)
-)
-
 // ExecMigrate command.
 // assumes args already validated.
 func ExecMigrate(ctx context.Context, args []string) error {
@@ -86,9 +79,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 
 	file, err := ioutil.TempFile(os.TempDir(), "rel-*.go")
 	check(err)
-	defer func() {
-		fmt.Println(os.Remove(file.Name()))
-	}()
+	defer os.Remove(file.Name())
 
 	err = tmpl.Execute(file, struct {
 		Package    string

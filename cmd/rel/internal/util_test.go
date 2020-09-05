@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -72,6 +73,45 @@ func TestGetDatabaseInfo(t *testing.T) {
 		assert.Equal(t, "test.db", url)
 	})
 
+}
+
+func TestGetModule(t *testing.T) {
+	t.Run("gomod", func(t *testing.T) {
+		var (
+			file, _ = ioutil.TempFile(os.TempDir(), "go.mod")
+		)
+
+		defer os.Remove(file.Name())
+		file.WriteString("module github.com/Fs02/go-todo-backend")
+		file.Close()
+
+		gomod = file.Name()
+		assert.Equal(t, "github.com/Fs02/go-todo-backend", getModule())
+	})
+
+	t.Run("gomod invalid", func(t *testing.T) {
+		var (
+			file, _ = ioutil.TempFile(os.TempDir(), "go.mod")
+		)
+
+		defer os.Remove(file.Name())
+		file.WriteString("pkg github.com/Fs02/go-todo-backend")
+		file.Close()
+
+		gomod = file.Name()
+		assert.NotEqual(t, "github.com/Fs02/go-todo-backend", getModule())
+	})
+
+	t.Run("gopath", func(t *testing.T) {
+		var (
+			wd, _ = os.Getwd()
+		)
+
+		os.Setenv("GOPATH", wd[:len(wd)-1])
+		defer os.Setenv("GOPATH", "")
+
+		assert.Equal(t, wd[len(wd)-1:], getModule())
+	})
 }
 
 func TestInternal(t *testing.T) {

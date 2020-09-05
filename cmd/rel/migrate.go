@@ -112,8 +112,8 @@ func migrate(ctx context.Context) {
 	output, err := cmd.CombinedOutput()
 	print(string(output))
 
-	if ee, ok := err.(*exec.ExitError); ok {
-		os.Exit(ee.ExitCode())
+	if err != nil {
+		os.Exit(1)
 	} else {
 		os.Exit(0)
 	}

@@ -41,16 +41,17 @@ _report_coverage: &report_coverage
 
 jobs:
   include:
-    - go: "1.10.x"
-      <<: *godep_build
-    - go: "1.11.x"
-      <<: *godep_build
-    - go: "1.12.x"
-      env:
-        - GO111MODULE=on
-      <<: *gomod_build
-    - go: "1.13.x"
-      <<: *gomod_build
-    - go: "1.14.x"
-      <<: *gomod_build
-      <<: *report_coverage
+    - stage: test
+      - go: "1.10.x"
+        <<: *godep_build
+      - go: "1.11.x"
+        <<: *godep_build
+      - go: "1.12.x"
+        env:
+          - GO111MODULE=on
+        <<: *gomod_build
+      - go: "1.13.x"
+        <<: *gomod_build
+      - go: "1.14.x"
+        <<: *gomod_build
+        <<: *report_coverage

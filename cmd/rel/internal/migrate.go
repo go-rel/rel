@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -66,11 +66,13 @@ var (
 	reGomod         = regexp.MustCompile(`module\s(\S+)`)
 )
 
-func migrate(ctx context.Context) {
+// ExecMigrate command.
+// assumes args already validated.
+func ExecMigrate(ctx context.Context, args []string) error {
 	var (
-		defAdapter, defDriver, defDSN = getDsnFromEnv()
-		fs                            = flag.NewFlagSet(os.Args[1], flag.ExitOnError)
-		command                       = getMigrateCommand(os.Args[1])
+		defAdapter, defDriver, defDSN = getDatabaseInfo()
+		fs                            = flag.NewFlagSet(args[1], flag.ExitOnError)
+		command                       = getMigrateCommand(args[1])
 		dir                           = fs.String("dir", "db/migrations", "Path to directory containing migration files")
 		module                        = fs.String("module", getModule(), "Module of the main package")
 		adapter                       = fs.String("adapter", defAdapter, "Adapter package")
@@ -80,7 +82,7 @@ func migrate(ctx context.Context) {
 		tmpl                          = template.Must(template.New("migration").Parse(migrationTemplate))
 	)
 
-	fs.Parse(os.Args[2:])
+	fs.Parse(args[2:])
 
 	file, err := ioutil.TempFile(os.TempDir(), "rel-*.go")
 	check(err)
@@ -111,12 +113,7 @@ func migrate(ctx context.Context) {
 	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
 	output, err := cmd.CombinedOutput()
 	print(string(output))
-
-	if err != nil {
-		os.Exit(1)
-	} else {
-		os.Exit(0)
-	}
+	return err
 }
 
 type migration struct {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Fs02/rel/cmd/rel/internal"
 	"github.com/subosito/gotenv"
 )
 
@@ -13,6 +14,7 @@ func main() {
 	gotenv.Load()
 
 	var (
+		err error
 		ctx = context.Background()
 	)
 
@@ -23,15 +25,15 @@ func main() {
 
 	switch os.Args[1] {
 	case "migrate", "up", "rollback", "down":
-		migrate(ctx)
+		err = internal.ExecMigrate(ctx, os.Args)
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-}
 
-func check(err error) {
 	if err != nil {
-		panic(err)
+		os.Exit(1)
+	} else {
+		os.Exit(0)
 	}
 }

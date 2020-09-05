@@ -111,7 +111,12 @@ func migrate(ctx context.Context) {
 	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
 	output, err := cmd.CombinedOutput()
 	print(string(output))
-	os.Exit(cmd.ProcessState.ExitCode())
+
+	if ee, ok := err.(*exec.ExitError); ok {
+		os.Exit(ee.ExitCode())
+	} else {
+		os.Exit(0)
+	}
 }
 
 type migration struct {

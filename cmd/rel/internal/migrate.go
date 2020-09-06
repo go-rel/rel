@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -59,6 +60,12 @@ func main() {
 }
 `
 
+var (
+	tempDir           = os.TempDir
+	stdout  io.Writer = os.Stdout
+	stderr  io.Writer = os.Stderr
+)
+
 // ExecMigrate command.
 // assumes args already validated.
 func ExecMigrate(ctx context.Context, args []string) error {
@@ -77,7 +84,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 
 	fs.Parse(args[2:])
 
-	file, err := ioutil.TempFile(os.TempDir(), "rel-*.go")
+	file, err := ioutil.TempFile(tempDir(), "rel-*.go")
 	check(err)
 	defer os.Remove(file.Name())
 
@@ -107,8 +114,8 @@ func ExecMigrate(ctx context.Context, args []string) error {
 	check(file.Close())
 
 	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	return cmd.Run()
 }
 

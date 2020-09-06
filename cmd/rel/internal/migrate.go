@@ -5,7 +5,6 @@ import (
 	"flag"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 
@@ -115,14 +114,14 @@ type migration struct {
 func scanMigration(dir string) []migration {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Fatal(err)
+		panic("rel: cannot access migration directory: " + err.Error())
 	}
 
 	mFiles := make([]migration, len(files))
 	for i, f := range files {
 		result := reMigrationFile.FindStringSubmatch(f.Name())
 		if len(result) < 3 {
-			log.Fatal("invalid migration file: ", result)
+			panic("rel: invalid migration file: " + f.Name())
 		}
 
 		mFiles[i] = migration{
@@ -136,7 +135,7 @@ func scanMigration(dir string) []migration {
 
 func getMigrateCommand(cmd string) string {
 	switch cmd {
-	case "rollback", "up":
+	case "rollback", "down":
 		return "m.Rollback(ctx)"
 	default:
 		return "m.Migrate(ctx)"

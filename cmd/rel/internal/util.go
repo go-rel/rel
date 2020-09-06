@@ -72,7 +72,7 @@ func getModuleFromGomod() string {
 
 func getModuleFromGopath() string {
 	var (
-		gopath = os.Getenv("GOPATH")
+		gopath = os.Getenv("GOPATH") + "/src/"
 		wd, _  = os.Getwd()
 	)
 

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"html/template"
 	"io/ioutil"
@@ -80,6 +81,11 @@ func ExecMigrate(ctx context.Context, args []string) error {
 	check(err)
 	defer os.Remove(file.Name())
 
+	migrations, err := scanMigration(*dir)
+	if err != nil {
+		return err
+	}
+
 	err = tmpl.Execute(file, struct {
 		Package    string
 		Command    string
@@ -94,16 +100,16 @@ func ExecMigrate(ctx context.Context, args []string) error {
 		Adapter:    *adapter,
 		Driver:     *driver,
 		DSN:        *dsn,
-		Migrations: scanMigration(*dir),
+		Migrations: migrations,
 		Verbose:    *verbose,
 	})
 	check(err)
 	check(file.Close())
 
 	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
-	output, err := cmd.CombinedOutput()
-	print(string(output))
-	return err
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 type migration struct {
@@ -111,26 +117,30 @@ type migration struct {
 	Name    string
 }
 
-func scanMigration(dir string) []migration {
+func scanMigration(dir string) ([]migration, error) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		panic("rel: cannot access migration directory: " + err.Error())
+		return nil, errors.New("rel: " + err.Error())
 	}
 
-	mFiles := make([]migration, len(files))
-	for i, f := range files {
+	mFiles := make([]migration, 0, len(files))
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+
 		result := reMigrationFile.FindStringSubmatch(f.Name())
 		if len(result) < 3 {
-			panic("rel: invalid migration file: " + f.Name())
+			return nil, errors.New("rel: invalid migration file: " + f.Name())
 		}
 
-		mFiles[i] = migration{
+		mFiles = append(mFiles, migration{
 			Version: result[1],
 			Name:    snaker.SnakeToCamel(result[2]),
-		}
+		})
 	}
 
-	return mFiles
+	return mFiles, err
 }
 
 func getMigrateCommand(cmd string) string {

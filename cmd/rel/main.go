@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/Fs02/rel/cmd/rel/internal"
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	log.SetFlags(0)
 	gotenv.Load()
 
 	var (
@@ -32,6 +34,6 @@ func main() {
 	}
 
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }

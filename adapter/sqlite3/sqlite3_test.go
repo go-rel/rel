@@ -90,22 +90,6 @@ func TestAdapter_specs(t *testing.T) {
 	specs.CheckConstraint(t, repo)
 }
 
-// func TestAdapter_InsertAll_error(t *testing.T) {
-// 	adapter, err := Open(dsn())
-//  assert.Nil(t, err)
-// 	defer adapter.Close()
-
-// 	fields := []string{"notexist"}
-// 	mutations := []map[string]interface{}{
-// 		{"notexist": "12"},
-// 		{"notexist": "13"},
-// 	}
-
-// 	_, err = adapter.InsertAll(rel.Repo{}.From("users"), fields, mutations)
-
-// 	assert.NotNil(t, err)
-// }
-
 func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := Open(dsn())
 	assert.Nil(t, err)
@@ -121,17 +105,6 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 
 	assert.NotNil(t, adapter.Rollback(ctx))
 }
-
-// func TestAdapter_Query_error(t *testing.T) {
-// 	adapter, err := Open(dsn())
-// 	paranoid.Panic(err, "failed to open database connection")
-// 	defer adapter.Close()
-
-// 	out := struct{}{}
-
-// 	_, err = adapter.Query(&out, "error", nil)
-// 	assert.NotNil(t, err)
-// }
 
 func TestAdapter_Exec_error(t *testing.T) {
 	adapter, err := Open(dsn())

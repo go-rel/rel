@@ -3,14 +3,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:36cf6bea956351026b25720e840d94662e19b96f3d35b7c3bb0cd2d777e17535"
-  name = "github.com/Fs02/go-paranoid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ab50069def7d4ec973f1ebd67541b3e311ea66df"
-
-[[projects]]
-  branch = "master"
   digest = "1:6d030baec6dd4a8fbc671920e1b84103439c57ca28f83356d9bce4b8fa4b0ea0"
   name = "github.com/azer/snakecase"
   packages = ["."]
@@ -70,6 +62,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:efa124a0ca36a35cc1a1b472cb0fa2be1e7d9fd1db0f8bc9a042e42e4c6405aa"
+  name = "github.com/serenize/snaker"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a683aaf2d516deecd70cad0c72e3ca773ecfcef0"
+
+[[projects]]
   digest = "1:1bc4a5bd879ce6b44fdaa2e8e1144921c145604764e92220009b951c1f2439f5"
   name = "github.com/stretchr/objx"
   packages = ["."]
@@ -88,18 +88,27 @@
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
+[[projects]]
+  digest = "1:f4b32291cad5efac2bfdba89ccde6aa04618b62ce06c1a571da2dc4f3f2677fb"
+  name = "github.com/subosito/gotenv"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2ef7124db659d49edac6aa459693a15ae36c671a"
+  version = "v1.2.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/Fs02/go-paranoid",
     "github.com/azer/snakecase",
     "github.com/go-sql-driver/mysql",
     "github.com/jinzhu/inflection",
     "github.com/lib/pq",
     "github.com/mattn/go-sqlite3",
+    "github.com/serenize/snaker",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
+    "github.com/subosito/gotenv",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

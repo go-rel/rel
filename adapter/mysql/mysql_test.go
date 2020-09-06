@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	paranoid "github.com/Fs02/go-paranoid"
 	"github.com/Fs02/rel"
 	"github.com/Fs02/rel/adapter/specs"
 	_ "github.com/go-sql-driver/mysql"
@@ -25,7 +24,7 @@ func dsn() string {
 
 func TestAdapter_specs(t *testing.T) {
 	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
+	assert.Nil(t, err)
 	defer adapter.Close()
 
 	repo := rel.New(adapter)
@@ -109,7 +108,7 @@ func TestAdapter_Open(t *testing.T) {
 
 // func TestAdapter_InsertAll_error(t *testing.T) {
 // 	adapter, err := Open(dsn())
-// 	paranoid.Panic(err, "failed to open database connection")
+//  assert.Nil(t, err)
 // 	defer adapter.Close()
 
 // 	fields := []string{"notexist"}
@@ -125,7 +124,7 @@ func TestAdapter_Open(t *testing.T) {
 
 func TestAdapter_Transaction_commitError(t *testing.T) {
 	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
+	assert.Nil(t, err)
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Commit(ctx))
@@ -133,7 +132,7 @@ func TestAdapter_Transaction_commitError(t *testing.T) {
 
 func TestAdapter_Transaction_rollbackError(t *testing.T) {
 	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
+	assert.Nil(t, err)
 	defer adapter.Close()
 
 	assert.NotNil(t, adapter.Rollback(ctx))
@@ -141,7 +140,7 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 
 // func TestAdapter_Query_error(t *testing.T) {
 // 	adapter, err := Open(dsn())
-// 	paranoid.Panic(err, "failed to open database connection")
+// assert.Nil(t, err)
 // 	defer adapter.Close()
 
 // 	out := struct{}{}
@@ -152,7 +151,7 @@ func TestAdapter_Transaction_rollbackError(t *testing.T) {
 
 func TestAdapter_Exec_error(t *testing.T) {
 	adapter, err := Open(dsn())
-	paranoid.Panic(err, "failed to open database connection")
+	assert.Nil(t, err)
 	defer adapter.Close()
 
 	_, _, err = adapter.Exec(ctx, "error", nil)

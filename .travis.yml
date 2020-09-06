@@ -17,13 +17,6 @@ before_install:
   - mysql -e 'CREATE DATABASE rel_test;'
   - psql -c 'create database rel_test;' -U postgres
 
-_godep_build: &godep_build
-  install:
-    - go get -u github.com/golang/dep/cmd/dep
-  script:
-    - dep ensure
-    - go test ./...
-
 _gomod_build: &gomod_build
   script:
     - go test -race $COVER ./...
@@ -41,10 +34,6 @@ _report_coverage: &report_coverage
 
 jobs:
   include:
-    - go: "1.10.x"
-      <<: *godep_build
-    - go: "1.11.x"
-      <<: *godep_build
     - go: "1.12.x"
       env:
         - GO111MODULE=on

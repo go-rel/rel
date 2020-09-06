@@ -52,4 +52,6 @@ jobs:
       <<: *gomod_build
     - go: "1.14.x"
       <<: *gomod_build
+    - go: "1.15.x"
+      <<: *gomod_build
       <<: *report_coverage

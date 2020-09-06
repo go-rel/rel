@@ -61,7 +61,7 @@ func main() {
 `
 
 var (
-	tempDir           = os.TempDir
+	tempdir           = ""
 	stdout  io.Writer = os.Stdout
 	stderr  io.Writer = os.Stderr
 )
@@ -84,7 +84,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 
 	fs.Parse(args[2:])
 
-	file, err := ioutil.TempFile(tempDir(), "rel-*.go")
+	file, err := ioutil.TempFile(tempdir, "rel-*.go")
 	check(err)
 	defer os.Remove(file.Name())
 
@@ -113,7 +113,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 	check(err)
 	check(file.Close())
 
-	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
+	cmd := exec.CommandContext(ctx, "go", "run", "-mod=readonly", file.Name(), "migrate")
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd.Run()

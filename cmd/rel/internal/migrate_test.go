@@ -41,11 +41,9 @@ func TestExecMigrate(t *testing.T) {
 			buff = &bytes.Buffer{}
 		)
 
+		tempdir = dir
 		stderr = buff
 		defer func() { stderr = os.Stderr }()
-
-		tempDir = func() string { return dir }
-		defer func() { tempDir = os.TempDir }()
 
 		err := ExecMigrate(ctx, args)
 		assert.Empty(t, buff.String())

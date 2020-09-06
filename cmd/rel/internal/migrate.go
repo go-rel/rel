@@ -86,6 +86,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 
 	file, err := ioutil.TempFile(tempDir(), "rel-*.go")
 	check(err)
+	println(file.Name())
 	defer os.Remove(file.Name())
 
 	migrations, err := scanMigration(*dir)

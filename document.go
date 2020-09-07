@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/azer/snakecase"
 	"github.com/jinzhu/inflection"
+	"github.com/serenize/snaker"
 )
 
 // DocumentFlag stores information about document as a flag.
@@ -491,7 +491,7 @@ func fieldName(sf reflect.StructField) string {
 		}
 	}
 
-	return snakecase.SnakeCase(sf.Name)
+	return snaker.CamelToSnake(sf.Name)
 }
 
 func searchPrimary(rt reflect.Type) ([]string, []int) {
@@ -550,7 +550,7 @@ func tableName(rt reflect.Type) string {
 	}
 
 	name := inflection.Plural(rt.Name())
-	name = snakecase.SnakeCase(name)
+	name = snaker.CamelToSnake(name)
 
 	tablesCache.Store(rt, name)
 

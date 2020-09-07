@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/azer/snakecase"
+	"github.com/serenize/snaker"
 )
 
 // AssociationType defines the type of association in database.
@@ -190,7 +190,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 			fk = "id"
 		} else {
 			ref = "id"
-			fk = snakecase.SnakeCase(rt.Name()) + "_id"
+			fk = snaker.CamelToSnake(rt.Name()) + "_id"
 		}
 	}
 

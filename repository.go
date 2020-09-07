@@ -11,33 +11,109 @@ import (
 // Repository defines sets of available database operations.
 type Repository interface {
 	Adapter(ctx context.Context) Adapter
+
 	Instrumentation(instrumenter Instrumenter)
+
+	// Ping pings database.
 	Ping(ctx context.Context) error
+
+	// Iterate iterates through a collection of records from database in batches.
+	// This function returns iterator that can be used to loop all records.
+	// Limit, Offset and Sort query is automatically ignored.
 	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
+
+	// Aggregate calculate aggregate over the given field.
+	// Supported aggregate: count, sum, avg, max, min.
+	// Any select, group, offset, limit and sort query will be ignored automatically.
+	// If complex aggregation is needed, consider using All instead,
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
+
+	// MustAggregate calculate aggregate over the given field.
+	// It'll panic if any error occurred.
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
+
+	// Count retrieves count of results that match the query.
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
+
+	// MustCount retrieves count of results that match the query.
+	// It'll panic if any error occurred.
 	MustCount(ctx context.Context, collection string, queriers ...Querier) int
+
+	// Find finds a record that match the query.
+	// If no result found, it'll return not found error.
 	Find(ctx context.Context, record interface{}, queriers ...Querier) error
+
+	// MustFind finds a record that match the query.
+	// If no result found, it'll panic.
 	MustFind(ctx context.Context, record interface{}, queriers ...Querier)
+
+	// FindAll find all records that match the query.
 	FindAll(ctx context.Context, records interface{}, queriers ...Querier) error
+
+	// MustFindAll records that match the query.
+	// It'll panic if any error occurred.
 	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
+
+	// FindAndCountAll is convenient method that combines FindAll and Count.
+	// It's useful when dealing with queries related to pagination.
+	// Limit and Offset property will be ignored when performing count query.
 	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
+
+	// MustFindAndCountAll is convenient method that combines FindAll and Count.
+	//It's useful when dealing with queries related to pagination.
+	// Limit and Offset property will be ignored when performing count query.
+	// It'll panic if any error occurred.
 	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
+
+	// Insert inserts a record in database.
 	Insert(ctx context.Context, record interface{}, mutators ...Mutator) error
+
+	// MustInsert inserts a record in database.
+	// It'll panic if any error occurred.
 	MustInsert(ctx context.Context, record interface{}, mutators ...Mutator)
+
 	InsertAll(ctx context.Context, records interface{}) error
+
 	MustInsertAll(ctx context.Context, records interface{})
+
+	// Update updates a record in database.
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
+
+	// MustUpdate updates a record in database.
+	// It'll panic if any error occurred.
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
+
+	// UpdateAll updates all records that matches query.
 	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error
+
+	// UpdateAll updates all records that matches query.
+	// It'll panic if any error occurred.
 	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate)
+
+	// Delete deletes a single entry.
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
+
+	// MustDelete deletes a single entry.
+	// It'll panic if any error occurred.
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
+
+	// DeleteAll delete all records that matches query.
 	DeleteAll(ctx context.Context, query Query) error
+
+	// MustDeleteAll delete all records that matches query.
+	// It'll panic if any error occurred.
 	MustDeleteAll(ctx context.Context, query Query)
+
+	// Preload loads association with given query.
+	// If association is already loaded, this will do nothing.
+	// To force preloading even though association is already loaded, add `Reload(true)` as query.
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
+
+	// MustPreload loads association with given query.
+	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
+
+	// Transaction performs transaction with given function argument.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
 

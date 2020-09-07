@@ -1,7 +1,6 @@
 module github.com/Fs02/rel
 
 require (
-	github.com/azer/snakecase v1.0.0
 	github.com/go-sql-driver/mysql v1.3.0
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
 	github.com/lib/pq v1.7.0

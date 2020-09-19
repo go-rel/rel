@@ -26,8 +26,6 @@ func main() {
 		ctx = context.Background()
 	)
 
-	fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
-
 	if len(os.Args) < 2 {
 		fmt.Println("Available command are: migrate, rollback")
 		os.Exit(1)
@@ -36,6 +34,8 @@ func main() {
 	switch os.Args[1] {
 	case "migrate", "up", "rollback", "down":
 		err = internal.ExecMigrate(ctx, os.Args)
+	case "version", "-v":
+		fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)

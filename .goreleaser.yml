@@ -52,6 +52,7 @@ brews:
   - tap:
       owner: Fs02
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     commit_author:
       name: Fs02
       email: surya.asriadie@gmail.com

@@ -11,6 +11,12 @@ import (
 	"github.com/subosito/gotenv"
 )
 
+var (
+	version = ""
+	commit  = ""
+	date    = ""
+)
+
 func main() {
 	log.SetFlags(0)
 	gotenv.Load()
@@ -19,6 +25,8 @@ func main() {
 		err error
 		ctx = context.Background()
 	)
+
+	fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
 
 	if len(os.Args) < 2 {
 		fmt.Println("Available command are: migrate, rollback")

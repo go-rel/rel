@@ -52,6 +52,9 @@ brews:
   - tap:
       owner: Fs02
       name: homebrew-tap
+    commit_author:
+      name: Fs02
+      email: surya.asriadie@gmail.com
     folder: Formula
     homepage: https://fs02.github.io/rel
     description: Golang SQL Database Layer for Layered Architecture

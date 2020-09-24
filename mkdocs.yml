@@ -1,0 +1,17 @@
+site_name: REL
+theme:
+  name: material
+  # palette:
+  #   primary: light blue
+plugins:
+  - search
+  - macros:
+      module_name: docs/main
+markdown_extensions:
+  - admonition
+  - pymdownx.keys
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed

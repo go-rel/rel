@@ -11,37 +11,33 @@ REL uses mutator to define inserts and updates operation. Using basic mutator wo
 - `Set(field string, value interface{})` - Set a value to a field.
 - `SetFragment(raw string, args ...interface{})` - Set a value of a field using SQL fragment.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Set title and category values.
 
-Set title and category values.
+    {{ embed_code("docs/mutations.go", "basic-set", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=basic-set')
+    Decrement stock.
 
-Decrement stock.
+    {{ embed_code("docs/mutations.go", "basic-dec", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=basic-dec')
+    Update title using SQL fragment.
 
-Update title using SQL fragment.
+    {{ embed_code("docs/mutations.go", "basic-fragment", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=basic-fragment')
+=== "Mock"
 
-### **Mock**
+    Mock set title and category values.
 
-Mock set title and category values.
+    {{ embed_code("docs/mutations_test.go", "basic-set", "\t") }}
 
-[mutations_test.go](mutations_test.go ':include :fragment=basic-set')
+    Mock decrement stock.
 
-Mock decrement stock.
+    {{ embed_code("docs/mutations_test.go", "basic-dec", "\t") }}
 
-[mutations_test.go](mutations_test.go ':include :fragment=basic-dec')
+    Mock update title using SQL fragment.
 
-Mock update title using SQL fragment.
-
-[mutations_test.go](mutations_test.go ':include :fragment=basic-fragment')
-
-<!-- tabs:end -->
+    {{ embed_code("docs/mutations_test.go", "basic-fragment", "\t") }}
 
 ## Structset
 
@@ -49,108 +45,86 @@ Structset is a mutator that generates list of `Set` mutators based on a struct v
 
 ?> `Structset` is the default mutator used when none is provided explicitly.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Insert a struct.
 
-Insert a struct.
+    {{ embed_code("docs/mutations.go", "structset", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=structset')
+=== "Mock"
 
-### **Mock**
+    Mock insert a struct.
 
-Mock insert a struct.
-
-[mutations_test.go](mutations_test.go ':include :fragment=structset')
-
-<!-- tabs:end -->
+    {{ embed_code("docs/mutations_test.go", "structset", "\t") }}
 
 ## Changeset
 
 Changeset allows you to track and update only updated values and asssociation to database. This is very efficient when dealing with a complex struct that contains a lot of fields and associations.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Update only price and discount field using changeset.
 
-Update only price and discount field using changeset.
+    {{ embed_code("docs/mutations.go", "changeset", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=changeset')
+=== "Mock"
 
-### **Mock**
+    Mock update only price and discount field using changeset.
 
-Mock update only price and discount field using changeset.
-
-[mutations_test.go](mutations_test.go ':include :fragment=changeset')
-
-<!-- tabs:end -->
+    {{ embed_code("docs/mutations_test.go", "changeset", "\t") }}
 
 ## Map
 
 Map allows to define group of `Set` mutator, this is intended to be use internally and not to be exposed directly to user. Mutation defined in the map will be applied to the struct passed as the first argument. Insert/Update using map wont update `created_at` or `updated_at` field.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Insert books and its author using `Map`.
 
-Insert books and its author using `Map`.
+    {{ embed_code("docs/mutations.go", "map", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=map')
+=== "Mock"
 
-### **Mock**
+    Mock insert books and its author using `Map`.
 
-Mock insert books and its author using `Map`.
-
-[mutations_test.go](mutations_test.go ':include :fragment=map')
-
-<!-- tabs:end -->
+    {{ embed_code("docs/mutations_test.go", "map", "\t") }}
 
 ## Reloading Updated Struct
 
 By default, only `Inc`, `IncBy`, `Dec`, `DecBy` and `SetFragment` will reload struct from database, `Reload` mutator can be used to manually trigger reload after inserts/update operations.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Update title and force reload.
 
-Update title and force reload.
+    {{ embed_code("docs/mutations.go", "reload", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=reload')
+=== "Mock"
 
-### **Mock**
+    Mock update title and force reload.
 
-Mock update title and force reload.
-
-[mutations_test.go](mutations_test.go ':include :fragment=reload')
-
-<!-- tabs:end -->
+    {{ embed_code("docs/mutations_test.go", "reload", "\t") }}
 
 ## Cascade Operations
 
 REL supports insert/update/delete record and it's associations.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    Disable cascade insert (default enabled).
 
-Disable cascade insert (default enabled).
+    {{ embed_code("docs/mutations.go", "cascade", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=cascade')
+    Enable cascade delete (default disabled).
 
-Enable cascade delete (default disabled).
+    {{ embed_code("docs/mutations.go", "delete-cascade", "\t") }}
 
-[mutations.go](mutations.go ':include :fragment=delete-cascade')
+=== "Mock"
 
-### **Mock**
+    Mock disable cascade insert (default enabled).
 
-Mock disable cascade insert (default enabled).
+    {{ embed_code("docs/mutations_test.go", "cascade", "\t") }}
 
-[mutations_test.go](mutations_test.go ':include :fragment=cascade')
+    Mock enable cascade delete (default disabled).
 
-Mock enable cascade delete (default disabled).
-
-[mutations_test.go](mutations_test.go ':include :fragment=delete-cascade')
-
-<!-- tabs:end -->
-
-**Next: [Association](association.md)**
+    {{ embed_code("docs/mutations_test.go", "delete-cascade", "\t") }}

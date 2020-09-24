@@ -8,17 +8,10 @@ Context makes it easier to call any function that involves db operation inside a
 If any error occured within transaction, the transaction will be rolled back, and returns the error.
 If the error is a runtime error or `panic` with string argument, it'll panic after rollback.
 
-<!-- tabs:start -->
+=== "Example"
 
-### **Example**
+    {{ embed_code("docs/transactions.go", "transactions", "\t") }}
 
-[transactions.go](transactions.go ':include :fragment=transactions')
+=== "Mock"
 
-
-### **Mock**
-
-[transactions_test.go](transactions_test.go ':include :fragment=transactions')
-
-<!-- tabs:end -->
-
-**Next: [Instrumentation](instrumentation.md)**
+    {{ embed_code("docs/transactions_test.go", "transactions", "\t") }}

@@ -50,5 +50,3 @@ func (ur userRepository) Find(user *User, id int) error {
 ```
 
 Compared to other orm, REL api is built with testability in mind. REL uses interface to define contract of every database query or execution, all while making a chainable query possible. The ultimate **goal of REL is to be your database package** without the needs of making your own wrapper.
-
-**Learn More: [Basics](basics.md)**

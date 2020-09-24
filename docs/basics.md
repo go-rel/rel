@@ -5,15 +5,13 @@
 Below is a very basic example on how to utilize REL using mysql adapter.
 Testing database query using REL can be done using [reltest](https://godoc.org/github.com/Fs02/rel/reltest) package.
 
-<!-- tabs:start -->
+=== "main.go"
 
-### **main.go**
+	{{ embed_code("docs/basics.go", prefix="\t") }}
 
-[main.go](basics.go ':include')
+=== "main_test.go"
 
-### **main_test.go**
-
-[main_test.go](basics_test.go ':include :fragment=example')
+	{{ embed_code("docs/basics_test.go", "example", "\t") }}
 
 <!-- tabs:end -->
 
@@ -78,5 +76,3 @@ type Book struct {
 ### Timestamp
 
 REL automatically track created and updated time of each struct if `CreatedAt` or `UpdatedAt` field exists.
-
-**Next: [Reading and Writing Record](crud.md)**

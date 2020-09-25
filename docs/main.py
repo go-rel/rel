@@ -1,5 +1,7 @@
 import os
 import textwrap
+import requests
+from datetime import datetime
 
 
 def define_env(env):
@@ -37,3 +39,20 @@ def define_env(env):
             str = ''.join(lines)
 
         return textwrap.indent('```'+extension+'\n'+str+'\n```', prefix)[len(prefix):]
+
+    @env.macro
+    def changelog():
+        """
+        Generate Changelog.
+        """
+        result = ""
+        url = "https://api.github.com/repos/Fs02/rel/releases"
+        data = requests.get(url).json()
+        datetime.fromisoformat
+        for release in data:
+            time = datetime.strptime(
+                release["created_at"], '%Y-%m-%dT%H:%M:%SZ')
+            result += "\n## **" + release["name"] + "** - " + \
+                time.strftime("%B %-d, %Y") + "\n\n" + release["body"]
+
+        return result

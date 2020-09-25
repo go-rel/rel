@@ -21,6 +21,8 @@ nav:
     - Example Package: reference/godoc.md 
   - Adapters:
     - Adapters: adapters.md
+  - Changelog:
+    - Release Notes: changelog/release-notes.md
 
 theme:
   name: material

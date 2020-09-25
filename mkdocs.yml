@@ -1,15 +1,14 @@
 site_name: REL
+site_description: Modern Golang ORM-ish Database Access Layer
+# copyright: Made with ❤️ by REL contributors.
 repo_url: https://github.com/Fs02/rel
 site_author: Muhammad Surya Asriadie
-site_description: >-
-  REL is a modern golang orm-ish database layer for layered architecture.
-  It's testable and comes with its own test library.
-  REL also features extendable query builder that allows you to write query using builder or plain sql.
 repo_name: Fs02/rel
 
 nav:
   - Home: index.md
   - Getting Started:
+    - Introduction: introduction.md
     - Basics: basics.md
     - Reading and Writing Record: crud.md
     - Queries: queries.md
@@ -29,8 +28,9 @@ theme:
   features:
     - tabs
   custom_dir: docs/overrides
-  # palette:
-  #   primary: light blue
+  palette:
+    primary: light blue
+    accent: green
 
 plugins:
   - search
@@ -48,6 +48,7 @@ markdown_extensions:
   - pymdownx.tabbed
   - toc:
       permalink: true
+      slugify: !!python/name:pymdownx.slugs.uslugify
 
 extra:
   social:

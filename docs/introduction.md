@@ -1,6 +1,4 @@
-# REL
-
-> Golang SQL Database Layer for Layered Architecture.
+# Introduction
 
 REL is golang orm-ish database layer for layered architecture. It's testable and comes with it's own test library. REL also features extendable query builder that allows you to write query using builder or plain sql.
 

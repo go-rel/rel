@@ -1,4 +1,4 @@
 ---
 template: home.html
-title: REL
+title: Modern Golang ORM-ish Database Access Layer
 ---

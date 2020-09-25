@@ -2,10 +2,6 @@
 {% block tabs %}
 {{ super() }}
 <style>
-    :root {
-        --primary-color: #00dad69a;
-    }
-
     .md-header {
         position: initial
     }
@@ -20,7 +16,7 @@
 
     .tx-container {
         padding-top: 1rem;
-        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1123 258'><path d='M1124,2c0,0 0,256 0,256l-1125,0l0,-48c0,0 16,5 55,5c116,0 197,-92 325,-92c121,0 114,46 254,46c140,0 214,-167 572,-166Z' style='fill: white' /></svg>") no-repeat bottom, linear-gradient(to bottom, var(--md-primary-fg-color), var(--primary-color) 99%, #fff 99%)
+        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1123 258'><path d='M1124,2c0,0 0,256 0,256l-1125,0l0,-48c0,0 16,5 55,5c116,0 197,-92 325,-92c121,0 114,46 254,46c140,0 214,-167 572,-166Z' style='fill: white' /></svg>") no-repeat bottom, linear-gradient(to bottom, var(--md-primary-fg-color), var(--md-accent-fg-color) 99%, #fff 99%)
     }
 
     .tx-hero {
@@ -46,15 +42,15 @@
 
     .tx-hero .md-button--primary {
         background-color: var(--md-primary-bg-color);
-        color: var(--primary-color);
+        color: var(--md-accent-fg-color);
         border-color: var(--md-primary-bg-color)
     }
 
     .tx-hero .md-button:focus,
     .tx-hero .md-button:hover {
-        background-color: var(--md-accent-fg-color);
-        color: var(--md-default-bg-color);
-        border-color: var(--md-accent-fg-color)
+        background-color: var(--md-primary-fg-color);
+        color: var(--md-accent-bg-color);
+        border-color: var(--md-primary-fg-color)
     }
 
     @media screen and (max-width:70em) {
@@ -104,6 +100,7 @@
         }
 
         .tx-hero__image {
+            margin-top: 5rem;
             margin-left: auto;
         }
 
@@ -124,6 +121,11 @@
                     Modern golang orm-ish database layer for layered architecture - Clean API, Testable, Extendable with
                     mix of syntactic sugar.
                 </p>
+                <ul>
+                    <li>Feature Rich</li>
+                    <li>Fully Testable</li>
+                    <li>Elegant, yet extendable</li>
+                </ul>
                 <a href="{{ page.next_page.url | url }}" title="{{ page.next_page.title | striptags }}"
                     class="md-button md-button--primary">
                     Get started

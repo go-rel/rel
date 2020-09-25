@@ -13,87 +13,65 @@ By following that convention, REL currently supports `belongs to`, `has one` and
 
 Preload will load association to structs. To preload association, use `Preload`.
 
+*Preload Transaction's Buyer (`belongs to` association):*
+
 === "Example"
-
-    Preload Transaction's Buyer (`belongs to` association).
-
     {{ embed_code("docs/association.go","preload-belongs-to", "\t") }}
-
-    Preload User's Address (`has one` association).
-
-    {{ embed_code("docs/association.go","preload-has-one", "\t") }}
-
-    Preload User's Transactions (`has many` association).
-
-    {{ embed_code("docs/association.go","preload-has-many", "\t") }}
-
-    Preload only paid Transactions from users.
-
-    {{ embed_code("docs/association.go","preload-has-many-filter", "\t") }}
-
-    Preload every Buyer's Address in Transactions.
-
-    **Note:** Buyer needs to be preloaded before preloading Buyer's Address.
-
-    {{ embed_code("docs/association.go","preload-nested", "\t") }}
-
 === "Mock"
-
-    Mock preload Transaction's Buyer (`belongs to` association).
-
     {{ embed_code("docs/association_test.go", "preload-belongs-to", "\t") }}
 
-    Mock preload User's Address (`has one` association).
+*Preload User's Address (`has one` association):*
 
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-one", "\t") }}
+=== "Mock"
     {{ embed_code("docs/association_test.go", "preload-has-one", "\t") }}
 
-    Preload User's Transactions (`has many` association).
+*Preload User's Transactions (`has many` association):*
 
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-many", "\t") }}
+=== "Mock"
     {{ embed_code("docs/association_test.go", "preload-has-many", "\t") }}
 
-    Mock preload only paid Transactions from users.
+*Preload only paid Transactions from users:*
 
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-many-filter", "\t") }}
+=== "Mock"
     {{ embed_code("docs/association_test.go", "preload-has-many-filter", "\t") }}
 
-    Mock preload every Buyer's Address in Transactions.
+*Preload every Buyer's Address in Transactions (Buyer needs to be preloaded before preloading Buyer's Address):*
 
-    **Note:** Address will be assigned based on `UserID` (association key).
-
+=== "Example"
+    {{ embed_code("docs/association.go","preload-nested", "\t") }}
+=== "Mock"
     {{ embed_code("docs/association_test.go", "preload-nested", "\t") }}
-
 
 ## Inserting and Updating Association
 
 REL will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, REL will try to update the association, else it'll create a new association.
 
-> REL will try to create a new record for association if Primary Value (`ID`) is a zero value.
+!!! note
+    REL will try to create a new record for association if Primary Value (`ID`) is a zero value.
 
 === "Example"
-
     {{ embed_code("docs/association.go","insert-association", "\t") }}
-
 === "Mock"
-
     {{ embed_code("docs/association_test.go", "insert-association", "\t") }}
 
 
 REL will try to update a new record for association if `ID` is a zero value. To update association, it first needs to be preloaded.
 
 === "Example"
-
     {{ embed_code("docs/association.go","update-association", "\t") }}
-
 === "Mock"
-
     {{ embed_code("docs/association_test.go", "update-association", "\t") }}
 
 
 To selectively update only specific fields or association, `use rel.Map`.
 
 === "Example"
-
     {{ embed_code("docs/association.go","update-association-with-map", "\t") }}
-
 === "Mock"
-
     {{ embed_code("docs/association_test.go", "update-association-with-map", "\t") }}

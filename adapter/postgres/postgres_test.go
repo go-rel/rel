@@ -1,3 +1,5 @@
+// +build all postgres
+
 package postgres
 
 import (

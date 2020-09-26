@@ -8,6 +8,21 @@ on:
 
 jobs:
 
+  test:
+    name: Test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: [1.12, 1.13, 1.4, 1.15]
+    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^${{ matrix.go }}
+      - name: go test -race ./...
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
@@ -34,9 +49,8 @@ jobs:
         with:
           cc_test_reporter_id: ${{ secrets.CC_TEST_REPORTER_ID }}
       - run: cc-test-reporter before-build
-      - name: Test
-        env:
+      - env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
-        run: go test -race -coverprofile=c.out ./...
+        run: go test -race -tags=all -coverprofile=c.out ./...
       - run: cc-test-reporter after-build -p github.com/Fs02/rel

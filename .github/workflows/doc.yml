@@ -17,8 +17,10 @@ jobs:
           go-version: 1.15
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
-      # - name: Install mkdocs-git-revision-date-plugin
-      #   run: pip3 install mkdocs-git-revision-date-plugin
+      - name: Install mkdocs-macros-plugin
+        run: pip3 install mkdocs-macros-plugin
+      - name: Install mkdocs-git-revision-date-plugin
+        run: pip3 install mkdocs-git-revision-date-plugin
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:

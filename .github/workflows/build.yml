@@ -107,4 +107,4 @@ jobs:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=all -coverprofile=c.out ./...
-      - run: GIT_BRANCH=$GITHUB_HEAD_REF GIT_COMMIT_SHA=$(git rev-parse origin/$GITHUB_HEAD_REF) cc-test-reporter after-build -p github.com/Fs02/rel
+      - run: cc-test-reporter after-build -p github.com/Fs02/rel

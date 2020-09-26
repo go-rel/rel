@@ -1,7 +1,8 @@
 site_name: REL
-site_description: Modern Database Access Layer for Golang
-repo_url: https://github.com/Fs02/rel
+site_description: Modern Database Access Layer for Golang - Testable, Extendable and Crafted Into a Clean and Elegant API
 site_author: REL
+site_url: https://go-rel.github.io/
+repo_url: https://github.com/Fs02/rel
 repo_name: Fs02/rel
 
 nav:

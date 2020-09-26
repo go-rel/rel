@@ -6,10 +6,10 @@ on:
 
 jobs:
   build:
-    name: Deploy website
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout rel
         uses: actions/checkout@v2
         with:
           path: rel

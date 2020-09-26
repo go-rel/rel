@@ -170,7 +170,7 @@ To use group by query, you can use `Group` method.
 To join tables, you can use `join` api.
 
 !!! note
-    Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
+    Joining table won't load the association to struct. If you want to load association on a struct, use [preload](/association/#preloading-association) instead.
 
 *Join transaction and book table, then filter only transaction that have specified book name. This methods assumes belongs to relation, which means it'll try to join using `transactions.book_id=books.id`:*
 

@@ -25,7 +25,6 @@ jobs:
             mkdocs \
             mkdocs-material-extensions \
             mkdocs-minify-plugin \
-            mkdocs-redirects \
             mkdocs-macros-plugin \
             mkdocs-git-revision-date-plugin
       - name: Install godoc2md
@@ -34,9 +33,6 @@ jobs:
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
-          ls
-          echo "\n"
-          ls docs
           mkdocs --version
           mkdocs build
       - name: Deploy docs

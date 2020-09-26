@@ -49,6 +49,11 @@ plugins:
   - git-revision-date
   - macros:
       module_name: docs/main
+  - minify:
+      minify_html: true
+      minify_js: true
+      htmlmin_opts:
+        remove_comments: true
 
 markdown_extensions:
   - admonition

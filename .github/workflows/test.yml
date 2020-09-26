@@ -22,11 +22,13 @@ jobs:
           container port: 3307
           mysql database: rel_test
           mysql user: rel
+          mysql password: rel
       - name: Setup PostgreSQL
         uses: harmon758/postgresql-action@v1
         with:
           postgresql db: rel_test
           postgresql user: rel
+          postgresql password: rel
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
       - uses: amancevice/setup-code-climate@v0
@@ -35,8 +37,8 @@ jobs:
       - run: cc-test-reporter before-build
       - name: Test
         env:
-          MYSQL_DATABASE: rel@(127.0.0.1:3307)/rel_test
-          POSTGRESQL_DATABASE: postgres://postgres@localhost/rel_test
+          MYSQL_DATABASE: rel:rel@(127.0.0.1:3307)/rel_test
+          POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: |
           go test -race -coverprofile=c.out ./...
       - run: cc-test-reporter after-build

@@ -4,13 +4,20 @@ on:
     # branches:
     #   - master
 
+
+defaults:
+  run:
+    working-directory: rel
+
 jobs:
   build:
     name: Deploy docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+        with:
+          path: rel
       - uses: actions/setup-python@v1
         with:
           python-version: 3.x
@@ -30,16 +37,22 @@ jobs:
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
       - name: Build docs
+        working-directory: ./rel
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
           mkdocs --version
           mkdocs build
-      - name: Deploy docs
-        uses: andstor/copycat-action@v3
+      - name: Push site
+        uses: actions/checkout@v2
         with:
-          personal_token: ${{ secrets.PERSONAL_TOKEN }}
-          src_path: /site
-          dst_path: /.
-          dst_owner: go-rel
-          dst_repo_name: go-rel.github.io
+          repository: go-rel/go-rel.github.io
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          path: go-rel.github.io
+        run: |
+          yes | cp -rf ../rel/site/* .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "generated"
+          git push

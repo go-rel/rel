@@ -91,9 +91,20 @@ jobs:
       - uses: amancevice/setup-code-climate@v0
         with:
           cc_test_reporter_id: ${{ secrets.CC_TEST_REPORTER_ID }}
+      - name: Set ENV for codeclimate (pull_request)
+        run: |
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/$GITHUB_HEAD_REF:refs/remotes/origin/$GITHUB_HEAD_REF
+          echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"
+          echo "::set-env name=GIT_COMMIT_SHA::$(git rev-parse origin/$GITHUB_HEAD_REF)"
+        if: github.event_name == 'pull_request'
+      - name: Set ENV for codeclimate (push)
+        run: |
+          echo "::set-env name=GIT_BRANCH::$GITHUB_REF"
+          echo "::set-env name=GIT_COMMIT_SHA::$GITHUB_SHA"
+        if: github.event_name == 'push'
       - run: cc-test-reporter before-build
       - env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=all -coverprofile=c.out ./...
-      - run: cc-test-reporter after-build -p github.com/Fs02/rel
+      - run: GIT_BRANCH=$GITHUB_HEAD_REF GIT_COMMIT_SHA=$(git rev-parse origin/$GITHUB_HEAD_REF) cc-test-reporter after-build -p github.com/Fs02/rel

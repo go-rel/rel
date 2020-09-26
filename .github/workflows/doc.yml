@@ -39,5 +39,7 @@ jobs:
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
+          git remote rm origin
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Fs02/rel.git
           mkdocs gh-deploy --force
           mkdocs --version

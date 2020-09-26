@@ -36,8 +36,7 @@ jobs:
       - name: Deploy docs
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
-        run: |
-          mkdocs build
+        run: mkdocs build
       - name: Push
         uses: andstor/copycat-action@v3
         with:

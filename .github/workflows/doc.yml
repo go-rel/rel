@@ -35,11 +35,11 @@ jobs:
             requests
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
-      - name: Deploy docs
+      - name: Build docs
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
-        run: mkdocs build
-      - name: Push
+        run: ls && echo "\n" && ls docs && mkdocs build
+      - name: Deploy docs
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.PERSONAL_TOKEN }}

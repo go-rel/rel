@@ -79,5 +79,5 @@ extra:
       link: https://twitter.com/Fs02
 
 google_analytics:
-  - UA-179100090-1
+  - !!python/object/apply:os.getenv ["GOOGLE_ANALYTICS_KEY"]
   - auto

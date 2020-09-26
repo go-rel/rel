@@ -27,13 +27,12 @@ jobs:
             pymdown-extensions>=7.0 \
             mkdocs-material-extensions>=1.0 \
             mkdocs-minify-plugin>=0.3 \
-            mkdocs-redirects>=1.0
+            mkdocs-redirects>=1.0 \
+            mkdocs-macros-plugin \
+            mkdocs-git-revision-date-plugin \
+            requests
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
-      - name: Install mkdocs-macros-plugin
-        run: pip3 install mkdocs-macros-plugin
-      - name: Install mkdocs-git-revision-date-plugin
-        run: pip3 install mkdocs-git-revision-date-plugin
       - name: Deploy docs
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}

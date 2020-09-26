@@ -1,6 +1,5 @@
 site_name: REL
 site_description: Modern Golang ORM-ish Database Access Layer
-# copyright: Made with ❤️ by REL contributors.
 repo_url: https://github.com/Fs02/rel
 site_author: Muhammad Surya Asriadie
 repo_name: Fs02/rel

@@ -37,7 +37,7 @@ jobs:
             mkdocs-git-revision-date-plugin
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
-      - name: Build docs
+      - name: Build site
         working-directory: rel
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
@@ -46,7 +46,6 @@ jobs:
           mkdocs build
       - name: Push site
         working-directory: site
-        uses: actions/checkout@v2
         run: |
           yes | cp -rf ../rel/site/* .
           git config user.name github-actions

@@ -34,13 +34,16 @@ nav:
 
 theme:
   name: material
-  features:
-    - tabs
-  custom_dir: docs/overrides
+  favicon: static/favicon.png
+  icon:
+    logo: material/database
   palette:
     primary: light blue
     accent: green
-
+  features:
+    - tabs
+  custom_dir: docs/overrides
+  
 plugins:
   - search
   - git-revision-date

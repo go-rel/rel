@@ -38,6 +38,5 @@ jobs:
         env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
-        run: |
-          go test -race -coverprofile=c.out ./...
-      - run: cc-test-reporter after-build
+        run: go test -race -coverprofile=c.out ./...
+      - run: cc-test-reporter after-build -p github.com/Fs02/rel

@@ -1,5 +1,5 @@
 site_name: REL
-site_description: Modern Golang ORM-ish Database Access Layer
+site_description: Modern Database Access Layer for Golang
 repo_url: https://github.com/Fs02/rel
 site_author: REL
 repo_name: Fs02/rel

@@ -7,9 +7,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="317.76459mm"
+   height="166.95209mm"
+   viewBox="0 0 317.76459 166.95209"
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (c497b03c, 2020-09-10)"
@@ -26,17 +26,17 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="-98.571429"
-     inkscape:cy="560"
+     inkscape:zoom="0.90510006"
+     inkscape:cx="573.52139"
+     inkscape:cy="417.56575"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
      showgrid="false"
-     inkscape:window-width="1252"
-     inkscape:window-height="938"
+     inkscape:window-width="1680"
+     inkscape:window-height="1050"
      inkscape:window-x="0"
-     inkscape:window-y="23"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:snap-page="false" />
   <metadata
@@ -54,10 +54,11 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(0.88824391,-49.00461)">
     <g
        id="g763"
-       transform="translate(242.66071,-149.30051)">
+       transform="matrix(0.59682779,0,0,0.59682779,237.32549,-56.673353)">
       <g
          id="g657"
          style="fill:#f9f9f9;stroke:#f9f9f9"
@@ -121,7 +122,7 @@
     <g
        style="enable-background:new"
        id="g447"
-       transform="matrix(0.28222222,0,0,0.28222222,1.9524039,65.266956)">
+       transform="matrix(0.16843807,0,0,0.16843807,93.664091,71.386473)">
       <g
          id="layer11"
          inkscape:label="background"
@@ -655,5 +656,18 @@
         </g>
       </g>
     </g>
+    <text
+       xml:space="preserve"
+       style="font-size:11.2889px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:Roboto;stroke-width:0.264583"
+       x="39.55901"
+       y="182.05399"
+       id="text132"><tspan
+         sodipodi:role="line"
+         id="tspan130"
+         x="39.55901"
+         y="182.05399"
+         style="font-size:11.2889px;stroke-width:0.264583"><tspan
+   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Roboto;-inkscape-font-specification:'Roboto Bold'"
+   id="tspan134">REL</tspan> | Modern Database Access Layer For Golang</tspan></text>
   </g>
 </svg>

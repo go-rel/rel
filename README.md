@@ -6,7 +6,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/maintainability)](https://codeclimate.com/github/Fs02/rel/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/test_coverage)](https://codeclimate.com/github/Fs02/rel/test_coverage)
 
-> Golang SQL Database Layer for Layered Architecture.
+> Modern Database Access Layer for Golang.
 
 REL is golang orm-ish database layer for layered architecture. It's testable and comes with its own test library. REL also features extendable query builder that allows you to write query using builder or plain sql.
 

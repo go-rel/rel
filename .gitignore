@@ -8,3 +8,4 @@ debug.test
 *.test
 dist/
 __pycache__/
+site/

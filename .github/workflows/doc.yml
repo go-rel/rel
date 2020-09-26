@@ -37,5 +37,12 @@ jobs:
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
-          mkdocs gh-deploy --force
-          mkdocs --version
+          mkdocs build
+      - name: Push
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          src_path: /site
+          dst_path: /.
+          dst_owner: go-rel
+          dst_repo_name: go-rel.github.io

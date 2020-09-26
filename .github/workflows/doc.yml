@@ -11,8 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v1
         with:
           python-version: 3.x
@@ -38,7 +36,12 @@ jobs:
       - name: Build docs
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
-        run: ls && echo "\n" && ls docs && mkdocs build
+        run: |
+          ls
+          echo "\n"
+          ls docs
+          mkdocs --version
+          mkdocs build
       - name: Deploy docs
         uses: andstor/copycat-action@v3
         with:

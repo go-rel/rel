@@ -1,7 +1,7 @@
 site_name: REL
 site_description: Modern Golang ORM-ish Database Access Layer
 repo_url: https://github.com/Fs02/rel
-site_author: Muhammad Surya Asriadie
+site_author: REL
 repo_name: Fs02/rel
 
 nav:

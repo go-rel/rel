@@ -1,4 +1,4 @@
-name: Test
+name: Build
 
 on:
   push:
@@ -19,7 +19,6 @@ jobs:
       - name: Setup MySQL
         uses: mirromutth/mysql-action@v1.1
         with:
-          container port: 3307
           mysql database: rel_test
           mysql user: rel
           mysql password: rel
@@ -37,7 +36,7 @@ jobs:
       - run: cc-test-reporter before-build
       - name: Test
         env:
-          MYSQL_DATABASE: rel:rel@(127.0.0.1:3307)/rel_test
+          MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: |
           go test -race -coverprofile=c.out ./...

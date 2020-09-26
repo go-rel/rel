@@ -46,7 +46,7 @@ theme:
   
 plugins:
   - search
-  - git-revision-date
+  # - git-revision-date
   - macros:
       module_name: docs/main
 

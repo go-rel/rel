@@ -47,7 +47,7 @@ jobs:
           pwd
           ls
           mkdocs --version
-          mkdocs build --config-file "${GITHUB_WORKSPACE}/mkdocs.yml"
+          mkdocs build --config-file "${GITHUB_WORKSPACE}/rel/mkdocs.yml"
       - name: Push website
         working-directory: website
         run: |

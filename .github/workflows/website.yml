@@ -30,12 +30,12 @@ jobs:
         working-directory: rel
         run: |
           pip install \
-            requests \
-            mkdocs \
-            mkdocs-material-extensions \
-            mkdocs-minify-plugin \
-            mkdocs-macros-plugin \
-            mkdocs-git-revision-date-plugin
+            'requests' \
+            'mkdocs==1.1.2' \
+            'mkdocs-material-extensions==1.0.1' \
+            'mkdocs-minify-plugin==0.3.0' \
+            'mkdocs-macros-plugin==0.4.15' \
+            'mkdocs-git-revision-date-plugin==0.3'
       - name: Install godoc2md
         working-directory: rel
         run: go get github.com/davecheney/godoc2md

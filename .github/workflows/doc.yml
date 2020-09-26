@@ -11,10 +11,23 @@ jobs:
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.x
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.15
+      - name: Install mkdocs and it's plugins
+        run: |
+          pip install \
+            mkdocs>=1.1 \
+            Pygments>=2.4 \
+            markdown>=3.2 \
+            pymdown-extensions>=7.0 \
+            mkdocs-material-extensions>=1.0 \
+            mkdocs-minify-plugin>=0.3 \
+            mkdocs-redirects>=1.0
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
       - name: Install mkdocs-macros-plugin
@@ -22,6 +35,8 @@ jobs:
       - name: Install mkdocs-git-revision-date-plugin
         run: pip3 install mkdocs-git-revision-date-plugin
       - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        - env:
+          GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
+        run: |
+          mkdocs gh-deploy --force
+          mkdocs --version

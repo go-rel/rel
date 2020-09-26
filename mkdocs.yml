@@ -61,6 +61,10 @@ markdown_extensions:
   - toc:
       permalink: true
       slugify: !!python/name:pymdownx.slugs.uslugify
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: Fs02
+      repo: rel
 
 extra:
   social:

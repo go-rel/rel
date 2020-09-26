@@ -35,7 +35,7 @@ jobs:
       - name: Install mkdocs-git-revision-date-plugin
         run: pip3 install mkdocs-git-revision-date-plugin
       - name: Deploy docs
-        - env:
+        env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
           mkdocs gh-deploy --force

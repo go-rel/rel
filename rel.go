@@ -1,2 +1,2 @@
-// Package rel is a Database Layer for SQL Database.
+// Package rel contains all rel primary APIs, such as Repository.
 package rel

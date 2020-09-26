@@ -7,3 +7,5 @@ debug.test
 *.out
 *.test
 dist/
+__pycache__/
+site/

@@ -1,6 +1,10 @@
 # Instrumentation
 
-REL provides hooks that can be used to log or instrument your queries. This is the list for available operations:
+REL provides hooks that can be used to log or instrument your queries.
+
+{{ embed_code("docs/instrumentation.go", "instrumentation") }}
+
+This is the list for available operations:
 
 - `rel-aggregate`
 - `rel-count`
@@ -23,13 +27,3 @@ REL provides hooks that can be used to log or instrument your queries. This is t
 - `adapter-begin`
 - `adapter-commit`
 - `adapter-rollback`
-
-<!-- tabs:start -->
-
-### **Example**
-
-[instrumentation.go](instrumentation.go ':include :fragment=instrumentation')
-
-<!-- tabs:end -->
-
-**Next: [Adapters](adapters.md)**

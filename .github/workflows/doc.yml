@@ -21,16 +21,13 @@ jobs:
       - name: Install mkdocs and it's plugins
         run: |
           pip install \
-            mkdocs>=1.1 \
-            Pygments>=2.4 \
-            markdown>=3.2 \
-            pymdown-extensions>=7.0 \
-            mkdocs-material-extensions>=1.0 \
-            mkdocs-minify-plugin>=0.3 \
-            mkdocs-redirects>=1.0 \
+            requests \
+            mkdocs \
+            mkdocs-material-extensions \
+            mkdocs-minify-plugin \
+            mkdocs-redirects \
             mkdocs-macros-plugin \
-            mkdocs-git-revision-date-plugin \
-            requests
+            mkdocs-git-revision-date-plugin
       - name: Install godoc2md
         run: go get github.com/davecheney/godoc2md
       - name: Build docs

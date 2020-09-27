@@ -84,17 +84,18 @@ jobs:
           go-version: ^${{ matrix.go }}
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
+      - run: go install ./cmd/rel
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
         with:
           repository: Fs02/go-todo-backend
-      - run: go get github.com/Fs02/rel/cmd/rel@${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request'
-      - run: echo ${{ toJson(github) }}
-      - run: go get github.com/Fs02/rel/cmd/rel@${{ github.event.push.after }}
-        if: github.event_name == 'push'
-      - run: go mod tidy
-      - run: rel -v
-      - run: rel migrate
-      - run: rel rollback
+          path: project
+      - name: Test CLI
+        working-directory: rel
+        run: |
+          rel -v
+          rel migrate
+          rel rollback
 
   coverage:
     name: Coverage

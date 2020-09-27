@@ -43,7 +43,8 @@ theme:
     primary: light blue
     accent: green
   features:
-    - tabs
+    - navigation.tabs
+    - navigation.instant
   custom_dir: docs/overrides
   
 plugins:

@@ -88,7 +88,8 @@ jobs:
           repository: Fs02/go-todo-backend
       - run: go get github.com/Fs02/rel/cmd/rel@${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request'
-      - run: go get github.com/Fs02/rel/cmd/rel@${{ github.event.push.head.sha }}
+      - run: echo ${{ toJson(github) }}
+      - run: go get github.com/Fs02/rel/cmd/rel@${{ github.event.push.after }}
         if: github.event_name == 'push'
       - run: go mod tidy
       - run: rel -v

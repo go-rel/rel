@@ -7,11 +7,11 @@ Testing database query using REL can be done using [reltest](https://godoc.org/g
 
 === "main.go"
 
-	{{ embed_code("docs/basics.go", prefix="\t") }}
+	{{ embed_code("examples/basics.go", prefix="\t") }}
 
 === "main_test.go"
 
-	{{ embed_code("docs/basics_test.go", "example", "\t") }}
+	{{ embed_code("examples/basics_test.go", "example", "\t") }}
 
 <!-- tabs:end -->
 

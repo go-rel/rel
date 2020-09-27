@@ -1,8 +1,8 @@
-name: Publish website
+name: Website
 on:
   push:
-    branches:
-      - master
+    # branches:
+    #   - master
 
 jobs:
   deploy:

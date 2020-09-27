@@ -90,7 +90,7 @@ jobs:
         uses: actions/checkout@v2
       - uses: amancevice/setup-code-climate@v0
         with:
-          cc_test_reporter_id: ${{ secrets.CC_TEST_REPORTER_ID }}
+          cc_test_reporter_id: 045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
       - name: Set ENV for codeclimate (pull_request)
         run: |
           git fetch --no-tags --prune --depth=1 origin +refs/heads/$GITHUB_HEAD_REF:refs/remotes/origin/$GITHUB_HEAD_REF

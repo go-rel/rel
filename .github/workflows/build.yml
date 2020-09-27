@@ -90,6 +90,7 @@ jobs:
         if: github.event_name == 'pull_request'
       - run: go get github.com/Fs02/rel@$GITHUB_REF
         if: github.event_name == 'push'
+      - run: go get github.com/Fs02/rel/cmd/rel
       - run: rel -v
       - run: rel migrate
       - run: rel rollback

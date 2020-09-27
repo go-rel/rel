@@ -21,7 +21,6 @@ import (
 	"log"
 	"strings"
 	"time"
-	{{if not .Verbose}} "io/ioutil" {{end}}
 
 	_ "{{.Driver}}"
 	db "{{.Adapter}}"
@@ -54,7 +53,7 @@ func logger(ctx context.Context, op string, message string) func(err error) {
 
 		if op == "migrate" || op == "rollback" {
 			log.Print("Done: ", op, " ", message, " in ", duration)
-		} else {
+		} else if {{.Verbose}} {
 			log.Print("\t[duration: ", duration, " op: ", op, "] ", message)
 		}
 	}
@@ -64,10 +63,6 @@ func main() {
 	var (
 		ctx = context.Background()
 	)
-
-	{{if not .Verbose}}
-	log.SetOutput(ioutil.Discard)
-	{{end}}
 
 	adapter, err := db.Open("{{.DSN}}")
 	if err != nil {

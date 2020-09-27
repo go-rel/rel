@@ -46,7 +46,8 @@ func TestExecMigrate(t *testing.T) {
 		defer func() { stderr = os.Stderr }()
 
 		err := ExecMigrate(ctx, args)
-		assert.Empty(t, buff.String())
+		assert.Contains(t, buff.String(), "Running: migrate 1 create table todos")
+		assert.Contains(t, buff.String(), "Done: migrate 1 create table todos")
 		assert.Nil(t, err)
 	})
 }

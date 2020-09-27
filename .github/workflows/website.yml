@@ -1,0 +1,59 @@
+name: Publish website
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout rel
+        uses: actions/checkout@v2
+        with:
+          path: rel
+      - name: Checkout website
+        uses: actions/checkout@v2
+        with:
+          repository: go-rel/go-rel.github.io
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          path: website
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.x
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: Install mkdocs and it's plugins
+        working-directory: rel
+        run: |
+          pip install \
+            'requests' \
+            'mkdocs==1.1.2' \
+            'mkdocs-material-extensions==1.0.1' \
+            'mkdocs-minify-plugin==0.3.0' \
+            'mkdocs-macros-plugin==0.4.15' \
+            'mkdocs-git-revision-date-plugin==0.3'
+      - name: Install godoc2md
+        working-directory: rel
+        run: go get github.com/davecheney/godoc2md
+      - name: Build website
+        working-directory: rel
+        env:
+          GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
+        run: |
+          pwd
+          ls
+          mkdocs --version
+          mkdocs build --config-file "${GITHUB_WORKSPACE}/rel/mkdocs.yml"
+      - name: Push website
+        working-directory: website
+        run: |
+          yes | cp -rf ../rel/site/* .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "deploy ${GITHUB_SHA}"
+          git push

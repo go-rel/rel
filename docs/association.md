@@ -7,108 +7,71 @@ Association field is a field with the type of another struct.
 Reference id is an id field that can be mapped to the foreign id field in another struct.
 By following that convention, REL currently supports `belongs to`, `has one` and `has many` association.
 
-[association.go](association.go ':include :fragment=association-schema')
+{{ embed_code("docs/association.go","association-schema") }}
 
 ## Preloading Association
 
 Preload will load association to structs. To preload association, use `Preload`.
 
-<!-- tabs:start -->
+*Preload Transaction's Buyer (`belongs to` association):*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/association.go","preload-belongs-to", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "preload-belongs-to", "\t") }}
 
-Preload Transaction's Buyer (`belongs to` association).
+*Preload User's Address (`has one` association):*
 
-[association.go](association.go ':include :fragment=preload-belongs-to')
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-one", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "preload-has-one", "\t") }}
 
-Preload User's Address (`has one` association).
+*Preload User's Transactions (`has many` association):*
 
-[association.go](association.go ':include :fragment=preload-has-one')
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-many", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "preload-has-many", "\t") }}
 
-Preload User's Transactions (`has many` association).
+*Preload only paid Transactions from users:*
 
-[association.go](association.go ':include :fragment=preload-has-many')
+=== "Example"
+    {{ embed_code("docs/association.go","preload-has-many-filter", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "preload-has-many-filter", "\t") }}
 
-Preload only paid Transactions from users.
+*Preload every Buyer's Address in Transactions (Buyer needs to be preloaded before preloading Buyer's Address):*
 
-[association.go](association.go ':include :fragment=preload-has-many-filter')
-
-Preload every Buyer's Address in Transactions.
-
-**Note:** Buyer needs to be preloaded before preloading Buyer's Address.
-
-[association.go](association.go ':include :fragment=preload-nested')
-
-### **Mock**
-
-Mock preload Transaction's Buyer (`belongs to` association).
-
-[association_test.go](association_test.go ':include :fragment=preload-belongs-to')
-
-Mock preload User's Address (`has one` association).
-
-[association_test.go](association_test.go ':include :fragment=preload-has-one')
-
-Preload User's Transactions (`has many` association).
-
-[association_test.go](association_test.go ':include :fragment=preload-has-many')
-
-Mock preload only paid Transactions from users.
-
-[association_test.go](association_test.go ':include :fragment=preload-has-many-filter')
-
-Mock preload every Buyer's Address in Transactions.
-
-**Note:** Address will be assigned based on `UserID` (association key).
-
-[association_test.go](association_test.go ':include :fragment=preload-nested')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/association.go","preload-nested", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "preload-nested", "\t") }}
 
 ## Inserting and Updating Association
 
 REL will automatically creates or updates association by using `Insert` or `Update` method. If `ID` of association struct is not a zero value, REL will try to update the association, else it'll create a new association.
 
-> REL will try to create a new record for association if Primary Value (`ID`) is a zero value.
+!!! note
+    REL will try to create a new record for association if Primary Value (`ID`) is a zero value.
 
-<!-- tabs:start -->
+=== "Example"
+    {{ embed_code("docs/association.go","insert-association", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "insert-association", "\t") }}
 
-### **Example**
-
-[association.go](association.go ':include :fragment=insert-association')
-
-### **Mock**
-
-[association_test.go](association_test.go ':include :fragment=insert-association')
-
-<!-- tabs:end -->
 
 REL will try to update a new record for association if `ID` is a zero value. To update association, it first needs to be preloaded.
 
-<!-- tabs:start -->
+=== "Example"
+    {{ embed_code("docs/association.go","update-association", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "update-association", "\t") }}
 
-### **Example**
-
-[association.go](association.go ':include :fragment=update-association')
-
-### **Mock**
-
-[association_test.go](association_test.go ':include :fragment=update-association')
-
-<!-- tabs:end -->
 
 To selectively update only specific fields or association, `use rel.Map`.
 
-<!-- tabs:start -->
-
-### **Example**
-
-[association.go](association.go ':include :fragment=update-association-with-map')
-
-### **Mock**
-
-[association_test.go](association_test.go ':include :fragment=update-association-with-map')
-
-<!-- tabs:end -->
-
-**Next: [Transactions](transactions.md)**
+=== "Example"
+    {{ embed_code("docs/association.go","update-association-with-map", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/association_test.go", "update-association-with-map", "\t") }}

@@ -11,6 +11,12 @@ import (
 	"github.com/subosito/gotenv"
 )
 
+var (
+	version = ""
+	commit  = ""
+	date    = ""
+)
+
 func main() {
 	log.SetFlags(0)
 	gotenv.Load()
@@ -28,6 +34,8 @@ func main() {
 	switch os.Args[1] {
 	case "migrate", "up", "rollback", "down":
 		err = internal.ExecMigrate(ctx, os.Args)
+	case "version", "-v":
+		fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)

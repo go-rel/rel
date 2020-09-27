@@ -4,412 +4,271 @@
 
 REL provides two basic finders method, `Find` for retrieving single record, and `FindAll` for retrieving multiple record.
 
-`Find` only accepts struct as the first argument, and always return the first result from the query.
+!!! note
+    - `Find` only accepts struct as the first argument, and always return the first result from the query.
+    - `FindAll` only accepts slice as the first argument, and always return all result from the query.
 
-<!-- tabs:start -->
+*Retrieve a book where id=1:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "find", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "find", "\t") }}
 
-Retrieve a book where id=1.
+*Retrieve all books:*
 
-[queries.go](queries.go ':include :fragment=find')
-
-### **Mock**
-
-Mock retrieve a book where id=1.
-
-[queries_test.go](queries_test.go ':include :fragment=find')
-
-<!-- tabs:end -->
-
-`FindAll` only accepts slice as the first argument, and always return all result from the query.
-
-<!-- tabs:start -->
-
-### **Example**
-
-Retrieve all books.
-
-[queries.go](queries.go ':include :fragment=find-all')
-
-### **Mock**
-
-Mock retrieve all books.
-
-[queries_test.go](queries_test.go ':include :fragment=find-all')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "find-all", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "find-all", "\t") }}
 
 ## Conditions
 
 To retrieve filtered recods from database, you can use filter api to specify [condition](https://pkg.go.dev/github.com/Fs02/rel/where). For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
-<!-- tabs:start -->
+*Retrieve all available books using filter query:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition", "\t") }}
 
-Retrieve all available books using filter query.
+*Alias can be used to boost readability when dealing with short query:*
 
-[queries.go](queries.go ':include :fragment=condition')
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition-alias", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition-alias", "\t") }}
 
-Alias can be used to boost readability when dealing with short query.
+*Use fragment to specify custom SQL query:*
 
-[queries.go](queries.go ':include :fragment=condition-alias')
-
-Use fragment to specify custom SQL query.
-
-[queries.go](queries.go ':include :fragment=condition-fragment')
-
-### **Mock**
-
-Mock retrieve all available books.
-
-[queries_test.go](queries_test.go ':include :fragment=condition')
-
-Mock retrieve all using alias.
-
-[queries_test.go](queries_test.go ':include :fragment=condition-alias')
-
-Mock retrieve all using fragment to specify custom SQL query.
-
-[queries_test.go](queries_test.go ':include :fragment=condition-fragment')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition-fragment", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition-fragment", "\t") }}
 
 You can use `rel.And` or `rel.Or` to specify more conditions.
 
-<!-- tabs:start -->
+*Retrieve all available books where price is at least 100 or in discount using filter query:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition-advanced", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition-advanced", "\t") }}
 
-Retrieve all available books where price is at least 100 or in discount using filter query.
+*Retrieve all available books where price is at least 100 or in discount using chained filter query:*
 
-[queries.go](queries.go ':include :fragment=condition-advanced')
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition-advanced-chain", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition-advanced-chain", "\t") }}
 
-Retrieve all available books where price is at least 100 or in discount using chained filter query.
+*Retrieve all available books where price is at least 100 or in discount using alias (`github.com/Fs02/rel/where`):*
 
-[queries.go](queries.go ':include :fragment=condition-advanced-chain')
-
-Retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
-
-[queries.go](queries.go ':include :fragment=condition-advanced-alias')
-
-### **Mock**
-
-
-Mock retrieve all available books where price is at least 100 or in discount using filter query.
-
-[queries_test.go](queries_test.go ':include :fragment=condition-advanced')
-
-Mock retrieve all available books where price is at least 100 or in discount using chained filter query.
-
-[queries_test.go](queries_test.go ':include :fragment=condition-advanced-chain')
-
-Mock retrieve all available books where price is at least 100 or in discount using alias: github.com/Fs02/rel/where
-
-[queries_test.go](queries_test.go ':include :fragment=condition-advanced-alias')
-
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "condition-advanced-alias", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "condition-advanced-alias", "\t") }}
 
 ## Sorting
 
 To retrieve records from database in a specific order, you can use the sort api.
 
-<!-- tabs:start -->
-### **Example**
+*Sort books ascending by updated_at field:*
 
-Sort books ascending by updated_at field.
+=== "Example"
+    {{ embed_code("docs/queries.go", "sorting", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "sorting", "\t") }}
 
-[queries.go](queries.go ':include :fragment=sorting')
+*Using alias if you need more syntactic sugar:*
 
-Using alias if you need more syntactic sugar.
-
-[queries.go](queries.go ':include :fragment=sorting-alias')
-
-### **Mock**
-
-Mock sort books ascending by updated_at field.
-
-[queries_test.go](queries_test.go ':include :fragment=sorting')
-
-Mock sort using alias.
-
-[queries_test.go](queries_test.go ':include :fragment=sorting-alias')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "sorting-alias", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "sorting-alias", "\t") }}
 
 Combining with other query is fairly easy.
 
-<!-- tabs:start -->
+*Chain where and sort using query builder:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "sorting-with-condition", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "sorting-with-condition", "\t") }}
 
-Chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
+*It's also possible to use variadic arguments to combine multiple queries:*
 
-[queries.go](queries.go ':include :fragment=sorting-with-condition')
-
-It's also possible to use variadic arguments to combine multiple queries.
-
-[queries.go](queries.go ':include :fragment=sorting-with-condition-variadic')
-
-### **Mock**
-
-Mock chain where and sort using [query builder](https://pkg.go.dev/github.com/Fs02/rel?tab=doc#Query).
-
-[queries_test.go](queries_test.go ':include :fragment=sorting-with-condition')
-
-Mock query that uses variadic arguments to combine multiple queries.
-
-[queries_test.go](queries_test.go ':include :fragment=sorting-with-condition-variadic')
-
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "sorting-with-condition-variadic", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "sorting-with-condition-variadic", "\t") }}
 
 ## Selecting Specific Fields
 
 To select specific fields, you can use `Select` method, this way only specificied field will be mapped to books.
 
-?> Specifying select without argument (`rel.Select()`) will automatically load all fields. This is helpful when used as query builder entry point (compared to using `rel.From`), because you can let REL to infer the table name.
+!!! note
+    Specifying select without argument (`rel.Select()`) will automatically load all fields. This is helpful when used as query builder entry point (compared to using `rel.From`), because you can let REL to infer the table name.
 
-<!-- tabs:start -->
+*Load only id and title:*
 
-### **Example**
-
-Load only id and title.
-
-[queries.go](queries.go ':include :fragment=select')
-
-### **Mock**
-
-Mock find all to load only id and title.
-
-[queries_test.go](queries_test.go ':include :fragment=select')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "select", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "select", "\t") }}
 
 ## Using Specific Table
 
 By default, REL will use pluralized-snakecase struct name as the table name. To select from specific table, you can use `From` method.
 
-<!-- tabs:start -->
+*Load from `ebooks` table:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "table", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "table", "\t") }}
 
-Load from `ebooks` table.
+*Chain the query with select:*
 
-[queries.go](queries.go ':include :fragment=table')
-
-Chain the query with select.
-
-[queries.go](queries.go ':include :fragment=table-chained')
-
-### **Mock**
-
-Mock load from `ebooks` table.
-
-[queries_test.go](queries_test.go ':include :fragment=table')
-
-Mock chain the query with select.
-
-[queries_test.go](queries_test.go ':include :fragment=table-chained')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "table-chained", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "table-chained", "\t") }}
 
 ## Limit and Offset
 
 To set the limit and offset of query, use `Limit` and `Offset` api. `Offset` will be ignored if `Limit` is not specified.
 
-<!-- tabs:start -->
+*Specify limit and offset:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "limit-offset", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "limit-offset", "\t") }}
 
-Specify limit and offset.
+*As a chainable api:*
 
-[queries.go](queries.go ':include :fragment=limit-offset')
-
-As a chainable api.
-
-[queries.go](queries.go ':include :fragment=limit-offset-chained')
-
-### **Mock**
-
-Mock limit and offset.
-
-[queries_test.go](queries_test.go ':include :fragment=limit-offset')
-
-Mock using chainable api.
-
-[queries_test.go](queries_test.go ':include :fragment=limit-offset-chained')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "limit-offset-chained", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "limit-offset-chained", "\t") }}
 
 ## Group
 
 To use group by query, you can use `Group` method.
 
-<!-- tabs:start -->
+*Retrieve count of books for every category:*
 
-### **Example**
-
-Retrieve count of books for every category.
-
-[queries.go](queries.go ':include :fragment=group')
-
-### **Mock**
-
-Mock retrieve count of books for every category.
-
-[queries_test.go](queries_test.go ':include :fragment=group')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "group", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "group", "\t") }}
 
 ## Joining Tables
 
 To join tables, you can use `join` api.
 
-?> Joining table won't load the association to struct. If you want to load association on a struct, use [preload](associations.md#preload) instead.
+!!! note
+    Joining table won't load the association to struct. If you want to load association on a struct, use [preload](/association/#preloading-association) instead.
 
-<!-- tabs:start -->
+*Join transaction and book table, then filter only transaction that have specified book name. This methods assumes belongs to relation, which means it'll try to join using `transactions.book_id=books.id`:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "join", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "join", "\t") }}
 
-Join transaction and book table, then filter only transaction that have specified book name. This methods assumes belongs to relation, which means it'll try to join using `transactions.book_id=books.id`.
+*Specifying which column to join using JoinOn:*
 
-[queries.go](queries.go ':include :fragment=join')
+=== "Example"
+    {{ embed_code("docs/queries.go", "join-on", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "join-on", "\t") }}
 
-Specifying which column to join using JoinOn.
+*Syntactic sugar also available for join:*
 
-[queries.go](queries.go ':include :fragment=join-on')
+=== "Example"
+    {{ embed_code("docs/queries.go", "join-alias", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "join-alias", "\t") }}
 
-Syntactic sugar also available for join.
+*Joining table with custom join mode:*
 
-[queries.go](queries.go ':include :fragment=join-alias')
+=== "Example"
+    {{ embed_code("docs/queries.go", "join-with", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "join-with", "\t") }}
 
-Joining table with custom join mode.
+*Use fragment for more complex join query:*
 
-[queries.go](queries.go ':include :fragment=join-with')
-
-Use fragment for more complex join query.
-
-[queries.go](queries.go ':include :fragment=join-fragment')
-
-### **Mock**
-
-Mock join transaction and book table, then filter only transaction that have specified book name.
-
-[queries_test.go](queries_test.go ':include :fragment=join')
-
-Specifying which column to join using JoinOn.
-
-[queries_test.go](queries_test.go ':include :fragment=join-on')
-
-Syntactic sugar also available for join.
-
-[queries_test.go](queries_test.go ':include :fragment=join-alias')
-
-Joining table with custom join mode.
-
-[queries_test.go](queries_test.go ':include :fragment=join-with')
-
-Use fragment for more complex join query.
-
-[queries_test.go](queries_test.go ':include :fragment=join-fragment')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "join-fragment", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "join-fragment", "\t") }}
 
 ## Pessimistic Locking
 
 REL supports pessimistic locking by using mechanism provided by the underlying database. `Lock` can be only used only inside transaction.
 
-<!-- tabs:start -->
+*Retrieve and lock a row for update:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "lock", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "lock", "\t") }}
 
-Retrieve and lock a row for update.
+*Retrieve and lock a row using predefined lock alias:*
 
-[queries.go](queries.go ':include :fragment=lock')
+=== "Example"
+    {{ embed_code("docs/queries.go", "lock-for-update", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "lock-for-update", "\t") }}
 
-Retrieve and lock a row using predefined lock alias.
+*Retrieve and lock a row using chained query:*
 
-[queries.go](queries.go ':include :fragment=lock-for-update')
-
-Retrieve and lock a row using chained query.
-
-[queries.go](queries.go ':include :fragment=lock-chained')
-
-### **Mock**
-
-Mock retrieve and lock a row for update.
-
-[queries_test.go](queries_test.go ':include :fragment=lock')
-
-Mock retrieve and lock a row using predefined lock alias.
-
-[queries_test.go](queries_test.go ':include :fragment=lock-for-update')
-
-Mock retrieve and lock a row using chained query.
-
-[queries_test.go](queries_test.go ':include :fragment=lock-chained')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "lock-chained", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "lock-chained", "\t") }}
 
 ## Aggregation
 
 REL provides a very basic `Aggregate` method which can be used to count, sum, max etc.
 
-<!-- tabs:start -->
+*Count all available books using aggregate:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "aggregate", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "aggregate", "\t") }}
 
-Count all available books using aggregate.
+*Count all available books using count:*
 
-[queries.go](queries.go ':include :fragment=aggregate')
+=== "Example"
+    {{ embed_code("docs/queries.go", "count", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "count", "\t") }}
 
-Count all available books using count.
+*Count all available books using count:*
 
-[queries.go](queries.go ':include :fragment=count')
-
-Count all available books using count.
-
-[queries.go](queries.go ':include :fragment=count-with-condition')
-
-### **Mock**
-
-Mock count all available books using aggregate.
-
-[queries_test.go](queries_test.go ':include :fragment=aggregate')
-
-Mock count all available books using count.
-
-[queries_test.go](queries_test.go ':include :fragment=count')
-
-Mock count all available books using count.
-
-[queries_test.go](queries_test.go ':include :fragment=count-with-condition')
-
-<!-- tabs:end -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "count-with-condition", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "count-with-condition", "\t") }}
 
 ## Pagination
 
 REL provides a convenient `FindAndCountAll` methods that is useful for pagination, It's a combination of `FindAll` and `Count` method.
 FindAndCountAll returns count of records (ignoring limit and offset query) and an error.
 
-<!-- tabs:start -->
+*Retrieve all books within limit and offset and also count of all books:*
 
-### **Example**
+=== "Example"
+    {{ embed_code("docs/queries.go", "find-and-count-all", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "find-and-count-all", "\t") }}
 
-Retrieve all books within limit and offset and also count of all books.
-
-[queries.go](queries.go ':include :fragment=find-and-count-all')
-
-### **Mock**
-
-Mock retrieve all books within limit and offset and also count of all books.
-
-[queries_test.go](queries_test.go ':include :fragment=find-and-count-all')
-
-<!-- tabs:end -->
 
 ## Batch Iteration
 
@@ -421,42 +280,21 @@ Options:
 - `Start` - The primary value (ID) to start from (inclusive).
 - `Finish` - The primary value (ID) to finish at (inclusive).
 
-<!-- tabs:start -->
+=== "Example"
+    {{ embed_code("docs/queries.go", "batch-iteration", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "batch-iteration", "\t") }}
+=== "Mock Error"
+    {{ embed_code("docs/queries_test.go", "batch-iteration-connection-error", "\t") }}
 
-### **Example**
-
-[queries.go](queries.go ':include :fragment=batch-iteration')
-
-### **Mock**
-
-Mock and returns users.
-
-[queries_test.go](queries_test.go ':include :fragment=batch-iteration')
-
-Mock and retuns `reltest.ErrConnectionClosed` (`sql.ErrConnDone`).
-
-[queries_test.go](queries_test.go ':include :fragment=batch-iteration-connection-error')
-
-<!-- tabs:end -->
 
 ## Native SQL Query
 
 REL allows querying using native SQL query, this is especially useful when using complex query that cannot be covered with the query builder.
 
-<!-- tabs:start -->
+*Retrieve a book using native sql query:*
 
-### **Example**
-
-Retrieve a book using native sql query.
-
-[queries.go](queries.go ':include :fragment=sql')
-
-### **Mock**
-
-Mock and retrieve a book using native sql query.
-
-[queries_test.go](queries_test.go ':include :fragment=sql')
-
-<!-- tabs:end -->
-
-**Next: [Mutations](mutations.md)**
+=== "Example"
+    {{ embed_code("docs/queries.go", "sql", "\t") }}
+=== "Mock"
+    {{ embed_code("docs/queries_test.go", "sql", "\t") }}

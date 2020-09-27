@@ -71,11 +71,7 @@ jobs:
   cli:
     name: CLI
     env:
-      POSTGRESQL_DATABASE: todos
-      POSTGRESQL_USERNAME: rel
-      POSTGRESQL_PASSWORD: rel
-      POSTGRESQL_HOST: localhost
-      POSTGRESQL_PORT: 5432
+      SQLITE3_DATABASE: cli-test.db
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -86,12 +82,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ^${{ matrix.go }}
-      - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql db: todos
-          postgresql user: rel
-          postgresql password: rel
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:

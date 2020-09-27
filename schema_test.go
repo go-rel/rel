@@ -6,6 +6,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSchemaOp(t *testing.T) {
+	ops := map[string]SchemaOp{
+		"create": SchemaCreate,
+		"alter":  SchemaAlter,
+		"rename": SchemaRename,
+		"drop":   SchemaDrop,
+	}
+
+	for name, op := range ops {
+		assert.Equal(t, name, op.String())
+	}
+}
+
 func TestSchema_CreateTable(t *testing.T) {
 	var schema Schema
 
@@ -25,18 +38,20 @@ func TestSchema_CreateTable(t *testing.T) {
 		},
 	}, schema.Migrations[0])
 
-	schema.CreateTableIfNotExists("products", func(t *Table) {
+	schema.CreateTableIfNotExists("wishlists", func(t *Table) {
 		t.ID("id")
 	})
 
 	assert.Equal(t, Table{
 		Op:       SchemaCreate,
-		Name:     "products",
+		Name:     "wishlists",
 		Optional: true,
 		Definitions: []TableDefinition{
 			Column{Name: "id", Type: ID},
 		},
 	}, schema.Migrations[1])
+
+	assert.Equal(t, "create table products, create table wishlists", schema.String())
 }
 
 func TestSchema_AlterTable(t *testing.T) {
@@ -196,4 +211,12 @@ func TestSchema_Do(t *testing.T) {
 
 	schema.Do(func(repo Repository) error { return nil })
 	assert.NotNil(t, schema.Migrations[0])
+}
+
+func TestRaw_description(t *testing.T) {
+	assert.Equal(t, "execute raw command", Raw("").description())
+}
+
+func TestDow_description(t *testing.T) {
+	assert.Equal(t, "run go code", Do(nil).description())
 }

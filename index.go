@@ -11,6 +11,10 @@ type Index struct {
 	Options  string
 }
 
+func (i Index) description() string {
+	return i.Op.String() + " index " + i.Name + " on " + i.Table
+}
+
 func (Index) internalMigration() {}
 
 func createIndex(table string, name string, columns []string, options []IndexOption) Index {

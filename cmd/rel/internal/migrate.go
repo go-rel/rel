@@ -19,6 +19,8 @@ package main
 import (
 	"context"
 	"log"
+	"strings"
+	"time"
 	{{if not .Verbose}} "io/ioutil" {{end}}
 
 	_ "{{.Driver}}"
@@ -32,6 +34,31 @@ import (
 var (
 	shutdowns []func() error
 )
+
+func logger(ctx context.Context, op string, message string) func(err error) {
+	// no op for rel functions.
+	if strings.HasPrefix(op, "rel-") {
+		return func(error) {}
+	}
+
+	if op == "migrate" || op == "rollback" {
+		log.Print("Running: ", op, " ", message)
+	}
+
+	t := time.Now()
+	return func(err error) {
+		duration := time.Since(t)
+		if err != nil {
+			log.Println("Error: ", op, " ", err)
+		}
+
+		if op == "migrate" || op == "rollback" {
+			log.Print("Done: ", op, " ", message, " in ", duration)
+		} else {
+			log.Print("\t[duration: ", duration, " op: ", op, "] ", message)
+		}
+	}
+}
 
 func main() {
 	var (
@@ -51,6 +78,9 @@ func main() {
 		repo = rel.New(adapter)
 		m    = migrator.New(repo)
 	)
+
+	repo.Instrumentation(logger)
+	m.Instrumentation(logger)
 
 	{{range .Migrations}}
 	m.Register({{.Version}}, migrations.Migrate{{.Name}}, migrations.Rollback{{.Name}})

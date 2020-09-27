@@ -106,6 +106,10 @@ func (t *Table) Fragment(fragment string) {
 	t.Definitions = append(t.Definitions, Raw(fragment))
 }
 
+func (t Table) description() string {
+	return t.Op.String() + " table " + t.Name
+}
+
 func (t Table) internalMigration() {}
 
 // AlterTable Migrator.

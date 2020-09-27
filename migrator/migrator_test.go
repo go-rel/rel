@@ -205,6 +205,18 @@ func TestMigrator_Sync(t *testing.T) {
 		})
 	}
 }
+
+func TestMigrator_Instrumentation(t *testing.T) {
+	var (
+		ctx  = context.TODO()
+		repo = reltest.New()
+		m    = New(repo)
+	)
+
+	m.Instrumentation(func(context.Context, string, string) func(error) { return nil })
+	m.instrument(ctx, "test", "test")
+}
+
 func TestCheck(t *testing.T) {
 	assert.Panics(t, func() {
 		check(errors.New("error"))

@@ -91,7 +91,7 @@ jobs:
           repository: Fs02/go-todo-backend
           path: project
       - name: Test CLI
-        working-directory: rel
+        working-directory: project
         run: |
           rel -v
           rel migrate

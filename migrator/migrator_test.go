@@ -214,7 +214,7 @@ func TestMigrator_Instrumentation(t *testing.T) {
 	)
 
 	m.Instrumentation(func(context.Context, string, string) func(error) { return nil })
-	m.instrument(ctx, "test", "test")
+	m.instrumenter.Observe(ctx, "test", "test")
 }
 
 func TestCheck(t *testing.T) {

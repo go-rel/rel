@@ -31,15 +31,6 @@ func (a *Adapter) Instrumentation(instrumenter rel.Instrumenter) {
 	a.Instrumenter = instrumenter
 }
 
-// Instrument call instrumenter, if no instrumenter is set, this will be a no op.
-func (a *Adapter) Instrument(ctx context.Context, op string, message string) func(err error) {
-	if a.Instrumenter != nil {
-		return a.Instrumenter(ctx, op, message)
-	}
-
-	return func(err error) {}
-}
-
 // Ping database.
 func (a *Adapter) Ping(ctx context.Context) error {
 	return a.DB.PingContext(ctx)
@@ -53,7 +44,7 @@ func (a *Adapter) Aggregate(ctx context.Context, query rel.Query, mode string, f
 		statement, args = NewBuilder(a.Config).Aggregate(query, mode, field)
 	)
 
-	finish := a.Instrument(ctx, "adapter-aggregate", statement)
+	finish := a.Instrumenter.Observe(ctx, "adapter-aggregate", statement)
 	if a.Tx != nil {
 		err = a.Tx.QueryRowContext(ctx, statement, args...).Scan(&out)
 	} else {
@@ -70,7 +61,7 @@ func (a *Adapter) Query(ctx context.Context, query rel.Query) (rel.Cursor, error
 		statement, args = NewBuilder(a.Config).Find(query)
 	)
 
-	finish := a.Instrument(ctx, "adapter-query", statement)
+	finish := a.Instrumenter.Observe(ctx, "adapter-query", statement)
 	rows, err := a.query(ctx, statement, args)
 	finish(err)
 
@@ -87,7 +78,7 @@ func (a *Adapter) query(ctx context.Context, statement string, args []interface{
 
 // Exec performs exec operation.
 func (a *Adapter) Exec(ctx context.Context, statement string, args []interface{}) (int64, int64, error) {
-	finish := a.Instrument(ctx, "adapter-exec", statement)
+	finish := a.Instrumenter.Observe(ctx, "adapter-exec", statement)
 	res, err := a.exec(ctx, statement, args)
 	finish(err)
 
@@ -186,7 +177,7 @@ func (a *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 		err       error
 	)
 
-	finish := a.Instrument(ctx, "adapter-begin", "begin transaction")
+	finish := a.Instrumenter.Observe(ctx, "adapter-begin", "begin transaction")
 
 	if a.Tx != nil {
 		tx = a.Tx
@@ -210,7 +201,7 @@ func (a *Adapter) Begin(ctx context.Context) (rel.Adapter, error) {
 func (a *Adapter) Commit(ctx context.Context) error {
 	var err error
 
-	finish := a.Instrument(ctx, "adapter-commit", "commit transaction")
+	finish := a.Instrumenter.Observe(ctx, "adapter-commit", "commit transaction")
 
 	if a.Tx == nil {
 		err = errors.New("unable to commit outside transaction")
@@ -229,7 +220,7 @@ func (a *Adapter) Commit(ctx context.Context) error {
 func (a *Adapter) Rollback(ctx context.Context) error {
 	var err error
 
-	finish := a.Instrument(ctx, "adapter-rollback", "rollback transaction")
+	finish := a.Instrumenter.Observe(ctx, "adapter-rollback", "rollback transaction")
 
 	if a.Tx == nil {
 		err = errors.New("unable to rollback outside transaction")

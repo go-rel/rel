@@ -54,15 +54,6 @@ func (m *Migrator) Instrumentation(instrumenter rel.Instrumenter) {
 	m.instrumenter = instrumenter
 }
 
-// instrument call instrumenter, if no instrumenter is set, this will be a no op.
-func (m *Migrator) instrument(ctx context.Context, op string, message string) func(err error) {
-	if m.instrumenter != nil {
-		return m.instrumenter(ctx, op, message)
-	}
-
-	return func(err error) {}
-}
-
 // Register a migration.
 func (m *Migrator) Register(v int, up func(schema *rel.Schema), down func(schema *rel.Schema)) {
 	var upSchema, downSchema rel.Schema
@@ -124,7 +115,7 @@ func (m *Migrator) Migrate(ctx context.Context) {
 			continue
 		}
 
-		finish := m.instrument(ctx, "migrate", strconv.Itoa(v.Version)+" "+v.up.String())
+		finish := m.instrumenter.Observe(ctx, "migrate", strconv.Itoa(v.Version)+" "+v.up.String())
 
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustInsert(ctx, &version{Version: v.Version})
@@ -147,7 +138,7 @@ func (m *Migrator) Rollback(ctx context.Context) {
 			continue
 		}
 
-		finish := m.instrument(ctx, "rollback", strconv.Itoa(v.Version)+" "+v.down.String())
+		finish := m.instrumenter.Observe(ctx, "rollback", strconv.Itoa(v.Version)+" "+v.down.String())
 
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustDelete(ctx, &v)

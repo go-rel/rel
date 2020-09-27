@@ -52,7 +52,7 @@ func logger(ctx context.Context, op string, message string) func(err error) {
 		}
 
 		if op == "migrate" || op == "rollback" {
-			log.Print("Done: ", op, " ", message, " in ", duration)
+			log.Print("=> Done: ", op, " ", message, " in ", duration)
 		} else if {{.Verbose}} {
 			log.Print("\t[duration: ", duration, " op: ", op, "] ", message)
 		}

@@ -17,10 +17,10 @@ Migrate and rollback function name is the camel cased file name without version.
 
 ## Running Migration
 
-REL provides CLI that can be used to run your migration, it can be installed using `go get` or downloaded from [release page](https://github.com/Fs02/rel/releases).
+REL provides CLI that can be used to run your migration, it can be installed using `go get` or downloaded from [release page](https://github.com/go-rel/rel/releases).
 
 ```bash
-go get github.com/Fs02/rel/cmd/rel
+go get github.com/go-rel/rel/cmd/rel
 ```
 
 *Verify installation:*
@@ -65,5 +65,5 @@ By default, REL will try to use database connection info that available as envir
 *Database connection info can also be specified using command line options: `dsn`, `adapter` and `driver`:*
 
 ```bash
-rel migrate -adapter=github.com/Fs02/rel/adapter/sqlite3 -driver=github.com/mattn/go-sqlite3 -dsn=:memory:
+rel migrate -adapter=github.com/go-rel/rel/adapter/sqlite3 -driver=github.com/mattn/go-sqlite3 -dsn=:memory:
 ```

@@ -3,7 +3,7 @@ package reltest
 import (
 	"context"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 type nopAdapter struct {

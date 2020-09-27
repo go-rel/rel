@@ -1,4 +1,4 @@
-module github.com/Fs02/rel
+module github.com/go-rel/rel
 
 require (
 	github.com/go-sql-driver/mysql v1.5.0
@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/subosito/gotenv v1.2.0
-	golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321 // indirect
+	golang.org/x/net v0.0.0-20200927032502-5d4f70055728 // indirect
 )
 
-go 1.13
+go 1.15

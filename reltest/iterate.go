@@ -4,7 +4,7 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 type data interface {

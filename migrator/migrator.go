@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 const versionTable = "rel_schema_versions"

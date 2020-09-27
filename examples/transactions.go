@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // Process is blank function used for transaction example.

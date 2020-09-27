@@ -24,7 +24,7 @@ REL provides two basic finders method, `Find` for retrieving single record, and 
 
 ## Conditions
 
-To retrieve filtered recods from database, you can use filter api to specify [condition](https://pkg.go.dev/github.com/Fs02/rel/where). For example, to filter all books that available, you can use `rel.Eq` in the query builder.
+To retrieve filtered recods from database, you can use filter api to specify [condition](https://pkg.go.dev/github.com/go-rel/rel/where). For example, to filter all books that available, you can use `rel.Eq` in the query builder.
 
 *Retrieve all available books using filter query:*
 
@@ -63,7 +63,7 @@ You can use `rel.And` or `rel.Or` to specify more conditions.
 === "Mock"
     {{ embed_code("examples/queries_test.go", "condition-advanced-chain", "\t") }}
 
-*Retrieve all available books where price is at least 100 or in discount using alias (`github.com/Fs02/rel/where`):*
+*Retrieve all available books where price is at least 100 or in discount using alias (`github.com/go-rel/rel/where`):*
 
 === "Example"
     {{ embed_code("examples/queries.go", "condition-advanced-alias", "\t") }}

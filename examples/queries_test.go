@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/join"
-	"github.com/Fs02/rel/reltest"
-	"github.com/Fs02/rel/sort"
-	"github.com/Fs02/rel/where"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/join"
+	"github.com/go-rel/rel/reltest"
+	"github.com/go-rel/rel/sort"
+	"github.com/go-rel/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,1 +1,1 @@
-{{ godoc("github.com/Fs02/rel/where") }}
+{{ godoc("github.com/go-rel/rel/where") }}

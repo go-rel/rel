@@ -1,4 +1,4 @@
-name: Publish website
+name: Website
 on:
   push:
     branches:
@@ -8,7 +8,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    if: github.repository == 'Fs02/rel'
+    if: github.repository == 'go-rel/rel'
     steps:
       - name: Checkout rel
         uses: actions/checkout@v2

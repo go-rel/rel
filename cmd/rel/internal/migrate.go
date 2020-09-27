@@ -24,8 +24,8 @@ import (
 
 	_ "{{.Driver}}"
 	db "{{.Adapter}}"
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/migrator"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/migrator"
 
 	"{{.Package}}"
 )

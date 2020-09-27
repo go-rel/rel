@@ -1,6 +1,6 @@
 package reltest
 
-import "github.com/Fs02/rel"
+import "github.com/go-rel/rel"
 
 // Aggregate asserts and simulate aggregate function for test.
 type Aggregate struct {

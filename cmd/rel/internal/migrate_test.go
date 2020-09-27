@@ -21,7 +21,7 @@ func TestExecMigrate(t *testing.T) {
 			}
 		)
 
-		assert.Equal(t, errors.New("rel: open db: no such file or directory"), ExecMigrate(ctx, args))
+		assert.Equal(t, errors.New("rel: error accessing read migration directory: db"), ExecMigrate(ctx, args))
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestScanMigration(t *testing.T) {
 		},
 		{
 			dir: "db",
-			err: errors.New("rel: open db: no such file or directory"),
+			err: errors.New("rel: error accessing read migration directory: db"),
 		},
 		{
 			dir: "../",

@@ -75,7 +75,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/Fs02
+      link: https://github.com/go-rel
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/Fs02
 

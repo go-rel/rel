@@ -127,7 +127,7 @@ type migration struct {
 func scanMigration(dir string) ([]migration, error) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return nil, errors.New("rel: " + err.Error())
+		return nil, errors.New("rel: error accessing read migration directory: " + dir)
 	}
 
 	mFiles := make([]migration, 0, len(files))

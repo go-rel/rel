@@ -85,8 +85,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:
-          repository: Fs02
-          path: go-todo-backend
+          repository: Fs02/go-todo-backend
       - run: go get github.com/Fs02/rel/cmd/rel
       - run: rel -v
       - run: rel migrate

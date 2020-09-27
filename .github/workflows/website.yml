@@ -5,9 +5,10 @@ on:
       - master
 
 jobs:
-  build:
+  deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    if: github.repository == ‘Fs02/rel’
     steps:
       - name: Checkout rel
         uses: actions/checkout@v2

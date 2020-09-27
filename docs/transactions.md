@@ -9,6 +9,6 @@ If any error occured within transaction, the transaction will be rolled back, an
 If the error is a runtime error or `panic` with string argument, it'll panic after rollback.
 
 === "Example"
-    {{ embed_code("docs/transactions.go", "transactions", "\t") }}
+    {{ embed_code("examples/transactions.go", "transactions", "\t") }}
 === "Mock"
-    {{ embed_code("docs/transactions_test.go", "transactions", "\t") }}
+    {{ embed_code("examples/transactions_test.go", "transactions", "\t") }}

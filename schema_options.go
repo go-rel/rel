@@ -133,14 +133,3 @@ func (o Optional) applyTable(table *Table) {
 func (o Optional) applyIndex(index *Index) {
 	index.Optional = bool(o)
 }
-
-// Raw string
-type Raw string
-
-func (r Raw) internalMigration()       {}
-func (r Raw) internalTableDefinition() {}
-
-// Do used internally for schema migration.
-type Do func(Repository) error
-
-func (d Do) internalMigration() {}

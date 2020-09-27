@@ -2,7 +2,7 @@
 
 REL provides hooks that can be used to log or instrument your queries.
 
-{{ embed_code("docs/instrumentation.go", "instrumentation") }}
+{{ embed_code("examples/instrumentation.go", "instrumentation") }}
 
 This is the list for available operations:
 

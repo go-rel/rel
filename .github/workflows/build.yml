@@ -68,6 +68,40 @@ jobs:
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=postgres ./...
 
+  cli:
+    name: CLI
+    env:
+      POSTGRESQL_DATABASE: todos
+      POSTGRESQL_USERNAME: rel
+      POSTGRESQL_PASSWORD: rel
+      POSTGRESQL_HOST: localhost
+      POSTGRESQL_PORT: 5432
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: [1.12, 1.13, 1.14, 1.15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^${{ matrix.go }}
+      - name: Setup PostgreSQL
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql db: todos
+          postgresql user: rel
+          postgresql password: rel
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          repository: Fs02
+          path: go-todo-backend
+      - run: go get github.com/Fs02/rel/cmd/rel
+      - run: rel -v
+      - run: rel migrate
+      - run: rel rollback
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

@@ -5,7 +5,7 @@ on:
       - master
 
 jobs:
-  build:
+  deploy:
     name: Deploy
     runs-on: ubuntu-latest
     steps:

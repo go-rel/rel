@@ -10,23 +10,23 @@ A new record can be inserted to database using a struct, map or set function. To
 *Inserting a record:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "insert", "\t") }}
+    {{ embed_code("examples/crud.go", "insert", "\t") }}
 === "Mock Any"
-    {{ embed_code("docs/crud_test.go", "insert", "\t") }}
+    {{ embed_code("examples/crud_test.go", "insert", "\t") }}
 === "Mock by Record"
-    {{ embed_code("docs/crud_test.go", "insert-for", "\t") }}
+    {{ embed_code("examples/crud_test.go", "insert-for", "\t") }}
 === "Mock by Type"
-    {{ embed_code("docs/crud_test.go", "insert-for-type", "\t") }}
+    {{ embed_code("examples/crud_test.go", "insert-for-type", "\t") }}
 === "Mock Error"
-    {{ embed_code("docs/crud_test.go", "insert-error", "\t") }}
+    {{ embed_code("examples/crud_test.go", "insert-error", "\t") }}
 
 
 *To inserts multiple records at once, use `InsertAll`:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "insert-all", "\t") }}
+    {{ embed_code("examples/crud.go", "insert-all", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "insert-all", "\t") }}
+    {{ embed_code("examples/crud_test.go", "insert-all", "\t") }}
 
 ## Read
 
@@ -35,31 +35,31 @@ REL provides a powerful API for querying record from database. To query a record
 *Retrieve a book with id 1:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "find", "\t") }}
+    {{ embed_code("examples/crud.go", "find", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "find", "\t") }}
+    {{ embed_code("examples/crud_test.go", "find", "\t") }}
 
 *Retrieve a book with id 1 using syntactic sugar:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "find-alias", "\t") }}
+    {{ embed_code("examples/crud.go", "find-alias", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "find-alias-error", "\t") }}
+    {{ embed_code("examples/crud_test.go", "find-alias-error", "\t") }}
 
 *Querying multiple records using `FindAll` method:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "find-all", "\t") }}
+    {{ embed_code("examples/crud.go", "find-all", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "find-all", "\t") }}
+    {{ embed_code("examples/crud_test.go", "find-all", "\t") }}
 
 
 *Using chainable query api for a more complex query use case:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "find-all-chained", "\t") }}
+    {{ embed_code("examples/crud.go", "find-all-chained", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "find-all-chained", "\t") }}
+    {{ embed_code("examples/crud_test.go", "find-all-chained", "\t") }}
 
 ## Update
 
@@ -73,16 +73,16 @@ An update using struct will cause all fields and association to be saved to data
 *Updating a record:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "update", "\t") }}
+    {{ embed_code("examples/crud.go", "update", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "update", "\t") }}
+    {{ embed_code("examples/crud_test.go", "update", "\t") }}
 
 *Updating multiple records is possible using `UpdateAll`:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "update-all", "\t") }}
+    {{ embed_code("examples/crud.go", "update-all", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "update-all", "\t") }}
+    {{ embed_code("examples/crud_test.go", "update-all", "\t") }}
 
 ## Delete
 
@@ -94,14 +94,14 @@ To delete a record in rel, simply pass the record to be deleted.
 *Deleting a record:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "delete", "\t") }}
+    {{ embed_code("examples/crud.go", "delete", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "delete", "\t") }}
+    {{ embed_code("examples/crud_test.go", "delete", "\t") }}
 
 
 *Deleting multiple records:*
 
 === "Example"
-    {{ embed_code("docs/crud.go", "delete-all", "\t") }}
+    {{ embed_code("examples/crud.go", "delete-all", "\t") }}
 === "Mock"
-    {{ embed_code("docs/crud_test.go", "delete-all", "\t") }}
+    {{ embed_code("examples/crud_test.go", "delete-all", "\t") }}

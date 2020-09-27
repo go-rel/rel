@@ -17,23 +17,23 @@ REL uses mutator to define inserts and updates operation. Using basic mutator wo
 *Set title and category values:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "basic-set", "\t") }}
+    {{ embed_code("examples/mutations.go", "basic-set", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "basic-set", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "basic-set", "\t") }}
 
 *Decrement stock:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "basic-dec", "\t") }}
+    {{ embed_code("examples/mutations.go", "basic-dec", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "basic-dec", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "basic-dec", "\t") }}
 
 *Update title using SQL fragment:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "basic-fragment", "\t") }}
+    {{ embed_code("examples/mutations.go", "basic-fragment", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "basic-fragment", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "basic-fragment", "\t") }}
 
 ## Structset
 
@@ -45,9 +45,9 @@ Structset is a mutator that generates list of `Set` mutators based on a struct v
 *Inserting a struct using structset mutator:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "structset", "\t") }}
+    {{ embed_code("examples/mutations.go", "structset", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "structset", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "structset", "\t") }}
 
 ## Changeset
 
@@ -56,10 +56,10 @@ Changeset allows you to track and update only updated values and asssociation to
 *Update only price and discount field using changeset:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "changeset", "\t") }}
+    {{ embed_code("examples/mutations.go", "changeset", "\t") }}
 
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "changeset", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "changeset", "\t") }}
 
 ## Map
 
@@ -68,9 +68,9 @@ Map allows to define group of `Set` mutator, this is intended to be use internal
 *Insert books and its author using `Map`:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "map", "\t") }}
+    {{ embed_code("examples/mutations.go", "map", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "map", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "map", "\t") }}
 
 ## Reloading Updated Struct
 
@@ -79,9 +79,9 @@ By default, only `Inc`, `IncBy`, `Dec`, `DecBy` and `SetFragment` will reload st
 *Update title and force reload:*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "reload", "\t") }}
+    {{ embed_code("examples/mutations.go", "reload", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "reload", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "reload", "\t") }}
 
 ## Cascade Operations
 
@@ -90,14 +90,14 @@ REL supports insert/update/delete record and it's associations.
 *Disable cascade insert (default enabled):*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "cascade", "\t") }}
+    {{ embed_code("examples/mutations.go", "cascade", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "cascade", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "cascade", "\t") }}
 
 
 *Enable cascade delete (default disabled):*
 
 === "Example"
-    {{ embed_code("docs/mutations.go", "delete-cascade", "\t") }}
+    {{ embed_code("examples/mutations.go", "delete-cascade", "\t") }}
 === "Mock"
-    {{ embed_code("docs/mutations_test.go", "delete-cascade", "\t") }}
+    {{ embed_code("examples/mutations_test.go", "delete-cascade", "\t") }}

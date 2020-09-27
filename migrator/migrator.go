@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/Fs02/rel"
@@ -43,8 +44,14 @@ func (v versions) Swap(i, j int) {
 // Migrator is a migration manager that handles migration logic.
 type Migrator struct {
 	repo               rel.Repository
+	instrumenter       rel.Instrumenter
 	versions           versions
 	versionTableExists bool
+}
+
+// Instrumentation function.
+func (m *Migrator) Instrumentation(instrumenter rel.Instrumenter) {
+	m.instrumenter = instrumenter
 }
 
 // Register a migration.
@@ -108,12 +115,15 @@ func (m *Migrator) Migrate(ctx context.Context) {
 			continue
 		}
 
+		finish := m.instrumenter.Observe(ctx, "migrate", strconv.Itoa(v.Version)+" "+v.up.String())
+
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustInsert(ctx, &version{Version: v.Version})
 			m.run(ctx, v.up.Migrations)
 			return nil
 		})
 
+		finish(err)
 		check(err)
 	}
 }
@@ -128,12 +138,15 @@ func (m *Migrator) Rollback(ctx context.Context) {
 			continue
 		}
 
+		finish := m.instrumenter.Observe(ctx, "rollback", strconv.Itoa(v.Version)+" "+v.down.String())
+
 		err := m.repo.Transaction(ctx, func(ctx context.Context) error {
 			m.repo.MustDelete(ctx, &v)
 			m.run(ctx, v.down.Migrations)
 			return nil
 		})
 
+		finish(err)
 		check(err)
 
 		// only rollback one version.

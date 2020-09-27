@@ -175,3 +175,7 @@ func TestCreateTable(t *testing.T) {
 		Options:  "options",
 	}, table)
 }
+
+func TestTable_description(t *testing.T) {
+	assert.Equal(t, "create table tests", Table{Name: "tests"}.description())
+}

@@ -34,8 +34,11 @@ func main() {
 	switch os.Args[1] {
 	case "migrate", "up", "rollback", "down":
 		err = internal.ExecMigrate(ctx, os.Args)
-	case "version", "-v":
+	case "version", "-v", "-version":
 		fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
+	case "-help":
+		fmt.Println("Usage: rel [command] -help")
+		fmt.Println("Available commands: migrate, rollback")
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)

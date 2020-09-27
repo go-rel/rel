@@ -56,3 +56,7 @@ func TestDropIndex(t *testing.T) {
 		Options: "options",
 	}, index)
 }
+
+func TestIndex_description(t *testing.T) {
+	assert.Equal(t, "create index idx_test on tests", Index{Name: "idx_test", Table: "tests"}.description())
+}

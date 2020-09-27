@@ -1,5 +1,7 @@
 package rel
 
+import "strings"
+
 // SchemaOp type.
 type SchemaOp uint8
 
@@ -14,9 +16,14 @@ const (
 	SchemaDrop
 )
 
+func (s SchemaOp) String() string {
+	return [...]string{"create", "alter", "rename", "drop"}[s]
+}
+
 // Migration definition.
 type Migration interface {
 	internalMigration()
+	description() string
 }
 
 // Schema builder.
@@ -109,3 +116,32 @@ func (s *Schema) Exec(raw Raw) {
 func (s *Schema) Do(fn Do) {
 	s.add(fn)
 }
+
+// String returns schema operation.
+func (s Schema) String() string {
+	descs := make([]string, len(s.Migrations))
+	for i := range descs {
+		descs[i] = s.Migrations[i].description()
+	}
+
+	return strings.Join(descs, ", ")
+}
+
+// Raw string
+type Raw string
+
+func (r Raw) description() string {
+	return "execute raw command"
+}
+
+func (r Raw) internalMigration()       {}
+func (r Raw) internalTableDefinition() {}
+
+// Do used internally for schema migration.
+type Do func(Repository) error
+
+func (d Do) description() string {
+	return "run go code"
+}
+
+func (d Do) internalMigration() {}

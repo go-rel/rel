@@ -19,7 +19,8 @@ package main
 import (
 	"context"
 	"log"
-	{{if not .Verbose}} "io/ioutil" {{end}}
+	"strings"
+	"time"
 
 	_ "{{.Driver}}"
 	db "{{.Adapter}}"
@@ -33,14 +34,35 @@ var (
 	shutdowns []func() error
 )
 
+func logger(ctx context.Context, op string, message string) func(err error) {
+	// no op for rel functions.
+	if strings.HasPrefix(op, "rel-") {
+		return func(error) {}
+	}
+
+	if op == "migrate" || op == "rollback" {
+		log.Print("Running: ", op, " ", message)
+	}
+
+	t := time.Now()
+	return func(err error) {
+		duration := time.Since(t)
+		if op == "migrate" || op == "rollback" {
+			log.Print("=> Done: ", op, " ", message, " in ", duration)
+		} else if {{.Verbose}} {
+			log.Print("\t[duration: ", duration, " op: ", op, "] ", message)
+		}
+
+		if err != nil {
+			log.Println("\tError: ", op, " ", err)
+		}
+	}
+}
+
 func main() {
 	var (
 		ctx = context.Background()
 	)
-
-	{{if not .Verbose}}
-	log.SetOutput(ioutil.Discard)
-	{{end}}
 
 	adapter, err := db.Open("{{.DSN}}")
 	if err != nil {
@@ -51,6 +73,10 @@ func main() {
 		repo = rel.New(adapter)
 		m    = migrator.New(repo)
 	)
+
+	log.SetFlags(0)
+	repo.Instrumentation(logger)
+	m.Instrumentation(logger)
 
 	{{range .Migrations}}
 	m.Register({{.Version}}, migrations.Migrate{{.Name}}, migrations.Rollback{{.Name}})
@@ -78,7 +104,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 		adapter                       = fs.String("adapter", defAdapter, "Adapter package")
 		driver                        = fs.String("driver", defDriver, "Driver package")
 		dsn                           = fs.String("dsn", defDSN, "DSN for database connection")
-		verbose                       = fs.Bool("verbose", true, "Show logs from REL")
+		verbose                       = fs.Bool("verbose", false, "Show logs from REL")
 		tmpl                          = template.Must(template.New("migration").Parse(migrationTemplate))
 	)
 

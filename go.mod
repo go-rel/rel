@@ -1,7 +1,6 @@
 module github.com/Fs02/rel
 
 require (
-	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jinzhu/inflection v1.0.0
 	github.com/lib/pq v1.8.0

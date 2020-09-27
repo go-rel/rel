@@ -45,17 +45,17 @@ func TestGetDatabaseInfo(t *testing.T) {
 	})
 
 	t.Run("postgresql", func(t *testing.T) {
-		os.Setenv("POSTGRESQL_HOST", "localhost")
-		os.Setenv("POSTGRESQL_PORT", "5432")
-		os.Setenv("POSTGRESQL_DATABASE", "db")
-		os.Setenv("POSTGRESQL_USERNAME", "user")
-		os.Setenv("POSTGRESQL_PASSWORD", "password")
+		os.Setenv("POSTGRES_HOST", "localhost")
+		os.Setenv("POSTGRES_PORT", "5432")
+		os.Setenv("POSTGRES_DATABASE", "db")
+		os.Setenv("POSTGRES_USERNAME", "user")
+		os.Setenv("POSTGRES_PASSWORD", "password")
 
-		defer os.Setenv("POSTGRESQL_HOST", "")
-		defer os.Setenv("POSTGRESQL_PORT", "")
-		defer os.Setenv("POSTGRESQL_DATABASE", "")
-		defer os.Setenv("POSTGRESQL_USERNAME", "")
-		defer os.Setenv("POSTGRESQL_PASSWORD", "")
+		defer os.Setenv("POSTGRES_HOST", "")
+		defer os.Setenv("POSTGRES_PORT", "")
+		defer os.Setenv("POSTGRES_DATABASE", "")
+		defer os.Setenv("POSTGRES_USERNAME", "")
+		defer os.Setenv("POSTGRES_PASSWORD", "")
 
 		adapter, driver, url := getDatabaseInfo()
 		assert.Equal(t, "github.com/Fs02/rel/adapter/postgres", adapter)

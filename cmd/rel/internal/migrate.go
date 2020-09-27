@@ -47,14 +47,14 @@ func logger(ctx context.Context, op string, message string) func(err error) {
 	t := time.Now()
 	return func(err error) {
 		duration := time.Since(t)
-		if err != nil {
-			log.Println("Error: ", op, " ", err)
-		}
-
 		if op == "migrate" || op == "rollback" {
 			log.Print("=> Done: ", op, " ", message, " in ", duration)
 		} else if {{.Verbose}} {
 			log.Print("\t[duration: ", duration, " op: ", op, "] ", message)
+		}
+
+		if err != nil {
+			log.Println("\tError: ", op, " ", err)
 		}
 	}
 }

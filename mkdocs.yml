@@ -15,6 +15,7 @@ nav:
     - Mutations: mutations.md
     - Association: association.md
     - Transactions: transactions.md
+    - Migration: migration.md
     - Instrumentation: instrumentation.md
   - Reference:
     - github.com/Fs02/rel: reference/rel.md

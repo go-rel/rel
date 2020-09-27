@@ -85,8 +85,11 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:
-          repository: Fs02/go-todo-backend
-      - run: go get github.com/Fs02/rel/cmd/rel
+        repository: Fs02/go-todo-backend
+      - run:  go get github.com/Fs02/rel@$GITHUB_HEAD_REF
+        if: github.event_name == 'pull_request'
+      - run:  go get github.com/Fs02/rel@$GITHUB_REF
+        if: github.event_name == 'push'
       - run: rel -v
       - run: rel migrate
       - run: rel rollback

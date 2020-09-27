@@ -74,6 +74,7 @@ func main() {
 		m    = migrator.New(repo)
 	)
 
+	log.SetFlags(0)
 	repo.Instrumentation(logger)
 	m.Instrumentation(logger)
 
@@ -103,7 +104,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 		adapter                       = fs.String("adapter", defAdapter, "Adapter package")
 		driver                        = fs.String("driver", defDriver, "Driver package")
 		dsn                           = fs.String("dsn", defDSN, "DSN for database connection")
-		verbose                       = fs.Bool("verbose", true, "Show logs from REL")
+		verbose                       = fs.Bool("verbose", false, "Show logs from REL")
 		tmpl                          = template.Must(template.New("migration").Parse(migrationTemplate))
 	)
 

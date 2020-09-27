@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // Adapter definition for database database.

@@ -1,1 +1,1 @@
-{{ godoc("github.com/Fs02/rel/adapter/mysql") }}
+{{ godoc("github.com/go-rel/rel/adapter/mysql") }}

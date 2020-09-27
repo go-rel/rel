@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/where"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/where"
 )
 
 // QuickExample documentation.

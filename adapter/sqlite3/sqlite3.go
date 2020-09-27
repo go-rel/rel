@@ -16,8 +16,8 @@ import (
 	db "database/sql"
 	"strings"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/adapter/sql"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/adapter/sql"
 )
 
 // Adapter definition for mysql database.

@@ -8,7 +8,7 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
-    if: github.repository == ‘Fs02/rel’
+    if: github.repository == ‘go-rel/rel’
     steps:
       - name: Checkout
         uses: actions/checkout@v2

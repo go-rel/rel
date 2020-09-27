@@ -17,7 +17,7 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 ## Install
 
 ```
-go get github.com/Fs02/rel
+go get github.com/go-rel/rel
 ```
 
 ## Why rel

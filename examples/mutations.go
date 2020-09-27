@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // MutationsBasicSet docs example.

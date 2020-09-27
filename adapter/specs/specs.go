@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/adapter/sql"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/adapter/sql"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/adapter/mysql"
-	"github.com/Fs02/rel/where"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/adapter/mysql"
+	"github.com/go-rel/rel/where"
 	_ "github.com/go-sql-driver/mysql"
 )
 

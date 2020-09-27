@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // Instrumentation docs example.

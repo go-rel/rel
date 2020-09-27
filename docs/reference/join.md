@@ -1,1 +1,1 @@
-{{ godoc("github.com/Fs02/rel/join") }}
+{{ godoc("github.com/go-rel/rel/join") }}

@@ -1,1 +1,1 @@
-{{ godoc("github.com/Fs02/rel/sort") }}
+{{ godoc("github.com/go-rel/rel/sort") }}

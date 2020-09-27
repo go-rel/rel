@@ -48,7 +48,7 @@ def define_env(env):
         Generate Changelog.
         """
         result = ""
-        url = "https://api.github.com/repos/Fs02/rel/releases"
+        url = "https://api.github.com/repos/go-rel/rel/releases"
         releases = requests.get(url).json()
 
         for release in releases:

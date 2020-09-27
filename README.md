@@ -1,10 +1,10 @@
 # REL
 
-[![GoDoc](https://godoc.org/github.com/Fs02/rel?status.svg)](https://godoc.org/github.com/Fs02/rel)
-[![Build Status](https://github.com/Fs02/rel/workflows/Build/badge.svg)](https://github.com/Fs02/rel/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Fs02/rel)](https://goreportcard.com/report/github.com/Fs02/rel)
-[![Maintainability](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/maintainability)](https://codeclimate.com/github/Fs02/rel/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/test_coverage)](https://codeclimate.com/github/Fs02/rel/test_coverage)
+[![GoDoc](https://godoc.org/github.com/go-rel/rel?status.svg)](https://godoc.org/github.com/go-rel/rel)
+[![Build Status](https://github.com/go-rel/rel/workflows/Build/badge.svg)](https://github.com/go-rel/rel/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-rel/rel)](https://goreportcard.com/report/github.com/go-rel/rel)
+[![Maintainability](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/maintainability)](https://codeclimate.com/github/go-rel/rel/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/test_coverage)](https://codeclimate.com/github/go-rel/rel/test_coverage)
 
 > Modern Database Access Layer for Golang.
 
@@ -25,12 +25,12 @@ REL is golang orm-ish database layer for layered architecture. It's testable and
 ## Install
 
 ```bash
-go get github.com/Fs02/rel
+go get github.com/go-rel/rel
 ```
 
 ## Getting Started
 
-- Guides [https://fs02.github.io/rel](https://fs02.github.io/rel)
+- Guides [https://go-rel.github.io](https://go-rel.github.io)
 
 ## Examples
 
@@ -38,4 +38,4 @@ go get github.com/Fs02/rel
 
 ## License
 
-Released under the [MIT License](https://github.com/Fs02/rel/blob/master/LICENSE)
+Released under the [MIT License](https://github.com/go-rel/rel/blob/master/LICENSE)

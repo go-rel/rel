@@ -1,4 +1,4 @@
-module github.com/Fs02/rel
+module github.com/go-rel/rel
 
 require (
 	github.com/go-sql-driver/mysql v1.5.0
@@ -14,4 +14,4 @@ require (
 	golang.org/x/net v0.0.0-20200925080053-05aa5d4ee321 // indirect
 )
 
-go 1.13
+go 1.15

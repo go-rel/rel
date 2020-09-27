@@ -1,1 +1,1 @@
-{{ godoc("github.com/Fs02/rel/adapter/postgres") }}
+{{ godoc("github.com/go-rel/rel/adapter/postgres") }}

@@ -3,7 +3,7 @@ package specs
 import (
 	"testing"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 func createExtra(repo rel.Repository, slug string) Extra {

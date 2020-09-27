@@ -3,7 +3,7 @@ package sql
 import (
 	"time"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // Config holds configuration for adapter.

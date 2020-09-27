@@ -2,8 +2,8 @@ site_name: REL
 site_description: Modern Database Access Layer for Golang - Testable, Extendable and Crafted Into a Clean and Elegant API
 site_author: REL
 site_url: https://go-rel.github.io/
-repo_url: https://github.com/Fs02/rel
-repo_name: Fs02/rel
+repo_url: https://github.com/go-rel/rel
+repo_name: go-rel/rel
 
 nav:
   - Home: index.md
@@ -18,17 +18,17 @@ nav:
     - Migration: migration.md
     - Instrumentation: instrumentation.md
   - Reference:
-    - github.com/Fs02/rel: reference/rel.md
-    - github.com/Fs02/rel/group: reference/group.md
-    - github.com/Fs02/rel/join: reference/join.md
-    - github.com/Fs02/rel/migrator: reference/migrator.md
-    - github.com/Fs02/rel/reltest: reference/reltest.md
-    - github.com/Fs02/rel/sort: reference/sort.md
-    - github.com/Fs02/rel/where: reference/where.md
-    - github.com/Fs02/rel/adapter/mysql: reference/adapter-mysql.md
-    - github.com/Fs02/rel/adapter/postgres: reference/adapter-postgres.md
-    - github.com/Fs02/rel/adapter/sql: reference/adapter-sql.md
-    - github.com/Fs02/rel/adapter/sqlite3: reference/adapter-sqlite3.md
+    - github.com/go-rel/rel: reference/rel.md
+    - github.com/go-rel/rel/group: reference/group.md
+    - github.com/go-rel/rel/join: reference/join.md
+    - github.com/go-rel/rel/migrator: reference/migrator.md
+    - github.com/go-rel/rel/reltest: reference/reltest.md
+    - github.com/go-rel/rel/sort: reference/sort.md
+    - github.com/go-rel/rel/where: reference/where.md
+    - github.com/go-rel/rel/adapter/mysql: reference/adapter-mysql.md
+    - github.com/go-rel/rel/adapter/postgres: reference/adapter-postgres.md
+    - github.com/go-rel/rel/adapter/sql: reference/adapter-sql.md
+    - github.com/go-rel/rel/adapter/sqlite3: reference/adapter-sqlite3.md
   - Adapters:
     - Adapters: adapters.md
   - Changelog:
@@ -70,7 +70,7 @@ markdown_extensions:
       slugify: !!python/name:pymdownx.slugs.uslugify
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: Fs02
+      user: go-rel
       repo: rel
 
 extra:

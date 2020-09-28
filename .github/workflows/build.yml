@@ -128,7 +128,7 @@ jobs:
         if: github.event_name == 'pull_request'
       - name: Set ENV for codeclimate (push)
         run: |
-          echo "::set-env name=GIT_BRANCH::$GITHUB_REF"
+          echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"
           echo "::set-env name=GIT_COMMIT_SHA::$GITHUB_SHA"
         if: github.event_name == 'push'
       - run: cc-test-reporter before-build

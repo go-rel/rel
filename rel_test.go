@@ -15,8 +15,8 @@ type User struct {
 	UserRoles    []UserRole
 
 	// many to many
-	// user:id <- user_id:subscription_users:subscription_id -> subscriptions:id
-	Subscriptions []Subscription `through:"subscription_users"`
+	// user:id <- user_id:user_roles:role_id -> role:id
+	Roles []Role `through:"user_roles"`
 
 	// many to many: self-referencing with explicitly defined ref and fk.
 	// omit mapped field.
@@ -71,18 +71,13 @@ type Role struct {
 	ID        int
 	Name      string
 	UserRoles []UserRole
+
+	// explicit many to many declaration:
+	// role:id <- role_id:user_roles:user_id -> user:id
+	Users []User `ref:"id:role_id" fk:"id:user_id" through:"user_roles"`
 }
 
 type UserRole struct {
 	UserID int `db:",primary"`
 	RoleID int `db:",primary"`
-}
-
-type Subscription struct {
-	ID   int
-	Name string
-
-	// basic many to many declaration:
-	// subscription:id <- subscription_id:subscription_users:user_id -> user:id
-	Users []User `ref:"id:subscription_id" fk:"id:user_id" through:"subscription_users"`
 }

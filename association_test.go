@@ -144,11 +144,11 @@ func TestAssociation_Document(t *testing.T) {
 
 func TestAssociation_Collection(t *testing.T) {
 	var (
-		transaction  = &Transaction{ID: 1}
-		user         = &User{ID: 2}
-		address      = &Address{ID: 3}
-		subscription = &Subscription{ID: 4}
-		userLoaded   = &User{
+		transaction = &Transaction{ID: 1}
+		user        = &User{ID: 2}
+		address     = &Address{ID: 3}
+		role        = &Role{ID: 4}
+		userLoaded  = &User{
 			ID: 2, Address: *address,
 			Transactions: []Transaction{*transaction},
 		}
@@ -198,35 +198,35 @@ func TestAssociation_Collection(t *testing.T) {
 		},
 		{
 			record:           "User",
-			field:            "Subscriptions",
+			field:            "Roles",
 			data:             user,
 			typ:              ManyToMany,
-			col:              NewCollection(&user.Subscriptions),
+			col:              NewCollection(&user.Roles),
 			loaded:           false,
 			isZero:           true,
 			referenceField:   "id",
 			referenceThrough: "user_id",
 			referenceValue:   user.ID,
 			foreignField:     "id",
-			foreignThrough:   "subscription_id",
+			foreignThrough:   "role_id",
 			foreignValue:     nil,
-			through:          "subscription_users",
+			through:          "user_roles",
 		},
 		{
-			record:           "Subscription",
+			record:           "Role",
 			field:            "Users",
-			data:             subscription,
+			data:             role,
 			typ:              ManyToMany,
-			col:              NewCollection(&subscription.Users),
+			col:              NewCollection(&role.Users),
 			loaded:           false,
 			isZero:           true,
 			referenceField:   "id",
-			referenceThrough: "subscription_id",
-			referenceValue:   subscription.ID,
+			referenceThrough: "role_id",
+			referenceValue:   role.ID,
 			foreignField:     "id",
 			foreignThrough:   "user_id",
 			foreignValue:     nil,
-			through:          "subscription_users",
+			through:          "user_roles",
 		},
 		{
 			record:           "User",

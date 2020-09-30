@@ -13,8 +13,18 @@ type User struct {
 	Transactions []Transaction `ref:"id" fk:"user_id"`
 	Address      Address
 	UserRoles    []UserRole
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+
+	// many to many
+	// user:id <- user_id:subscription_users:subscription_id -> subscriptions:id
+	Subscriptions []Subscription `through:"subscription_users"`
+
+	// many to many: self-referencing with explicitly defined ref and fk.
+	// omit mapped field.
+	Followers  []User `ref:"id:following_id" fk:"id:follower_id" through:"followers"`
+	Followings []User `ref:"id:follower_id" fk:"id:following_id" through:"followers"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Transaction struct {
@@ -66,4 +76,13 @@ type Role struct {
 type UserRole struct {
 	UserID int `db:",primary"`
 	RoleID int `db:",primary"`
+}
+
+type Subscription struct {
+	ID   int
+	Name string
+
+	// basic many to many declaration:
+	// subscription:id <- subscription_id:subscription_users:user_id -> user:id
+	Users []User `ref:"id:subscription_id" fk:"id:user_id" through:"subscription_users"`
 }

@@ -176,6 +176,10 @@ func TestCreateTable(t *testing.T) {
 	}, table)
 }
 
-func TestTable_description(t *testing.T) {
+func TestTable_Description(t *testing.T) {
 	assert.Equal(t, "create table tests", Table{Name: "tests"}.description())
+}
+
+func TestTable_InternalMigration(t *testing.T) {
+	assert.NotPanics(t, func() { Table{}.internalMigration() })
 }

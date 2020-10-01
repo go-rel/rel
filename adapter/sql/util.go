@@ -23,10 +23,19 @@ type fieldCacheKey struct {
 	escape string
 }
 
+type aliasField struct {
+	source string
+	alias  string
+}
+
 // Escape field or table name.
 func Escape(config Config, field string) string {
 	if config.EscapeChar == "" || field == "*" {
 		return field
+	}
+
+	if v, ok := isAliasField(field); ok {
+		return Escape(config, v.source) + " AS " + v.alias
 	}
 
 	key := fieldCacheKey{field: field, escape: config.EscapeChar}
@@ -49,6 +58,19 @@ func Escape(config Config, field string) string {
 
 	fieldCache.Store(key, escapedField)
 	return escapedField.(string)
+}
+
+func isAliasField(field string) (*aliasField, bool) {
+	if !strings.Contains(strings.ToLower(field), " as ") {
+		return nil, false
+	}
+
+	f := strings.Fields(field)
+	if len(f) != 3 {
+		return nil, false
+	}
+
+	return &aliasField{f[0], f[2]}, true
 }
 
 func toInt64(i interface{}) int64 {

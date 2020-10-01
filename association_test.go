@@ -147,21 +147,28 @@ func TestAssociation_Collection(t *testing.T) {
 		transaction = &Transaction{ID: 1}
 		user        = &User{ID: 2}
 		address     = &Address{ID: 3}
-		userLoaded  = &User{ID: 2, Address: *address, Transactions: []Transaction{*transaction}}
+		role        = &Role{ID: 4}
+		userLoaded  = &User{
+			ID: 2, Address: *address,
+			Transactions: []Transaction{*transaction},
+		}
 	)
 
 	tests := []struct {
-		record         string
-		field          string
-		data           interface{}
-		typ            AssociationType
-		col            *Collection
-		loaded         bool
-		isZero         bool
-		referenceField string
-		referenceValue interface{}
-		foreignField   string
-		foreignValue   interface{}
+		record           string
+		field            string
+		data             interface{}
+		typ              AssociationType
+		col              *Collection
+		loaded           bool
+		isZero           bool
+		referenceField   string
+		referenceValue   interface{}
+		referenceThrough string
+		foreignField     string
+		foreignValue     interface{}
+		foreignThrough   string
+		through          string
 	}{
 		{
 			record:         "User",
@@ -189,6 +196,70 @@ func TestAssociation_Collection(t *testing.T) {
 			foreignField:   "user_id",
 			foreignValue:   nil,
 		},
+		{
+			record:           "User",
+			field:            "Roles",
+			data:             user,
+			typ:              ManyToMany,
+			col:              NewCollection(&user.Roles),
+			loaded:           false,
+			isZero:           true,
+			referenceField:   "id",
+			referenceThrough: "user_id",
+			referenceValue:   user.ID,
+			foreignField:     "id",
+			foreignThrough:   "role_id",
+			foreignValue:     nil,
+			through:          "user_roles",
+		},
+		{
+			record:           "Role",
+			field:            "Users",
+			data:             role,
+			typ:              ManyToMany,
+			col:              NewCollection(&role.Users),
+			loaded:           false,
+			isZero:           true,
+			referenceField:   "id",
+			referenceThrough: "role_id",
+			referenceValue:   role.ID,
+			foreignField:     "id",
+			foreignThrough:   "user_id",
+			foreignValue:     nil,
+			through:          "user_roles",
+		},
+		{
+			record:           "User",
+			field:            "Followers",
+			data:             user,
+			typ:              ManyToMany,
+			col:              NewCollection(&user.Followers),
+			loaded:           false,
+			isZero:           true,
+			referenceField:   "id",
+			referenceThrough: "following_id",
+			referenceValue:   user.ID,
+			foreignField:     "id",
+			foreignThrough:   "follower_id",
+			foreignValue:     nil,
+			through:          "followers",
+		},
+		{
+			record:           "User",
+			field:            "Followings",
+			data:             user,
+			typ:              ManyToMany,
+			col:              NewCollection(&user.Followings),
+			loaded:           false,
+			isZero:           true,
+			referenceField:   "id",
+			referenceThrough: "follower_id",
+			referenceValue:   user.ID,
+			foreignField:     "id",
+			foreignThrough:   "following_id",
+			foreignValue:     nil,
+			through:          "followers",
+		},
 	}
 
 	for _, test := range tests {
@@ -206,9 +277,12 @@ func TestAssociation_Collection(t *testing.T) {
 			assert.Equal(t, test.isZero, assoc.IsZero())
 			assert.Equal(t, test.referenceField, assoc.ReferenceField())
 			assert.Equal(t, test.referenceValue, assoc.ReferenceValue())
+			assert.Equal(t, test.referenceThrough, assoc.ReferenceThrough())
 			assert.Equal(t, test.foreignField, assoc.ForeignField())
+			assert.Equal(t, test.foreignThrough, assoc.ForeignThrough())
+			assert.Equal(t, test.through, assoc.Through())
 
-			if test.typ == HasMany {
+			if test.typ == HasMany || test.typ == ManyToMany {
 				assert.Panics(t, func() {
 					assert.Equal(t, test.foreignValue, assoc.ForeignValue())
 				})

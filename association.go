@@ -2,6 +2,7 @@ package rel
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/serenize/snaker"
@@ -17,6 +18,8 @@ const (
 	HasOne
 	// HasMany association.
 	HasMany
+	// ManyToMany association.
+	ManyToMany
 )
 
 type associationKey struct {
@@ -25,12 +28,15 @@ type associationKey struct {
 }
 
 type associationData struct {
-	typ             AssociationType
-	targetIndex     []int
-	referenceColumn string
-	referenceIndex  int
-	foreignField    string
-	foreignIndex    int
+	typ              AssociationType
+	targetIndex      []int
+	referenceField   string
+	referenceIndex   int
+	referenceThrough string
+	foreignField     string
+	foreignIndex     int
+	foreignThrough   string
+	through          string
 }
 
 var associationCache sync.Map
@@ -109,7 +115,12 @@ func (a Association) IsZero() bool {
 
 // ReferenceField of the association.
 func (a Association) ReferenceField() string {
-	return a.data.referenceColumn
+	return a.data.referenceField
+}
+
+// ReferenceThrough return intermediary foreign field used for many to many association.
+func (a Association) ReferenceThrough() string {
+	return a.data.referenceThrough
 }
 
 // ReferenceValue of the association.
@@ -122,11 +133,16 @@ func (a Association) ForeignField() string {
 	return a.data.foreignField
 }
 
+// ForeignThrough return intermediary foreign field used for many to many association.
+func (a Association) ForeignThrough() string {
+	return a.data.foreignThrough
+}
+
 // ForeignValue of the association.
 // It'll panic if association type is has many.
 func (a Association) ForeignValue() interface{} {
-	if a.Type() == HasMany {
-		panic("cannot infer foreign value for has many association")
+	if a.Type() == HasMany || a.Type() == ManyToMany {
+		panic("cannot infer foreign value for has many or many to many association")
 	}
 
 	var (
@@ -138,6 +154,11 @@ func (a Association) ForeignValue() interface{} {
 	}
 
 	return indirect(rv.Field(a.data.foreignIndex))
+}
+
+// Through return intermediary table used for many to many association.
+func (a Association) Through() string {
+	return a.data.through
 }
 
 func newAssociation(rv reflect.Value, index int) Association {
@@ -164,12 +185,13 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	}
 
 	var (
-		sf        = rt.Field(index)
-		ft        = sf.Type
-		ref       = sf.Tag.Get("ref")
-		fk        = sf.Tag.Get("fk")
-		fName     = fieldName(sf)
-		assocData = associationData{
+		sf              = rt.Field(index)
+		ft              = sf.Type
+		ref, refThrough = getAssocField(sf.Tag, "ref")
+		fk, fkThrough   = getAssocField(sf.Tag, "fk")
+		through         = sf.Tag.Get("through")
+		fName           = fieldName(sf)
+		assocData       = associationData{
 			targetIndex: sf.Index,
 		}
 	)
@@ -185,7 +207,13 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 
 	// Try to guess ref and fk if not defined.
 	if ref == "" || fk == "" {
-		if _, isBelongsTo := refDocData.index[fName+"_id"]; isBelongsTo {
+		// TODO: replace "id" with inferred primary field
+		if through != "" {
+			ref = "id"
+			fk = "id"
+			refThrough = snaker.CamelToSnake(rt.Name()) + "_id"
+			fkThrough = snaker.CamelToSnake(ft.Name()) + "_id"
+		} else if _, isBelongsTo := refDocData.index[fName+"_id"]; isBelongsTo {
 			ref = fName + "_id"
 			fk = "id"
 		} else {
@@ -198,7 +226,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 		panic("rel: references (" + ref + ") field not found ")
 	} else {
 		assocData.referenceIndex = id
-		assocData.referenceColumn = ref
+		assocData.referenceField = ref
 	}
 
 	if id, exist := fkDocData.index[fk]; !exist {
@@ -209,11 +237,17 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	}
 
 	// guess assoc type
-	if sf.Type.Kind() == reflect.Slice ||
-		(sf.Type.Kind() == reflect.Ptr && sf.Type.Elem().Kind() == reflect.Slice) {
-		assocData.typ = HasMany
+	if sf.Type.Kind() == reflect.Slice || (sf.Type.Kind() == reflect.Ptr && sf.Type.Elem().Kind() == reflect.Slice) {
+		if through != "" {
+			assocData.typ = ManyToMany
+			assocData.referenceThrough = refThrough
+			assocData.foreignThrough = fkThrough
+			assocData.through = through
+		} else {
+			assocData.typ = HasMany
+		}
 	} else {
-		if len(assocData.referenceColumn) > len(assocData.foreignField) {
+		if len(assocData.referenceField) > len(assocData.foreignField) {
 			assocData.typ = BelongsTo
 		} else {
 			assocData.typ = HasOne
@@ -223,4 +257,13 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	associationCache.Store(key, assocData)
 
 	return assocData
+}
+
+func getAssocField(tag reflect.StructTag, field string) (string, string) {
+	fields := strings.Split(tag.Get(field), ":")
+	if len(fields) == 2 {
+		return fields[0], fields[1]
+	}
+
+	return fields[0], ""
 }

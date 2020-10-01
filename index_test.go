@@ -57,6 +57,10 @@ func TestDropIndex(t *testing.T) {
 	}, index)
 }
 
-func TestIndex_description(t *testing.T) {
+func TestIndex_Description(t *testing.T) {
 	assert.Equal(t, "create index idx_test on tests", Index{Name: "idx_test", Table: "tests"}.description())
+}
+
+func TestIndex_InternalMigration(t *testing.T) {
+	assert.NotPanics(t, func() { Index{}.internalMigration() })
 }

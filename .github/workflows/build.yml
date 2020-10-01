@@ -126,4 +126,4 @@ jobs:
         env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
-          CC_TEST_REPORTER_ID: 045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
+          CC_TEST_REPORTER_ID: 83e67f07a2ebbb28902b9e701a8b6204ed5aa768baf9a08bce758088dfc8e433

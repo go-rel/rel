@@ -117,23 +117,11 @@ jobs:
           postgresql password: rel
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-      - uses: amancevice/setup-code-climate@v0
-        with:
-          cc_test_reporter_id: 045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d
-      - name: Set ENV for codeclimate (pull_request)
-        run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/$GITHUB_HEAD_REF:refs/remotes/origin/$GITHUB_HEAD_REF
-          echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"
-          echo "::set-env name=GIT_COMMIT_SHA::$(git rev-parse origin/$GITHUB_HEAD_REF)"
-        if: github.event_name == 'pull_request'
-      - name: Set ENV for codeclimate (push)
-        run: |
-          echo "::set-env name=GIT_BRANCH::$GITHUB_REF"
-          echo "::set-env name=GIT_COMMIT_SHA::$GITHUB_SHA"
-        if: github.event_name == 'push'
-      - run: cc-test-reporter before-build
       - env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=all -coverprofile=c.out ./...
-      - run: cc-test-reporter after-build -p github.com/Fs02/rel
+      - name: Test & publish code coverage
+        uses: paambaati/codeclimate-action@v2.7.2
+        env:
+          CC_TEST_REPORTER_ID: 045e6c8f64f873901bacc868224b418d9fc72dd73c40feb1af50faf3e96de15d

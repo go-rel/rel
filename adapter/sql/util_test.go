@@ -44,6 +44,10 @@ func TestEscape(t *testing.T) {
 			result: "count(*) AS count",
 		},
 		{
+			field:  "count(*) as count", // duplicated test to simulate cache load
+			result: "count(*) AS count",
+		},
+		{
 			field:  "user.address as home_address",
 			result: "`user`.`address` AS home_address",
 		},
@@ -58,6 +62,10 @@ func TestEscape(t *testing.T) {
 		{
 			field:  "*",
 			result: "*",
+		},
+		{
+			field:  "user.*",
+			result: "`user`.*",
 		},
 	}
 	for _, test := range tests {

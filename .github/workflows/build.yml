@@ -124,7 +124,7 @@ jobs:
         env:
           BASE: ${{ github.head_ref }}
         run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/${BASE}:refs/remotes/origin/${BASE}
+          # git fetch --no-tags --prune --depth=1 origin +refs/heads/${BASE}:refs/remotes/origin/${BASE}
           echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"
           echo "::set-env name=GIT_COMMIT_SHA::$(git rev-parse origin/$GITHUB_HEAD_REF)"
         if: github.event_name == 'pull_request'

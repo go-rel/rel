@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 	"github.com/stretchr/testify/mock"
 )
 

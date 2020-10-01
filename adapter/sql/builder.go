@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 // UnescapeCharacter disable field escaping when it starts with this character.

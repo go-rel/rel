@@ -1,6 +1,6 @@
 package migrations
 
-import "github.com/Fs02/rel"
+import "github.com/go-rel/rel"
 
 // MigrateCreateSamples definition
 func MigrateCreateSamples(schema *rel.Schema) {

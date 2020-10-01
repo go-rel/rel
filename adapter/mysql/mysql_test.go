@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/adapter/specs"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/adapter/specs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )

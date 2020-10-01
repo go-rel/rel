@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Fs02/rel/cmd/rel/internal"
+	"github.com/go-rel/rel/cmd/rel/internal"
 	"github.com/subosito/gotenv"
 )
 

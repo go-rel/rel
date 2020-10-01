@@ -22,7 +22,7 @@ func getDatabaseInfo() (string, string, string) {
 		driver = os.Getenv("DATABASE_DRIVER")
 		dsn = os.Getenv("DATABASE_URL")
 	case os.Getenv("MYSQL_HOST") != "":
-		adapter = "github.com/Fs02/rel/adapter/mysql"
+		adapter = "github.com/go-rel/rel/adapter/mysql"
 		driver = "github.com/go-sql-driver/mysql"
 		dsn = fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			os.Getenv("MYSQL_USERNAME"),
@@ -31,7 +31,7 @@ func getDatabaseInfo() (string, string, string) {
 			os.Getenv("MYSQL_PORT"),
 			os.Getenv("MYSQL_DATABASE"))
 	case os.Getenv("POSTGRES_HOST") != "":
-		adapter = "github.com/Fs02/rel/adapter/postgres"
+		adapter = "github.com/go-rel/rel/adapter/postgres"
 		driver = "github.com/lib/pq"
 		dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 			os.Getenv("POSTGRES_USERNAME"),
@@ -40,7 +40,7 @@ func getDatabaseInfo() (string, string, string) {
 			os.Getenv("POSTGRES_PORT"),
 			os.Getenv("POSTGRES_DATABASE"))
 	case os.Getenv("SQLITE3_DATABASE") != "":
-		adapter = "github.com/Fs02/rel/adapter/sqlite3"
+		adapter = "github.com/go-rel/rel/adapter/sqlite3"
 		driver = "github.com/mattn/go-sqlite3"
 		dsn = os.Getenv("SQLITE3_DATABASE")
 	}

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/Fs02/rel/where"
+	"github.com/go-rel/rel/where"
 	"github.com/stretchr/testify/assert"
 )
 

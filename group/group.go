@@ -2,7 +2,7 @@
 package group
 
 import (
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 )
 
 var (

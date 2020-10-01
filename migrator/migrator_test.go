@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/reltest"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/reltest"
 	"github.com/stretchr/testify/assert"
 )
 

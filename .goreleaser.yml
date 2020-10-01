@@ -37,11 +37,11 @@ changelog:
       - '^test:'
 nfpms:
   - file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    homepage: https://fs02.github.io/rel
+    homepage: https://go-rel.github.io
     description: Modern Database Access Layer for Golang
     maintainer: Muhammad Surya Asriadie <surya.asriadie@gmail.com>
     license: MIT
-    vendor: Fs02
+    vendor: REL
     formats:
       - apk
       - deb

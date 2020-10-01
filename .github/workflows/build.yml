@@ -121,10 +121,8 @@ jobs:
         with:
           cc_test_reporter_id: 83e67f07a2ebbb28902b9e701a8b6204ed5aa768baf9a08bce758088dfc8e433
       - name: Set ENV for codeclimate (pull_request)
-        env:
-          BASE: ${{ github.head_ref }}
         run: |
-          # git fetch --no-tags --prune --depth=1 origin +refs/heads/${BASE}:refs/remotes/origin/${BASE}
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/$GITHUB_HEAD_REF:refs/remotes/origin/$GITHUB_HEAD_REF
           echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"
           echo "::set-env name=GIT_COMMIT_SHA::$(git rev-parse origin/$GITHUB_HEAD_REF)"
         if: github.event_name == 'pull_request'
@@ -138,4 +136,6 @@ jobs:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=all -coverprofile=c.out ./...
-      - run: cc-test-reporter after-build -p github.com/go-rel/rel -d
+      - run: cc-test-reporter after-build -p github.com/go-rel/rel
+      - name: Codecov
+        uses: codecov/codecov-action@v1.0.13

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/adapter/specs"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/adapter/specs"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )

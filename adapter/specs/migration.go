@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fs02/rel"
-	"github.com/Fs02/rel/migrator"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/rel/migrator"
 )
 
 var m migrator.Migrator

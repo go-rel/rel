@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Fs02/rel"
+	"github.com/go-rel/rel"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )

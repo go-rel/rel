@@ -122,7 +122,7 @@ jobs:
           cc_test_reporter_id: 83e67f07a2ebbb28902b9e701a8b6204ed5aa768baf9a08bce758088dfc8e433
       - name: Set ENV for codeclimate (pull_request)
         env:
-          BASE: ${{ github['base_ref'] }}
+          BASE: ${{ github.base_ref }}
         run: |
           git fetch --no-tags --prune --depth=1 origin +refs/heads/${BASE}:refs/remotes/origin/${BASE}
           echo "::set-env name=GIT_BRANCH::$GITHUB_HEAD_REF"

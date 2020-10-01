@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/go-rel/rel/workflows/Build/badge.svg)](https://github.com/go-rel/rel/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-rel/rel)](https://goreportcard.com/report/github.com/go-rel/rel)
 [![Maintainability](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/maintainability)](https://codeclimate.com/github/go-rel/rel/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/194611cc82f02edcda6e/test_coverage)](https://codeclimate.com/github/go-rel/rel/test_coverage)
+[![codecov](https://codecov.io/gh/go-rel/rel/branch/master/graph/badge.svg?token=0P505E1IWB)](https://codecov.io/gh/go-rel/rel)
 [![Gitter chat](https://badges.gitter.im/go-rel/rel.png)](https://gitter.im/go-rel/rel)
 
 > Modern Database Access Layer for Golang.

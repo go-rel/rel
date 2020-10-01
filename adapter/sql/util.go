@@ -34,14 +34,17 @@ func Escape(config Config, field string) string {
 		return field
 	}
 
-	if v, ok := isAliasField(field); ok {
-		return Escape(config, v.source) + " AS " + v.alias
-	}
-
 	key := fieldCacheKey{field: field, escape: config.EscapeChar}
 	escapedField, ok := fieldCache.Load(key)
 	if ok {
 		return escapedField.(string)
+	}
+
+	if v, ok := isAliasField(field); ok {
+		aliasField := Escape(config, v.source) + " AS " + v.alias
+		fieldCache.Store(key, aliasField)
+
+		return aliasField
 	}
 
 	if len(field) > 0 && field[0] == UnescapeCharacter {

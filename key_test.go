@@ -30,3 +30,7 @@ func TestCreateForeignKey(t *testing.T) {
 		Options: "options",
 	}, index)
 }
+
+func TestKey_InternalTableDefinition(t *testing.T) {
+	assert.NotPanics(t, func() { Key{}.internalTableDefinition() })
+}

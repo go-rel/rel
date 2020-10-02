@@ -1253,7 +1253,6 @@ func TestRepository_Update_saveBelongsTo(t *testing.T) {
 			ID:        1,
 			Name:      "name",
 			UpdatedAt: now(),
-			CreatedAt: now(),
 		},
 	}, address)
 
@@ -1340,7 +1339,6 @@ func TestRepository_Update_saveHasOne(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		UpdatedAt: now(),
-		CreatedAt: now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1372,7 +1370,6 @@ func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		UpdatedAt: now(),
-		CreatedAt: now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1432,7 +1429,6 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        10,
-		CreatedAt: now(),
 		UpdatedAt: now(),
 		Transactions: []Transaction{
 			{
@@ -1466,7 +1462,6 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
 		ID:        10,
-		CreatedAt: now(),
 		UpdatedAt: now(),
 		Transactions: []Transaction{
 			{
@@ -2249,7 +2244,6 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID:        1,
-		CreatedAt: now(),
 		UpdatedAt: now(),
 		Transactions: []Transaction{
 			{ID: 3, BuyerID: 1, Item: "item3"},

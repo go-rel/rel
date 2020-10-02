@@ -89,3 +89,7 @@ func TestDropColumn(t *testing.T) {
 		Options:   "options",
 	}, column)
 }
+
+func TestColumn_InternalTableDefinition(t *testing.T) {
+	assert.NotPanics(t, func() { Column{}.internalTableDefinition() })
+}

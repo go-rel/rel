@@ -197,14 +197,26 @@ func TestSchema_DropIndex(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
-func TestSchema_Exec(t *testing.T) {
+func TestRaw(t *testing.T) {
 	var schema Schema
 
 	schema.Exec("RAW SQL")
 	assert.Equal(t, Raw("RAW SQL"), schema.Migrations[0])
 }
 
-func TestSchema_Do(t *testing.T) {
+func TestRaw_Description(t *testing.T) {
+	assert.Equal(t, "execute raw command", Raw("").description())
+}
+
+func TestRaw_InternalMigration(t *testing.T) {
+	assert.NotPanics(t, func() { Raw("").internalMigration() })
+}
+
+func TestRaw_InternalTableDefinition(t *testing.T) {
+	assert.NotPanics(t, func() { Raw("").internalTableDefinition() })
+}
+
+func TestDo(t *testing.T) {
 	var (
 		schema Schema
 	)
@@ -213,10 +225,10 @@ func TestSchema_Do(t *testing.T) {
 	assert.NotNil(t, schema.Migrations[0])
 }
 
-func TestRaw_description(t *testing.T) {
-	assert.Equal(t, "execute raw command", Raw("").description())
+func TestDo_InternalTableDefinition(t *testing.T) {
+	assert.NotPanics(t, func() { Do(nil).internalMigration() })
 }
 
-func TestDow_description(t *testing.T) {
+func TestDo_Description(t *testing.T) {
 	assert.Equal(t, "run go code", Do(nil).description())
 }

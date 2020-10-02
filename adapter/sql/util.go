@@ -23,11 +23,6 @@ type fieldCacheKey struct {
 	escape string
 }
 
-type aliasField struct {
-	source string
-	alias  string
-}
-
 // Escape field or table name.
 func Escape(config Config, field string) string {
 	if config.EscapeChar == "" || field == "*" {
@@ -40,12 +35,10 @@ func Escape(config Config, field string) string {
 		return escapedField.(string)
 	}
 
-	field = strings.Trim(field, config.EscapeChar) // prevent double escape char
-
-	if v, ok := escapeAliasField(field); ok {
-		escapedField = Escape(config, v.source) + " AS " + Escape(config, v.alias)
-	} else if len(field) > 0 && field[0] == UnescapeCharacter {
+	if len(field) > 0 && field[0] == UnescapeCharacter {
 		escapedField = field[1:]
+	} else if i := strings.Index(strings.ToLower(field), " as "); i > -1 {
+		escapedField = Escape(config, field[:i]) + " AS " + Escape(config, field[i+4:])
 	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
 		escapedField = field[:start+1] + Escape(config, field[start+1:end]) + field[end:]
 	} else if strings.HasSuffix(field, "*") {
@@ -58,14 +51,6 @@ func Escape(config Config, field string) string {
 
 	fieldCache.Store(key, escapedField)
 	return escapedField.(string)
-}
-
-func escapeAliasField(field string) (*aliasField, bool) {
-	if i := strings.Index(strings.ToLower(field), " as "); i > -1 {
-		return &aliasField{field[:i], field[i+4:]}, true
-	}
-
-	return nil, false
 }
 
 func toInt64(i interface{}) int64 {

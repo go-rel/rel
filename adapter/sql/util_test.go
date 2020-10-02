@@ -41,23 +41,27 @@ func TestEscape(t *testing.T) {
 	}{
 		{
 			field:  "count(*) as count",
-			result: "count(*) AS count",
+			result: "count(*) AS `count`",
+		},
+		{
+			field:  "count(*) as `count`",
+			result: "count(*) AS `count`",
 		},
 		{
 			field:  "count(*) as count", // duplicated test to simulate cache load
-			result: "count(*) AS count",
+			result: "count(*) AS `count`",
 		},
 		{
 			field:  "user.address as home_address",
-			result: "`user`.`address` AS home_address",
+			result: "`user`.`address` AS `home_address`",
 		},
 		{
-			field:  "^FIELD(`gender`, \"male\") AS `order`",
+			field:  "^FIELD(`gender`, \"male\") AS order",
 			result: "FIELD(`gender`, \"male\") AS `order`",
 		},
 		{
 			field:  "^FIELD(`gender`, \"male\") AS order",
-			result: "FIELD(`gender`, \"male\") AS order",
+			result: "FIELD(`gender`, \"male\") AS `order`",
 		},
 		{
 			field:  "*",

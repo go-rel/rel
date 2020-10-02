@@ -40,14 +40,11 @@ func Escape(config Config, field string) string {
 		return escapedField.(string)
 	}
 
-	if v, ok := isAliasField(field); ok {
-		aliasField := Escape(config, v.source) + " AS " + v.alias
-		fieldCache.Store(key, aliasField)
+	field = strings.Trim(field, config.EscapeChar) // prevent double escape char
 
-		return aliasField
-	}
-
-	if len(field) > 0 && field[0] == UnescapeCharacter {
+	if v, ok := escapeAliasField(field); ok {
+		escapedField = Escape(config, v.source) + " AS " + Escape(config, v.alias)
+	} else if len(field) > 0 && field[0] == UnescapeCharacter {
 		escapedField = field[1:]
 	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
 		escapedField = field[:start+1] + Escape(config, field[start+1:end]) + field[end:]
@@ -63,17 +60,12 @@ func Escape(config Config, field string) string {
 	return escapedField.(string)
 }
 
-func isAliasField(field string) (*aliasField, bool) {
-	if !strings.Contains(strings.ToLower(field), " as ") {
-		return nil, false
+func escapeAliasField(field string) (*aliasField, bool) {
+	if i := strings.Index(strings.ToLower(field), " as "); i > -1 {
+		return &aliasField{field[:i], field[i+4:]}, true
 	}
 
-	f := strings.Fields(field)
-	if len(f) != 3 {
-		return nil, false
-	}
-
-	return &aliasField{f[0], f[2]}, true
+	return nil, false
 }
 
 func toInt64(i interface{}) int64 {

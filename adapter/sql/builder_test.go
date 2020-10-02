@@ -354,12 +354,12 @@ func TestBuilder_Find_ordinal(t *testing.T) {
 			query.Select("id", "name"),
 		},
 		{
-			"SELECT \"id\" AS user_id,\"name\" FROM \"users\";",
+			"SELECT \"id\" AS \"user_id\",\"name\" FROM \"users\";",
 			nil,
 			query.Select("id as user_id", "name"),
 		},
 		{
-			"SELECT \"id\" AS user_id,\"name\" FROM \"users\";",
+			"SELECT \"id\" AS \"user_id\",\"name\" FROM \"users\";",
 			nil,
 			query.Select("id AS user_id", "name"),
 		},
@@ -791,15 +791,15 @@ func TestBuilder_Select(t *testing.T) {
 			fields:   []string{"id", "name"},
 		},
 		{
-			result: "SELECT COUNT(*) AS count",
+			result: "SELECT COUNT(*) AS `count`",
 			fields: []string{"COUNT(*) AS count"},
 		},
 		{
-			result: "SELECT COUNT(`transactions`.*) AS count",
+			result: "SELECT COUNT(`transactions`.*) AS `count`",
 			fields: []string{"COUNT(transactions.*) AS count"},
 		},
 		{
-			result: "SELECT SUM(`transactions`.`total`) AS total",
+			result: "SELECT SUM(`transactions`.`total`) AS `total`",
 			fields: []string{"SUM(transactions.total) AS total"},
 		},
 	}

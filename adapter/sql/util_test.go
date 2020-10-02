@@ -40,7 +40,7 @@ func TestEscape(t *testing.T) {
 		result string
 	}{
 		{
-			field:  "count(*) as count", // duplicated test to simulate cache load
+			field:  "count(*) as count",
 			result: "count(*) AS `count`",
 		},
 		{

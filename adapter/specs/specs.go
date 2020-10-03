@@ -35,8 +35,8 @@ type User struct {
 	Gender         string
 	Age            int
 	Note           *string
-	Addresses      []Address
-	PrimaryAddress *Address
+	Addresses      []Address `autosave:"true"`
+	PrimaryAddress *Address  `autosave:"true"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -44,7 +44,7 @@ type User struct {
 // Address defines addresses schema.
 type Address struct {
 	ID        int64
-	User      User
+	User      User `autosave:"true"`
 	UserID    *int64
 	Name      string
 	CreatedAt time.Time

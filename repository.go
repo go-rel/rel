@@ -539,7 +539,6 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 			assoc      = doc.Association(field)
 			col, _     = assoc.Collection()
 			table      = col.Table()
-			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
 			muts       = assocMuts.Mutations
@@ -562,7 +561,8 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
-				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+				filter = filter.AndIn(col.PrimaryField(), deletedIDs...)
+				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			}

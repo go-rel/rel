@@ -30,13 +30,20 @@ type Poster struct {
 }
 
 type Book struct {
-	ID       int
-	Title    string
-	Author   Author
-	AuthorID *int
-	Ratings  []Rating
-	Poster   Poster
-	Views    int
+	ID         int
+	Title      string
+	Author     Author
+	AuthorID   *int
+	Ratings    []Rating `autosave:"true"`
+	Poster     Poster   `autosave:"true"`
+	AbstractID int
+	Abstract   Abstract `autosave:"true"`
+	Views      int
+}
+
+type Abstract struct {
+	ID      int
+	Content string
 }
 
 func TestRepository_Adapter(t *testing.T) {

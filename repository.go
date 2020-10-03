@@ -562,7 +562,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 				}
 			} else if len(deletedIDs) > 0 {
 				filter = filter.AndIn(col.PrimaryField(), deletedIDs...)
-				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
+				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			}

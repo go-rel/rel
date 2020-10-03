@@ -11,8 +11,10 @@ type User struct {
 	Name         string
 	Age          int
 	Transactions []Transaction `ref:"id" fk:"user_id"`
-	Address      Address
-	UserRoles    []UserRole
+	Address      Address       `autosave:"true"`
+	WorkAddress  Address
+	UserRoles    []UserRole `autosave:"true"`
+	Emails       []Email    `autosave:"true"`
 
 	// many to many
 	// user:id <- user_id:user_roles:role_id -> role:id
@@ -25,6 +27,12 @@ type User struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type Email struct {
+	ID     int
+	Email  string
+	UserID int
 }
 
 type Transaction struct {
@@ -62,8 +70,10 @@ type Address struct {
 	DeletedAt *time.Time
 }
 
-type Owner struct {
-	User   *User
+type Profile struct {
+	ID     int
+	Name   string
+	User   *User `autosave:"true"`
 	UserID *int
 }
 

@@ -448,13 +448,16 @@ func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators
 // TODO: support deletion
 func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.BelongsTo() {
-		assocMuts, changed := mutation.Assoc[field]
-		if !changed || len(assocMuts.Mutations) == 0 {
+		var (
+			assoc              = doc.Association(field)
+			assocMuts, changed = mutation.Assoc[field]
+		)
+
+		if !assoc.Autosave() || !changed || len(assocMuts.Mutations) == 0 {
 			continue
 		}
 
 		var (
-			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
 			assocMut         = assocMuts.Mutations[0]
 		)
@@ -489,13 +492,16 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 // TODO: suppprt deletion
 func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutation) error {
 	for _, field := range doc.HasOne() {
-		assocMuts, changed := mutation.Assoc[field]
-		if !changed || len(assocMuts.Mutations) == 0 {
+		var (
+			assoc              = doc.Association(field)
+			assocMuts, changed = mutation.Assoc[field]
+		)
+
+		if !assoc.Autosave() || !changed || len(assocMuts.Mutations) == 0 {
 			continue
 		}
 
 		var (
-			assoc            = doc.Association(field)
 			assocDoc, loaded = assoc.Document()
 			assocMut         = assocMuts.Mutations[0]
 		)
@@ -530,16 +536,18 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 // saveHasMany expects has many mutation to be ordered the same as the recrods in collection.
 func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Mutation, insertion bool) error {
 	for _, field := range doc.HasMany() {
-		assocMuts, changed := mutation.Assoc[field]
-		if !changed {
+		var (
+			assoc              = doc.Association(field)
+			assocMuts, changed = mutation.Assoc[field]
+		)
+
+		if !assoc.Autosave() || !changed {
 			continue
 		}
 
 		var (
-			assoc      = doc.Association(field)
 			col, _     = assoc.Collection()
 			table      = col.Table()
-			pField     = col.PrimaryField()
 			fField     = assoc.ForeignField()
 			rValue     = assoc.ReferenceValue()
 			muts       = assocMuts.Mutations
@@ -562,6 +570,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
+				pField := col.PrimaryField()
 				if _, err := r.deleteAll(cw, col.data.flag, Build(table, filter.AndIn(pField, deletedIDs...))); err != nil {
 					return err
 				}
@@ -710,11 +719,14 @@ func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery,
 func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Cascade) error {
 	for _, field := range doc.BelongsTo() {
 		var (
-			assoc            = doc.Association(field)
-			assocDoc, loaded = assoc.Document()
+			assoc = doc.Association(field)
 		)
 
-		if loaded {
+		if !assoc.Autosave() {
+			continue
+		}
+
+		if assocDoc, loaded := assoc.Document(); loaded {
 			filter, err := filterBelongsTo(assoc)
 			if err != nil {
 				return err
@@ -732,11 +744,14 @@ func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Ca
 func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Cascade) error {
 	for _, field := range doc.HasOne() {
 		var (
-			assoc            = doc.Association(field)
-			assocDoc, loaded = assoc.Document()
+			assoc = doc.Association(field)
 		)
 
-		if loaded {
+		if !assoc.Autosave() {
+			continue
+		}
+
+		if assocDoc, loaded := assoc.Document(); loaded {
 			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err
@@ -754,11 +769,14 @@ func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Casca
 func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	for _, field := range doc.HasMany() {
 		var (
-			assoc       = doc.Association(field)
-			col, loaded = assoc.Collection()
+			assoc = doc.Association(field)
 		)
 
-		if loaded {
+		if !assoc.Autosave() {
+			continue
+		}
+
+		if col, loaded := assoc.Collection(); loaded {
 			var (
 				table  = col.Table()
 				fField = assoc.ForeignField()

@@ -37,6 +37,7 @@ type associationData struct {
 	foreignIndex     int
 	foreignThrough   string
 	through          string
+	autosave         bool
 }
 
 var associationCache sync.Map
@@ -161,6 +162,11 @@ func (a Association) Through() string {
 	return a.data.through
 }
 
+// Autosave setting when parent is created/updated/deleted.
+func (a Association) Autosave() bool {
+	return a.data.autosave
+}
+
 func newAssociation(rv reflect.Value, index int) Association {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
@@ -193,6 +199,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 		fName           = fieldName(sf)
 		assocData       = associationData{
 			targetIndex: sf.Index,
+			autosave:    sf.Tag.Get("autosave") == "true",
 		}
 	)
 

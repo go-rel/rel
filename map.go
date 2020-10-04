@@ -125,5 +125,4 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 	}
 
 	return muts, deletedIDs
-
 }

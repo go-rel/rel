@@ -28,3 +28,45 @@ func TestToInt64(t *testing.T) {
 	assert.Equal(t, int64(1), toInt64(uint16(1)))
 	assert.Equal(t, int64(1), toInt64(uint8(1)))
 }
+
+func TestEscape(t *testing.T) {
+	config := Config{
+		Placeholder: "?",
+		EscapeChar:  "`",
+	}
+
+	tests := []struct {
+		field  string
+		result string
+	}{
+		{
+			field:  "count(*) as count",
+			result: "count(*) AS `count`",
+		},
+		{
+			field:  "user.address as home_address",
+			result: "`user`.`address` AS `home_address`",
+		},
+		{
+			field:  "^FIELD(`gender`, \"male\") AS order",
+			result: "FIELD(`gender`, \"male\") AS order",
+		},
+		{
+			field:  "*",
+			result: "*",
+		},
+		{
+			field:  "user.*",
+			result: "`user`.*",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.result, func(t *testing.T) {
+			var (
+				result = Escape(config, test.field)
+			)
+
+			assert.Equal(t, test.result, result)
+		})
+	}
+}

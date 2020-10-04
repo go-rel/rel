@@ -34,8 +34,9 @@ func TestMutate_Insert_nested(t *testing.T) {
 		repo     = New()
 		authorID = 1
 		result   = Book{
-			Title:  "Rel for dummies",
-			Author: Author{Name: "Kia"},
+			Title:    "Rel for dummies",
+			AuthorID: &authorID,
+			Author:   Author{ID: 1, Name: "Kia"},
 			Ratings: []Rating{
 				{Score: 9},
 				{Score: 10},
@@ -110,14 +111,11 @@ func TestMutate_Insert_set(t *testing.T) {
 
 func TestMutate_Insert_map(t *testing.T) {
 	var (
-		repo     = New()
-		result   Book
-		authorID = 1
-		book     = Book{
-			ID:       1,
-			Title:    "Rel for dummies",
-			Author:   Author{ID: 1, Name: "Kia"},
-			AuthorID: &authorID,
+		repo   = New()
+		result Book
+		book   = Book{
+			ID:    1,
+			Title: "Rel for dummies",
 			Ratings: []Rating{
 				{ID: 1, Score: 9, BookID: 1},
 				{ID: 2, Score: 10, BookID: 1},
@@ -126,9 +124,6 @@ func TestMutate_Insert_map(t *testing.T) {
 		}
 		mut = rel.Map{
 			"title": "Rel for dummies",
-			"author": rel.Map{
-				"name": "Kia",
-			},
 			"ratings": []rel.Map{
 				{"score": 9},
 				{"score": 10},
@@ -268,9 +263,10 @@ func TestMutate_Update_nestedInsert(t *testing.T) {
 		repo     = New()
 		authorID = 1
 		result   = Book{
-			ID:     2,
-			Title:  "Rel for dummies",
-			Author: Author{Name: "Kia"},
+			ID:       2,
+			Title:    "Rel for dummies",
+			AuthorID: &authorID,
+			Author:   Author{ID: authorID, Name: "Kia"},
 			Ratings: []Rating{
 				{Score: 9},
 				{Score: 10},
@@ -477,25 +473,24 @@ func TestMutate_Update_map(t *testing.T) {
 
 func TestMutate_Update_belongsToInconsistentFk(t *testing.T) {
 	var (
-		repo     = New()
-		authorID = 1
-		result   = Book{
-			ID:       2,
-			Title:    "Golang for dummies",
-			AuthorID: &authorID,
-			Author:   Author{ID: 2, Name: "Kia"},
+		repo   = New()
+		result = Book{
+			ID:         2,
+			Title:      "Golang for dummies",
+			AbstractID: 3,
+			Abstract:   Abstract{ID: 2, Content: "REL for Dummies"},
 		}
 		mut = rel.Map{
-			"author": rel.Map{
-				"id":   2,
-				"name": "Koa",
+			"abstract": rel.Map{
+				"id":      2,
+				"content": "lorem ipsum",
 			},
 		}
 	)
 
 	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
-		Key:  "author_id",
+		Key:  "abstract_id",
 		Type: rel.ForeignKeyConstraint,
 		Err:  errors.New("rel: inconsistent belongs to ref and fk"),
 	}, repo.Update(context.TODO(), &result, mut))

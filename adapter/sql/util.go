@@ -37,6 +37,8 @@ func Escape(config Config, field string) string {
 
 	if len(field) > 0 && field[0] == UnescapeCharacter {
 		escapedField = field[1:]
+	} else if i := strings.Index(strings.ToLower(field), " as "); i > -1 {
+		escapedField = Escape(config, field[:i]) + " AS " + Escape(config, field[i+4:])
 	} else if start, end := strings.IndexRune(field, '('), strings.IndexRune(field, ')'); start >= 0 && end >= 0 && end > start {
 		escapedField = field[:start+1] + Escape(config, field[start+1:end]) + field[end:]
 	} else if strings.HasSuffix(field, "*") {

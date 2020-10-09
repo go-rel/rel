@@ -265,7 +265,7 @@ func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv refl
 		fk = ft.Kind()
 	)
 
-	// prevents unintentional convertion
+	// prevents unintentional conversion
 	if (rk >= reflect.Int || rk <= reflect.Uint64) && fk == reflect.String {
 		return false
 	}

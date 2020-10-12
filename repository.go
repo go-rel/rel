@@ -24,20 +24,23 @@ type Repository interface {
 	// Limit, Offset and Sort query is automatically ignored.
 	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
 
-	// Aggregate calculate aggregate over the given field.
+	// Aggregate over the given field.
 	// Supported aggregate: count, sum, avg, max, min.
 	// Any select, group, offset, limit and sort query will be ignored automatically.
-	// If complex aggregation is needed, consider using All instead,
+	// If complex aggregation is needed, consider using All instead.
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
 
-	// MustAggregate calculate aggregate over the given field.
+	// MustAggregate over the given field.
+	// Supported aggregate: count, sum, avg, max, min.
+	// Any select, group, offset, limit and sort query will be ignored automatically.
+	// If complex aggregation is needed, consider using All instead.
 	// It'll panic if any error eccured.
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
 
-	// Count retrieves count of results that match the query.
+	// Count records that match the query.
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
 
-	// MustCount retrieves count of results that match the query.
+	// MustCount records that match the query.
 	// It'll panic if any error eccured.
 	MustCount(ctx context.Context, collection string, queriers ...Querier) int
 
@@ -56,11 +59,13 @@ type Repository interface {
 	// It'll panic if any error eccured.
 	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
 
-	// FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+	// FindAndCountAll records that match the query.
+	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
 
-	// MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+	// MustFindAndCountAll records that match the query.
+	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	// It'll panic if any error eccured.
 	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
@@ -79,11 +84,11 @@ type Repository interface {
 	// It'll panic if any error occurred.
 	MustInsertAll(ctx context.Context, records interface{})
 
-	// Update an record in database.
+	// Update a record in database.
 	// It'll panic if any error occurred.
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
 
-	// MustUpdate an record in database.
+	// MustUpdate a record in database.
 	// It'll panic if any error occurred.
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
 
@@ -108,16 +113,17 @@ type Repository interface {
 	// It'll panic if any error eccured.
 	MustDeleteAll(ctx context.Context, query Query)
 
-	// Preload loads association with given query.
+	// Preload association with given query.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
 
-	// MustPreload loads association with given query.
+	// MustPreload association with given query.
 	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 
 	// Transaction performs transaction with given function argument.
+	// Transaction scope/connection is automatically passed using context.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
 

@@ -10,34 +10,114 @@ import (
 
 // Repository defines sets of available database operations.
 type Repository interface {
+	// Adapter used in this repository.
 	Adapter(ctx context.Context) Adapter
+
+	// Instrumentation defines callback to be used as instrumenter.
 	Instrumentation(instrumenter Instrumenter)
+
+	// Ping database.
 	Ping(ctx context.Context) error
+
+	// Iterate through a collection of records from database in batches.
+	// This function returns iterator that can be used to loop all records.
+	// Limit, Offset and Sort query is automatically ignored.
 	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
+
+	// Aggregate calculate aggregate over the given field.
+	// Supported aggregate: count, sum, avg, max, min.
+	// Any select, group, offset, limit and sort query will be ignored automatically.
+	// If complex aggregation is needed, consider using All instead,
 	Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error)
+
+	// MustAggregate calculate aggregate over the given field.
+	// It'll panic if any error eccured.
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
+
+	// Count retrieves count of results that match the query.
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
+
+	// MustCount retrieves count of results that match the query.
+	// It'll panic if any error eccured.
 	MustCount(ctx context.Context, collection string, queriers ...Querier) int
+
+	// Find a record that match the query.
+	// If no result found, it'll return not found error.
 	Find(ctx context.Context, record interface{}, queriers ...Querier) error
+
+	// MustFind a record that match the query.
+	// If no result found, it'll panic.
 	MustFind(ctx context.Context, record interface{}, queriers ...Querier)
+
+	// FindAll records that match the query.
 	FindAll(ctx context.Context, records interface{}, queriers ...Querier) error
+
+	// MustFindAll records that match the query.
+	// It'll panic if any error eccured.
 	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
+
+	// FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+	// Limit and Offset property will be ignored when performing count query.
 	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
+
+	// MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
+	// Limit and Offset property will be ignored when performing count query.
+	// It'll panic if any error eccured.
 	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
+
+	// Insert a record to database.
 	Insert(ctx context.Context, record interface{}, mutators ...Mutator) error
+
+	// MustInsert an record to database.
+	// It'll panic if any error occurred.
 	MustInsert(ctx context.Context, record interface{}, mutators ...Mutator)
+
+	// InsertAll records.
 	InsertAll(ctx context.Context, records interface{}) error
+
+	// MustInsertAll records.
+	// It'll panic if any error occurred.
 	MustInsertAll(ctx context.Context, records interface{})
+
+	// Update an record in database.
+	// It'll panic if any error occurred.
 	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
+
+	// MustUpdate an record in database.
+	// It'll panic if any error occurred.
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
+
+	// UpdateAll records tha match the query.
 	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error
+
+	// MustUpdateAll records that match the query.
+	// It'll panic if any error occurred.
 	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate)
+
+	// Delete a record.
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
+
+	// MustDelete a record.
+	// It'll panic if any error eccured.
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
+
+	// DeleteAll records that match the query.
 	DeleteAll(ctx context.Context, query Query) error
+
+	// MustDeleteAll records that match the query.
+	// It'll panic if any error eccured.
 	MustDeleteAll(ctx context.Context, query Query)
+
+	// Preload loads association with given query.
+	// If association is already loaded, this will do nothing.
+	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
+
+	// MustPreload loads association with given query.
+	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
+
+	// Transaction performs transaction with given function argument.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
@@ -55,14 +135,10 @@ func (r *repository) Instrumentation(instrumenter Instrumenter) {
 	r.rootAdapter.Instrumentation(instrumenter)
 }
 
-// Ping database.
 func (r *repository) Ping(ctx context.Context) error {
 	return r.rootAdapter.Ping(ctx)
 }
 
-// Iterate through a collection of records from database in batches.
-// This function returns iterator that can be used to loop all records.
-// Limit, Offset and Sort query is automatically ignored.
 func (r repository) Iterate(ctx context.Context, query Query, options ...IteratorOption) Iterator {
 	var (
 		cw = fetchContext(ctx, r.rootAdapter)
@@ -71,10 +147,6 @@ func (r repository) Iterate(ctx context.Context, query Query, options ...Iterato
 	return newIterator(cw.ctx, cw.adapter, query, options)
 }
 
-// Aggregate calculate aggregate over the given field.
-// Supported aggregate: count, sum, avg, max, min.
-// Any select, group, offset, limit and sort query will be ignored automatically.
-// If complex aggregation is needed, consider using All instead,
 func (r repository) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-aggregate", "aggregating records")
 	defer finish(nil)
@@ -95,15 +167,12 @@ func (r repository) aggregate(cw contextWrapper, query Query, aggregate string, 
 	return cw.adapter.Aggregate(cw.ctx, query, aggregate, field)
 }
 
-// MustAggregate calculate aggregate over the given field.
-// It'll panic if any error eccured.
 func (r repository) MustAggregate(ctx context.Context, query Query, aggregate string, field string) int {
 	result, err := r.Aggregate(ctx, query, aggregate, field)
 	must(err)
 	return result
 }
 
-// Count retrieves count of results that match the query.
 func (r repository) Count(ctx context.Context, collection string, queriers ...Querier) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-count", "aggregating records")
 	defer finish(nil)
@@ -115,16 +184,12 @@ func (r repository) Count(ctx context.Context, collection string, queriers ...Qu
 	return r.aggregate(cw, Build(collection, queriers...), "count", "*")
 }
 
-// MustCount retrieves count of results that match the query.
-// It'll panic if any error eccured.
 func (r repository) MustCount(ctx context.Context, collection string, queriers ...Querier) int {
 	count, err := r.Count(ctx, collection, queriers...)
 	must(err)
 	return count
 }
 
-// Find a record that match the query.
-// If no result found, it'll return not found error.
 func (r repository) Find(ctx context.Context, record interface{}, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-find", "finding a record")
 	defer finish(nil)
@@ -138,8 +203,6 @@ func (r repository) Find(ctx context.Context, record interface{}, queriers ...Qu
 	return r.find(cw, doc, query)
 }
 
-// MustFind a record that match the query.
-// If no result found, it'll panic.
 func (r repository) MustFind(ctx context.Context, record interface{}, queriers ...Querier) {
 	must(r.Find(ctx, record, queriers...))
 }
@@ -157,7 +220,6 @@ func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 	return scanOne(cur, doc)
 }
 
-// FindAll records that match the query.
 func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-find-all", "finding all records")
 	defer finish(nil)
@@ -173,8 +235,6 @@ func (r repository) FindAll(ctx context.Context, records interface{}, queriers .
 	return r.findAll(cw, col, query)
 }
 
-// MustFindAll records that match the query.
-// It'll panic if any error eccured.
 func (r repository) MustFindAll(ctx context.Context, records interface{}, queriers ...Querier) {
 	must(r.FindAll(ctx, records, queriers...))
 }
@@ -192,8 +252,6 @@ func (r repository) findAll(cw contextWrapper, col *Collection, query Query) err
 	return scanAll(cur, col)
 }
 
-// FindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
-// Limit and Offset property will be ignored when performing count query.
 func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-find-and-count-all", "finding all records")
 	defer finish(nil)
@@ -213,9 +271,6 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 	return r.aggregate(cw, query, "count", "*")
 }
 
-// MustFindAndCountAll is convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
-// Limit and Offset property will be ignored when performing count query.
-// It'll panic if any error eccured.
 func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {
 	count, err := r.FindAndCountAll(ctx, records, queriers...)
 	must(err)
@@ -223,7 +278,6 @@ func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}
 	return count
 }
 
-// Insert an record to database.
 func (r repository) Insert(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-insert", "inserting a record")
 	defer finish(nil)
@@ -298,8 +352,6 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	return nil
 }
 
-// MustInsert an record to database.
-// It'll panic if any error occurred.
 func (r repository) MustInsert(ctx context.Context, record interface{}, mutators ...Mutator) {
 	must(r.Insert(ctx, record, mutators...))
 }
@@ -375,8 +427,6 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	return nil
 }
 
-// Update an record in database.
-// It'll panic if any error occurred.
 func (r repository) Update(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-update", "updating a record")
 	defer finish(nil)
@@ -439,8 +489,6 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 	return nil
 }
 
-// MustUpdate an record in database.
-// It'll panic if any error occurred.
 func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator) {
 	must(r.Update(ctx, record, mutators...))
 }
@@ -662,7 +710,6 @@ func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...M
 	must(r.UpdateAll(ctx, query, mutates...))
 }
 
-// Delete single entry.
 func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
 	finish := r.instrumenter.Observe(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
@@ -793,13 +840,10 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	return nil
 }
 
-// MustDelete single entry.
-// It'll panic if any error eccured.
 func (r repository) MustDelete(ctx context.Context, record interface{}, options ...Cascade) {
 	must(r.Delete(ctx, record, options...))
 }
 
-// DeleteAll records athat matches query.
 func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
@@ -812,8 +856,6 @@ func (r repository) DeleteAll(ctx context.Context, query Query) error {
 	return err
 }
 
-// MustDeleteAll records athat matches query.
-// It'll panic if any error eccured.
 func (r repository) MustDeleteAll(ctx context.Context, query Query) {
 	must(r.DeleteAll(ctx, query))
 }
@@ -827,9 +869,6 @@ func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query)
 	return cw.adapter.Delete(cw.ctx, query)
 }
 
-// Preload loads association with given query.
-// If association is already loaded, this will do nothing.
-// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
@@ -876,8 +915,6 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	return scanMulti(cur, keyField, keyType, targets)
 }
 
-// MustPreload loads association with given query.
-// It'll panic if any error occurred.
 func (r repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier) {
 	must(r.Preload(ctx, records, field, queriers...))
 }
@@ -1004,7 +1041,6 @@ func (r repository) withDefaultScope(ddata documentData, query Query) Query {
 	return query
 }
 
-// Transaction performs transaction with given function argument.
 func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	finish := r.instrumenter.Observe(ctx, "rel-transaction", "transaction")
 	defer finish(nil)

@@ -13,8 +13,6 @@ import (
 
 var (
 	version = ""
-	commit  = ""
-	date    = ""
 )
 
 func main() {
@@ -35,7 +33,7 @@ func main() {
 	case "migrate", "up", "rollback", "down":
 		err = internal.ExecMigrate(ctx, os.Args)
 	case "version", "-v", "-version":
-		fmt.Println("REL " + version + " (Commit: " + commit + " Date: " + date + ")")
+		fmt.Println("REL CLI" + version)
 	case "-help":
 		fmt.Println("Usage: rel [command] -help")
 		fmt.Println("Available commands: migrate, rollback")

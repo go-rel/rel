@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Repository defines sets of available database operations.
+// Repository for interacting with database.
 type Repository interface {
 	// Adapter used in this repository.
 	Adapter(ctx context.Context) Adapter

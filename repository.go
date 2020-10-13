@@ -881,7 +881,6 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		sl   slice
-		cw   = fetchContext(ctx, r.rootAdapter)
 		path = strings.Split(field, ".")
 		rt   = reflect.TypeOf(records)
 	)
@@ -897,13 +896,58 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		sl = NewDocument(records)
 	}
 
+	if sl.Len() == 0 {
+		return nil
+	}
+
+	a := sl.Get(sl.Len() - 1).Association(path[0])
+	if a.Through() == "" {
+		return r.preload(ctx, sl, path, queriers...)
+	}
+
+	return r.preloadThrough(ctx, sl, path, field, a, queriers...)
+}
+
+func (r repository) preloadThrough(ctx context.Context, sl slice, path []string, fieldName string, assoc Association, queriers ...Querier) error {
+	throughPath := append(path[:len(path)-1], assoc.Through())
+	if err := r.preload(ctx, sl, throughPath); err != nil {
+		return err
+	}
+
+	targetName := fieldName
+	if assoc.Type() == HasMany {
+		targetName = strings.TrimSuffix(targetName, "s")
+	}
+	if err := r.preload(ctx, sl, append(throughPath, targetName)); err != nil {
+		return err
+	}
+
+	for i := 0; i < sl.Len(); i++ {
+		recordDoc := sl.Get(i)
+		field, _ := recordDoc.Value(fieldName)
+		fieldv := reflect.ValueOf(field)
+
+		record, _ := recordDoc.Value(assoc.Through())
+		rv := reflect.ValueOf(record)
+		for i := 0; i < rv.Len(); i++ {
+			assocDoc, _ := NewDocument(rv.Index(i).Addr(), true).Value(targetName)
+			targetv := reflect.ValueOf(assocDoc)
+			fieldv.Set(reflect.Append(fieldv, targetv))
+		}
+	}
+
+	return nil
+}
+
+func (r repository) preload(ctx context.Context, sl slice, path []string, queriers ...Querier) error {
 	var (
+		cw                                               = fetchContext(ctx, r.rootAdapter)
 		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
 		ids                                              = r.targetIDs(targets)
 		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)
 
-	if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
+	if loaded && !bool(query.ReloadQuery) {
 		return nil
 	}
 

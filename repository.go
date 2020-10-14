@@ -39,6 +39,7 @@ type Repository interface {
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
+	Exec(ctx context.Context, statement string, args ...interface{}) (int64, error)
 }
 
 type repository struct {
@@ -1051,6 +1052,17 @@ func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) er
 	}()
 
 	return err
+}
+
+// Exec executes raw sql. Returns number of rows affected.
+func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int64, error) {
+	rowsAffected, _, err := r.Adapter(ctx).Exec(ctx, stmt, args)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }
 
 // New create new repo using adapter.

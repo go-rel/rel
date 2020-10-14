@@ -20,4 +20,5 @@ type Adapter interface {
 	Rollback(ctx context.Context) error
 
 	Apply(ctx context.Context, migration Migration) error
+	Exec(ctx context.Context, stmt string, args []interface{}) (int64, int64, error)
 }

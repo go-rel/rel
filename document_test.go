@@ -395,13 +395,13 @@ func TestDocument_Association(t *testing.T) {
 			name:    "User",
 			record:  &User{},
 			hasOne:  []string{"address", "work_address"},
-			hasMany: []string{"transactions", "user_roles", "emails"},
+			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
 		},
 		{
 			name:    "User Cached",
 			record:  &User{},
 			hasOne:  []string{"address", "work_address"},
-			hasMany: []string{"transactions", "user_roles", "emails"},
+			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
 		},
 		{
 			name:      "Transaction",

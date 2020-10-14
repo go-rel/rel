@@ -20,13 +20,22 @@ type User struct {
 	// user:id <- user_id:user_roles:role_id -> role:id
 	Roles []Role `through:"user_roles"`
 
-	// many to many: self-referencing with explicitly defined ref and fk.
-	// omit mapped field.
-	Followers  []User `ref:"id:following_id" fk:"id:follower_id" through:"followers"`
-	Followings []User `ref:"id:follower_id" fk:"id:following_id" through:"followers"`
+	// self-referencing needs two intermediate reference to be set up.
+	Follows   []Follow `ref:"id" fk:"following_id"`
+	Followeds []Follow `ref:"id" fk:"follower_id"`
+
+	// association through
+	Followings []User `through:"follows"`
+	Followers  []User `through:"followeds"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type Follow struct {
+	FollowerID  int  `db:",primary"`
+	FollowingID int  `db:",primary"`
+	Accepted    bool // this way, it may contains additional data
 }
 
 type Email struct {
@@ -84,7 +93,7 @@ type Role struct {
 
 	// explicit many to many declaration:
 	// role:id <- role_id:user_roles:user_id -> user:id
-	Users []User `ref:"id:role_id" fk:"id:user_id" through:"user_roles"`
+	Users []User `through:"user_roles"`
 }
 
 type UserRole struct {

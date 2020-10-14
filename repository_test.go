@@ -1434,8 +1434,8 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        10,
-		UpdatedAt: now(),
 		CreatedAt: now(),
+		UpdatedAt: now(),
 		UserRoles: []UserRole{
 			{UserID: 10, RoleID: 2},
 		},
@@ -1461,8 +1461,8 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
 		ID:        10,
-		UpdatedAt: now(),
 		CreatedAt: now(),
+		UpdatedAt: now(),
 		UserRoles: []UserRole{
 			{RoleID: 2},
 		},
@@ -2241,8 +2241,8 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID:        1,
-		UpdatedAt: now(),
 		CreatedAt: now(),
+		UpdatedAt: now(),
 		Emails: []Email{
 			{ID: 3, UserID: 1, Email: "email3@gmail.com"},
 			{ID: 4, UserID: 1, Email: "email4@gmail.com"},

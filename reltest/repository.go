@@ -292,7 +292,7 @@ func (r *Repository) ExpectTransaction(fn func(*Repository)) {
 // Exec raw sql.
 func (r *Repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int64, error) {
 	ret := r.mock.Called(ctx, stmt, args)
-	return (int64)(ret.Int(0)), ret.Error(1)
+	return int64(ret.Int(0)), ret.Error(1)
 }
 
 // AssertExpectations asserts that everything was in fact called as expected. Calls may have occurred in any order.

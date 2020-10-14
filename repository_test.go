@@ -1255,6 +1255,7 @@ func TestRepository_Update_saveBelongsTo(t *testing.T) {
 			ID:        1,
 			Name:      "name",
 			UpdatedAt: now(),
+			CreatedAt: now(),
 		},
 	}, profile)
 
@@ -1344,6 +1345,7 @@ func TestRepository_Update_saveHasOne(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		UpdatedAt: now(),
+		CreatedAt: now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1375,6 +1377,7 @@ func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		UpdatedAt: now(),
+		CreatedAt: now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1432,6 +1435,7 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        10,
 		UpdatedAt: now(),
+		CreatedAt: now(),
 		UserRoles: []UserRole{
 			{UserID: 10, RoleID: 2},
 		},
@@ -1458,6 +1462,7 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        10,
 		UpdatedAt: now(),
+		CreatedAt: now(),
 		UserRoles: []UserRole{
 			{RoleID: 2},
 		},
@@ -2237,6 +2242,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		UpdatedAt: now(),
+		CreatedAt: now(),
 		Emails: []Email{
 			{ID: 3, UserID: 1, Email: "email3@gmail.com"},
 			{ID: 4, UserID: 1, Email: "email4@gmail.com"},

@@ -44,7 +44,7 @@ func TestStructset(t *testing.T) {
 				"id":         Set("id", 1),
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
-				"created_at": Set("created_at", time.Time{}),
+				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
 		}
@@ -85,6 +85,7 @@ func TestStructset_skipZero(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"id":         Set("id", 1),
 				"name":       Set("name", "Luffy"),
+				"created_at": Set("created_at", now()),
 				"updated_at": Set("updated_at", now()),
 			},
 		}

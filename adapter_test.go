@@ -87,6 +87,6 @@ func (ta *testAdapter) Result(result interface{}) *testAdapter {
 }
 
 func (ta *testAdapter) Exec(ctx context.Context, stmt string, args []interface{}) (int64, int64, error) {
-	mockArgs := ta.Called(stmt, args)
+	mockArgs := ta.Called(ctx, stmt, args)
 	return int64(mockArgs.Int(0)), int64(mockArgs.Int(1)), mockArgs.Error(2)
 }

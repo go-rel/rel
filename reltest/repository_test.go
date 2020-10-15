@@ -155,3 +155,18 @@ func TestRepository_Transaction_runtimerError(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestRepository_Exec(t *testing.T) {
+	var (
+		repo  = New()
+		query = "UPDATE users SET something = ? WHERE something2 = ?;"
+	)
+
+	repo.mock.On("Exec", context.TODO(), query, []interface{}{3, "sdfds"}).Return(2, nil).Once()
+
+	rowsAffected, err := repo.Exec(context.TODO(), query, 3, "sdfds")
+	assert.Equal(t, int64(2), rowsAffected)
+	assert.Equal(t, nil, err)
+
+	repo.AssertExpectations(t)
+}

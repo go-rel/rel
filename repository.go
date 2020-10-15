@@ -125,6 +125,7 @@ type Repository interface {
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
+
 	Exec(ctx context.Context, statement string, args ...interface{}) (int64, error)
 }
 
@@ -1061,7 +1062,7 @@ func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context
 	})
 }
 
-func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) error) error {
+func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) error) error {	
 	adp, err := cw.adapter.Begin(cw.ctx)
 	if err != nil {
 		return err
@@ -1078,7 +1079,7 @@ func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) er
 				switch e := p.(type) {
 				case runtime.Error:
 					panic(e)
-				case error:
+				case error:	
 					err = e
 				default:
 					panic(e)

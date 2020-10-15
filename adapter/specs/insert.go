@@ -2,6 +2,7 @@ package specs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -144,17 +145,19 @@ func Inserts(t *testing.T, repo rel.Repository) {
 
 	repo.MustInsert(ctx, &user)
 
+	now := time.Now()
+
 	tests := []interface{}{
 		&User{},
 		&User{Name: "insert", Age: 100},
 		&User{Name: "insert", Age: 100, Note: &note},
 		&User{Note: &note},
-		&User{ID: 123, Name: "insert", Age: 100, Note: &note},
+		&User{ID: 123, Name: "insert", Age: 100, Note: &note, CreatedAt: now},
 		&Address{},
 		&Address{Name: "work"},
 		&Address{UserID: &user.ID},
 		&Address{Name: "work", UserID: &user.ID},
-		&Address{ID: 123, Name: "work", UserID: &user.ID},
+		&Address{ID: 123, Name: "work", UserID: &user.ID, CreatedAt: now},
 		&Composite{Primary1: 1, Primary2: 2, Data: "data-1-2"},
 	}
 
@@ -192,19 +195,21 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 
 	repo.MustInsert(ctx, &user)
 
+	now := time.Now()
+
 	tests := []interface{}{
 		&[]User{{}},
 		&[]User{{Name: "insert", Age: 100}},
 		&[]User{{Name: "insert", Age: 100, Note: &note}},
 		&[]User{{Note: &note}},
 		&[]User{{Name: "insert", Age: 100}, {Name: "insert too"}},
-		&[]User{{ID: 224, Name: "insert", Age: 100}, {ID: 234, Name: "insert too"}},
+		&[]User{{ID: 224, Name: "insert", Age: 100, CreatedAt: now}, {ID: 234, Name: "insert too", CreatedAt: now}},
 		&[]Address{{}},
 		&[]Address{{Name: "work"}},
 		&[]Address{{UserID: &user.ID}},
 		&[]Address{{Name: "work", UserID: &user.ID}},
 		&[]Address{{Name: "work"}, {Name: "home"}},
-		&[]Address{{ID: 233, Name: "work"}, {ID: 235, Name: "home"}},
+		&[]Address{{ID: 233, Name: "work", CreatedAt: now}, {ID: 235, Name: "home", CreatedAt: now}},
 	}
 
 	for _, record := range tests {
@@ -217,10 +222,13 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 
 // InsertAllPartialCustomPrimary tests insert multiple specifications.
 func InsertAllPartialCustomPrimary(t *testing.T, repo rel.Repository) {
+
+	now := time.Now()
+
 	tests := []interface{}{
-		&[]User{{ID: 300, Name: "insert 300", Age: 100}, {Name: "insert 300+?"}},
-		&[]User{{Name: "insert 305-?", Age: 100}, {ID: 305, Name: "insert 305+?"}},
-		&[]User{{Name: "insert 310-?"}, {ID: 310, Name: "insert 310", Age: 100}, {Name: "insert 300+?"}},
+		&[]User{{ID: 300, Name: "insert 300", Age: 100, CreatedAt: now}, {Name: "insert 300+?"}},
+		&[]User{{Name: "insert 305-?", Age: 100}, {ID: 305, Name: "insert 305+?", CreatedAt: now}},
+		&[]User{{Name: "insert 310-?"}, {ID: 310, Name: "insert 310", Age: 100, CreatedAt: now}, {Name: "insert 300+?"}},
 	}
 
 	for _, record := range tests {

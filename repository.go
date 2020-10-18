@@ -1099,7 +1099,7 @@ func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) er
 
 // Exec executes raw sql. Returns number of rows affected.
 func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int64, error) {
-	rowsAffected, _, err := r.Adapter(ctx).Exec(ctx, stmt, args)
+	_, rowsAffected, err := r.Adapter(ctx).Exec(ctx, stmt, args)
 
 	if err != nil {
 		return 0, err

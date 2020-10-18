@@ -289,6 +289,11 @@ func (r *Repository) ExpectTransaction(fn func(*Repository)) {
 	r.ctxData.txDepth--
 }
 
+// ExpectExec for mocking Exec
+func (r *Repository) ExpectExec(stmt string, args []interface{}, rets []interface{}) *Expect {
+	return newExpect(r, "Exec", args, rets)
+}
+
 // Exec raw sql.
 func (r *Repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int64, error) {
 	ret := r.mock.Called(ctx, stmt, args)

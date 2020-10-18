@@ -3300,14 +3300,17 @@ func TestRepository_Exec(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		query   = "UPDATE users SET something = ? WHERE something2 = ?;"
+		query = "UPDATE users SET something = ? WHERE something2 = ?;"
+		args = []interface{}{3, "sdfds"}
+		retRowsAffected = 1
+		rets = []interface{}{2, retRowsAffected, nil}
 	)
 
-	adapter.On("Exec", context.TODO(), query, []interface{}{3, "sdfds"}).Return(2, 1, nil).Once()
+	adapter.On("Exec", context.TODO(), query, args).Return(rets...).Once()
 
-	rowsAffected, err := repo.Exec(context.TODO(), query, 3, "sdfds")
-	assert.Equal(t, int64(2), rowsAffected)
-	assert.Equal(t, nil, err)
+	rowsAffected, err := repo.Exec(context.TODO(), query, args...)
+	assert.Equal(t, int64(retRowsAffected), rowsAffected)
+	assert.Equal(t, rets[2], err)
 
 	adapter.AssertExpectations(t)
 }

@@ -160,13 +160,16 @@ func TestRepository_Exec(t *testing.T) {
 	var (
 		repo  = New()
 		query = "UPDATE users SET something = ? WHERE something2 = ?;"
+		args = []interface{}{3, "sdfds"}
+		retRowsAffected = 2
+		rets = []interface{}{retRowsAffected, nil}
 	)
 
-	repo.mock.On("Exec", context.TODO(), query, []interface{}{3, "sdfds"}).Return(2, nil).Once()
+	repo.ExpectExec(query, args, rets)
 
-	rowsAffected, err := repo.Exec(context.TODO(), query, 3, "sdfds")
-	assert.Equal(t, int64(2), rowsAffected)
-	assert.Equal(t, nil, err)
+	rowsAffected, err := repo.Exec(context.TODO(), query, args...)
+	assert.Equal(t, int64(retRowsAffected), rowsAffected)
+	assert.Equal(t, rets[1], err)
 
 	repo.AssertExpectations(t)
 }

@@ -1062,7 +1062,7 @@ func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context
 	})
 }
 
-func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) error) error {	
+func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) error) error {
 	adp, err := cw.adapter.Begin(cw.ctx)
 	if err != nil {
 		return err

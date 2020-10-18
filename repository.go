@@ -1079,7 +1079,7 @@ func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) er
 				switch e := p.(type) {
 				case runtime.Error:
 					panic(e)
-				case error:	
+				case error:
 					err = e
 				default:
 					panic(e)

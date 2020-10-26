@@ -100,3 +100,24 @@ type UserRole struct {
 	UserID int `db:",primary"`
 	RoleID int `db:",primary"`
 }
+
+type Supplier struct {
+	ID   int
+	Name string
+
+	Account        Account
+	AccountHistory AccountHistory `through:"account"`
+}
+
+type Account struct {
+	ID             int
+	SupplierID     int
+	AccountNumber  string
+	AccountHistory AccountHistory
+}
+
+type AccountHistory struct {
+	ID           int
+	AccountID    int
+	CreditRating int
+}

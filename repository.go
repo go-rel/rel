@@ -915,25 +915,16 @@ func (r repository) preloadThrough(ctx context.Context, sl slice, path []string,
 	}
 
 	targetName := fieldName
-	if assoc.Type() == HasMany {
-		targetName = strings.TrimSuffix(targetName, "s")
-	}
 	if err := r.preload(ctx, sl, append(throughPath, targetName)); err != nil {
 		return err
 	}
 
 	for i := 0; i < sl.Len(); i++ {
 		recordDoc := sl.Get(i)
-		field, _ := recordDoc.Value(fieldName)
-		fieldv := reflect.ValueOf(field)
 
 		record, _ := recordDoc.Value(assoc.Through())
-		rv := reflect.ValueOf(record)
-		for i := 0; i < rv.Len(); i++ {
-			assocDoc, _ := NewDocument(rv.Index(i).Addr(), true).Value(targetName)
-			targetv := reflect.ValueOf(assocDoc)
-			recordDoc.SetValue(fieldName, reflect.Append(fieldv, targetv))
-		}
+		assocDoc, _ := NewDocument(record, true).Value(targetName)
+		recordDoc.SetValue(fieldName, assocDoc)
 	}
 
 	return nil

@@ -3177,6 +3177,114 @@ func TestRepository_Preload_queryError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_PreloadThrough_hasOne(t *testing.T) {
+	var (
+		adapter        = &testAdapter{}
+		repo           = New(adapter)
+		supplier       = Supplier{ID: 1, Name: "Supplier 1"}
+		account        = Account{ID: 2, SupplierID: supplier.ID, AccountNumber: "222222"}
+		accountHistory = AccountHistory{ID: 3, AccountID: account.ID, CreditRating: 3333}
+		cur            = &testCursor{}
+	)
+
+	adapter.On("Query", From("accounts").Where(In("supplier_id", supplier.ID))).Return(cur, nil).Once()
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "supplier_id", "account_number"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(account.ID, account.SupplierID, account.AccountNumber).Twice()
+	cur.On("Next").Return(false).Once()
+
+	adapter.On("Query", From("account_histories").Where(In("account_id", account.ID))).Return(cur, nil).Once()
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "account_id", "credit_rating"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(accountHistory.ID, accountHistory.AccountID, accountHistory.CreditRating).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &supplier, "account_history"))
+	assert.Equal(t, accountHistory, supplier.AccountHistory)
+	assert.Equal(t, accountHistory, supplier.Account.AccountHistory)
+}
+
+func TestRepository_PreloadThrough_sliceHasOne(t *testing.T) {
+	var (
+		adapter   = &testAdapter{}
+		repo      = New(adapter)
+		suppliers = []Supplier{
+			Supplier{ID: 1, Name: "Supplier 1"},
+			Supplier{ID: 4, Name: "Supplier 4"},
+		}
+		accounts = []Account{
+			Account{ID: 2, SupplierID: suppliers[0].ID, AccountNumber: "222222"},
+			Account{ID: 5, SupplierID: suppliers[1].ID, AccountNumber: "555555"},
+		}
+		accountHistories = []AccountHistory{
+			AccountHistory{ID: 3, AccountID: accounts[0].ID, CreditRating: 3333},
+			AccountHistory{ID: 6, AccountID: accounts[1].ID, CreditRating: 6666},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("accounts").Where(In("supplier_id", suppliers[0].ID, suppliers[1].ID))).Return(cur, nil).Once()
+	adapter.On("Query", From("accounts").Where(In("supplier_id", suppliers[1].ID, suppliers[0].ID))).Return(cur, nil).Once()
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "supplier_id", "account_number"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(accounts[0].ID, accounts[0].SupplierID, accounts[0].AccountNumber).Twice()
+	cur.MockScan(accounts[1].ID, accounts[1].SupplierID, accounts[1].AccountNumber).Twice()
+	cur.On("Next").Return(false).Once()
+
+	adapter.On("Query", From("account_histories").Where(In("account_id", accounts[0].ID, accounts[1].ID))).Return(cur, nil).Once()
+	adapter.On("Query", From("account_histories").Where(In("account_id", accounts[1].ID, accounts[0].ID))).Return(cur, nil).Once()
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "account_id", "credit_rating"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(accountHistories[0].ID, accountHistories[0].AccountID, accountHistories[0].CreditRating).Twice()
+	cur.MockScan(accountHistories[1].ID, accountHistories[1].AccountID, accountHistories[1].CreditRating).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &suppliers, "account_history"))
+	for i := 0; i < 2; i++ {
+		assert.Equal(t, accountHistories[i], suppliers[i].AccountHistory)
+		assert.Equal(t, accountHistories[i], suppliers[i].Account.AccountHistory)
+	}
+}
+
+func TestRepository_PreloadThrough_intermediaryQueryError(t *testing.T) {
+	var (
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		supplier = Supplier{ID: 1, Name: "Supplier 1"}
+		err      = errors.New("intermediaryError")
+	)
+
+	adapter.On("Query", From("accounts").Where(In("supplier_id", supplier.ID))).Return(&testCursor{}, err).Once()
+
+	assert.Error(t, repo.Preload(context.TODO(), &supplier, "account_history"))
+}
+
+func TestRepository_PreloadThrough_targerQueryError(t *testing.T) {
+	var (
+		adapter  = &testAdapter{}
+		repo     = New(adapter)
+		supplier = Supplier{ID: 1, Name: "Supplier 1"}
+		account  = Account{ID: 2, SupplierID: supplier.ID, AccountNumber: "222222"}
+		cur      = &testCursor{}
+		err      = errors.New("targetError")
+	)
+
+	adapter.On("Query", From("accounts").Where(In("supplier_id", supplier.ID))).Return(cur, nil).Once()
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "supplier_id", "account_number"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(account.ID, account.SupplierID, account.AccountNumber).Twice()
+	cur.On("Next").Return(false).Once()
+
+	adapter.On("Query", From("account_histories").Where(In("account_id", account.ID))).Return(cur, err).Once()
+
+	assert.Error(t, repo.Preload(context.TODO(), &supplier, "account_history"))
+}
+
 func TestRepository_MustPreload(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}

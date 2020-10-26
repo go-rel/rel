@@ -905,26 +905,25 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		return r.preload(ctx, sl, path, queriers...)
 	}
 
-	return r.preloadThrough(ctx, sl, path, field, a, queriers...)
+	path = append(path[:len(path)-1], a.Through(), path[len(path)-1])
+	return r.preloadThrough(ctx, sl, path, queriers...)
 }
 
-func (r repository) preloadThrough(ctx context.Context, sl slice, path []string, fieldName string, assoc Association, queriers ...Querier) error {
-	throughPath := append(path[:len(path)-1], assoc.Through())
-	if err := r.preload(ctx, sl, throughPath); err != nil {
+func (r repository) preloadThrough(ctx context.Context, sl slice, path []string, queriers ...Querier) error {
+	if err := r.preload(ctx, sl, path[:len(path)-1]); err != nil {
 		return err
 	}
 
-	targetName := fieldName
-	if err := r.preload(ctx, sl, append(throughPath, targetName)); err != nil {
+	if err := r.preload(ctx, sl, path); err != nil {
 		return err
 	}
 
 	for i := 0; i < sl.Len(); i++ {
 		recordDoc := sl.Get(i)
 
-		record, _ := recordDoc.Value(assoc.Through())
-		assocDoc, _ := NewDocument(record, true).Value(targetName)
-		recordDoc.SetValue(fieldName, assocDoc)
+		record, _ := recordDoc.Value(path[len(path)-2])
+		assocDoc, _ := NewDocument(record, true).Value(path[len(path)-1])
+		recordDoc.SetValue(path[len(path)-1], assocDoc)
 	}
 
 	return nil

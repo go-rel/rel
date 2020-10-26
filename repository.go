@@ -932,7 +932,7 @@ func (r repository) preloadThrough(ctx context.Context, sl slice, path []string,
 		for i := 0; i < rv.Len(); i++ {
 			assocDoc, _ := NewDocument(rv.Index(i).Addr(), true).Value(targetName)
 			targetv := reflect.ValueOf(assocDoc)
-			fieldv.Set(reflect.Append(fieldv, targetv))
+			recordDoc.SetValue(fieldName, reflect.Append(fieldv, targetv))
 		}
 	}
 

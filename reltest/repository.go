@@ -290,8 +290,10 @@ func (r *Repository) ExpectTransaction(fn func(*Repository)) {
 }
 
 // ExpectExec for mocking Exec
-func (r *Repository) ExpectExec(stmt string, args []interface{}, rets []interface{}) *Expect {
-	return newExpect(r, "Exec", args, rets)
+func (r *Repository) ExpectExec(stmt string, args []interface{}) *Expect {
+	expectMethodArgs := []interface{}{context.TODO(), stmt, args}
+	
+	return newExpect(r, "Exec", expectMethodArgs, []interface{}{2, nil})
 }
 
 // Exec raw sql.

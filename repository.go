@@ -900,39 +900,38 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		return nil
 	}
 
-	a := sl.Get(sl.Len() - 1).Association(path[0])
-	if a.Through() == "" {
-		return r.preload(ctx, sl, path, queriers...)
+	assoc := NewAssociationData(sl, path)
+	if assoc.Through() == "" {
+		return r.preload(ctx, sl, assoc, queriers...)
 	}
 
-	path = append(path[:len(path)-1], a.Through(), path[len(path)-1])
-	return r.preloadThrough(ctx, sl, path, queriers...)
+	return r.preloadThrough(ctx, sl, assoc, queriers...)
 }
 
-func (r repository) preloadThrough(ctx context.Context, sl slice, path []string, queriers ...Querier) error {
-	if err := r.preload(ctx, sl, path[:len(path)-1]); err != nil {
+func (r repository) preloadThrough(ctx context.Context, sl slice, assoc AssocData, queriers ...Querier) error {
+	if err := r.preload(ctx, sl, NewAssociationData(sl, assoc.IntermediaryPath())); err != nil {
 		return err
 	}
 
-	if err := r.preload(ctx, sl, path); err != nil {
+	if err := r.preload(ctx, sl, NewAssociationData(sl, assoc.FullPath())); err != nil {
 		return err
 	}
 
 	for i := 0; i < sl.Len(); i++ {
 		recordDoc := sl.Get(i)
 
-		record, _ := recordDoc.Value(path[len(path)-2])
-		assocDoc, _ := NewDocument(record, true).Value(path[len(path)-1])
-		recordDoc.SetValue(path[len(path)-1], assocDoc)
+		record, _ := recordDoc.Value(assoc.Through())
+		assocDoc, _ := NewDocument(record, true).Value(assoc.Field())
+		recordDoc.SetValue(assoc.Field(), assocDoc)
 	}
 
 	return nil
 }
 
-func (r repository) preload(ctx context.Context, sl slice, path []string, queriers ...Querier) error {
+func (r repository) preload(ctx context.Context, sl slice, assoc AssocData, queriers ...Querier) error {
 	var (
 		cw                                               = fetchContext(ctx, r.rootAdapter)
-		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, assoc.path)
 		ids                                              = r.targetIDs(targets)
 		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)

@@ -25,9 +25,8 @@ type associationKey struct {
 }
 
 type AssocData struct {
-	path     []string
-	through  string
-	keyField string
+	path    []string
+	through string
 }
 
 func (a AssocData) Through() string {
@@ -50,9 +49,8 @@ func (a AssocData) Field() string {
 func NewAssociationData(sl slice, path []string) AssocData {
 	a := sl.Get(0).Association(path[0])
 	return AssocData{
-		path:     path,
-		through:  a.Through(),
-		keyField: a.ForeignField(),
+		path:    path,
+		through: a.Through(),
 	}
 }
 

@@ -24,6 +24,38 @@ type associationKey struct {
 	index int
 }
 
+type AssocData struct {
+	path     []string
+	through  string
+	keyField string
+}
+
+func (a AssocData) Through() string {
+	return a.through
+}
+
+func (a AssocData) FullPath() []string {
+	return append(a.IntermediaryPath(), a.path[len(a.path)-1])
+}
+
+func (a AssocData) IntermediaryPath() []string {
+	tmpPath := append([]string{}, a.path[:len(a.path)-1]...)
+	return append(tmpPath, a.Through())
+}
+
+func (a AssocData) Field() string {
+	return a.path[len(a.path)-1]
+}
+
+func NewAssociationData(sl slice, path []string) AssocData {
+	a := sl.Get(0).Association(path[0])
+	return AssocData{
+		path:     path,
+		through:  a.Through(),
+		keyField: a.ForeignField(),
+	}
+}
+
 type associationData struct {
 	typ            AssociationType
 	targetIndex    []int

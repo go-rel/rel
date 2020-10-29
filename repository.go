@@ -881,7 +881,6 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 
 	var (
 		sl   slice
-		cw   = fetchContext(ctx, r.rootAdapter)
 		path = strings.Split(field, ".")
 		rt   = reflect.TypeOf(records)
 	)
@@ -897,13 +896,47 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		sl = NewDocument(records)
 	}
 
+	if sl.Len() == 0 {
+		return nil
+	}
+
+	assoc := NewAssociationData(sl, path)
+	if assoc.Through() == "" {
+		return r.preload(ctx, sl, assoc, queriers...)
+	}
+
+	return r.preloadThrough(ctx, sl, assoc, queriers...)
+}
+
+func (r repository) preloadThrough(ctx context.Context, sl slice, assoc AssocData, queriers ...Querier) error {
+	if err := r.preload(ctx, sl, NewAssociationData(sl, assoc.IntermediaryPath())); err != nil {
+		return err
+	}
+
+	if err := r.preload(ctx, sl, NewAssociationData(sl, assoc.FullPath())); err != nil {
+		return err
+	}
+
+	for i := 0; i < sl.Len(); i++ {
+		recordDoc := sl.Get(i)
+
+		record, _ := recordDoc.Value(assoc.Through())
+		assocDoc, _ := NewDocument(record, true).Value(assoc.Field())
+		recordDoc.SetValue(assoc.Field(), assocDoc)
+	}
+
+	return nil
+}
+
+func (r repository) preload(ctx context.Context, sl slice, assoc AssocData, queriers ...Querier) error {
 	var (
-		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
+		cw                                               = fetchContext(ctx, r.rootAdapter)
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, assoc.path)
 		ids                                              = r.targetIDs(targets)
 		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)
 
-	if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
+	if loaded && !bool(query.ReloadQuery) {
 		return nil
 	}
 

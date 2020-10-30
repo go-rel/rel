@@ -903,6 +903,15 @@ func TestBuilder_Where(t *testing.T) {
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
 		},
+		{
+			" WHERE `field1` IN (SELECT `field2` FROM `table2` WHERE `field3` IN (?,?))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1",
+				rel.Select("field2").From("table2").Where(
+					where.InString("field3", []string{"value1", "value2"}),
+				),
+			),
+		},
 	}
 
 	for _, test := range tests {
@@ -944,6 +953,15 @@ func TestBuilder_Where_ordinal(t *testing.T) {
 			" WHERE (\"field1\"=$1 AND \"field2\"=$2)",
 			[]interface{}{"value1", "value2"},
 			where.Eq("field1", "value1").AndEq("field2", "value2"),
+		},
+		{
+			" WHERE \"field1\" IN (SELECT \"field2\" FROM \"table2\" WHERE \"field3\" IN ($1,$2))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1",
+				rel.Select("field2").From("table2").Where(
+					where.InString("field3", []string{"value1", "value2"}),
+				),
+			),
 		},
 	}
 

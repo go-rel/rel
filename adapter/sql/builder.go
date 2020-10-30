@@ -744,6 +744,25 @@ func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 	buffer.Append(filter.Value)
 }
 
+func (b *Builder) buildQueryOrValues(buffer *Buffer, values []interface{}) {
+	if len(values) == 1 {
+		switch values[0].(type) {
+		case rel.Query:
+			s, args := b.Find(values[0].(rel.Query))
+			buffer.WriteString(strings.TrimSuffix(s, ";"))
+			buffer.Append(args...)
+			return
+		}
+	}
+
+	buffer.WriteString(b.ph())
+	for i := 1; i <= len(values)-1; i++ {
+		buffer.WriteByte(',')
+		buffer.WriteString(b.ph())
+	}
+	buffer.Append(values...)
+}
+
 func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 	var (
 		values = filter.Value.([]interface{})
@@ -757,13 +776,9 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 		buffer.WriteString(" NOT IN (")
 	}
 
-	buffer.WriteString(b.ph())
-	for i := 1; i <= len(values)-1; i++ {
-		buffer.WriteByte(',')
-		buffer.WriteString(b.ph())
-	}
+	b.buildQueryOrValues(buffer, values)
+
 	buffer.WriteByte(')')
-	buffer.Append(values...)
 }
 
 func (b *Builder) ph() string {

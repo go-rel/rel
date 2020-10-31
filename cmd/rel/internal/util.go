@@ -21,6 +21,10 @@ func getDatabaseInfo() (string, string, string) {
 		adapter = os.Getenv("DATABASE_ADAPTER")
 		driver = os.Getenv("DATABASE_DRIVER")
 		dsn = os.Getenv("DATABASE_URL")
+	case os.Getenv("SQLITE3_DATABASE") != "":
+		adapter = "github.com/go-rel/rel/adapter/sqlite3"
+		driver = "github.com/mattn/go-sqlite3"
+		dsn = os.Getenv("SQLITE3_DATABASE")
 	case os.Getenv("MYSQL_HOST") != "":
 		adapter = "github.com/go-rel/rel/adapter/mysql"
 		driver = "github.com/go-sql-driver/mysql"
@@ -48,10 +52,6 @@ func getDatabaseInfo() (string, string, string) {
 			os.Getenv("POSTGRESQL_HOST"),
 			os.Getenv("POSTGRESQL_PORT"),
 			os.Getenv("POSTGRESQL_DATABASE"))
-	case os.Getenv("SQLITE3_DATABASE") != "":
-		adapter = "github.com/go-rel/rel/adapter/sqlite3"
-		driver = "github.com/mattn/go-sqlite3"
-		dsn = os.Getenv("SQLITE3_DATABASE")
 	}
 
 	return adapter, driver, dsn

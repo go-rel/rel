@@ -144,7 +144,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 	check(err)
 	check(file.Close())
 
-	cmd := exec.CommandContext(ctx, "go", "run", file.Name(), "migrate")
+	cmd := exec.CommandContext(ctx, "go", "run", "-mod=mod", file.Name(), "migrate")
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd.Run()

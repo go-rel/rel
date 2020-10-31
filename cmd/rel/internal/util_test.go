@@ -63,6 +63,25 @@ func TestGetDatabaseInfo(t *testing.T) {
 		assert.Equal(t, "postgres://user:password@localhost:5432/db?sslmode=disable", url)
 	})
 
+	t.Run("postgresql alternative", func(t *testing.T) {
+		os.Setenv("POSTGRESQL_HOST", "localhost")
+		os.Setenv("POSTGRESQL_PORT", "5432")
+		os.Setenv("POSTGRESQL_DATABASE", "db")
+		os.Setenv("POSTGRESQL_USERNAME", "user")
+		os.Setenv("POSTGRESQL_PASSWORD", "password")
+
+		defer os.Setenv("POSTGRESQL_HOST", "")
+		defer os.Setenv("POSTGRESQL_PORT", "")
+		defer os.Setenv("POSTGRESQL_DATABASE", "")
+		defer os.Setenv("POSTGRESQL_USERNAME", "")
+		defer os.Setenv("POSTGRESQL_PASSWORD", "")
+
+		adapter, driver, url := getDatabaseInfo()
+		assert.Equal(t, "github.com/go-rel/rel/adapter/postgres", adapter)
+		assert.Equal(t, "github.com/lib/pq", driver)
+		assert.Equal(t, "postgres://user:password@localhost:5432/db?sslmode=disable", url)
+	})
+
 	t.Run("sqlite3", func(t *testing.T) {
 		os.Setenv("SQLITE3_DATABASE", "test.db")
 		defer os.Setenv("SQLITE3_DATABASE", "")

@@ -122,4 +122,4 @@ jobs:
           POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
         run: go test -race -tags=all -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Codecov
-        uses: codecov/codecov-action@v1.0.13
+        uses: codecov/codecov-action@v1

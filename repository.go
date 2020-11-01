@@ -334,17 +334,6 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 		doc.SetValue(pField, pValue)
 	}
 
-	if mutation.Reload {
-		var (
-			filter = filterDocument(doc)
-		)
-
-		// fetch record
-		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {
-			return err
-		}
-	}
-
 	if mutation.Cascade {
 		if err := r.saveHasOne(cw, doc, &mutation); err != nil {
 			return err

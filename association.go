@@ -190,8 +190,8 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 		assocData = associationData{
 			targetIndex: sf.Index,
 			through:     sf.Tag.Get("through"),
-			autoload:    sf.Tag.Get("autoload") == "true",
-			autosave:    sf.Tag.Get("autosave") == "true",
+			autoload:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autoload") == "true",
+			autosave:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autosave") == "true",
 		}
 	)
 

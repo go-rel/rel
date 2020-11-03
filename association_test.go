@@ -44,6 +44,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: transaction.BuyerID,
 			foreignField:   "id",
 			foreignValue:   transaction.Buyer.ID,
+			autoload:       true,
 		},
 		{
 			record:         "Transaction",
@@ -57,6 +58,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: transactionLoaded.BuyerID,
 			foreignField:   "id",
 			foreignValue:   transactionLoaded.Buyer.ID,
+			autoload:       true,
 		},
 		{
 			record:         "User",
@@ -70,7 +72,6 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: user.ID,
 			foreignField:   "user_id",
 			foreignValue:   nil,
-			autoload:       true,
 			autosave:       true,
 		},
 		{
@@ -85,7 +86,6 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: userLoaded.ID,
 			foreignField:   "user_id",
 			foreignValue:   nil,
-			autoload:       true,
 			autosave:       true,
 		},
 		{

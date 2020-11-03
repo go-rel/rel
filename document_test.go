@@ -397,20 +397,19 @@ func TestDocument_Association(t *testing.T) {
 			record:  &User{},
 			hasOne:  []string{"address", "work_address"},
 			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
-			preload: []string{"address", "user_roles", "emails"},
 		},
 		{
 			name:    "User Cached",
 			record:  &User{},
 			hasOne:  []string{"address", "work_address"},
 			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
-			preload: []string{"address", "user_roles", "emails"},
 		},
 		{
 			name:      "Transaction",
 			record:    &Transaction{},
 			belongsTo: []string{"buyer", "address"},
 			hasMany:   []string{"histories"},
+			preload:   []string{"buyer"},
 		},
 		{
 			name:      "Address",

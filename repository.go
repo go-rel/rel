@@ -214,7 +214,7 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 }
 
 func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
-	query = r.withDefaultScope(doc.data, query)
+	query = r.withDefaultScope(doc.data, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query.Limit(1))
 	if err != nil {
 		return err
@@ -227,11 +227,9 @@ func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 	}
 	finish(nil)
 
-	if query.CascadeQuery {
-		for i := range query.PreloadQuery {
-			if err := r.preload(cw, doc, query.PreloadQuery[i], nil); err != nil {
-				return err
-			}
+	for i := range query.PreloadQuery {
+		if err := r.preload(cw, doc, query.PreloadQuery[i], nil); err != nil {
+			return err
 		}
 	}
 
@@ -258,7 +256,7 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 }
 
 func (r repository) findAll(cw contextWrapper, col *Collection, query Query) error {
-	query = r.withDefaultScope(col.data, query)
+	query = r.withDefaultScope(col.data, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query)
 	if err != nil {
 		return err
@@ -271,11 +269,9 @@ func (r repository) findAll(cw contextWrapper, col *Collection, query Query) err
 	}
 	finish(nil)
 
-	if query.CascadeQuery {
-		for i := range query.PreloadQuery {
-			if err := r.preload(cw, col, query.PreloadQuery[i], nil); err != nil {
-				return err
-			}
+	for i := range query.PreloadQuery {
+		if err := r.preload(cw, col, query.PreloadQuery[i], nil); err != nil {
+			return err
 		}
 	}
 
@@ -479,7 +475,7 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 
 	if !mutation.IsMutatesEmpty() {
 		var (
-			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade))
+			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade), false)
 		)
 
 		if updatedCount, err := cw.adapter.Update(cw.ctx, query, mutation.Mutates); err != nil {
@@ -925,7 +921,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 	}
 
 	var (
-		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query))
+		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query, false))
 	)
 
 	if err != nil {
@@ -1052,13 +1048,17 @@ func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
 	return ids
 }
 
-func (r repository) withDefaultScope(ddata documentData, query Query) Query {
+func (r repository) withDefaultScope(ddata documentData, query Query, preload bool) Query {
 	if query.UnscopedQuery {
 		return query
 	}
 
 	if ddata.flag.Is(HasDeletedAt) {
 		query = query.Where(Nil("deleted_at"))
+	}
+
+	if preload && bool(query.CascadeQuery) {
+		query.PreloadQuery = append(ddata.preload, query.PreloadQuery...)
 	}
 
 	return query

@@ -294,6 +294,26 @@ func TestRepository_Find_withPreloadError(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Find_scanError(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		cur     = &testCursor{}
+		query   = From("users").Limit(1)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	cur.On("Fields").Return([]string(nil), errors.New("error")).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Find_error(t *testing.T) {
 	var (
 		user    User
@@ -489,6 +509,27 @@ func TestRepository_FindAll_withPreloadError(t *testing.T) {
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
 	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_scanError(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1)
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	cur.On("Fields").Return([]string(nil), errors.New("error")).Once()
+	cur.On("Close").Return(nil).Once()
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &users, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
 }
 
 func TestRepository_FindAll_error(t *testing.T) {

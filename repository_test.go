@@ -280,13 +280,14 @@ func TestRepository_Find_withPreloadError(t *testing.T) {
 		repo    = New(adapter)
 		query   = From("users").Limit(1).Preload("address")
 		cur     = createCursor(1)
+		err     = errors.New("error")
 	)
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
-		Return(&testCursor{}, errors.New("error")).Once()
+		Return(&testCursor{}, err).Once()
 
-	assert.Equal(t, errors.New("error"), repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
 	assert.Equal(t, 10, user.ID)
 	assert.False(t, cur.Next())
 
@@ -301,14 +302,15 @@ func TestRepository_Find_scanError(t *testing.T) {
 		repo    = New(adapter)
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
+		err     = errors.New("error")
 	)
 
 	adapter.On("Query", query).Return(cur, nil).Once()
 
-	cur.On("Fields").Return([]string(nil), errors.New("error")).Once()
+	cur.On("Fields").Return([]string(nil), err).Once()
 	cur.On("Close").Return(nil).Once()
 
-	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -321,11 +323,12 @@ func TestRepository_Find_error(t *testing.T) {
 		repo    = New(adapter)
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
+		err     = errors.New("error")
 	)
 
-	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
+	adapter.On("Query", query).Return(cur, err).Once()
 
-	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -489,11 +492,12 @@ func TestRepository_FindAll_withPreloadError(t *testing.T) {
 		query      = From("addresses").Preload("user")
 		cur        = &testCursor{}
 		curPreload = &testCursor{}
+		err        = errors.New("error")
 	)
 
 	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
 	adapter.On("Query", From("users").Where(In("id", 20))).
-		Return(curPreload, errors.New("error")).Once()
+		Return(curPreload, err).Once()
 
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
 	cur.On("Next").Return(true).Once()
@@ -501,7 +505,7 @@ func TestRepository_FindAll_withPreloadError(t *testing.T) {
 	cur.On("Next").Return(false).Once()
 	cur.On("Close").Return(nil).Once()
 
-	assert.Equal(t, errors.New("error"), repo.FindAll(context.TODO(), &addresses, query))
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &addresses, query))
 	assert.Len(t, addresses, 1)
 	assert.Equal(t, 10, addresses[0].ID)
 	assert.Equal(t, 20, *addresses[0].UserID)
@@ -521,7 +525,7 @@ func TestRepository_FindAll_scanError(t *testing.T) {
 		err     = errors.New("error")
 	)
 
-	cur.On("Fields").Return([]string(nil), errors.New("error")).Once()
+	cur.On("Fields").Return([]string(nil), err).Once()
 	cur.On("Close").Return(nil).Once()
 
 	adapter.On("Query", query).Return(cur, nil).Once()
@@ -981,11 +985,12 @@ func TestRepository_Insert_error(t *testing.T) {
 			"created_at": Set("created_at", now()),
 			"updated_at": Set("updated_at", now()),
 		}
+		err = errors.New("error")
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(0, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), mutates).Return(0, err).Once()
 
-	assert.NotNil(t, repo.Insert(context.TODO(), &user, mutators...))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
 
 	adapter.AssertExpectations(t)

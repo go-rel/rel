@@ -8,7 +8,7 @@ type Querier interface {
 // Build for given table using given queriers.
 func Build(table string, queriers ...Querier) Query {
 	var (
-		query Query
+		query = newQuery()
 	)
 
 	if len(queriers) > 0 {
@@ -40,6 +40,10 @@ func Build(table string, queriers ...Querier) Query {
 			q.Build(&query)
 		case SQLQuery:
 			q.Build(&query)
+		case Preload:
+			q.Build(&query)
+		case Cascade:
+			q.Build(&query)
 		}
 	}
 
@@ -62,9 +66,11 @@ type Query struct {
 	OffsetQuery   Offset
 	LimitQuery    Limit
 	LockQuery     Lock
+	SQLQuery      SQLQuery
 	UnscopedQuery Unscoped
 	ReloadQuery   Reload
-	SQLQuery      SQLQuery
+	CascadeQuery  Cascade
+	PreloadQuery  []string
 }
 
 // Build query.
@@ -106,6 +112,7 @@ func (q Query) Build(query *Query) {
 		}
 
 		query.ReloadQuery = q.ReloadQuery
+		query.CascadeQuery = q.CascadeQuery
 	}
 }
 
@@ -268,20 +275,36 @@ func (q Query) Reload() Query {
 	return q
 }
 
+// Cascade enable/disable autoload association on Find and FindAll query.
+func (q Query) Cascade(c bool) Query {
+	q.CascadeQuery = Cascade(c)
+	return q
+}
+
+// Preload field association.
+func (q Query) Preload(field string) Query {
+	q.PreloadQuery = append(q.PreloadQuery, field)
+	return q
+}
+
+func newQuery() Query {
+	return Query{
+		CascadeQuery: true,
+	}
+}
+
 // Select query create a query with chainable syntax, using select as the starting point.
 func Select(fields ...string) Query {
-	return Query{
-		SelectQuery: SelectQuery{
-			Fields: fields,
-		},
-	}
+	query := newQuery()
+	query.SelectQuery.Fields = fields
+	return query
 }
 
 // From create a query with chainable syntax, using from as the starting point.
 func From(table string) Query {
-	return Query{
-		Table: table,
-	}
+	query := newQuery()
+	query.Table = table
+	return query
 }
 
 // Join create a query with chainable syntax, using join as the starting point.
@@ -296,36 +319,27 @@ func JoinOn(table string, from string, to string) Query {
 
 // JoinWith create a query with chainable syntax, using join as the starting point.
 func JoinWith(mode string, table string, from string, to string) Query {
-	return Query{
-		JoinQuery: []JoinQuery{
-			NewJoinWith(mode, table, from, to),
-		},
+	query := newQuery()
+	query.JoinQuery = []JoinQuery{
+		NewJoinWith(mode, table, from, to),
 	}
-	// var q Query
-	// NewJoinWith(mode, table, from, to).Build(&q) // TODO: ensure this always called last
-
-	// return q
+	return query
 }
 
 // Joinf create a query with chainable syntax, using join as the starting point.
 func Joinf(expr string, args ...interface{}) Query {
-	return Query{
-		JoinQuery: []JoinQuery{
-			NewJoinFragment(expr, args...),
-		},
+	query := newQuery()
+	query.JoinQuery = []JoinQuery{
+		NewJoinFragment(expr, args...),
 	}
-
-	// var q Query
-	// NewJoinFragment(expr, args...).Build(&q) // TODO: ensure this always called last
-
-	// return q
+	return query
 }
 
 // Where create a query with chainable syntax, using where as the starting point.
 func Where(filters ...FilterQuery) Query {
-	return Query{
-		WhereQuery: And(filters...),
-	}
+	query := newQuery()
+	query.WhereQuery = And(filters...)
+	return query
 }
 
 // Offset  Query.
@@ -375,4 +389,12 @@ func (u Unscoped) Build(query *Query) {
 // Apply mutation.
 func (u Unscoped) Apply(doc *Document, mutation *Mutation) {
 	mutation.Unscoped = u
+}
+
+// Preload query.
+type Preload string
+
+// Build query.
+func (p Preload) Build(query *Query) {
+	query.PreloadQuery = append(query.PreloadQuery, string(p))
 }

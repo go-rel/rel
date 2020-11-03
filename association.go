@@ -32,6 +32,7 @@ type associationData struct {
 	foreignField   string
 	foreignIndex   int
 	through        string
+	autoload       bool
 	autosave       bool
 }
 
@@ -147,6 +148,11 @@ func (a Association) Through() string {
 	return a.data.through
 }
 
+// Autoload assoc setting when parent is loaded.
+func (a Association) Autoload() bool {
+	return a.data.autoload
+}
+
 // Autosave setting when parent is created/updated/deleted.
 func (a Association) Autosave() bool {
 	return a.data.autosave
@@ -184,6 +190,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 		assocData = associationData{
 			targetIndex: sf.Index,
 			through:     sf.Tag.Get("through"),
+			autoload:    sf.Tag.Get("autoload") == "true",
 			autosave:    sf.Tag.Get("autosave") == "true",
 		}
 	)

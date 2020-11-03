@@ -11,10 +11,10 @@ type User struct {
 	Name         string
 	Age          int
 	Transactions []Transaction `ref:"id" fk:"user_id"`
-	Address      Address       `autosave:"true"`
+	Address      Address       `autoload:"true" autosave:"true"`
 	WorkAddress  Address
-	UserRoles    []UserRole `autosave:"true"`
-	Emails       []Email    `autosave:"true"`
+	UserRoles    []UserRole `autoload:"true" autosave:"true"`
+	Emails       []Email    `autoload:"true" autosave:"true"`
 
 	// many to many
 	// user:id <- user_id:user_roles:role_id -> role:id

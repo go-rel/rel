@@ -390,6 +390,7 @@ func TestDocument_Association(t *testing.T) {
 		belongsTo []string
 		hasOne    []string
 		hasMany   []string
+		preload   []string
 	}{
 		{
 			name:    "User",
@@ -408,6 +409,7 @@ func TestDocument_Association(t *testing.T) {
 			record:    &Transaction{},
 			belongsTo: []string{"buyer", "address"},
 			hasMany:   []string{"histories"},
+			preload:   []string{"buyer"},
 		},
 		{
 			name:      "Address",
@@ -429,6 +431,7 @@ func TestDocument_Association(t *testing.T) {
 			assert.Equal(t, test.belongsTo, doc.BelongsTo())
 			assert.Equal(t, test.hasOne, doc.HasOne())
 			assert.Equal(t, test.hasMany, doc.HasMany())
+			assert.Equal(t, test.preload, doc.Preload())
 		})
 	}
 }

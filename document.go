@@ -61,6 +61,7 @@ type documentData struct {
 	hasMany      []string
 	primaryField []string
 	primaryIndex []int
+	preload      []string
 	flag         DocumentFlag
 }
 
@@ -315,6 +316,11 @@ func (d Document) HasMany() []string {
 	return d.data.hasMany
 }
 
+// Preload fields of this document.
+func (d Document) Preload() []string {
+	return d.data.preload
+}
+
 // Association of this document with given name.
 func (d Document) Association(name string) Association {
 	index, ok := d.data.index[name]
@@ -440,13 +446,21 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 		}
 
 		if !skipAssoc {
-			switch extractAssociationData(rt, i).typ {
+			var (
+				assocData = extractAssociationData(rt, i)
+			)
+
+			switch assocData.typ {
 			case BelongsTo:
 				data.belongsTo = append(data.belongsTo, name)
 			case HasOne:
 				data.hasOne = append(data.hasOne, name)
 			case HasMany:
 				data.hasMany = append(data.hasMany, name)
+			}
+
+			if assocData.autoload {
+				data.preload = append(data.preload, name)
 			}
 		}
 	}

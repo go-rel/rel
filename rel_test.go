@@ -49,7 +49,7 @@ type Transaction struct {
 	Item      string
 	Status    Status
 	BuyerID   int  `db:"user_id"`
-	Buyer     User `ref:"user_id" fk:"id"`
+	Buyer     User `ref:"user_id" fk:"id" autoload:"true"`
 	AddressID int
 	Address   Address
 	Histories *[]History

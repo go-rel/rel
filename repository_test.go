@@ -227,19 +227,21 @@ func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_Find_withPreloadAndDisabledCascade(t *testing.T) {
+func TestRepository_Find_withCascade(t *testing.T) {
 	var (
-		user    User
-		adapter = &testAdapter{}
-		repo    = New(adapter)
-		query   = From("users").Limit(1).Preload("address").Cascade(false)
-		cur     = createCursor(1)
+		trx        Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions").Limit(1).Cascade(true)
+		cur        = createCursor(1)
+		curPreload = createCursor(0)
 	)
 
-	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil).Once()
 
-	assert.Nil(t, repo.Find(context.TODO(), &user, query))
-	assert.Equal(t, 10, user.ID)
+	assert.Nil(t, repo.Find(context.TODO(), &trx, query))
+	assert.Equal(t, 10, trx.ID)
 	assert.False(t, cur.Next())
 
 	adapter.AssertExpectations(t)
@@ -434,21 +436,23 @@ func TestRepository_FindAll_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_FindAll_withPreloadAndDisabledCascade(t *testing.T) {
+func TestRepository_FindAll_withCascade(t *testing.T) {
 	var (
-		addresses []Address
-		adapter   = &testAdapter{}
-		repo      = New(adapter)
-		query     = From("addresses").Preload("user").Cascade(false)
-		cur       = createCursor(2)
+		trxs       []Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions")
+		cur        = createCursor(2)
+		curPreload = createCursor(0)
 	)
 
-	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil)
 
-	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
-	assert.Len(t, addresses, 2)
-	assert.Equal(t, 10, addresses[0].ID)
-	assert.Equal(t, 10, addresses[1].ID)
+	assert.Nil(t, repo.FindAll(context.TODO(), &trxs, query))
+	assert.Len(t, trxs, 2)
+	assert.Equal(t, 10, trxs[0].ID)
+	assert.Equal(t, 10, trxs[1].ID)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -110,6 +111,10 @@ func ExecMigrate(ctx context.Context, args []string) error {
 
 	fs.Parse(args[2:])
 
+	if *adapter == "" || *driver == "" || *dsn == "" {
+		return fmt.Errorf("rel: missing required parameters:\n\tadapter: %s\n\tdriver: %s\n\tdsn: %s", *adapter, *driver, *dsn)
+	}
+
 	file, err := ioutil.TempFile(tempdir, "rel-*.go")
 	check(err)
 	defer os.Remove(file.Name())
@@ -139,7 +144,7 @@ func ExecMigrate(ctx context.Context, args []string) error {
 	check(err)
 	check(file.Close())
 
-	cmd := exec.CommandContext(ctx, "go", "run", "-mod=readonly", file.Name(), "migrate")
+	cmd := exec.CommandContext(ctx, "go", "run", "-mod=mod", file.Name(), "migrate")
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd.Run()

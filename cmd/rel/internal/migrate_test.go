@@ -11,12 +11,27 @@ import (
 )
 
 func TestExecMigrate(t *testing.T) {
+	t.Run("missing required parameters", func(t *testing.T) {
+		var (
+			ctx  = context.TODO()
+			args = []string{
+				"rel",
+				"migrate",
+			}
+		)
+
+		assert.Equal(t, errors.New("rel: missing required parameters:\n\tadapter: \n\tdriver: \n\tdsn: "), ExecMigrate(ctx, args))
+	})
+
 	t.Run("invalid migration dir", func(t *testing.T) {
 		var (
 			ctx  = context.TODO()
 			args = []string{
 				"rel",
 				"migrate",
+				"-adapter=github.com/go-rel/rel/adapter/sqlite3",
+				"-driver=github.com/mattn/go-sqlite3",
+				"-dsn=:memory:",
 				"-dir=db",
 			}
 		)

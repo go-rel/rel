@@ -227,18 +227,110 @@ func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_Find_queryError(t *testing.T) {
+func TestRepository_Find_withCascade(t *testing.T) {
+	var (
+		trx        Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions").Limit(1).Cascade(true)
+		cur        = createCursor(1)
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &trx, query))
+	assert.Equal(t, 10, trx.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_withPreload(t *testing.T) {
+	var (
+		user       User
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("users").Limit(1).Preload("address")
+		cur        = createCursor(1)
+		curPreload = &testCursor{}
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+		Return(curPreload, nil).Once()
+
+	curPreload.On("Close").Return(nil).Once()
+	curPreload.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	curPreload.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_Find_withPreloadError(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1).Preload("address")
+		cur     = createCursor(1)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+		Return(&testCursor{}, err).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_scanError(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
 		repo    = New(adapter)
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
+		err     = errors.New("error")
 	)
 
-	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
+	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
+	cur.On("Fields").Return([]string(nil), err).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_error(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		cur     = &testCursor{}
+		query   = From("users").Limit(1)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Query", query).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -344,6 +436,110 @@ func TestRepository_FindAll_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAll_withCascade(t *testing.T) {
+	var (
+		trxs       []Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions")
+		cur        = createCursor(2)
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil)
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &trxs, query))
+	assert.Len(t, trxs, 2)
+	assert.Equal(t, 10, trxs[0].ID)
+	assert.Equal(t, 10, trxs[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_withPreload(t *testing.T) {
+	var (
+		addresses  []Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, nil).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_withPreloadError(t *testing.T) {
+	var (
+		addresses  []Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = &testCursor{}
+		err        = errors.New("error")
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, err).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_scanError(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1)
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	cur.On("Fields").Return([]string(nil), err).Once()
+	cur.On("Close").Return(nil).Once()
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &users, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_FindAll_error(t *testing.T) {
 	var (
 		users   []User
@@ -406,7 +602,7 @@ func TestRepository_FindAndCountAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_FindAndCountAll_queryError(t *testing.T) {
+func TestRepository_FindAndCountAll_error(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -530,70 +726,6 @@ func TestRepository_Insert_sets(t *testing.T) {
 	}, user)
 
 	adapter.AssertExpectations(t)
-}
-
-func TestRepository_Insert_reload(t *testing.T) {
-	var (
-		user     User
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		mutators = []Mutator{
-			Reload(true),
-			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		}
-		mutates = map[string]Mutate{
-			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
-		}
-		cur = createCursor(1)
-	)
-
-	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, nil).Once()
-
-	assert.Nil(t, repo.Insert(context.TODO(), &user, mutators...))
-	assert.Equal(t, User{
-		ID:        10,
-		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
-	}, user)
-	assert.False(t, cur.Next())
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
-}
-
-func TestRepository_Insert_reloadError(t *testing.T) {
-	var (
-		user     User
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		mutators = []Mutator{
-			Reload(true),
-			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		}
-		mutates = map[string]Mutate{
-			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
-		}
-		cur = &testCursor{}
-		err = errors.New("error")
-	)
-
-	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, err).Once()
-
-	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_Insert_saveBelongsTo(t *testing.T) {
@@ -857,11 +989,12 @@ func TestRepository_Insert_error(t *testing.T) {
 			"created_at": Set("created_at", now()),
 			"updated_at": Set("updated_at", now()),
 		}
+		err = errors.New("error")
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(0, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), mutates).Return(0, err).Once()
 
-	assert.NotNil(t, repo.Insert(context.TODO(), &user, mutators...))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
 
 	adapter.AssertExpectations(t)
@@ -1278,7 +1411,7 @@ func TestRepository_Update_saveBelongsToCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)).Cascade(false), mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &profile, Cascade(false)))
 	assert.Equal(t, Profile{
@@ -1371,7 +1504,7 @@ func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)).Cascade(false), mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
@@ -1456,7 +1589,7 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)).Cascade(false), mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{

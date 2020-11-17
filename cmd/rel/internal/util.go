@@ -21,6 +21,10 @@ func getDatabaseInfo() (string, string, string) {
 		adapter = os.Getenv("DATABASE_ADAPTER")
 		driver = os.Getenv("DATABASE_DRIVER")
 		dsn = os.Getenv("DATABASE_URL")
+	case os.Getenv("SQLITE3_DATABASE") != "":
+		adapter = "github.com/go-rel/rel/adapter/sqlite3"
+		driver = "github.com/mattn/go-sqlite3"
+		dsn = os.Getenv("SQLITE3_DATABASE")
 	case os.Getenv("MYSQL_HOST") != "":
 		adapter = "github.com/go-rel/rel/adapter/mysql"
 		driver = "github.com/go-sql-driver/mysql"
@@ -39,10 +43,15 @@ func getDatabaseInfo() (string, string, string) {
 			os.Getenv("POSTGRES_HOST"),
 			os.Getenv("POSTGRES_PORT"),
 			os.Getenv("POSTGRES_DATABASE"))
-	case os.Getenv("SQLITE3_DATABASE") != "":
-		adapter = "github.com/go-rel/rel/adapter/sqlite3"
-		driver = "github.com/mattn/go-sqlite3"
-		dsn = os.Getenv("SQLITE3_DATABASE")
+	case os.Getenv("POSTGRESQL_HOST") != "":
+		adapter = "github.com/go-rel/rel/adapter/postgres"
+		driver = "github.com/lib/pq"
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			os.Getenv("POSTGRESQL_USERNAME"),
+			os.Getenv("POSTGRESQL_PASSWORD"),
+			os.Getenv("POSTGRESQL_HOST"),
+			os.Getenv("POSTGRESQL_PORT"),
+			os.Getenv("POSTGRESQL_DATABASE"))
 	}
 
 	return adapter, driver, dsn

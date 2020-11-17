@@ -29,7 +29,7 @@ func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface
 	return !(typ.Comparable() && old == new)
 }
 
-// FieldChanged returns true if field exists and it's already chagned.
+// FieldChanged returns true if field exists and it's already changed.
 // returns false otherwise.
 func (c Changeset) FieldChanged(field string) bool {
 	for i, f := range c.doc.Fields() {

@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// Iterator alllows iterating through all record in database in batch.
+// Iterator allows iterating through all record in database in batch.
 type Iterator interface {
 	io.Closer
 	Next(record interface{}) error
@@ -33,7 +33,7 @@ func (s start) apply(i *iterator) {
 	i.start = s
 }
 
-// Start specfies the primary value to start from (inclusive).
+// Start specifies the primary value to start from (inclusive).
 func Start(id ...interface{}) IteratorOption {
 	return start(id)
 }
@@ -44,7 +44,7 @@ func (f finish) apply(i *iterator) {
 	i.finish = f
 }
 
-// Finish specfies the primary value to finish at (inclusive).
+// Finish specifies the primary value to finish at (inclusive).
 func Finish(id ...interface{}) IteratorOption {
 	return finish(id)
 }

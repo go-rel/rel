@@ -722,6 +722,16 @@ func (b *Builder) build(buffer *Buffer, op string, inner []rel.FilterQuery) {
 	}
 }
 
+func (b *Builder) buildSubQuery(buffer *Buffer, sub rel.SubQuery) {
+		s, args := b.Find(sub.Query)
+		buffer.WriteString(sub.Prefix)
+		buffer.WriteByte('(')
+		buffer.WriteString(strings.TrimSuffix(s, ";"))
+		buffer.WriteByte(')')
+		buffer.Append(args...)
+}
+
+
 func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 	buffer.WriteString(Escape(b.config, filter.Field))
 
@@ -740,8 +750,41 @@ func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 		buffer.WriteString(">=")
 	}
 
+	// For warped sub-queries
+	if value, ok := filter.Value.(rel.SubQuery); ok {
+		b.buildSubQuery(buffer, value)
+		return
+	}
+
+	// For sub-queries without warp
+	if value, ok := filter.Value.(rel.Query); ok {
+		b.buildSubQuery(buffer, rel.SubQuery{
+			Query: value,
+		})
+		return
+	}
+
+	// For simple values
 	buffer.WriteString(b.ph())
 	buffer.Append(filter.Value)
+}
+
+func (b *Builder) buildValueList(buffer *Buffer, values []interface{}) {
+	if len(values) == 1 {
+		if value, ok := values[0].(rel.Query); ok {
+			b.buildSubQuery(buffer, rel.SubQuery{Query: value})
+			return
+		}
+	}
+
+	buffer.WriteByte('(')
+	buffer.WriteString(b.ph())
+	for i := 1; i <= len(values)-1; i++ {
+		buffer.WriteByte(',')
+		buffer.WriteString(b.ph())
+	}
+	buffer.WriteByte(')')
+	buffer.Append(values...)
 }
 
 func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
@@ -752,18 +795,12 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 	buffer.WriteString(Escape(b.config, filter.Field))
 
 	if filter.Type == rel.FilterInOp {
-		buffer.WriteString(" IN (")
+		buffer.WriteString(" IN ")
 	} else {
-		buffer.WriteString(" NOT IN (")
+		buffer.WriteString(" NOT IN ")
 	}
 
-	buffer.WriteString(b.ph())
-	for i := 1; i <= len(values)-1; i++ {
-		buffer.WriteByte(',')
-		buffer.WriteString(b.ph())
-	}
-	buffer.WriteByte(')')
-	buffer.Append(values...)
+	b.buildValueList(buffer, values)
 }
 
 func (b *Builder) ph() string {

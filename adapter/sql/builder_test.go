@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/sort"
 	"github.com/go-rel/rel/where"
-	"github.com/stretchr/testify/assert"
 )
 
 func BenchmarkBuilder_Find(b *testing.B) {
@@ -1483,4 +1484,110 @@ func TestBuilder_Lock(t *testing.T) {
 
 	assert.Equal(t, "SELECT * FROM `users` FOR UPDATE;", qs)
 	assert.Nil(t, args)
+}
+
+func TestBuilder_SubQuery(t *testing.T) {
+	var (
+		config = Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Filter      rel.FilterQuery
+	}{
+		{
+			" WHERE `field`=ANY(SELECT `field1` FROM `table2` WHERE `type`=?)",
+			[]interface{}{"value"},
+			where.Eq("field", rel.Any(
+				rel.Select("field1").From("table2").Where(where.Eq("type", "value")),
+			)),
+		},
+		{
+			" WHERE `field`=(SELECT `field1` FROM `table2` WHERE `type`=?)",
+			[]interface{}{"value"},
+			where.Eq("field",
+				rel.Select("field1").From("table2").Where(where.Eq("type", "value")),
+			),
+		},
+		{
+			" WHERE `field1` IN (SELECT `field2` FROM `table2` WHERE `field3` IN (?,?))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1", rel.Select("field2").From("table2").Where(
+				where.InString("field3", []string{"value1", "value2"}),
+			)),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
+			var (
+				buffer  Buffer
+				builder = NewBuilder(config)
+			)
+
+			builder.where(&buffer, test.Filter)
+
+			assert.Equal(t, test.QueryString, buffer.String())
+			assert.Equal(t, test.Args, buffer.Arguments)
+		})
+	}
+}
+
+func TestBuilder_SubQuery_ordinal(t *testing.T) {
+	var (
+		config = Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+	)
+
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Filter      rel.FilterQuery
+	}{
+		{
+			" WHERE \"field1\"=ANY(SELECT \"field2\" FROM \"table2\" WHERE \"type\"=$1)",
+			[]interface{}{"value"},
+			where.Eq("field1", rel.Any(
+				rel.Select("field2").From("table2").Where(where.Eq("type", "value")),
+			)),
+		},
+		{
+			" WHERE \"field1\"=(SELECT \"field2\" FROM \"table2\" WHERE \"type\"=$1)",
+			[]interface{}{"value"},
+			where.Eq("field1",
+				rel.Select("field2").From("table2").Where(where.Eq("type", "value")),
+			),
+		},
+		{
+			" WHERE \"field1\" IN (SELECT \"field2\" FROM \"table2\" WHERE \"field3\" IN ($1,$2))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1",
+				rel.Select("field2").From("table2").Where(
+					where.InString("field3", []string{"value1", "value2"}),
+				),
+			),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
+			var (
+				buffer  Buffer
+				builder = NewBuilder(config)
+			)
+
+			builder.where(&buffer, test.Filter)
+
+			assert.Equal(t, test.QueryString, buffer.String())
+			assert.Equal(t, test.Args, buffer.Arguments)
+		})
+	}
 }

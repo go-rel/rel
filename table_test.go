@@ -25,6 +25,14 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
+	t.Run("SmallInt", func(t *testing.T) {
+		table.SmallInt("smallint")
+		assert.Equal(t, Column{
+			Name: "smallint",
+			Type: SmallInt,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
 	t.Run("Int", func(t *testing.T) {
 		table.Int("integer")
 		assert.Equal(t, Column{

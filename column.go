@@ -8,6 +8,8 @@ const (
 	ID ColumnType = "ID"
 	// Bool ColumnType.
 	Bool ColumnType = "BOOL"
+	// SmallInt ColumnType.
+	SmallInt ColumnType = "SMALLINT"
 	// Int ColumnType.
 	Int ColumnType = "INT"
 	// BigInt ColumnType.

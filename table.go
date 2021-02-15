@@ -31,6 +31,11 @@ func (t *Table) Bool(name string, options ...ColumnOption) {
 	t.Column(name, Bool, options...)
 }
 
+// SmallInt defines a column with name and Small type.
+func (t *Table) SmallInt(name string, options ...ColumnOption) {
+	t.Column(name, SmallInt, options...)
+}
+
 // Int defines a column with name and Int type.
 func (t *Table) Int(name string, options ...ColumnOption) {
 	t.Column(name, Int, options...)

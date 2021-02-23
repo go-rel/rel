@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -160,6 +161,61 @@ func TestChangeset(t *testing.T) {
 	})
 }
 
+func TestChangeset_byte_slice(t *testing.T) {
+	var (
+		ts   = time.Now()
+		user = extendedUser{
+			ID:        1,
+			Password:  []byte("foo"),
+			Metadata:  []byte(`{"baz":"foo"}`),
+			CreatedAt: ts,
+			UpdatedAt: ts,
+		}
+		snapshot  = []interface{}{1, []byte("foo"), json.RawMessage(`{"baz":"foo"}`), ts, ts}
+		doc       = NewDocument(&user)
+		changeset = NewChangeset(&user)
+	)
+
+	t.Run("snapshot", func(t *testing.T) {
+		assert.Equal(t, snapshot, changeset.snapshot)
+		assert.Empty(t, changeset.Changes())
+	})
+
+	t.Run("apply clean", func(t *testing.T) {
+		assert.Equal(t, Mutation{
+			Cascade: true,
+		}, Apply(doc, changeset))
+	})
+
+	t.Run("update", func(t *testing.T) {
+		user.Password = []byte("bar")
+		user.Metadata = []byte("{}")
+
+		assert.Equal(t, snapshot, changeset.snapshot)
+		assert.Equal(t, map[string]interface{}{
+			"password": pair{[]byte("foo"), []byte("bar")},
+			"metadata": pair{json.RawMessage(`{"baz":"foo"}`), json.RawMessage("{}")},
+		}, changeset.Changes())
+
+		assert.True(t, changeset.FieldChanged("password"))
+		assert.True(t, changeset.FieldChanged("metadata"))
+
+		assert.False(t, changeset.FieldChanged("id"))
+		assert.False(t, changeset.FieldChanged("created_at"))
+		assert.False(t, changeset.FieldChanged("unknown"))
+	})
+
+	t.Run("apply changeset", func(t *testing.T) {
+		assert.Equal(t, Mutation{
+			Cascade: true,
+			Mutates: map[string]Mutate{
+				"password":   Set("password", []byte("bar")),
+				"metadata":   Set("metadata", json.RawMessage(`{}`)),
+				"updated_at": Set("updated_at", now()),
+			},
+		}, Apply(doc, changeset))
+	})
+}
 func TestChangeset_ptr(t *testing.T) {
 	var (
 		userID  = 2

@@ -1,10 +1,19 @@
 package rel
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type Status string
+
+type extendedUser struct {
+	ID        int
+	Password  []byte
+	Metadata  json.RawMessage
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
 
 type User struct {
 	ID           int

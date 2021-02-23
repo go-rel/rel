@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"bytes"
 	"reflect"
 	"time"
 )
@@ -26,7 +27,11 @@ func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface
 		return !ot.Equal(new.(time.Time))
 	}
 
-	return !(typ.Comparable() && old == new)
+	if typ.Comparable() {
+		return old != new
+	}
+
+	return bytes.Compare(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes()) != 0
 }
 
 // FieldChanged returns true if field exists and it's already changed.

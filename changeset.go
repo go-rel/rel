@@ -27,11 +27,11 @@ func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface
 		return !ot.Equal(new.(time.Time))
 	}
 
-	if typ.Comparable() {
-		return old != new
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return bytes.Compare(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes()) != 0
 	}
 
-	return bytes.Compare(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes()) != 0
+	return !(typ.Comparable() && old == new)
 }
 
 // FieldChanged returns true if field exists and it's already changed.

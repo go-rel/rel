@@ -69,6 +69,7 @@ func conversionTests() []conversionTest {
 		{s: "foo", d: &scanstr, wantstr: "foo"},
 		{s: 123, d: &scanint, wantint: 123},
 		{s: someTime, d: &scantime, wanttime: someTime},
+		{s: someTime.UTC(), d: &scantime, wanttime: someTime.UTC()},
 
 		// To strings
 		{s: "string", d: &scanstr, wantstr: "string"},

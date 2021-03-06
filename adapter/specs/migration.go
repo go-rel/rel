@@ -24,8 +24,6 @@ func Setup(t *testing.T, repo rel.Repository) func() {
 				t.String("note", rel.Limit(50))
 				t.DateTime("created_at")
 				t.DateTime("updated_at")
-
-				// t.Unique([]string{"slug"})
 			})
 
 			schema.CreateUniqueIndex("users", "unique_slug", []string{"slug"})

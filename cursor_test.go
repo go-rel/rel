@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -73,7 +74,7 @@ func TestScanOne(t *testing.T) {
 		user User
 		cur  = &testCursor{}
 		doc  = NewDocument(&user)
-		now  = now()
+		now  = time.Now()
 	)
 
 	cur.On("Close").Return(nil).Once()
@@ -111,7 +112,7 @@ func TestScanAll(t *testing.T) {
 		users []User
 		cur   = &testCursor{}
 		col   = NewCollection(&users)
-		now   = now()
+		now   = time.Now()
 	)
 
 	cur.On("Close").Return(nil).Once()
@@ -185,7 +186,7 @@ func TestScanMulti(t *testing.T) {
 			10: {NewCollection(&users1), NewCollection(&users2)},
 			11: {NewCollection(&users3)},
 		}
-		now = now()
+		now = time.Now()
 	)
 
 	cur.On("Close").Return(nil).Once()

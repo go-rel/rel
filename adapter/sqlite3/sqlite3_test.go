@@ -15,10 +15,10 @@ var ctx = context.TODO()
 
 func dsn() string {
 	if os.Getenv("SQLITE3_DATABASE") != "" {
-		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1"
+		return os.Getenv("SQLITE3_DATABASE") + "?_foreign_keys=1&_loc=Local"
 	}
 
-	return "./rel_test.db?_foreign_keys=1"
+	return "./rel_test.db?_foreign_keys=1&_loc=Local"
 }
 
 func TestAdapter_specs(t *testing.T) {

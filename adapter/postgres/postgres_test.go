@@ -93,9 +93,12 @@ func TestAdapter_specs(t *testing.T) {
 	specs.DeleteAll(t, repo)
 
 	// Constraint specs
-	specs.UniqueConstraint(t, repo)
-	specs.ForeignKeyConstraint(t, repo)
-	specs.CheckConstraint(t, repo)
+	specs.UniqueConstraintOnInsert(t, repo)
+	specs.UniqueConstraintOnUpdate(t, repo)
+	specs.ForeignKeyConstraintOnInsert(t, repo)
+	specs.ForeignKeyConstraintOnUpdate(t, repo)
+	specs.CheckConstraintOnInsert(t, repo)
+	specs.CheckConstraintOnUpdate(t, repo)
 }
 
 func TestAdapter_Transaction_commitError(t *testing.T) {

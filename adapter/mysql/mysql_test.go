@@ -90,8 +90,10 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Constraint specs
 	// - Check constraint is not supported by mysql
-	specs.UniqueConstraint(t, repo)
-	specs.ForeignKeyConstraint(t, repo)
+	specs.UniqueConstraintOnInsert(t, repo)
+	specs.UniqueConstraintOnInsert(t, repo)
+	specs.ForeignKeyConstraintOnInsert(t, repo)
+	specs.ForeignKeyConstraintOnUpdate(t, repo)
 }
 
 func TestAdapter_Open(t *testing.T) {

@@ -25,10 +25,13 @@ func Setup(t *testing.T, repo rel.Repository) func() {
 				t.DateTime("created_at")
 				t.DateTime("updated_at")
 
-				t.Unique([]string{"slug"})
+				// t.Unique([]string{"slug"})
 			})
+
+			schema.CreateUniqueIndex("users", "unique_slug", []string{"slug"})
 		},
 		func(schema *rel.Schema) {
+			schema.DropIndex("users", "unique_slug")
 			schema.DropTable("users")
 		},
 	)
@@ -119,7 +122,6 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 				t.Time("time1")
 				t.Time("time2", rel.Default(time.Now()))
 				t.Timestamp("timestamp1")
-				t.Timestamp("timestamp2", rel.Default(time.Now()))
 
 				t.Unique([]string{"int2"})
 				t.Unique([]string{"bigint1", "bigint2"})

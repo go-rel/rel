@@ -23,10 +23,10 @@ func init() {
 
 func dsn() string {
 	if os.Getenv("POSTGRESQL_DATABASE") != "" {
-		return os.Getenv("POSTGRESQL_DATABASE") + "?sslmode=disable&timezone=Asia/Jakarta"
+		return os.Getenv("POSTGRESQL_DATABASE") + "?sslmode=disable"
 	}
 
-	return "postgres://rel@localhost:5432/rel_test?sslmode=disable&timezone=Asia/Jakarta"
+	return "postgres://rel@localhost:5432/rel_test?sslmode=disable"
 }
 
 func TestAdapter_specs(t *testing.T) {

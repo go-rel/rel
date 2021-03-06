@@ -18,10 +18,10 @@ var ctx = context.TODO()
 
 func dsn() string {
 	if os.Getenv("MYSQL_DATABASE") != "" {
-		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True&loc=Local"
+		return os.Getenv("MYSQL_DATABASE") + "?charset=utf8&parseTime=True"
 	}
 
-	return "root@tcp(localhost:3306)/rel_test?charset=utf8&parseTime=True&loc=Local"
+	return "root@tcp(localhost:3306)/rel_test?charset=utf8&parseTime=True"
 }
 
 func TestAdapter_specs(t *testing.T) {

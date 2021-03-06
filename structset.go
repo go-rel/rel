@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	now = time.Now
+	now = func() time.Time {
+		return time.Now().UTC()
+	}
 )
 
 // Structset can be used as mutation for repository insert or update operation.

@@ -150,7 +150,7 @@ func (a *Adapter) InsertAll(ctx context.Context, query rel.Query, primaryField s
 }
 
 // Update updates a record in database.
-func (a *Adapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
+func (a *Adapter) Update(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (int, error) {
 	var (
 		statement, args      = NewBuilder(a.Config).Update(query.Table, mutates, query.WhereQuery)
 		_, updatedCount, err = a.Exec(ctx, statement, args)

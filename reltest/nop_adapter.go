@@ -56,7 +56,7 @@ func (na *nopAdapter) Rollback(ctx context.Context) error {
 	return nil
 }
 
-func (na *nopAdapter) Update(ctx context.Context, query rel.Query, mutates map[string]rel.Mutate) (int, error) {
+func (na *nopAdapter) Update(ctx context.Context, query rel.Query, primaryField string, mutates map[string]rel.Mutate) (int, error) {
 	return 1, nil
 }
 

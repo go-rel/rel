@@ -475,10 +475,15 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 
 	if !mutation.IsMutatesEmpty() {
 		var (
-			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade), false)
+			pField string
+			query  = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade), false)
 		)
 
-		if updatedCount, err := cw.adapter.Update(cw.ctx, query, mutation.Mutates); err != nil {
+		if len(doc.data.primaryField) == 1 {
+			pField = doc.PrimaryField()
+		}
+
+		if updatedCount, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
 			return mutation.ErrorFunc.transform(err)
 		} else if updatedCount == 0 {
 			return NotFoundError{}
@@ -715,7 +720,7 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	}
 
 	if len(muts) > 0 {
-		_, err = cw.adapter.Update(cw.ctx, query, muts)
+		_, err = cw.adapter.Update(cw.ctx, query, "", muts)
 	}
 
 	return err
@@ -878,7 +883,7 @@ func (r repository) MustDeleteAll(ctx context.Context, query Query) {
 func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {
 	if flag.Is(HasDeletedAt) {
 		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
-		return cw.adapter.Update(cw.ctx, query, mutates)
+		return cw.adapter.Update(cw.ctx, query, "", mutates)
 	}
 
 	return cw.adapter.Delete(cw.ctx, query)

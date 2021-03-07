@@ -51,8 +51,8 @@ func (ta *testAdapter) InsertAll(ctx context.Context, query Query, primaryField 
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 
-func (ta *testAdapter) Update(ctx context.Context, query Query, mutates map[string]Mutate) (int, error) {
-	args := ta.Called(query, mutates)
+func (ta *testAdapter) Update(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate) (int, error) {
+	args := ta.Called(query, primaryField, mutates)
 	return args.Int(0), args.Error(1)
 }
 

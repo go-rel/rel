@@ -47,7 +47,9 @@ jobs:
         uses: actions/checkout@v2
       - env:
           MYSQL_DATABASE: rel:rel@(127.0.0.1:3306)/rel_test
-        run: go test -race -tags=mysql ./...
+        run: |
+          sleep 15
+          go test -race -tags=mysql ./...
 
   postgres:
     name: Postgres

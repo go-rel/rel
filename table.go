@@ -88,6 +88,8 @@ func (t *Table) Time(name string, options ...ColumnOption) {
 }
 
 // Timestamp defines a column with name and Timestamp type.
+//
+// Deprecated: builder for this column type is deprecated, because incompatibility of different databases.
 func (t *Table) Timestamp(name string, options ...ColumnOption) {
 	t.Column(name, Timestamp, options...)
 }

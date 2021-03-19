@@ -31,6 +31,8 @@ const (
 	// Time ColumnType.
 	Time ColumnType = "TIME"
 	// Timestamp ColumnType.
+	//
+	// Deprecated: builder for this column type is deprecated, because incompatibility of different databases.
 	Timestamp ColumnType = "TIMESTAMP"
 )
 

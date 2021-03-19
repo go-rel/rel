@@ -26,6 +26,12 @@ func (t *Table) ID(name string, options ...ColumnOption) {
 	t.Column(name, ID, options...)
 }
 
+// BigID defines a column with name and Big ID type.
+// the resulting database type will depends on database.
+func (t *Table) BigID(name string, options ...ColumnOption) {
+	t.Column(name, BigID, options...)
+}
+
 // Bool defines a column with name and Bool type.
 func (t *Table) Bool(name string, options ...ColumnOption) {
 	t.Column(name, Bool, options...)

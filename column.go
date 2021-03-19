@@ -6,6 +6,8 @@ type ColumnType string
 const (
 	// ID ColumnType.
 	ID ColumnType = "ID"
+	// BigID ColumnType.
+	BigID ColumnType = "BigID"
 	// Bool ColumnType.
 	Bool ColumnType = "BOOL"
 	// SmallInt ColumnType.

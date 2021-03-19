@@ -1,5 +1,3 @@
-// +build all mysql
-
 package mysql
 
 import (

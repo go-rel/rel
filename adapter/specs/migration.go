@@ -98,7 +98,7 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 	m.Register(5,
 		func(schema *rel.Schema) {
 			schema.CreateTable("dummies", func(t *rel.Table) {
-				t.ID("id")
+				t.BigID("id")
 				t.Bool("bool1")
 				t.Bool("bool2", rel.Default(true))
 				t.Int("int1")

@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/sort"
 	"github.com/go-rel/rel/where"
+	"github.com/stretchr/testify/assert"
 )
 
 func BenchmarkBuilder_Find(b *testing.B) {

@@ -139,7 +139,7 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 			schema.AddColumn("dummies", "new_column1", rel.Int, rel.Unsigned(true))
 		},
 		func(schema *rel.Schema) {
-			if SkipDropColumn.enabled(flags) {
+			if SkipDropColumn.disabled(flags) {
 				schema.AlterTable("dummies", func(t *rel.AlterTable) {
 					t.DropColumn("new_column")
 				})
@@ -149,7 +149,7 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 	)
 	defer m.Rollback(ctx)
 
-	if SkipRenameColumn.enabled(flags) {
+	if SkipRenameColumn.disabled(flags) {
 		m.Register(7,
 			func(schema *rel.Schema) {
 				schema.AlterTable("dummies", func(t *rel.AlterTable) {

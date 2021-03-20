@@ -16,10 +16,6 @@ jobs:
         go: [1.12, 1.13, 1.14, 1.15, 1.16]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Setup timezone
-        uses: zcong1993/setup-timezone@master
-        with:
-          timezone: Asia/Jakarta
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
@@ -59,6 +55,8 @@ jobs:
 
   coverage:
     name: Coverage
+    env:
+      TZ: Asia/Jakarta
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x

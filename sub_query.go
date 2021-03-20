@@ -7,6 +7,8 @@ type SubQuery struct {
 }
 
 // All warp a query into ALL(sub-query)
+//
+// Some database may not support this keyword, please consult to your database documentation.
 func All(sub Query) SubQuery {
 	return SubQuery{
 		Prefix: "ALL",
@@ -15,6 +17,8 @@ func All(sub Query) SubQuery {
 }
 
 // Any warp a query into ANY(sub-query)
+//
+// Some database may not support this keyword, please consult to your database documentation.
 func Any(sub Query) SubQuery {
 	return SubQuery{
 		Prefix: "ANY",

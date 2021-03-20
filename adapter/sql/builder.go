@@ -723,14 +723,13 @@ func (b *Builder) build(buffer *Buffer, op string, inner []rel.FilterQuery) {
 }
 
 func (b *Builder) buildSubQuery(buffer *Buffer, sub rel.SubQuery) {
-		s, args := b.Find(sub.Query)
-		buffer.WriteString(sub.Prefix)
-		buffer.WriteByte('(')
-		buffer.WriteString(strings.TrimSuffix(s, ";"))
-		buffer.WriteByte(')')
-		buffer.Append(args...)
+	s, args := b.Find(sub.Query)
+	buffer.WriteString(sub.Prefix)
+	buffer.WriteByte('(')
+	buffer.WriteString(strings.TrimSuffix(s, ";"))
+	buffer.WriteByte(')')
+	buffer.Append(args...)
 }
-
 
 func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 	buffer.WriteString(Escape(b.config, filter.Field))

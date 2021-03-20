@@ -17,8 +17,14 @@ var ctx = context.TODO()
 // Flag for configuration.
 type Flag int
 
-func (f Flag) enabled(flags []Flag) bool {
-	return len(flags) > 0 && f&flags[0] == 0
+func (f Flag) disabled(flags []Flag) bool {
+	for i := range flags {
+		if f&flags[i] == 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 const (
@@ -26,6 +32,8 @@ const (
 	SkipDropColumn Flag = 1 << iota
 	// SkipRenameColumn spec.
 	SkipRenameColumn
+	// SkipAllAndAnyKeyword spec.
+	SkipAllAndAnyKeyword
 )
 
 // User defines users schema.

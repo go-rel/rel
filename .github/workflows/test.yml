@@ -16,9 +16,10 @@ jobs:
         go: [1.12, 1.13, 1.14, 1.15, 1.16]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/set-timezone-action@v1.1
+      - name: Setup timezone
+        uses: zcong1993/setup-timezone@master
         with:
-          timezoneLinux: "Asia/Jakarta"
+          timezone: Asia/Jakarta
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:

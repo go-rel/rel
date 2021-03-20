@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var _, localTimeOffset = time.Now().Local().Zone()
+
 // convertAssign copies to dest the value in src, converting it if possible.
 // An error is returned if the copy would result in loss of information.
 // dest should be a pointer type.
@@ -51,7 +53,12 @@ func convertAssign(dest, src interface{}) error {
 	case time.Time:
 		switch d := dest.(type) {
 		case *time.Time:
-			*d = s
+			// make sure timezone equal for test assertion.
+			if _, offset := s.Zone(); offset == localTimeOffset {
+				*d = s.Local()
+			} else {
+				*d = s
+			}
 			return nil
 		case *string:
 			*d = s.Format(time.RFC3339Nano)

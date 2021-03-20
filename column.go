@@ -6,8 +6,12 @@ type ColumnType string
 const (
 	// ID ColumnType.
 	ID ColumnType = "ID"
+	// BigID ColumnType.
+	BigID ColumnType = "BigID"
 	// Bool ColumnType.
 	Bool ColumnType = "BOOL"
+	// SmallInt ColumnType.
+	SmallInt ColumnType = "SMALLINT"
 	// Int ColumnType.
 	Int ColumnType = "INT"
 	// BigInt ColumnType.
@@ -27,6 +31,8 @@ const (
 	// Time ColumnType.
 	Time ColumnType = "TIME"
 	// Timestamp ColumnType.
+	//
+	// Deprecated: builder for this column type is deprecated, because incompatibility of different databases.
 	Timestamp ColumnType = "TIMESTAMP"
 )
 

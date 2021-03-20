@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"bytes"
 	"reflect"
 	"time"
 )
@@ -24,6 +25,10 @@ func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface
 
 	if ot, ok := old.(time.Time); ok {
 		return !ot.Equal(new.(time.Time))
+	}
+
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return bytes.Compare(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes()) != 0
 	}
 
 	return !(typ.Comparable() && old == new)

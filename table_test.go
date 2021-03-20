@@ -17,11 +17,35 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
+	t.Run("ID", func(t *testing.T) {
+		table.ID("id")
+		assert.Equal(t, Column{
+			Name: "id",
+			Type: ID,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
+	t.Run("BigID", func(t *testing.T) {
+		table.BigID("big_id")
+		assert.Equal(t, Column{
+			Name: "big_id",
+			Type: BigID,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
 	t.Run("Bool", func(t *testing.T) {
 		table.Bool("boolean")
 		assert.Equal(t, Column{
 			Name: "boolean",
 			Type: Bool,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
+	t.Run("SmallInt", func(t *testing.T) {
+		table.SmallInt("smallint")
+		assert.Equal(t, Column{
+			Name: "smallint",
+			Type: SmallInt,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 

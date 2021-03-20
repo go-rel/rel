@@ -106,6 +106,8 @@ func mapColumnFunc(column *rel.Column) (string, int, int) {
 	switch column.Type {
 	case rel.ID:
 		typ = "INTEGER PRIMARY KEY"
+	case rel.BigID:
+		typ = "BIGINT PRIMARY KEY"
 	case rel.Int:
 		typ = "INTEGER"
 		m = column.Limit

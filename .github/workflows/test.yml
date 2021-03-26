@@ -55,6 +55,8 @@ jobs:
 
   coverage:
     name: Coverage
+    env:
+      TZ: Asia/Jakarta
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x

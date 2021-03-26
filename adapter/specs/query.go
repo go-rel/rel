@@ -85,6 +85,7 @@ func QueryJoin(t *testing.T, repo rel.Repository) {
 // Query tests query specifications without join.
 func QueryWhereSubQuery(t *testing.T, repo rel.Repository, flags ...Flag) {
 	tests := []rel.Querier{
+		rel.Where(where.Lte("age", rel.Select("AVG(age)").From("users"))),
 		rel.Where(where.Lte("age", rel.Select("MAX(age)").From("users").Where(where.Eq("gender", "male")))),
 		rel.Where(where.Gte("age", rel.Select("MIN(age)").From("users").Where(where.Eq("gender", "male")))),
 	}

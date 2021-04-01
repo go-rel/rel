@@ -59,7 +59,7 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144) UNIQUE, `text` TEXT(1000), `date` DATE, `datetime` DATETIME DEFAULT '2020-01-01 01:00:00', `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE `date_unique` (`date`)) Engine=InnoDB;",
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144) UNIQUE, `text` TEXT(1000), `date` DATE, `datetime` DATETIME DEFAULT '2020-01-01 01:00:00', `time` TIME, `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE `date_unique` (`date`)) Engine=InnoDB;",
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "columns",
@@ -72,8 +72,8 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "string", Type: rel.String, Limit: 144, Unique: true},
 					rel.Column{Name: "text", Type: rel.Text, Limit: 1000},
 					rel.Column{Name: "date", Type: rel.Date},
-					rel.Column{Name: "datetime", Type: rel.DateTime},
-					rel.Column{Name: "time", Type: rel.Time, Default: time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC)},
+					rel.Column{Name: "datetime", Type: rel.DateTime, Default: time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC)},
+					rel.Column{Name: "time", Type: rel.Time},
 					rel.Column{Name: "blob", Type: "blob"},
 					rel.Key{Columns: []string{"int"}, Type: rel.PrimaryKey},
 					rel.Key{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},

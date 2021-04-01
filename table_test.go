@@ -121,14 +121,6 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
-	t.Run("Timestamp", func(t *testing.T) {
-		table.Timestamp("timestamp")
-		assert.Equal(t, Column{
-			Name: "timestamp",
-			Type: Timestamp,
-		}, table.Definitions[len(table.Definitions)-1])
-	})
-
 	t.Run("PrimaryKey", func(t *testing.T) {
 		table.PrimaryKey("id")
 		assert.Equal(t, Key{

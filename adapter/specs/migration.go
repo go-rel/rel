@@ -119,7 +119,6 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 				t.DateTime("datetime2", rel.Default(time.Now()))
 				t.Time("time1")
 				t.Time("time2", rel.Default(time.Now()))
-				t.Timestamp("timestamp1")
 
 				t.Unique([]string{"int2"})
 				t.Unique([]string{"bigint1", "bigint2"})

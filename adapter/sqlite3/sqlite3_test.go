@@ -38,6 +38,7 @@ func TestAdapter_specs(t *testing.T) {
 	// Query Specs
 	specs.Query(t, repo)
 	specs.QueryJoin(t, repo)
+	specs.QueryWhereSubQuery(t, repo, specs.SkipAllAndAnyKeyword)
 	specs.QueryNotFound(t, repo)
 
 	// Preload specs
@@ -86,8 +87,10 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Constraint specs
 	// - foreign key constraint is not supported because of lack of information in the error message.
-	specs.UniqueConstraint(t, repo)
-	specs.CheckConstraint(t, repo)
+	specs.UniqueConstraintOnInsert(t, repo)
+	specs.UniqueConstraintOnUpdate(t, repo)
+	specs.CheckConstraintOnInsert(t, repo)
+	specs.CheckConstraintOnUpdate(t, repo)
 }
 
 func TestAdapter_Transaction_commitError(t *testing.T) {

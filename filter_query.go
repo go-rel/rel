@@ -48,7 +48,7 @@ const (
 	FilterFragmentOp
 )
 
-// FilterQuery defines details of a coundition type.
+// FilterQuery defines details of a condition type.
 type FilterQuery struct {
 	Type  FilterOp
 	Field string

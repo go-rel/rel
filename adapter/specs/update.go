@@ -379,10 +379,12 @@ func UpdateAll(t *testing.T, repo rel.Repository) {
 				name   = "all updated"
 			)
 
-			assert.Nil(t, repo.UpdateAll(ctx, query, rel.Set("name", name)))
+			updatedCount, err := repo.UpdateAll(ctx, query, rel.Set("name", name))
+			assert.Nil(t, err)
+			assert.NotZero(t, updatedCount)
 
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
-			assert.Equal(t, 0, len(result))
+			assert.Zero(t, len(result))
 			for i := range result {
 				assert.Equal(t, name, result[i].Name)
 			}

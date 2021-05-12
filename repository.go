@@ -93,11 +93,13 @@ type Repository interface {
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
 
 	// UpdateAll records tha match the query.
-	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error
+	// Returns number of updated records and error.
+	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error)
 
 	// MustUpdateAll records that match the query.
 	// It'll panic if any error occurred.
-	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate)
+	// Returns number of updated records.
+	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int
 
 	// Delete a record.
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
@@ -107,11 +109,13 @@ type Repository interface {
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
 
 	// DeleteAll records that match the query.
-	DeleteAll(ctx context.Context, query Query) error
+	// Returns number of deleted records and error.
+	DeleteAll(ctx context.Context, query Query) (int, error)
 
 	// MustDeleteAll records that match the query.
 	// It'll panic if any error eccured.
-	MustDeleteAll(ctx context.Context, query Query)
+	// Returns number of updated records.
+	MustDeleteAll(ctx context.Context, query Query) int
 
 	// Preload association with given query.
 	// If association is already loaded, this will do nothing.
@@ -216,16 +220,26 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 }
 
 func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
-	query = r.withDefaultScope(doc.data, query)
+	query = r.withDefaultScope(doc.data, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query.Limit(1))
 	if err != nil {
 		return err
 	}
 
 	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-one", "scanning a record")
-	defer finish(nil)
+	if err := scanOne(cur, doc); err != nil {
+		finish(err)
+		return err
+	}
+	finish(nil)
 
-	return scanOne(cur, doc)
+	for i := range query.PreloadQuery {
+		if err := r.preload(cw, doc, query.PreloadQuery[i], nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
@@ -248,16 +262,26 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 }
 
 func (r repository) findAll(cw contextWrapper, col *Collection, query Query) error {
-	query = r.withDefaultScope(col.data, query)
+	query = r.withDefaultScope(col.data, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query)
 	if err != nil {
 		return err
 	}
 
 	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-all", "scanning all records")
-	defer finish(nil)
+	if err := scanAll(cur, col); err != nil {
+		finish(err)
+		return err
+	}
+	finish(nil)
 
-	return scanAll(cur, col)
+	for i := range query.PreloadQuery {
+		if err := r.preload(cw, col, query.PreloadQuery[i], nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
@@ -334,17 +358,6 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	// update primary value
 	if pField != "" {
 		doc.SetValue(pField, pValue)
-	}
-
-	if mutation.Reload {
-		var (
-			filter = filterDocument(doc)
-		)
-
-		// fetch record
-		if err := r.find(cw, doc, queriers.Where(filter)); err != nil {
-			return err
-		}
 	}
 
 	if mutation.Cascade {
@@ -468,10 +481,15 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 
 	if !mutation.IsMutatesEmpty() {
 		var (
-			query = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped))
+			pField string
+			query  = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade), false)
 		)
 
-		if updatedCount, err := cw.adapter.Update(cw.ctx, query, mutation.Mutates); err != nil {
+		if len(doc.data.primaryField) == 1 {
+			pField = doc.PrimaryField()
+		}
+
+		if updatedCount, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
 			return mutation.ErrorFunc.transform(err)
 		} else if updatedCount == 0 {
 			return NotFoundError{}
@@ -693,14 +711,15 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 	return nil
 }
 
-func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error {
+func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-update-all", "updating multiple records")
 	defer finish(nil)
 
 	var (
-		err  error
-		cw   = fetchContext(ctx, r.rootAdapter)
-		muts = make(map[string]Mutate, len(mutates))
+		err          error
+		updatedCount int
+		cw           = fetchContext(ctx, r.rootAdapter)
+		muts         = make(map[string]Mutate, len(mutates))
 	)
 
 	for _, mut := range mutates {
@@ -708,14 +727,16 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	}
 
 	if len(muts) > 0 {
-		_, err = cw.adapter.Update(cw.ctx, query, muts)
+		updatedCount, err = cw.adapter.Update(cw.ctx, query, "", muts)
 	}
 
-	return err
+	return updatedCount, err
 }
 
-func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) {
-	must(r.UpdateAll(ctx, query, mutates...))
+func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int {
+	updatedCount, err := r.UpdateAll(ctx, query, mutates...)
+	must(err)
+	return updatedCount
 }
 
 func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
@@ -852,26 +873,27 @@ func (r repository) MustDelete(ctx context.Context, record interface{}, options 
 	must(r.Delete(ctx, record, options...))
 }
 
-func (r repository) DeleteAll(ctx context.Context, query Query) error {
+func (r repository) DeleteAll(ctx context.Context, query Query) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
 
 	var (
-		cw     = fetchContext(ctx, r.rootAdapter)
-		_, err = r.deleteAll(cw, Invalid, query)
+		cw = fetchContext(ctx, r.rootAdapter)
 	)
 
-	return err
+	return r.deleteAll(cw, Invalid, query)
 }
 
-func (r repository) MustDeleteAll(ctx context.Context, query Query) {
-	must(r.DeleteAll(ctx, query))
+func (r repository) MustDeleteAll(ctx context.Context, query Query) int {
+	deletedCount, err := r.DeleteAll(ctx, query)
+	must(err)
+	return deletedCount
 }
 
 func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {
 	if flag.Is(HasDeletedAt) {
 		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
-		return cw.adapter.Update(cw.ctx, query, mutates)
+		return cw.adapter.Update(cw.ctx, query, "", mutates)
 	}
 
 	return cw.adapter.Delete(cw.ctx, query)
@@ -882,10 +904,9 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	defer finish(nil)
 
 	var (
-		sl   slice
-		cw   = fetchContext(ctx, r.rootAdapter)
-		path = strings.Split(field, ".")
-		rt   = reflect.TypeOf(records)
+		sl slice
+		cw = fetchContext(ctx, r.rootAdapter)
+		rt = reflect.TypeOf(records)
 	)
 
 	if rt.Kind() != reflect.Ptr {
@@ -899,8 +920,13 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 		sl = NewDocument(records)
 	}
 
+	return r.preload(cw, sl, field, queriers)
+}
+
+func (r repository) preload(cw contextWrapper, records slice, field string, queriers []Querier) error {
 	var (
-		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(sl, path)
+		path                                             = strings.Split(field, ".")
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(records, path)
 		ids                                              = r.targetIDs(targets)
 		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
 	)
@@ -910,14 +936,14 @@ func (r repository) Preload(ctx context.Context, records interface{}, field stri
 	}
 
 	var (
-		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query))
+		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query, false))
 	)
 
 	if err != nil {
 		return err
 	}
 
-	scanFinish := r.instrumenter.Observe(ctx, "rel-scan-multi", "scanning all records to multiple targets")
+	scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
 	defer scanFinish(nil)
 
 	return scanMulti(cur, keyField, keyType, targets)
@@ -1037,13 +1063,17 @@ func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
 	return ids
 }
 
-func (r repository) withDefaultScope(ddata documentData, query Query) Query {
+func (r repository) withDefaultScope(ddata documentData, query Query, preload bool) Query {
 	if query.UnscopedQuery {
 		return query
 	}
 
 	if ddata.flag.Is(HasDeletedAt) {
 		query = query.Where(Nil("deleted_at"))
+	}
+
+	if preload && bool(query.CascadeQuery) {
+		query.PreloadQuery = append(ddata.preload, query.PreloadQuery...)
 	}
 
 	return query

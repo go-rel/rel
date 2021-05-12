@@ -227,6 +227,11 @@ func (r Reload) Build(query *Query) {
 // Default to true.
 type Cascade bool
 
+// Build query.
+func (c Cascade) Build(query *Query) {
+	query.CascadeQuery = c
+}
+
 // Apply mutation.
 func (c Cascade) Apply(doc *Document, mutation *Mutation) {
 	mutation.Cascade = c

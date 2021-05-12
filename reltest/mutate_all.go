@@ -11,20 +11,35 @@ type MutateAll struct {
 }
 
 // Unsafe allows for unsafe operation that doesn't contains where clause.
-func (ema *MutateAll) Unsafe() {
-	ema.RunFn = nil // clear validation
+func (ma *MutateAll) Unsafe() {
+	ma.RunFn = nil // clear validation
+}
+
+// Result sets the returned number of deleted/updated counts.
+func (ma *MutateAll) Result(count int) {
+	ma.Return(count, nil)
+}
+
+// Error sets error to be returned.
+func (ma *MutateAll) Error(err error) {
+	ma.Return(0, err)
+}
+
+// ConnectionClosed sets this error to be returned.
+func (ma *MutateAll) ConnectionClosed() {
+	ma.Error(ErrConnectionClosed)
 }
 
 func expectMutateAll(r *Repository, methodName string, args ...interface{}) *MutateAll {
-	ema := &MutateAll{
+	ma := &MutateAll{
 		Expect: newExpect(r, methodName,
 			args,
-			[]interface{}{nil},
+			[]interface{}{0, nil},
 		),
 	}
 
 	// validation
-	ema.Run(func(args mock.Arguments) {
+	ma.Run(func(args mock.Arguments) {
 		query := args[1].(rel.Query)
 
 		if query.Table == "" {
@@ -36,7 +51,7 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 		}
 	})
 
-	return ema
+	return ma
 }
 
 // ExpectUpdateAll to be called.

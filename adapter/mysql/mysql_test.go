@@ -43,6 +43,7 @@ func TestAdapter_specs(t *testing.T) {
 	specs.Query(t, repo)
 	specs.QueryJoin(t, repo)
 	specs.QueryNotFound(t, repo)
+	specs.QueryWhereSubQuery(t, repo)
 
 	// Preload specs
 	specs.PreloadHasMany(t, repo)
@@ -90,8 +91,10 @@ func TestAdapter_specs(t *testing.T) {
 
 	// Constraint specs
 	// - Check constraint is not supported by mysql
-	specs.UniqueConstraint(t, repo)
-	specs.ForeignKeyConstraint(t, repo)
+	specs.UniqueConstraintOnInsert(t, repo)
+	specs.UniqueConstraintOnUpdate(t, repo)
+	specs.ForeignKeyConstraintOnInsert(t, repo)
+	specs.ForeignKeyConstraintOnUpdate(t, repo)
 }
 
 func TestAdapter_Open(t *testing.T) {

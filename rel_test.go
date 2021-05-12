@@ -1,10 +1,19 @@
 package rel
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type Status string
+
+type extendedUser struct {
+	ID        int
+	Password  []byte
+	Metadata  json.RawMessage
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
 
 type User struct {
 	ID           int
@@ -49,7 +58,7 @@ type Transaction struct {
 	Item      string
 	Status    Status
 	BuyerID   int  `db:"user_id"`
-	Buyer     User `ref:"user_id" fk:"id"`
+	Buyer     User `ref:"user_id" fk:"id" autoload:"true"`
 	AddressID int
 	Address   Address
 	Histories *[]History

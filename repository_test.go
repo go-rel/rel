@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	t := time.Now().Truncate(time.Second)
+	t := now().Truncate(time.Second)
 	now = func() time.Time {
 		return t
 	}
@@ -94,7 +94,7 @@ func TestRepository_Iterate(t *testing.T) {
 			assert.Nil(t, err)
 		}
 
-		assert.NotEqual(t, 0, user.ID)
+		assert.NotZero(t, user.ID)
 	}
 
 	adapter.AssertExpectations(t)
@@ -227,18 +227,110 @@ func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_Find_queryError(t *testing.T) {
+func TestRepository_Find_withCascade(t *testing.T) {
+	var (
+		trx        Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions").Limit(1).Cascade(true)
+		cur        = createCursor(1)
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &trx, query))
+	assert.Equal(t, 10, trx.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_withPreload(t *testing.T) {
+	var (
+		user       User
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("users").Limit(1).Preload("address")
+		cur        = createCursor(1)
+		curPreload = &testCursor{}
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+		Return(curPreload, nil).Once()
+
+	curPreload.On("Close").Return(nil).Once()
+	curPreload.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	curPreload.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_Find_withPreloadError(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1).Preload("address")
+		cur     = createCursor(1)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+		Return(&testCursor{}, err).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
+	assert.Equal(t, 10, user.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_scanError(t *testing.T) {
 	var (
 		user    User
 		adapter = &testAdapter{}
 		repo    = New(adapter)
 		cur     = &testCursor{}
 		query   = From("users").Limit(1)
+		err     = errors.New("error")
 	)
 
-	adapter.On("Query", query).Return(cur, errors.New("error")).Once()
+	adapter.On("Query", query).Return(cur, nil).Once()
 
-	assert.NotNil(t, repo.Find(context.TODO(), &user, query))
+	cur.On("Fields").Return([]string(nil), err).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Find_error(t *testing.T) {
+	var (
+		user    User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		cur     = &testCursor{}
+		query   = From("users").Limit(1)
+		err     = errors.New("error")
+	)
+
+	adapter.On("Query", query).Return(cur, err).Once()
+
+	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -344,6 +436,110 @@ func TestRepository_FindAll_softDeleteUnscoped(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAll_withCascade(t *testing.T) {
+	var (
+		trxs       []Transaction
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("transactions")
+		cur        = createCursor(2)
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Preload("buyer")).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 0))).Return(curPreload, nil)
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &trxs, query))
+	assert.Len(t, trxs, 2)
+	assert.Equal(t, 10, trxs[0].ID)
+	assert.Equal(t, 10, trxs[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_withPreload(t *testing.T) {
+	var (
+		addresses  []Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, nil).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_withPreloadError(t *testing.T) {
+	var (
+		addresses  []Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = &testCursor{}
+		err        = errors.New("error")
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, err).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_scanError(t *testing.T) {
+	var (
+		users   []User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1)
+		cur     = &testCursor{}
+		err     = errors.New("error")
+	)
+
+	cur.On("Fields").Return([]string(nil), err).Once()
+	cur.On("Close").Return(nil).Once()
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Equal(t, err, repo.FindAll(context.TODO(), &users, query))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_FindAll_error(t *testing.T) {
 	var (
 		users   []User
@@ -406,7 +602,7 @@ func TestRepository_FindAndCountAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_FindAndCountAll_queryError(t *testing.T) {
+func TestRepository_FindAndCountAll_error(t *testing.T) {
 	var (
 		users   []User
 		adapter = &testAdapter{}
@@ -530,70 +726,6 @@ func TestRepository_Insert_sets(t *testing.T) {
 	}, user)
 
 	adapter.AssertExpectations(t)
-}
-
-func TestRepository_Insert_reload(t *testing.T) {
-	var (
-		user     User
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		mutators = []Mutator{
-			Reload(true),
-			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		}
-		mutates = map[string]Mutate{
-			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
-		}
-		cur = createCursor(1)
-	)
-
-	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, nil).Once()
-
-	assert.Nil(t, repo.Insert(context.TODO(), &user, mutators...))
-	assert.Equal(t, User{
-		ID:        10,
-		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
-	}, user)
-	assert.False(t, cur.Next())
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
-}
-
-func TestRepository_Insert_reloadError(t *testing.T) {
-	var (
-		user     User
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		mutators = []Mutator{
-			Reload(true),
-			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
-		}
-		mutates = map[string]Mutate{
-			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
-		}
-		cur = &testCursor{}
-		err = errors.New("error")
-	)
-
-	adapter.On("Insert", From("users"), mutates).Return(10, nil).Once()
-	adapter.On("Query", From("users").Where(Eq("id", 10)).Limit(1)).Return(cur, err).Once()
-
-	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
-
-	adapter.AssertExpectations(t)
-	cur.AssertExpectations(t)
 }
 
 func TestRepository_Insert_saveBelongsTo(t *testing.T) {
@@ -857,11 +989,12 @@ func TestRepository_Insert_error(t *testing.T) {
 			"created_at": Set("created_at", now()),
 			"updated_at": Set("updated_at", now()),
 		}
+		err = errors.New("error")
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(0, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), mutates).Return(0, err).Once()
 
-	assert.NotNil(t, repo.Insert(context.TODO(), &user, mutators...))
+	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
 
 	adapter.AssertExpectations(t)
@@ -1034,7 +1167,7 @@ func TestRepository_Update(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user))
 	assert.Equal(t, User{
@@ -1062,7 +1195,7 @@ func TestRepository_Update_compositePrimaryKeys(t *testing.T) {
 		queries = From("user_roles").Where(Eq("user_id", userRole.UserID).AndEq("role_id", userRole.RoleID))
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &userRole))
 	assert.Equal(t, UserRole{
@@ -1089,7 +1222,7 @@ func TestRepository_Update_sets(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, mutators...))
 	assert.Equal(t, User{
@@ -1115,7 +1248,7 @@ func TestRepository_Update_softDelete(t *testing.T) {
 		queries = From("addresses").Where(Eq("id", address.ID))
 	)
 
-	adapter.On("Update", queries.Where(Nil("deleted_at")), mutates).Return(1, nil).Once()
+	adapter.On("Update", queries.Where(Nil("deleted_at")), "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &address, mutators...))
 	assert.Equal(t, Address{
@@ -1141,7 +1274,7 @@ func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
 		queries = From("addresses").Where(Eq("id", address.ID)).Unscoped()
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &address, mutators...))
 	assert.Equal(t, Address{
@@ -1168,7 +1301,7 @@ func TestRepository_Update_notFound(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, mutates).Return(0, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(0, nil).Once()
 
 	assert.Equal(t, NotFoundError{}, repo.Update(context.TODO(), &user, mutators...))
 
@@ -1190,7 +1323,7 @@ func TestRepository_Update_reload(t *testing.T) {
 		cur     = createCursor(1)
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, mutators...))
@@ -1216,7 +1349,7 @@ func TestRepository_Update_reloadError(t *testing.T) {
 		err     = errors.New("error")
 	)
 
-	adapter.On("Update", queries, mutates).Return(1, nil).Once()
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
 	adapter.On("Query", queries.Limit(1)).Return(cur, err).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &user, mutators...))
@@ -1242,8 +1375,8 @@ func TestRepository_Update_saveBelongsTo(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", *profile.UserID)), mock.Anything).Return(1, nil).Once()
-	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", *profile.UserID)), "id", mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &profile))
@@ -1278,7 +1411,7 @@ func TestRepository_Update_saveBelongsToCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("profiles").Where(Eq("id", profile.ID)).Cascade(false), "id", mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &profile, Cascade(false)))
 	assert.Equal(t, Profile{
@@ -1313,7 +1446,7 @@ func TestRepository_Update_saveBelongsToError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", queries, mock.Anything).Return(0, err).Once()
+	adapter.On("Update", queries, "id", mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &profile))
@@ -1337,8 +1470,8 @@ func TestRepository_Update_saveHasOne(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user))
@@ -1371,7 +1504,7 @@ func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)).Cascade(false), "id", mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
@@ -1405,8 +1538,8 @@ func TestRepository_Update_saveHasOneError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), mock.Anything).Return(1, err).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &user))
@@ -1426,7 +1559,7 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Delete", From("user_roles").Where(Eq("user_id", 10))).Return(1, nil).Once()
 	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything).Return([]interface{}(nil), nil).Once()
 	adapter.On("Commit").Return(nil).Once()
@@ -1456,7 +1589,7 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)).Cascade(false), "id", mock.Anything).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
@@ -1485,7 +1618,7 @@ func TestRepository_Update_saveHasManyError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("users").Where(Eq("id", 10)), mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Delete", From("user_roles").Where(Eq("user_id", 10))).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
@@ -1521,7 +1654,7 @@ func TestRepository_Update_error(t *testing.T) {
 		queries = From("users").Where(Eq("id", user.ID))
 	)
 
-	adapter.On("Update", queries, mutates).Return(0, errors.New("error")).Once()
+	adapter.On("Update", queries, "id", mutates).Return(0, errors.New("error")).Once()
 
 	assert.NotNil(t, repo.Update(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustUpdate(context.TODO(), &user, mutators...) })
@@ -1553,7 +1686,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, mutates).Return(1, nil).Once()
+	adapter.On("Update", q, "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Equal(t, Profile{
@@ -1594,7 +1727,7 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 		q = Build("users", Eq("id", 1))
 	)
 
-	adapter.On("Update", q, mutates).Return(0, errors.New("update error")).Once()
+	adapter.On("Update", q, "id", mutates).Return(0, errors.New("update error")).Once()
 
 	err := repo.(*repository).saveBelongsTo(cw, doc, &mutation)
 	assert.Equal(t, errors.New("update error"), err)
@@ -1738,7 +1871,7 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
 	)
 
-	adapter.On("Update", q, mutates).Return(1, nil).Once()
+	adapter.On("Update", q, "id", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasOne(cw, doc, &mutation))
 	adapter.AssertExpectations(t)
@@ -1765,7 +1898,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
 	)
 
-	adapter.On("Update", q, mutates).Return(0, errors.New("update error")).Once()
+	adapter.On("Update", q, "id", mutates).Return(0, errors.New("update error")).Once()
 
 	err := repo.(*repository).saveHasOne(cw, doc, &mutation)
 	assert.Equal(t, errors.New("update error"), err)
@@ -1963,8 +2096,8 @@ func TestRepository_saveHasMany_update(t *testing.T) {
 	mutation.SetDeletedIDs("emails", []interface{}{2})
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 2))).Return(1, nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
-	adapter.On("Update", q.Where(Eq("id", 3).AndEq("user_id", 1)), mutates[1]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 3).AndEq("user_id", 1)), "id", mutates[1]).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
@@ -2038,7 +2171,7 @@ func TestRepository_saveHasMany_updateError(t *testing.T) {
 
 	mutation.SetDeletedIDs("emails", []interface{}{})
 
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(0, err).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(0, err).Once()
 
 	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 
@@ -2072,7 +2205,7 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 		}
 	)
 
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(1, nil).Once()
 	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
 
@@ -2116,7 +2249,7 @@ func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 	)
 	mutation.SetDeletedIDs("emails", []interface{}{})
 
-	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), mutates[0]).Return(1, nil).Once()
+	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(1, nil).Once()
 	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
 	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
 
@@ -2311,9 +2444,11 @@ func TestRepository_UpdateAll(t *testing.T) {
 		}
 	)
 
-	adapter.On("Update", query, mutates).Return(1, nil).Once()
+	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
-	assert.Nil(t, repo.UpdateAll(context.TODO(), query, Set("notes", "notes")))
+	updatedCount, err := repo.UpdateAll(context.TODO(), query, Set("notes", "notes"))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, updatedCount)
 
 	adapter.AssertExpectations(t)
 }
@@ -2328,7 +2463,7 @@ func TestRepository_MustUpdateAll(t *testing.T) {
 		}
 	)
 
-	adapter.On("Update", query, mutates).Return(1, nil).Once()
+	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
 		repo.MustUpdateAll(context.TODO(), query, Set("notes", "notes"))
@@ -2390,7 +2525,7 @@ func TestRepository_Delete_softDelete(t *testing.T) {
 		}
 	)
 
-	adapter.On("Update", query, mutates).Return(1, nil).Once()
+	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Delete(context.TODO(), &address))
 
@@ -2495,7 +2630,7 @@ func TestRepository_Delete_hasOne(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), addressMut).Return(1, nil).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, nil).Once()
 	adapter.On("Delete", From("users").Where(Eq("id", 10))).Return(1, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
@@ -2551,7 +2686,7 @@ func TestRepository_Delete_hasOneError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), addressMut).Return(1, err).Once()
+	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Delete(context.TODO(), &user, Cascade(true)))
@@ -2628,7 +2763,9 @@ func TestRepository_DeleteAll(t *testing.T) {
 
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
-	assert.Nil(t, repo.DeleteAll(context.TODO(), queries))
+	deletedCount, err := repo.DeleteAll(context.TODO(), queries)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, deletedCount)
 
 	adapter.AssertExpectations(t)
 }
@@ -2643,7 +2780,8 @@ func TestRepository_MustDeleteAll(t *testing.T) {
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), queries)
+		deletedCount := repo.MustDeleteAll(context.TODO(), queries)
+		assert.Equal(t, 1, deletedCount)
 	})
 
 	adapter.AssertExpectations(t)

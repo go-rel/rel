@@ -26,9 +26,20 @@ func (t *Table) ID(name string, options ...ColumnOption) {
 	t.Column(name, ID, options...)
 }
 
+// BigID defines a column with name and Big ID type.
+// the resulting database type will depends on database.
+func (t *Table) BigID(name string, options ...ColumnOption) {
+	t.Column(name, BigID, options...)
+}
+
 // Bool defines a column with name and Bool type.
 func (t *Table) Bool(name string, options ...ColumnOption) {
 	t.Column(name, Bool, options...)
+}
+
+// SmallInt defines a column with name and Small type.
+func (t *Table) SmallInt(name string, options ...ColumnOption) {
+	t.Column(name, SmallInt, options...)
 }
 
 // Int defines a column with name and Int type.
@@ -74,11 +85,6 @@ func (t *Table) DateTime(name string, options ...ColumnOption) {
 // Time defines a column with name and Time type.
 func (t *Table) Time(name string, options ...ColumnOption) {
 	t.Column(name, Time, options...)
-}
-
-// Timestamp defines a column with name and Timestamp type.
-func (t *Table) Timestamp(name string, options ...ColumnOption) {
-	t.Column(name, Timestamp, options...)
 }
 
 // PrimaryKey defines a primary key for table.

@@ -29,6 +29,8 @@ func TestAssociation_Document(t *testing.T) {
 		referenceValue interface{}
 		foreignField   string
 		foreignValue   interface{}
+		autosave       bool
+		autoload       bool
 	}{
 		{
 			record:         "Transaction",
@@ -42,6 +44,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: transaction.BuyerID,
 			foreignField:   "id",
 			foreignValue:   transaction.Buyer.ID,
+			autoload:       true,
 		},
 		{
 			record:         "Transaction",
@@ -55,6 +58,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: transactionLoaded.BuyerID,
 			foreignField:   "id",
 			foreignValue:   transactionLoaded.Buyer.ID,
+			autoload:       true,
 		},
 		{
 			record:         "User",
@@ -68,6 +72,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: user.ID,
 			foreignField:   "user_id",
 			foreignValue:   nil,
+			autosave:       true,
 		},
 		{
 			record:         "User",
@@ -81,6 +86,7 @@ func TestAssociation_Document(t *testing.T) {
 			referenceValue: userLoaded.ID,
 			foreignField:   "user_id",
 			foreignValue:   nil,
+			autosave:       true,
 		},
 		{
 			record:         "Address",
@@ -128,6 +134,8 @@ func TestAssociation_Document(t *testing.T) {
 			assert.Equal(t, test.referenceField, assoc.ReferenceField())
 			assert.Equal(t, test.referenceValue, assoc.ReferenceValue())
 			assert.Equal(t, test.foreignField, assoc.ForeignField())
+			assert.Equal(t, test.autoload, assoc.Autoload())
+			assert.Equal(t, test.autosave, assoc.Autosave())
 
 			if test.typ == HasMany {
 				assert.Panics(t, func() {
@@ -169,6 +177,8 @@ func TestAssociation_Collection(t *testing.T) {
 		foreignValue     interface{}
 		foreignThrough   string
 		through          string
+		autoload         bool
+		autosave         bool
 	}{
 		{
 			record:         "User",
@@ -271,6 +281,8 @@ func TestAssociation_Collection(t *testing.T) {
 			assert.Equal(t, test.referenceValue, assoc.ReferenceValue())
 			assert.Equal(t, test.foreignField, assoc.ForeignField())
 			assert.Equal(t, test.through, assoc.Through())
+			assert.Equal(t, test.autoload, assoc.Autoload())
+			assert.Equal(t, test.autosave, assoc.Autosave())
 
 			if test.typ == HasMany {
 				assert.Panics(t, func() {

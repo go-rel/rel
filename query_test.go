@@ -28,7 +28,8 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: rel.Query{
-				WhereQuery: where.Eq("id", 1),
+				WhereQuery:   where.Eq("id", 1),
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -48,7 +49,8 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: rel.Query{
-				WhereQuery: where.Eq("id", 1).AndLt("age", 10),
+				WhereQuery:   where.Eq("id", 1).AndLt("age", 10),
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -72,6 +74,7 @@ func TestQuerier(t *testing.T) {
 					rel.NewSortAsc("name"),
 					rel.NewSortDesc("age"),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -102,8 +105,9 @@ func TestQuerier(t *testing.T) {
 					Fields: []string{"name"},
 					Filter: where.Gt("amount", 10),
 				},
-				OffsetQuery: 10,
-				LimitQuery:  5,
+				OffsetQuery:  10,
+				LimitQuery:   5,
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -116,6 +120,20 @@ func TestQuerier(t *testing.T) {
 			query: rel.Query{
 				WhereQuery:    where.Eq("id", 1),
 				UnscopedQuery: true,
+				CascadeQuery:  true,
+			},
+		},
+		{
+			name: "where id=1 preload",
+			queriers: [][]rel.Querier{
+				{
+					where.Eq("id", 1), rel.Preload("users"), rel.Cascade(true),
+				},
+			},
+			query: rel.Query{
+				WhereQuery:   where.Eq("id", 1),
+				PreloadQuery: []string{"users"},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -126,8 +144,9 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: rel.Query{
-				WhereQuery: where.Eq("id", 1),
-				LockQuery:  "FOR UPDATE",
+				WhereQuery:   where.Eq("id", 1),
+				LockQuery:    "FOR UPDATE",
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -139,10 +158,11 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: rel.Query{
-				SelectQuery: rel.SelectQuery{Fields: []string{"status", "count(id)"}},
-				GroupQuery:  rel.GroupQuery{Fields: []string{"status"}},
-				WhereQuery:  where.Nil("deleted_at").AndNe("status", "paid"),
-				LockQuery:   "FOR UPDATE",
+				SelectQuery:  rel.SelectQuery{Fields: []string{"status", "count(id)"}},
+				GroupQuery:   rel.GroupQuery{Fields: []string{"status"}},
+				WhereQuery:   where.Nil("deleted_at").AndNe("status", "paid"),
+				LockQuery:    "FOR UPDATE",
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -153,7 +173,8 @@ func TestQuerier(t *testing.T) {
 				},
 			},
 			query: rel.Query{
-				SQLQuery: rel.SQL("SELECT 1;"),
+				SQLQuery:     rel.SQL("SELECT 1;"),
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -178,6 +199,7 @@ func TestQuery_Select(t *testing.T) {
 		SelectQuery: rel.SelectQuery{
 			Fields: []string{"*"},
 		},
+		CascadeQuery: true,
 	}, rel.From("users").Select("*"))
 
 	assert.Equal(t, rel.Query{
@@ -185,6 +207,7 @@ func TestQuery_Select(t *testing.T) {
 		SelectQuery: rel.SelectQuery{
 			Fields: []string{"id", "name", "email"},
 		},
+		CascadeQuery: true,
 	}, rel.From("users").Select("id", "name", "email"))
 }
 
@@ -195,6 +218,7 @@ func TestQuery_Distinct(t *testing.T) {
 			Fields:       []string{"*"},
 			OnlyDistinct: true,
 		},
+		CascadeQuery: true,
 	}, rel.From("users").Select("*").Distinct())
 }
 
@@ -207,6 +231,7 @@ func TestQuery_Join(t *testing.T) {
 				Table: "transactions",
 			},
 		},
+		CascadeQuery: true,
 	}
 
 	assert.Equal(t, result, rel.Build("", rel.From("users").Join("transactions")))
@@ -225,6 +250,7 @@ func TestQuery_JoinOn(t *testing.T) {
 				To:    "transactions.id",
 			},
 		},
+		CascadeQuery: true,
 	}
 
 	assert.Equal(t, result, rel.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
@@ -240,6 +266,7 @@ func TestQuery_Joinf(t *testing.T) {
 				Arguments: []interface{}{1},
 			},
 		},
+		CascadeQuery: true,
 	}
 
 	assert.Equal(t, result, rel.From("users").Joinf("JOIN transactions ON transacations.id=?", 1))
@@ -256,47 +283,53 @@ func TestQuery_Where(t *testing.T) {
 			`id=1 AND deleted_at IS NIL`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				Table:        "users",
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`where id=1 AND deleted_at IS NIL`,
 			rel.Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			rel.Query{
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL AND active<>false`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).Where(where.Ne("active", false)),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
+				Table:        "users",
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL (where package)`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				Table:        "users",
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1 AND deleted_at IS NIL (chained where package)`,
 			rel.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				Table:        "users",
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1`,
 			rel.From("users").Wheref("id=?", 1),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Fragment("id=?", 1)),
+				Table:        "users",
+				WhereQuery:   where.And(where.Fragment("id=?", 1)),
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -318,63 +351,71 @@ func TestQuery_OrWhere(t *testing.T) {
 			`id=1 AND deleted_at IS NIL`,
 			rel.From("users").OrWhere(where.Eq("id", 1), where.Nil("deleted_at")),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				Table:        "users",
+				WhereQuery:   where.And(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
 			rel.From("users").Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				Table:        "users",
+				WhereQuery:   where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1 OR deleted_at IS NIL`,
 			rel.Where(where.Eq("id", 1)).OrWhere(where.Nil("deleted_at")),
 			rel.Query{
-				WhereQuery: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				WhereQuery:   where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR active<>true`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false)),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
+				Table:        "users",
+				WhereQuery:   where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`(id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
+				Table:        "users",
+				WhereQuery:   where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000`,
 			rel.From("users").Where(where.Eq("id", 1), where.Nil("deleted_at")).OrWhere(where.Ne("active", false), where.Gte("score", 80)).Where(where.Lt("price", 10000)),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				Table:        "users",
+				WhereQuery:   where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`((id=1 AND deleted_at IS NIL) OR (active<>true AND score>=80)) AND price<10000 (chained where package)`,
 			rel.From("users").Where(where.Eq("id", 1).AndNil("deleted_at")).OrWhere(where.Ne("active", false).AndGte("score", 80)).Where(where.Lt("price", 10000)),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				Table:        "users",
+				WhereQuery:   where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
+				CascadeQuery: true,
 			},
 		},
 		{
 			`id=1`,
 			rel.From("users").Where(where.Nil("deleted_at")).OrWheref("id=?", 1),
 			rel.Query{
-				Table:      "users",
-				WhereQuery: where.Or(where.Nil("deleted_at"), where.Fragment("id=?", 1)),
+				Table:        "users",
+				WhereQuery:   where.Or(where.Nil("deleted_at"), where.Fragment("id=?", 1)),
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -392,6 +433,7 @@ func TestQuery_Group(t *testing.T) {
 		GroupQuery: rel.GroupQuery{
 			Fields: []string{"active", "plan"},
 		},
+		CascadeQuery: true,
 	}
 
 	assert.Equal(t, result, rel.From("users").Group("active", "plan"))
@@ -412,6 +454,7 @@ func TestQuery_Having(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -423,6 +466,7 @@ func TestQuery_Having(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -434,6 +478,7 @@ func TestQuery_Having(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at"), where.Ne("active", false)),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -445,6 +490,7 @@ func TestQuery_Having(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Fragment("id=?", 1)),
 				},
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -471,6 +517,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -482,6 +529,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.Eq("id", 1), where.Nil("deleted_at")),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -493,6 +541,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.Ne("active", false)),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -504,6 +553,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -515,6 +565,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Or(where.And(where.Eq("id", 1), where.Nil("deleted_at")), where.And(where.Ne("active", false), where.Gte("score", 80))), where.Lt("price", 10000)),
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -526,6 +577,7 @@ func TestQuery_OrHaving(t *testing.T) {
 					Fields: []string{"active", "plan"},
 					Filter: where.And(where.Fragment("id=?", 1)),
 				},
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -554,6 +606,7 @@ func TestQuery_Sort(t *testing.T) {
 						Sort:  1,
 					},
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -571,6 +624,7 @@ func TestQuery_Sort(t *testing.T) {
 						Sort:  1,
 					},
 				},
+				CascadeQuery: true,
 			},
 		},
 		{
@@ -596,6 +650,7 @@ func TestQuery_Sort(t *testing.T) {
 						Sort:  -1,
 					},
 				},
+				CascadeQuery: true,
 			},
 		},
 	}
@@ -609,21 +664,24 @@ func TestQuery_Sort(t *testing.T) {
 
 func TestQuery_Offset(t *testing.T) {
 	assert.Equal(t, rel.Query{
-		Table:       "users",
-		OffsetQuery: 10,
+		Table:        "users",
+		OffsetQuery:  10,
+		CascadeQuery: true,
 	}, rel.From("users").Offset(10))
 }
 
 func TestQuery_Limit(t *testing.T) {
 	assert.Equal(t, rel.Query{
-		Table:      "users",
-		LimitQuery: 10,
+		Table:        "users",
+		LimitQuery:   10,
+		CascadeQuery: true,
 	}, rel.From("users").Limit(10))
 }
 
 func TestQuery_Lock_outsideTransaction(t *testing.T) {
 	assert.Equal(t, rel.Query{
-		Table:     "users",
-		LockQuery: "FOR UPDATE",
+		Table:        "users",
+		LockQuery:    "FOR UPDATE",
+		CascadeQuery: true,
 	}, rel.From("users").Lock("FOR UPDATE"))
 }

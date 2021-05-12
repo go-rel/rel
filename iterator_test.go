@@ -112,17 +112,18 @@ func TestIterator_cursorFieldsError(t *testing.T) {
 		query   = From("users")
 		cur     = &testCursor{}
 		it      = newIterator(context.TODO(), adapter, query, nil)
+		err     = errors.New("cursor error")
 	)
 
 	adapter.On("Query", query.SortAsc("id").Limit(1000)).Return(cur, nil).Once()
-	cur.On("Fields").Return([]string{}, errors.New("cursor error"))
+	cur.On("Fields").Return([]string{}, err)
 
 	defer it.Close()
 	for {
 		if err := it.Next(&user); err == io.EOF {
 			break
 		} else {
-			assert.Equal(t, errors.New("cursor error"), err)
+			assert.Equal(t, err, err)
 		}
 
 		assert.Equal(t, 0, user.ID)
@@ -140,16 +141,17 @@ func TestIterator_queryError(t *testing.T) {
 		query   = From("users")
 		cur     = &testCursor{}
 		it      = newIterator(context.TODO(), adapter, query, nil)
+		err     = errors.New("query error")
 	)
 
-	adapter.On("Query", query.SortAsc("id").Limit(1000)).Return(cur, errors.New("query error")).Once()
+	adapter.On("Query", query.SortAsc("id").Limit(1000)).Return(cur, err).Once()
 
 	defer it.Close()
 	for {
 		if err := it.Next(&user); err == io.EOF {
 			break
 		} else {
-			assert.Equal(t, errors.New("query error"), err)
+			assert.Equal(t, err, err)
 		}
 
 		assert.Equal(t, 0, user.ID)

@@ -59,7 +59,7 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144) UNIQUE, `text` TEXT(1000), `date` DATE, `datetime` DATETIME, `time` TIME, `timestamp` TIMESTAMP DEFAULT '2020-01-01 01:00:00', `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE `date_unique` (`date`)) Engine=InnoDB;",
+			result: "CREATE TABLE `columns` (`bool` BOOL NOT NULL DEFAULT false, `int` INT(11) UNSIGNED, `bigint` BIGINT(20) UNSIGNED, `float` FLOAT(24) UNSIGNED, `decimal` DECIMAL(6,2) UNSIGNED, `string` VARCHAR(144) UNIQUE, `text` TEXT(1000), `date` DATE, `datetime` DATETIME DEFAULT '2020-01-01 01:00:00', `time` TIME, `blob` blob, PRIMARY KEY (`int`), FOREIGN KEY (`int`, `string`) REFERENCES `products` (`id`, `name`) ON DELETE CASCADE ON UPDATE CASCADE, UNIQUE `date_unique` (`date`)) Engine=InnoDB;",
 			table: rel.Table{
 				Op:   rel.SchemaCreate,
 				Name: "columns",
@@ -72,9 +72,8 @@ func TestBuilder_Table(t *testing.T) {
 					rel.Column{Name: "string", Type: rel.String, Limit: 144, Unique: true},
 					rel.Column{Name: "text", Type: rel.Text, Limit: 1000},
 					rel.Column{Name: "date", Type: rel.Date},
-					rel.Column{Name: "datetime", Type: rel.DateTime},
+					rel.Column{Name: "datetime", Type: rel.DateTime, Default: time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC)},
 					rel.Column{Name: "time", Type: rel.Time},
-					rel.Column{Name: "timestamp", Type: rel.Timestamp, Default: time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC)},
 					rel.Column{Name: "blob", Type: "blob"},
 					rel.Key{Columns: []string{"int"}, Type: rel.PrimaryKey},
 					rel.Key{Columns: []string{"int", "string"}, Type: rel.ForeignKey, Reference: rel.ForeignKeyReference{Table: "products", Columns: []string{"id", "name"}, OnDelete: "CASCADE", OnUpdate: "CASCADE"}},
@@ -84,13 +83,13 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE IF NOT EXISTS `products` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `raw` BOOL);",
+			result: "CREATE TABLE IF NOT EXISTS `products` (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `raw` BOOL);",
 			table: rel.Table{
 				Op:       rel.SchemaCreate,
 				Name:     "products",
 				Optional: true,
 				Definitions: []rel.TableDefinition{
-					rel.Column{Name: "id", Type: rel.ID},
+					rel.Column{Name: "id", Type: rel.BigID},
 					rel.Raw("`raw` BOOL"),
 				},
 			},
@@ -1483,4 +1482,110 @@ func TestBuilder_Lock(t *testing.T) {
 
 	assert.Equal(t, "SELECT * FROM `users` FOR UPDATE;", qs)
 	assert.Nil(t, args)
+}
+
+func TestBuilder_SubQuery(t *testing.T) {
+	var (
+		config = Config{
+			Placeholder: "?",
+			EscapeChar:  "`",
+		}
+	)
+
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Filter      rel.FilterQuery
+	}{
+		{
+			" WHERE `field`=ANY(SELECT `field1` FROM `table2` WHERE `type`=?)",
+			[]interface{}{"value"},
+			where.Eq("field", rel.Any(
+				rel.Select("field1").From("table2").Where(where.Eq("type", "value")),
+			)),
+		},
+		{
+			" WHERE `field`=(SELECT `field1` FROM `table2` WHERE `type`=?)",
+			[]interface{}{"value"},
+			where.Eq("field",
+				rel.Select("field1").From("table2").Where(where.Eq("type", "value")),
+			),
+		},
+		{
+			" WHERE `field1` IN (SELECT `field2` FROM `table2` WHERE `field3` IN (?,?))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1", rel.Select("field2").From("table2").Where(
+				where.InString("field3", []string{"value1", "value2"}),
+			)),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
+			var (
+				buffer  Buffer
+				builder = NewBuilder(config)
+			)
+
+			builder.where(&buffer, test.Filter)
+
+			assert.Equal(t, test.QueryString, buffer.String())
+			assert.Equal(t, test.Args, buffer.Arguments)
+		})
+	}
+}
+
+func TestBuilder_SubQuery_ordinal(t *testing.T) {
+	var (
+		config = Config{
+			Placeholder:         "$",
+			EscapeChar:          "\"",
+			Ordinal:             true,
+			InsertDefaultValues: true,
+		}
+	)
+
+	tests := []struct {
+		QueryString string
+		Args        []interface{}
+		Filter      rel.FilterQuery
+	}{
+		{
+			" WHERE \"field1\"=ANY(SELECT \"field2\" FROM \"table2\" WHERE \"type\"=$1)",
+			[]interface{}{"value"},
+			where.Eq("field1", rel.Any(
+				rel.Select("field2").From("table2").Where(where.Eq("type", "value")),
+			)),
+		},
+		{
+			" WHERE \"field1\"=(SELECT \"field2\" FROM \"table2\" WHERE \"type\"=$1)",
+			[]interface{}{"value"},
+			where.Eq("field1",
+				rel.Select("field2").From("table2").Where(where.Eq("type", "value")),
+			),
+		},
+		{
+			" WHERE \"field1\" IN (SELECT \"field2\" FROM \"table2\" WHERE \"field3\" IN ($1,$2))",
+			[]interface{}{"value1", "value2"},
+			where.In("field1",
+				rel.Select("field2").From("table2").Where(
+					where.InString("field3", []string{"value1", "value2"}),
+				),
+			),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.QueryString, func(t *testing.T) {
+			var (
+				buffer  Buffer
+				builder = NewBuilder(config)
+			)
+
+			builder.where(&buffer, test.Filter)
+
+			assert.Equal(t, test.QueryString, buffer.String())
+			assert.Equal(t, test.Args, buffer.Arguments)
+		})
+	}
 }

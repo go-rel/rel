@@ -30,6 +30,8 @@ func MapColumn(column *rel.Column) (string, int, int) {
 	switch column.Type {
 	case rel.ID:
 		typ = "INT UNSIGNED AUTO_INCREMENT PRIMARY KEY"
+	case rel.BigID:
+		typ = "BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY"
 	case rel.Bool:
 		typ = "BOOL"
 	case rel.Int:
@@ -62,8 +64,6 @@ func MapColumn(column *rel.Column) (string, int, int) {
 	case rel.Time:
 		typ = "TIME"
 		timeLayout = "15:04:05"
-	case rel.Timestamp:
-		typ = "TIMESTAMP"
 	default:
 		typ = string(column.Type)
 	}

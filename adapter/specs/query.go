@@ -82,6 +82,26 @@ func QueryJoin(t *testing.T, repo rel.Repository) {
 	run(t, repo, tests)
 }
 
+// Query tests query specifications without join.
+func QueryWhereSubQuery(t *testing.T, repo rel.Repository, flags ...Flag) {
+	tests := []rel.Querier{
+		rel.Where(where.Lte("age", rel.Select("AVG(age)").From("users"))),
+		rel.Where(where.Lte("age", rel.Select("MAX(age)").From("users").Where(where.Eq("gender", "male")))),
+		rel.Where(where.Gte("age", rel.Select("MIN(age)").From("users").Where(where.Eq("gender", "male")))),
+	}
+
+	if SkipAllAndAnyKeyword.disabled(flags) {
+		additionalTests := []rel.Querier{
+			rel.Where(where.Lte("age", rel.All(rel.Select("age").From("users").Where(where.Eq("gender", "male"))))),
+			rel.Where(where.Gte("age", rel.Any(rel.Select("age").From("users").Where(where.Eq("gender", "male"))))),
+		}
+
+		tests = append(tests, additionalTests...)
+	}
+
+	run(t, repo, tests)
+}
+
 // QueryNotFound tests query specifications when no result found.
 func QueryNotFound(t *testing.T, repo rel.Repository) {
 	t.Run("NotFound", func(t *testing.T) {

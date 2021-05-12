@@ -94,7 +94,7 @@ func TestRepository_Iterate(t *testing.T) {
 			assert.Nil(t, err)
 		}
 
-		assert.NotEqual(t, 0, user.ID)
+		assert.NotZero(t, user.ID)
 	}
 
 	adapter.AssertExpectations(t)
@@ -2446,7 +2446,9 @@ func TestRepository_UpdateAll(t *testing.T) {
 
 	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
-	assert.Nil(t, repo.UpdateAll(context.TODO(), query, Set("notes", "notes")))
+	updatedCount, err := repo.UpdateAll(context.TODO(), query, Set("notes", "notes"))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, updatedCount)
 
 	adapter.AssertExpectations(t)
 }
@@ -2761,7 +2763,9 @@ func TestRepository_DeleteAll(t *testing.T) {
 
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
-	assert.Nil(t, repo.DeleteAll(context.TODO(), queries))
+	deletedCount, err := repo.DeleteAll(context.TODO(), queries)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, deletedCount)
 
 	adapter.AssertExpectations(t)
 }
@@ -2776,7 +2780,8 @@ func TestRepository_MustDeleteAll(t *testing.T) {
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), queries)
+		deletedCount := repo.MustDeleteAll(context.TODO(), queries)
+		assert.Equal(t, 1, deletedCount)
 	})
 
 	adapter.AssertExpectations(t)

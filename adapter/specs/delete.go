@@ -106,10 +106,12 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
 			assert.NotEqual(t, 0, len(result))
 
-			assert.Nil(t, repo.DeleteAll(ctx, query))
+			deletedCount, err := repo.DeleteAll(ctx, query)
+			assert.Nil(t, err)
+			assert.NotZero(t, deletedCount)
 
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
-			assert.Equal(t, 0, len(result))
+			assert.Zero(t, len(result))
 		})
 	}
 }

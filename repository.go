@@ -93,11 +93,13 @@ type Repository interface {
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
 
 	// UpdateAll records tha match the query.
-	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error
+	// Returns number of updated records and error.
+	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error)
 
 	// MustUpdateAll records that match the query.
 	// It'll panic if any error occurred.
-	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate)
+	// Returns number of updated records.
+	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int
 
 	// Delete a record.
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
@@ -107,11 +109,13 @@ type Repository interface {
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
 
 	// DeleteAll records that match the query.
-	DeleteAll(ctx context.Context, query Query) error
+	// Returns number of deleted records and error.
+	DeleteAll(ctx context.Context, query Query) (int, error)
 
 	// MustDeleteAll records that match the query.
 	// It'll panic if any error eccured.
-	MustDeleteAll(ctx context.Context, query Query)
+	// Returns number of updated records.
+	MustDeleteAll(ctx context.Context, query Query) int
 
 	// Preload association with given query.
 	// If association is already loaded, this will do nothing.
@@ -705,14 +709,15 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 	return nil
 }
 
-func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) error {
+func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-update-all", "updating multiple records")
 	defer finish(nil)
 
 	var (
-		err  error
-		cw   = fetchContext(ctx, r.rootAdapter)
-		muts = make(map[string]Mutate, len(mutates))
+		err          error
+		updatedCount int
+		cw           = fetchContext(ctx, r.rootAdapter)
+		muts         = make(map[string]Mutate, len(mutates))
 	)
 
 	for _, mut := range mutates {
@@ -720,14 +725,16 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	}
 
 	if len(muts) > 0 {
-		_, err = cw.adapter.Update(cw.ctx, query, "", muts)
+		updatedCount, err = cw.adapter.Update(cw.ctx, query, "", muts)
 	}
 
-	return err
+	return updatedCount, err
 }
 
-func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) {
-	must(r.UpdateAll(ctx, query, mutates...))
+func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int {
+	updatedCount, err := r.UpdateAll(ctx, query, mutates...)
+	must(err)
+	return updatedCount
 }
 
 func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
@@ -864,20 +871,21 @@ func (r repository) MustDelete(ctx context.Context, record interface{}, options 
 	must(r.Delete(ctx, record, options...))
 }
 
-func (r repository) DeleteAll(ctx context.Context, query Query) error {
+func (r repository) DeleteAll(ctx context.Context, query Query) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting multiple records")
 	defer finish(nil)
 
 	var (
-		cw     = fetchContext(ctx, r.rootAdapter)
-		_, err = r.deleteAll(cw, Invalid, query)
+		cw = fetchContext(ctx, r.rootAdapter)
 	)
 
-	return err
+	return r.deleteAll(cw, Invalid, query)
 }
 
-func (r repository) MustDeleteAll(ctx context.Context, query Query) {
-	must(r.DeleteAll(ctx, query))
+func (r repository) MustDeleteAll(ctx context.Context, query Query) int {
+	deletedCount, err := r.DeleteAll(ctx, query)
+	must(err)
+	return deletedCount
 }
 
 func (r repository) deleteAll(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {

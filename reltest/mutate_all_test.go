@@ -15,13 +15,16 @@ func TestUpdateAll(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
-	assert.Nil(t, repo.UpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)))
+	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
+	updatedCount, err := repo.UpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, updatedCount)
 	repo.AssertExpectations(t)
 
-	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
 	assert.NotPanics(t, func() {
-		repo.MustUpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+		updatedCount = repo.MustUpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+		assert.Equal(t, 1, updatedCount)
 	})
 	repo.AssertExpectations(t)
 }
@@ -31,13 +34,16 @@ func TestDeleteAll(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
-	assert.Nil(t, repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1))))
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).Result(1)
+	deletedCount, err := repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, deletedCount)
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1)))
+	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).Result(1)
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+		deletedCount = repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+		assert.Equal(t, 1, deletedCount)
 	})
 	repo.AssertExpectations(t)
 }
@@ -48,7 +54,8 @@ func TestDeleteAll_error(t *testing.T) {
 	)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1))))
+	_, err := repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+	assert.Equal(t, sql.ErrConnDone, err)
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()

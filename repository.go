@@ -714,8 +714,10 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	defer finish(nil)
 
 	var (
-		cw   = fetchContext(ctx, r.rootAdapter)
-		muts = make(map[string]Mutate, len(mutates))
+		err          error
+		updatedCount int
+		cw           = fetchContext(ctx, r.rootAdapter)
+		muts         = make(map[string]Mutate, len(mutates))
 	)
 
 	for _, mut := range mutates {
@@ -723,10 +725,10 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	}
 
 	if len(muts) > 0 {
-		return cw.adapter.Update(cw.ctx, query, "", muts)
+		updatedCount, err = cw.adapter.Update(cw.ctx, query, "", muts)
 	}
 
-	return 0, nil
+	return updatedCount, err
 }
 
 func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int {

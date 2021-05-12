@@ -749,23 +749,19 @@ func (b *Builder) buildComparison(buffer *Buffer, filter rel.FilterQuery) {
 		buffer.WriteString(">=")
 	}
 
-	// For warped sub-queries
-	if value, ok := filter.Value.(rel.SubQuery); ok {
-		b.buildSubQuery(buffer, value)
-		return
-	}
-
-	// For sub-queries without warp
-	if value, ok := filter.Value.(rel.Query); ok {
+	switch v := filter.Value.(type) {
+	case rel.SubQuery:
+		// For warped sub-queries
+		b.buildSubQuery(buffer, v)
+	case rel.Query:
+		// For sub-queries without warp
 		b.buildSubQuery(buffer, rel.SubQuery{
-			Query: value,
+			Query: v,
 		})
-		return
+	default:
+		buffer.WriteString(b.ph())
+		buffer.Append(filter.Value)
 	}
-
-	// For simple values
-	buffer.WriteString(b.ph())
-	buffer.Append(filter.Value)
 }
 
 func (b *Builder) buildValueList(buffer *Buffer, values []interface{}) {

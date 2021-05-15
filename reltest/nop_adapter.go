@@ -64,6 +64,10 @@ func (na *nopAdapter) Apply(ctx context.Context, migration rel.Migration) error 
 	return nil
 }
 
+func (na *nopAdapter) Exec(ctx context.Context, stmt string, args []interface{}) (int64, int64, error) {
+	return 0, 0, nil
+}
+
 type nopCursor struct {
 	count int
 }

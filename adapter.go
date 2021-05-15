@@ -14,6 +14,7 @@ type Adapter interface {
 	InsertAll(ctx context.Context, query Query, primaryField string, fields []string, bulkMutates []map[string]Mutate) ([]interface{}, error)
 	Update(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate) (int, error)
 	Delete(ctx context.Context, query Query) (int, error)
+	Exec(ctx context.Context, stmt string, args []interface{}) (int64, int64, error)
 
 	Begin(ctx context.Context) (Adapter, error)
 	Commit(ctx context.Context) error

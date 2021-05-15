@@ -126,6 +126,14 @@ type Repository interface {
 	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 
+	// Exec raw statement.
+	// Returns last inserted id, rows affected and error.
+	Exec(ctx context.Context, statement string, args ...interface{}) (int, int, error)
+
+	// MustExec raw statement.
+	// Returns last inserted id, rows affected and error.
+	MustExec(ctx context.Context, statement string, args ...interface{}) (int, int)
+
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
@@ -1075,6 +1083,21 @@ func (r repository) withDefaultScope(ddata documentData, query Query, preload bo
 	}
 
 	return query
+}
+
+// Exec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int, int, error) {
+	lastInsertedId, rowsAffected, err := r.Adapter(ctx).Exec(ctx, stmt, args)
+	return int(lastInsertedId), int(rowsAffected), err
+}
+
+// MustExec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r repository) MustExec(ctx context.Context, stmt string, args ...interface{}) (int, int) {
+	lastInsertedId, rowsAffected, err := r.Exec(ctx, stmt, args...)
+	must(err)
+	return lastInsertedId, rowsAffected
 }
 
 func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {

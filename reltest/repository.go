@@ -258,6 +258,26 @@ func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *Prelo
 	return ExpectPreload(r, field, queriers)
 }
 
+// Exec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r *Repository) Exec(ctx context.Context, statement string, args ...interface{}) (int, int, error) {
+	ret := r.mock.Called(fetchContext(ctx), statement, args)
+	return ret.Int(0), ret.Int(1), ret.Error(2)
+}
+
+// MustExec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r *Repository) MustExec(ctx context.Context, statement string, args ...interface{}) (int, int) {
+	lastInsertedId, rowsAffected, err := r.Exec(ctx, statement, args...)
+	must(err)
+	return lastInsertedId, rowsAffected
+}
+
+// ExpectExec for mocking Exec
+func (r *Repository) ExpectExec(statement string, args []interface{}) *Exec {
+	return ExpectExec(r, statement, args)
+}
+
 // Transaction provides a mock function with given fields: fn
 func (r *Repository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	ctxData := fetchContext(ctx)

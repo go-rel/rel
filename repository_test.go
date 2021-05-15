@@ -3364,10 +3364,9 @@ func TestRepository_MustExec(t *testing.T) {
 	adapter.On("Exec", context.TODO(), query, args).Return(rets...).Once()
 
 	assert.NotPanics(t, func() {
-		lastInsertedId, rowsAffected, err := repo.Exec(context.TODO(), query, args...)
+		lastInsertedId, rowsAffected := repo.MustExec(context.TODO(), query, args...)
 		assert.Equal(t, rets[0], lastInsertedId)
 		assert.Equal(t, rets[1], rowsAffected)
-		assert.Equal(t, rets[2], err)
 	})
 
 	adapter.AssertExpectations(t)

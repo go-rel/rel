@@ -126,11 +126,17 @@ type Repository interface {
 	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 
+	// Exec raw statement.
+	// Returns last inserted id, rows affected and error.
+	Exec(ctx context.Context, statement string, args ...interface{}) (int, int, error)
+
+	// MustExec raw statement.
+	// Returns last inserted id, rows affected and error.
+	MustExec(ctx context.Context, statement string, args ...interface{}) (int, int)
+
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
-
-	Exec(ctx context.Context, statement string, args ...interface{}) (int64, error)
 }
 
 type repository struct {
@@ -1079,6 +1085,21 @@ func (r repository) withDefaultScope(ddata documentData, query Query, preload bo
 	return query
 }
 
+// Exec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int, int, error) {
+	lastInsertedId, rowsAffected, err := r.Adapter(ctx).Exec(ctx, stmt, args)
+	return int(lastInsertedId), int(rowsAffected), err
+}
+
+// MustExec raw statement.
+// Returns last inserted id, rows affected and error.
+func (r repository) MustExec(ctx context.Context, stmt string, args ...interface{}) (int, int) {
+	lastInsertedId, rowsAffected, err := r.Exec(ctx, stmt, args...)
+	must(err)
+	return lastInsertedId, rowsAffected
+}
+
 func (r repository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	finish := r.instrumenter.Observe(ctx, "rel-transaction", "transaction")
 	defer finish(nil)
@@ -1125,17 +1146,6 @@ func (r repository) transaction(cw contextWrapper, fn func(cw contextWrapper) er
 	}()
 
 	return err
-}
-
-// Exec executes raw sql. Returns number of rows affected.
-func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int64, error) {
-	_, rowsAffected, err := r.Adapter(ctx).Exec(ctx, stmt, args)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return rowsAffected, nil
 }
 
 // New create new repo using adapter.

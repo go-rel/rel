@@ -3333,6 +3333,46 @@ func TestRepository_MustPreload(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Exec(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = "UPDATE users SET something = ? WHERE something2 = ?;"
+		args    = []interface{}{3, "sdfds"}
+		rets    = []interface{}{1, 2, nil}
+	)
+
+	adapter.On("Exec", context.TODO(), query, args).Return(rets...).Once()
+
+	lastInsertedId, rowsAffected, err := repo.Exec(context.TODO(), query, args...)
+	assert.Equal(t, rets[0], lastInsertedId)
+	assert.Equal(t, rets[1], rowsAffected)
+	assert.Equal(t, rets[2], err)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_MustExec(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = "UPDATE users SET something = ? WHERE something2 = ?;"
+		args    = []interface{}{3, "sdfds"}
+		rets    = []interface{}{1, 2, nil}
+	)
+
+	adapter.On("Exec", context.TODO(), query, args).Return(rets...).Once()
+
+	assert.NotPanics(t, func() {
+		lastInsertedId, rowsAffected, err := repo.Exec(context.TODO(), query, args...)
+		assert.Equal(t, rets[0], lastInsertedId)
+		assert.Equal(t, rets[1], rowsAffected)
+		assert.Equal(t, rets[2], err)
+	})
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Transaction(t *testing.T) {
 	adapter := &testAdapter{}
 	adapter.On("Begin").Return(nil).On("Commit").Return(nil).Once()
@@ -3430,41 +3470,6 @@ func TestRepository_Transaction_runtimeError(t *testing.T) {
 			return nil
 		})
 	})
-
-	adapter.AssertExpectations(t)
-}
-
-func TestRepository_Exec(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = New(adapter)
-		query = "UPDATE users SET something = ? WHERE something2 = ?;"
-		args = []interface{}{3, "sdfds"}
-		retRowsAffected = 1
-		rets = []interface{}{2, retRowsAffected, nil}
-	)
-
-	adapter.On("Exec", context.TODO(), query, args).Return(rets...).Once()
-
-	rowsAffected, err := repo.Exec(context.TODO(), query, args...)
-	assert.Equal(t, int64(retRowsAffected), rowsAffected)
-	assert.Equal(t, rets[2], err)
-
-	adapter.AssertExpectations(t)
-}
-
-func TestRepository_Exec_Error(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = New(adapter)
-		query   = "UPDATE users SET something = ? WHERE something2 = ?;"
-	)
-
-	adapter.On("Exec", context.TODO(), query, []interface{}{3, "sdfds"}).Return(0, 0, errors.New("error")).Once()
-
-	rowsAffected, err := repo.Exec(context.TODO(), query, 3, "sdfds")
-	assert.Equal(t, int64(0), rowsAffected)
-	assert.Equal(t, errors.New("error"), err)
 
 	adapter.AssertExpectations(t)
 }

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"text/template"
 
 	"github.com/serenize/snaker"
 )

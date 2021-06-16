@@ -666,10 +666,10 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 
 			// When deleted IDs is nil, it's assumed that association will be replaced.
 			// hence any update request is ignored here.
-			if deletedIDs != nil && !isZero(assocDoc.PrimaryValue()) {
+			var fValue, _ = assocDoc.Value(fField)
+			if deletedIDs != nil && !isZero(assocDoc.PrimaryValue()) && !isZero(fValue) {
 				var (
-					fValue, _ = assocDoc.Value(fField)
-					filter    = filterDocument(assocDoc).AndEq(fField, rValue)
+					filter = filterDocument(assocDoc).AndEq(fField, rValue)
 				)
 
 				if rValue != fValue {

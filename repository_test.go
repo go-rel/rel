@@ -1916,8 +1916,9 @@ func TestRepository_saveHasOne_updateInconsistentAssoc(t *testing.T) {
 		mutation = Apply(doc,
 			Map{
 				"address": Map{
-					"id":     2,
-					"street": "street1",
+					"id":      2,
+					"user_id": 2,
+					"street":  "street1",
 				},
 			},
 		)

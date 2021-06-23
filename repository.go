@@ -587,7 +587,7 @@ func (r repository) saveHasOne(cw contextWrapper, doc *Document, mutation *Mutat
 		)
 
 		if loaded && ("" == assoc.ForeignField() ||
-			("" != assoc.ForeignField() && nil != assoc.ForeignValue())) {
+			("" != assoc.ForeignField() && !isZero(assoc.ForeignValue()))) {
 			filter, err := filterHasOne(assoc, assocDoc)
 			if err != nil {
 				return err

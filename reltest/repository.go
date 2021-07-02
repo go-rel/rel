@@ -206,7 +206,7 @@ func (r *Repository) MustUpdateAny(ctx context.Context, query rel.Query, mutates
 }
 
 // ExpectUpdateAny apply mocks and expectations for UpdateAny
-func (r *Repository) ExpectUpdateAny(query rel.Query, mutates ...rel.Mutate) *MutateAll {
+func (r *Repository) ExpectUpdateAny(query rel.Query, mutates ...rel.Mutate) *MutateAny {
 	return ExpectUpdateAny(r, query, mutates)
 }
 
@@ -239,7 +239,7 @@ func (r *Repository) MustDeleteAny(ctx context.Context, query rel.Query) int {
 }
 
 // ExpectDeleteAny apply mocks and expectations for DeleteAny
-func (r *Repository) ExpectDeleteAny(query rel.Query) *MutateAll {
+func (r *Repository) ExpectDeleteAny(query rel.Query) *MutateAny {
 	return ExpectDeleteAny(r, query)
 }
 

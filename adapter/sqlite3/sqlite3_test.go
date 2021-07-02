@@ -83,7 +83,7 @@ func TestAdapter_specs(t *testing.T) {
 	specs.DeleteBelongsTo(t, repo)
 	specs.DeleteHasOne(t, repo)
 	specs.DeleteHasMany(t, repo)
-	specs.DeleteAll(t, repo)
+	specs.DeleteAny(t, repo)
 
 	// Constraint specs
 	// - foreign key constraint is not supported because of lack of information in the error message.

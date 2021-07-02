@@ -2387,7 +2387,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_saveHasMany_replaceDeleteAllError(t *testing.T) {
+func TestRepository_saveHasMany_replaceDeleteAnyError(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		cw      = fetchContext(context.TODO(), adapter)
@@ -2755,7 +2755,7 @@ func TestRepository_MustDelete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_DeleteAll(t *testing.T) {
+func TestRepository_DeleteAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2764,14 +2764,14 @@ func TestRepository_DeleteAll(t *testing.T) {
 
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
-	deletedCount, err := repo.DeleteAll(context.TODO(), queries)
+	deletedCount, err := repo.DeleteAny(context.TODO(), queries)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, deletedCount)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_MustDeleteAll(t *testing.T) {
+func TestRepository_MustDeleteAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2781,7 +2781,7 @@ func TestRepository_MustDeleteAll(t *testing.T) {
 	adapter.On("Delete", From("logs").Where(Eq("user_id", 1))).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		deletedCount := repo.MustDeleteAll(context.TODO(), queries)
+		deletedCount := repo.MustDeleteAny(context.TODO(), queries)
 		assert.Equal(t, 1, deletedCount)
 	})
 

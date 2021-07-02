@@ -29,69 +29,69 @@ func TestUpdateAll(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestDeleteAll(t *testing.T) {
+func TestDeleteAny(t *testing.T) {
 	var (
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).Result(1)
-	deletedCount, err := repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", 1))).Result(1)
+	deletedCount, err := repo.DeleteAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, deletedCount)
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).Result(1)
+	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", 1))).Result(1)
 	assert.NotPanics(t, func() {
-		deletedCount = repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+		deletedCount = repo.MustDeleteAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 		assert.Equal(t, 1, deletedCount)
 	})
 	repo.AssertExpectations(t)
 }
 
-func TestDeleteAll_error(t *testing.T) {
+func TestDeleteAny_error(t *testing.T) {
 	var (
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
-	_, err := repo.DeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
+	_, err := repo.DeleteAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	assert.Equal(t, sql.ErrConnDone, err)
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
+	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", 1))).ConnectionClosed()
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
+		repo.MustDeleteAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	})
 	repo.AssertExpectations(t)
 }
 
-func TestDeleteAll_noTable(t *testing.T) {
+func TestDeleteAny_noTable(t *testing.T) {
 	var (
 		repo  = New()
 		query = rel.Where(where.Eq("id", 1))
 	)
 
-	repo.ExpectDeleteAll(query)
+	repo.ExpectDeleteAny(query)
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(context.TODO(), query)
+		repo.MustDeleteAny(context.TODO(), query)
 	})
 	repo.AssertExpectations(t)
 }
 
-func TestDeleteAll_unsafe(t *testing.T) {
+func TestDeleteAny_unsafe(t *testing.T) {
 	var (
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll(rel.From("books"))
+	repo.ExpectDeleteAny(rel.From("books"))
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(context.TODO(), rel.From("books"))
+		repo.MustDeleteAny(context.TODO(), rel.From("books"))
 	})
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll(rel.From("books")).Unsafe()
+	repo.ExpectDeleteAny(rel.From("books")).Unsafe()
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), rel.From("books"))
+		repo.MustDeleteAny(context.TODO(), rel.From("books"))
 	})
 	repo.AssertExpectations(t)
 }

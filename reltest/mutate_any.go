@@ -5,33 +5,33 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MutateAll asserts and simulate mutate all function for test.
-type MutateAll struct {
+// MutateAny asserts and simulate mutate all function for test.
+type MutateAny struct {
 	*Expect
 }
 
 // Unsafe allows for unsafe operation that doesn't contains where clause.
-func (ma *MutateAll) Unsafe() {
+func (ma *MutateAny) Unsafe() {
 	ma.RunFn = nil // clear validation
 }
 
 // Result sets the returned number of deleted/updated counts.
-func (ma *MutateAll) Result(count int) {
+func (ma *MutateAny) Result(count int) {
 	ma.Return(count, nil)
 }
 
 // Error sets error to be returned.
-func (ma *MutateAll) Error(err error) {
+func (ma *MutateAny) Error(err error) {
 	ma.Return(0, err)
 }
 
 // ConnectionClosed sets this error to be returned.
-func (ma *MutateAll) ConnectionClosed() {
+func (ma *MutateAny) ConnectionClosed() {
 	ma.Error(ErrConnectionClosed)
 }
 
-func expectMutateAll(r *Repository, methodName string, args ...interface{}) *MutateAll {
-	ma := &MutateAll{
+func expectMutateAny(r *Repository, methodName string, args ...interface{}) *MutateAny {
+	ma := &MutateAny{
 		Expect: newExpect(r, methodName,
 			args,
 			[]interface{}{0, nil},
@@ -55,11 +55,11 @@ func expectMutateAll(r *Repository, methodName string, args ...interface{}) *Mut
 }
 
 // ExpectUpdateAny to be called.
-func ExpectUpdateAny(r *Repository, query rel.Query, mutates []rel.Mutate) *MutateAll {
-	return expectMutateAll(r, "UpdateAny", r.ctxData, query, mutates)
+func ExpectUpdateAny(r *Repository, query rel.Query, mutates []rel.Mutate) *MutateAny {
+	return expectMutateAny(r, "UpdateAny", r.ctxData, query, mutates)
 }
 
 // ExpectDeleteAny to be called.
-func ExpectDeleteAny(r *Repository, query rel.Query) *MutateAll {
-	return expectMutateAll(r, "DeleteAny", r.ctxData, query)
+func ExpectDeleteAny(r *Repository, query rel.Query) *MutateAny {
+	return expectMutateAny(r, "DeleteAny", r.ctxData, query)
 }

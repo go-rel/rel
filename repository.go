@@ -895,8 +895,15 @@ func (r repository) DeleteAll(ctx context.Context, records interface{}) error {
 	defer finish(nil)
 
 	var (
-		cw     = fetchContext(ctx, r.rootAdapter)
-		col    = NewCollection(records)
+		cw  = fetchContext(ctx, r.rootAdapter)
+		col = NewCollection(records)
+	)
+
+	if col.Len() == 0 {
+		return nil
+	}
+
+	var (
 		query  = Build(col.Table(), filterCollection(col))
 		_, err = r.deleteAny(cw, col.data.flag, query)
 	)

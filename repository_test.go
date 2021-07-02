@@ -2769,6 +2769,18 @@ func TestRepository_DeleteAll(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_DeleteAll_emptySlice(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []User{}
+	)
+
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &users))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_MustDeleteAll(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

@@ -87,7 +87,7 @@ func TestAdapter_specs(t *testing.T) {
 	specs.DeleteBelongsTo(t, repo)
 	specs.DeleteHasOne(t, repo)
 	specs.DeleteHasMany(t, repo)
-	specs.DeleteAll(t, repo)
+	specs.DeleteAny(t, repo)
 
 	// Constraint specs
 	// - Check constraint is not supported by mysql

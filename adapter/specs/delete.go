@@ -89,8 +89,8 @@ func DeleteHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", user.Addresses[1].ID)))
 }
 
-// DeleteAll tests delete all specifications.
-func DeleteAll(t *testing.T, repo rel.Repository) {
+// DeleteAny tests delete all specifications.
+func DeleteAny(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "other delete", Age: 110})
@@ -102,11 +102,11 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 
 	for _, query := range tests {
 		var result []User
-		t.Run("DeleteAll", func(t *testing.T) {
+		t.Run("DeleteAny", func(t *testing.T) {
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
 			assert.NotEqual(t, 0, len(result))
 
-			deletedCount, err := repo.DeleteAll(ctx, query)
+			deletedCount, err := repo.DeleteAny(ctx, query)
 			assert.Nil(t, err)
 			assert.NotZero(t, deletedCount)
 

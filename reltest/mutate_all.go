@@ -59,7 +59,7 @@ func ExpectUpdateAny(r *Repository, query rel.Query, mutates []rel.Mutate) *Muta
 	return expectMutateAll(r, "UpdateAny", r.ctxData, query, mutates)
 }
 
-// ExpectDeleteAll to be called.
-func ExpectDeleteAll(r *Repository, query rel.Query) *MutateAll {
-	return expectMutateAll(r, "DeleteAll", r.ctxData, query)
+// ExpectDeleteAny to be called.
+func ExpectDeleteAny(r *Repository, query rel.Query) *MutateAll {
+	return expectMutateAll(r, "DeleteAny", r.ctxData, query)
 }

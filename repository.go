@@ -92,14 +92,14 @@ type Repository interface {
 	// It'll panic if any error occurred.
 	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
 
-	// UpdateAll records tha match the query.
+	// UpdateAny records tha match the query.
 	// Returns number of updated records and error.
-	UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error)
+	UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error)
 
-	// MustUpdateAll records that match the query.
+	// MustUpdateAny records that match the query.
 	// It'll panic if any error occurred.
 	// Returns number of updated records.
-	MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int
+	MustUpdateAny(ctx context.Context, query Query, mutates ...Mutate) int
 
 	// Delete a record.
 	Delete(ctx context.Context, record interface{}, options ...Cascade) error
@@ -717,7 +717,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 	return nil
 }
 
-func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
+func (r repository) UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-update-all", "updating multiple records")
 	defer finish(nil)
 
@@ -739,8 +739,8 @@ func (r repository) UpdateAll(ctx context.Context, query Query, mutates ...Mutat
 	return updatedCount, err
 }
 
-func (r repository) MustUpdateAll(ctx context.Context, query Query, mutates ...Mutate) int {
-	updatedCount, err := r.UpdateAll(ctx, query, mutates...)
+func (r repository) MustUpdateAny(ctx context.Context, query Query, mutates ...Mutate) int {
+	updatedCount, err := r.UpdateAny(ctx, query, mutates...)
 	must(err)
 	return updatedCount
 }

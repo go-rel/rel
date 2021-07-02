@@ -30,3 +30,10 @@ func ExpectDelete(r *Repository, options []rel.Cascade) *Delete {
 		Expect: newExpect(r, "Delete", []interface{}{r.ctxData, mock.Anything, options}, []interface{}{nil}),
 	}
 }
+
+// ExpectDeleteAll to be called.
+func ExpectDeleteAll(r *Repository) *Delete {
+	return &Delete{
+		Expect: newExpect(r, "DeleteAll", []interface{}{r.ctxData, mock.Anything}, []interface{}{nil}),
+	}
+}

@@ -2755,6 +2755,36 @@ func TestRepository_MustDelete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_DeleteAll(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []User{{ID: 1}}
+	)
+
+	adapter.On("Delete", From("users").Where(In("id", users[0].ID))).Return(1, nil).Once()
+
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &users))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_MustDeleteAll(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []User{{ID: 1}}
+	)
+
+	adapter.On("Delete", From("users").Where(In("id", users[0].ID))).Return(1, nil).Once()
+
+	assert.NotPanics(t, func() {
+		repo.MustDeleteAll(context.TODO(), &users)
+	})
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_DeleteAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

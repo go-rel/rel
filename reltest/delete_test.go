@@ -55,3 +55,19 @@ func TestDelete_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestDeleteAll(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
+	repo.AssertExpectations(t)
+
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+	assert.NotPanics(t, func() {
+		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
+	})
+	repo.AssertExpectations(t)
+}

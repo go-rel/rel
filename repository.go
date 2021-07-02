@@ -78,10 +78,12 @@ type Repository interface {
 	MustInsert(ctx context.Context, record interface{}, mutators ...Mutator)
 
 	// InsertAll records.
+	// Does not supports application cascade insert.
 	InsertAll(ctx context.Context, records interface{}) error
 
 	// MustInsertAll records.
 	// It'll panic if any error occurred.
+	// Does not supports application cascade insert.
 	MustInsertAll(ctx context.Context, records interface{})
 
 	// Update a record in database.
@@ -107,6 +109,15 @@ type Repository interface {
 	// MustDelete a record.
 	// It'll panic if any error eccured.
 	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
+
+	// DeleteAll records.
+	// Does not supports application cascade delete.
+	DeleteAll(ctx context.Context, records interface{}) error
+
+	// MustDeleteAll records.
+	// It'll panic if any error occurred.
+	// Does not supports application cascade delete.
+	MustDeleteAll(ctx context.Context, records interface{})
 
 	// DeleteAny records that match the query.
 	// Returns number of deleted records and error.
@@ -718,7 +729,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 }
 
 func (r repository) UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-update-all", "updating multiple records")
+	finish := r.instrumenter.Observe(ctx, "rel-update-any", "updating multiple records")
 	defer finish(nil)
 
 	var (
@@ -879,8 +890,33 @@ func (r repository) MustDelete(ctx context.Context, record interface{}, options 
 	must(r.Delete(ctx, record, options...))
 }
 
+func (r repository) DeleteAll(ctx context.Context, records interface{}) error {
+	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting records")
+	defer finish(nil)
+
+	var (
+		cw  = fetchContext(ctx, r.rootAdapter)
+		col = NewCollection(records)
+	)
+
+	if col.Len() == 0 {
+		return nil
+	}
+
+	var (
+		query  = Build(col.Table(), filterCollection(col))
+		_, err = r.deleteAny(cw, col.data.flag, query)
+	)
+
+	return err
+}
+
+func (r repository) MustDeleteAll(ctx context.Context, records interface{}) {
+	must(r.DeleteAll(ctx, records))
+}
+
 func (r repository) DeleteAny(ctx context.Context, query Query) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting multiple records")
+	finish := r.instrumenter.Observe(ctx, "rel-delete-any", "deleting multiple records")
 	defer finish(nil)
 
 	var (

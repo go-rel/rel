@@ -28,6 +28,23 @@ func Delete(t *testing.T, repo rel.Repository) {
 	assert.Nil(t, repo.Find(ctx, &User{}, where.Eq("id", address.User.ID)))
 }
 
+// DeleteAll tests delete specifications.
+func DeleteAll(t *testing.T, repo rel.Repository) {
+	var (
+		addresses = []Address{
+			{Name: "address1"},
+			{Name: "address2"},
+		}
+	)
+
+	repo.MustInsertAll(ctx, &addresses)
+	assert.NotEqual(t, 0, addresses[0].ID)
+	assert.NotEqual(t, 0, addresses[1].ID)
+
+	assert.Nil(t, repo.DeleteAll(ctx, &addresses))
+	assert.Zero(t, repo.MustCount(ctx, "addresses", where.In("id", addresses[0].ID, addresses[1].ID)))
+}
+
 // DeleteBelongsTo tests delete specifications.
 func DeleteBelongsTo(t *testing.T, repo rel.Repository) {
 	var (

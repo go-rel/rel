@@ -192,22 +192,22 @@ func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *Mutate {
 	return ExpectUpdate(r, mutators)
 }
 
-// UpdateAll provides a mock function with given fields: query
-func (r *Repository) UpdateAll(ctx context.Context, query rel.Query, mutates ...rel.Mutate) (int, error) {
+// UpdateAny provides a mock function with given fields: query
+func (r *Repository) UpdateAny(ctx context.Context, query rel.Query, mutates ...rel.Mutate) (int, error) {
 	ret := r.mock.Called(fetchContext(ctx), query, mutates)
 	return ret.Int(0), ret.Error(1)
 }
 
-// MustUpdateAll provides a mock function with given fields: query
-func (r *Repository) MustUpdateAll(ctx context.Context, query rel.Query, mutates ...rel.Mutate) int {
-	updatedCount, err := r.UpdateAll(ctx, query, mutates...)
+// MustUpdateAny provides a mock function with given fields: query
+func (r *Repository) MustUpdateAny(ctx context.Context, query rel.Query, mutates ...rel.Mutate) int {
+	updatedCount, err := r.UpdateAny(ctx, query, mutates...)
 	must(err)
 	return updatedCount
 }
 
-// ExpectUpdateAll apply mocks and expectations for UpdateAll
-func (r *Repository) ExpectUpdateAll(query rel.Query, mutates ...rel.Mutate) *MutateAll {
-	return ExpectUpdateAll(r, query, mutates)
+// ExpectUpdateAny apply mocks and expectations for UpdateAny
+func (r *Repository) ExpectUpdateAny(query rel.Query, mutates ...rel.Mutate) *MutateAll {
+	return ExpectUpdateAny(r, query, mutates)
 }
 
 // Delete provides a mock function with given fields: record

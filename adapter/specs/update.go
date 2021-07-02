@@ -361,8 +361,8 @@ func Updates(t *testing.T, repo rel.Repository) {
 	}
 }
 
-// UpdateAll tests update all specifications.
-func UpdateAll(t *testing.T, repo rel.Repository) {
+// UpdateAny tests update all specifications.
+func UpdateAny(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &User{Name: "update", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "update", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "other update", Age: 110})
@@ -373,13 +373,13 @@ func UpdateAll(t *testing.T, repo rel.Repository) {
 	}
 
 	for _, query := range tests {
-		t.Run("UpdateAll", func(t *testing.T) {
+		t.Run("UpdateAny", func(t *testing.T) {
 			var (
 				result []User
 				name   = "all updated"
 			)
 
-			updatedCount, err := repo.UpdateAll(ctx, query, rel.Set("name", name))
+			updatedCount, err := repo.UpdateAny(ctx, query, rel.Set("name", name))
 			assert.Nil(t, err)
 			assert.NotZero(t, updatedCount)
 

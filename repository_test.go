@@ -2435,7 +2435,7 @@ func TestRepository_saveHasMany_invalidMutator(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_UpdateAll(t *testing.T) {
+func TestRepository_UpdateAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2447,14 +2447,14 @@ func TestRepository_UpdateAll(t *testing.T) {
 
 	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
-	updatedCount, err := repo.UpdateAll(context.TODO(), query, Set("notes", "notes"))
+	updatedCount, err := repo.UpdateAny(context.TODO(), query, Set("notes", "notes"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, updatedCount)
 
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_MustUpdateAll(t *testing.T) {
+func TestRepository_MustUpdateAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2467,7 +2467,7 @@ func TestRepository_MustUpdateAll(t *testing.T) {
 	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
 	assert.NotPanics(t, func() {
-		repo.MustUpdateAll(context.TODO(), query, Set("notes", "notes"))
+		repo.MustUpdateAny(context.TODO(), query, Set("notes", "notes"))
 	})
 
 	adapter.AssertExpectations(t)

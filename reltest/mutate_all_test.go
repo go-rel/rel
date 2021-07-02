@@ -10,20 +10,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUpdateAll(t *testing.T) {
+func TestUpdateAny(t *testing.T) {
 	var (
 		repo = New()
 	)
 
-	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
-	updatedCount, err := repo.UpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+	repo.ExpectUpdateAny(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
+	updatedCount, err := repo.UpdateAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, updatedCount)
 	repo.AssertExpectations(t)
 
-	repo.ExpectUpdateAll(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
+	repo.ExpectUpdateAny(rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true)).Result(1)
 	assert.NotPanics(t, func() {
-		updatedCount = repo.MustUpdateAll(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
+		updatedCount = repo.MustUpdateAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)), rel.Set("discount", true))
 		assert.Equal(t, 1, updatedCount)
 	})
 	repo.AssertExpectations(t)

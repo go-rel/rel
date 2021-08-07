@@ -32,9 +32,9 @@ type Poster struct {
 type Book struct {
 	ID         int
 	Title      string
-	Author     Author   `auto:"true"`
+	Author     Author
 	AuthorID   *int
-	Ratings    []Rating `autosave:"true"`
+	Ratings    []Rating `auto:"true"`
 	Poster     Poster   `autosave:"true"`
 	AbstractID int
 	Abstract   Abstract `autosave:"true"`
@@ -69,7 +69,7 @@ func TestRepository_Transaction(t *testing.T) {
 	var (
 		repo   = New()
 		result = Book{Title: "Golang for dummies"}
-		book   = Book{ID: 1, Title: "Golang for dummies"}
+		book   = Book{ID: 1, Title: "Golang for dummies", Ratings: []Rating{}}
 	)
 
 	repo.ExpectTransaction(func(repo *Repository) {

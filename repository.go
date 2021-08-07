@@ -128,12 +128,14 @@ type Repository interface {
 	// Returns number of updated records.
 	MustDeleteAny(ctx context.Context, query Query) int
 
-	// Preload association of a struct or a slice with given query.
+	// Preload association with given query.
+	// This function can accepts either a struct or a slice of structs.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
 	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
 
-	// MustPreload association of a struct or a slice with given query.
+	// MustPreload association with given query.
+	// This function can accepts either a struct or a slice of structs.
 	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
 

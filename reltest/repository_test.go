@@ -32,7 +32,7 @@ type Poster struct {
 type Book struct {
 	ID         int
 	Title      string
-	Author     Author
+	Author     Author   `auto:"true"`
 	AuthorID   *int
 	Ratings    []Rating `autosave:"true"`
 	Poster     Poster   `autosave:"true"`

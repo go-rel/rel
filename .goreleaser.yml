@@ -48,3 +48,16 @@ nfpms:
       - rpm
     dependencies:
       - golang
+brews:
+  - tap:
+      owner: go-rel
+      name: homebrew-tap
+    commit_author:
+      name: REL
+    homepage: "https://go-rel.github.io/"
+    description: "Database migration using REL"
+    license: "MIT"
+    folder: Formula
+    dependencies:
+      - name: golang
+        type: optional

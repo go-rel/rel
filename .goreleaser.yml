@@ -35,6 +35,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^chore:'
 nfpms:
   - file_name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     homepage: https://go-rel.github.io
@@ -52,6 +53,7 @@ brews:
   - tap:
       owner: go-rel
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     commit_author:
       name: REL
     homepage: "https://go-rel.github.io/"

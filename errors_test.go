@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -9,6 +10,31 @@ import (
 
 func TestNoResultError(t *testing.T) {
 	assert.Equal(t, "Record not found", NotFoundError{}.Error())
+}
+
+func TestNotFoundError_Is(t *testing.T) {
+	tests := []struct {
+		err    NotFoundError
+		target error
+		equal  bool
+	}{
+		{
+			err:    NotFoundError{},
+			target: NotFoundError{},
+			equal:  true,
+		},
+		{
+			err:    NotFoundError{},
+			target: sql.ErrNoRows,
+			equal:  true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.err.Error(), func(t *testing.T) {
+			assert.Equal(t, test.equal, test.err.Is(test.target))
+		})
+	}
 }
 
 func TestConstraintType(t *testing.T) {

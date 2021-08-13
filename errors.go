@@ -1,5 +1,10 @@
 package rel
 
+import (
+	"database/sql"
+	"errors"
+)
+
 var (
 	// ErrNotFound returned when records not found.
 	ErrNotFound = NotFoundError{}
@@ -31,6 +36,11 @@ type NotFoundError struct{}
 // Error message.
 func (nfe NotFoundError) Error() string {
 	return "Record not found"
+}
+
+// Is returns true when target error is sql.ErrNoRows.
+func (nfe NotFoundError) Is(target error) bool {
+	return errors.Is(target, sql.ErrNoRows)
 }
 
 // ConstraintType defines the type of constraint error.

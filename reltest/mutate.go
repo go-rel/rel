@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -10,9 +11,10 @@ import (
 
 type mutate []*MockMutate
 
-func (m *mutate) register(ctxData ctxData, mutators ...rel.Mutator) *MockMutate {
+func (m *mutate) register(name string, ctxData ctxData, mutators ...rel.Mutator) *MockMutate {
 	mm := &MockMutate{
 		assert:      &Assert{ctxData: ctxData},
+		name:        name,
 		argMutators: mutators,
 	}
 	*m = append(*m, mm)
@@ -31,12 +33,18 @@ func (m mutate) execute(ctx context.Context, record interface{}, mutators ...rel
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mm := MockMutate{argRecord: record, argMutators: mutators}
+	mocks := ""
+	for i := range m {
+		mocks += "\n\t" + m[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mm, mm.ExpectString(), mocks))
 }
 
 // MockMutate asserts and simulate Insert function for test.
 type MockMutate struct {
 	assert            *Assert
+	name              string
 	argRecord         interface{}
 	argRecordType     string
 	argRecordTable    string
@@ -92,4 +100,39 @@ func (mm *MockMutate) NotUnique(key string) *Assert {
 		Key:  key,
 		Type: rel.UniqueConstraint,
 	})
+}
+
+// String representation of mocked call.
+func (mm MockMutate) String() string {
+	argRecord := "<Any>"
+	if mm.argRecord != nil {
+		argRecord = fmt.Sprintf("%#v", mm.argRecord)
+	} else if mm.argRecordContains != nil {
+		argRecord = fmt.Sprintf("<Contains: %#v>", mm.argRecord)
+	} else if mm.argRecordType != "" {
+		argRecord = fmt.Sprintf("<Type: %s>", mm.argRecordType)
+	} else if mm.argRecordTable != "" {
+		argRecord = fmt.Sprintf("<Table: %s>", mm.argRecordTable)
+	}
+
+	argMutators := ""
+	for i := range mm.argMutators {
+		argMutators += fmt.Sprintf(", %v", mm.argMutators[i])
+	}
+
+	return fmt.Sprintf("%s(ctx, %s%s)", mm.name, argRecord, argMutators)
+}
+
+// ExpectString representation of mocked call.
+func (mm MockMutate) ExpectString() string {
+	argMutators := ""
+	for i := range mm.argMutators {
+		if i > 0 {
+			argMutators += fmt.Sprintf(", %v", mm.argMutators[i])
+		} else {
+			argMutators += fmt.Sprintf("%v", mm.argMutators[i])
+		}
+	}
+
+	return fmt.Sprintf("Expect%s(%s).ForType(\"%T\")", mm.name, argMutators, mm.argRecord)
 }

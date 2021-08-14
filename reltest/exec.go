@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 )
 
@@ -26,7 +27,12 @@ func (e exec) execute(ctx context.Context, statement string, args ...interface{}
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	me := MockExec{argStatement: statement, argArgs: args}
+	mocks := ""
+	for i := range e {
+		mocks += "\n\t" + e[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", me, me.ExpectString(), mocks))
 }
 
 // MockExec asserts and simulate UpdateAny function for test.
@@ -55,4 +61,24 @@ func (me *MockExec) Error(err error) *Assert {
 // ConnectionClosed sets this error to be returned.
 func (me *MockExec) ConnectionClosed() *Assert {
 	return me.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (me MockExec) String() string {
+	args := ""
+	for i := range me.argArgs {
+		args += fmt.Sprintf(", %v", args[i])
+	}
+
+	return fmt.Sprintf("Exec(ctx, %s%s)", me.argStatement, args)
+}
+
+// ExpectString representation of mocked call.
+func (me MockExec) ExpectString() string {
+	args := ""
+	for i := range me.argArgs {
+		args += fmt.Sprintf(", %v", args[i])
+	}
+
+	return fmt.Sprintf("ExpectString(%s%s)", me.argStatement, args)
 }

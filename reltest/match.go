@@ -9,7 +9,7 @@ import (
 type any struct{}
 
 func (any) String() string {
-	return "(Any)"
+	return "<Any>"
 }
 
 var Any interface{} = any{}

@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -31,7 +32,12 @@ func (d delete) execute(ctx context.Context, record interface{}, options ...rel.
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	md := MockDelete{argRecord: record, argOptions: options}
+	mocks := ""
+	for i := range d {
+		mocks += "\n\t" + d[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", md, md.ExpectString(), mocks))
 }
 
 // MockDelete asserts and simulate Delete function for test.
@@ -84,4 +90,35 @@ func (md *MockDelete) Success() *Assert {
 // ConnectionClosed sets this error to be returned.
 func (md *MockDelete) ConnectionClosed() *Assert {
 	return md.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (md MockDelete) String() string {
+	argRecord := "<Any>"
+	if md.argRecord != nil {
+		argRecord = fmt.Sprintf("%#v", md.argRecord)
+	} else if md.argRecordContains != nil {
+		argRecord = fmt.Sprintf("<Contains: %#v>", md.argRecord)
+	} else if md.argRecordType != "" {
+		argRecord = fmt.Sprintf("<Type: %s>", md.argRecordType)
+	} else if md.argRecordTable != "" {
+		argRecord = fmt.Sprintf("<Table: %s>", md.argRecordTable)
+	}
+
+	argCascade := ""
+	for i := range md.argOptions {
+		argCascade += fmt.Sprintf(", %v", md.argOptions[i])
+	}
+
+	return fmt.Sprintf("Delete(ctx, %s%s)", argRecord, argCascade)
+}
+
+// ExpectString representation of mocked call.
+func (md MockDelete) ExpectString() string {
+	argOptions := ""
+	for i := range md.argOptions {
+		argOptions += fmt.Sprintf("%v", md.argOptions[i])
+	}
+
+	return fmt.Sprintf("ExpectDelete(%s).ForType(\"%T\")", argOptions, md.argRecord)
 }

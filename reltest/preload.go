@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -42,7 +43,12 @@ func (p preload) execute(ctx context.Context, records interface{}, field string,
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mp := MockPreload{argRecords: records, argField: field, argQuery: query}
+	mocks := ""
+	for i := range p {
+		mocks += "\n\t" + p[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mp, mp.ExpectString(), mocks))
 }
 
 // MockPreload asserts and simulate Delete function for test.
@@ -84,6 +90,23 @@ func (mp *MockPreload) Error(err error) *Assert {
 // ConnectionClosed sets this error to be returned.
 func (mp *MockPreload) ConnectionClosed() *Assert {
 	return mp.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (mp MockPreload) String() string {
+	argRecords := "<Any>"
+	if mp.argRecords != nil {
+		argRecords = fmt.Sprintf("%#v", mp.argRecords)
+	} else if mp.argRecordsType != "" {
+		argRecords = fmt.Sprintf("<Type: %s>", mp.argRecordsType)
+	}
+
+	return fmt.Sprintf("Preload(%s, %s, %s)", argRecords, mp.argField, mp.argQuery)
+}
+
+// ExpectString representation of mocked call.
+func (mp MockPreload) ExpectString() string {
+	return fmt.Sprintf("ExpectPreload(%s, %s).ForType(\"%T\")", mp.argField, mp.argQuery, mp.argRecords)
 }
 
 type slice interface {

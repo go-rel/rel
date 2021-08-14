@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-rel/rel"
 )
@@ -33,7 +34,12 @@ func (da deleteAny) execute(ctx context.Context, query rel.Query) (int, error) {
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mda := MockDeleteAny{argQuery: query}
+	mocks := ""
+	for i := range da {
+		mocks += "\n\t" + da[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mda, mda.ExpectString(), mocks))
 }
 
 // MockDeleteAny asserts and simulate DeleteAny function for test.
@@ -71,4 +77,14 @@ func (mda *MockDeleteAny) Success() *Assert {
 // ConnectionClosed sets this error to be returned.
 func (mda *MockDeleteAny) ConnectionClosed() *Assert {
 	return mda.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (mda MockDeleteAny) String() string {
+	return fmt.Sprintf("DeleteAny(ctx, %s)", mda.argQuery)
+}
+
+// ExpectString representation of mocked call.
+func (mda MockDeleteAny) ExpectString() string {
+	return fmt.Sprintf("ExpectDeleteAny(%s)", mda.argQuery)
 }

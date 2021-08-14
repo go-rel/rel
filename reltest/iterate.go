@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"reflect"
 
@@ -29,7 +30,12 @@ func (i iterate) execute(ctx context.Context, query rel.Query, options ...rel.It
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mi := MockIterate{argQuery: query, argOptions: options}
+	mocks := ""
+	for x := range i {
+		mocks += "\n\t" + i[x].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mi, mi.ExpectString(), mocks))
 }
 
 type data interface {
@@ -94,4 +100,24 @@ func (mi *MockIterate) Next(record interface{}) error {
 
 	mi.current++
 	return nil
+}
+
+// String representation of mocked call.
+func (mi MockIterate) String() string {
+	argOptions := ""
+	for i := range mi.argOptions {
+		argOptions += fmt.Sprintf(", %v", mi.argOptions[i])
+	}
+
+	return fmt.Sprintf("Iterate(ctx, %s%s)", mi.argQuery, argOptions)
+}
+
+// ExpectString representation of mocked call.
+func (mi MockIterate) ExpectString() string {
+	argOptions := ""
+	for i := range mi.argOptions {
+		argOptions += fmt.Sprintf(", %v", mi.argOptions[i])
+	}
+
+	return fmt.Sprintf("ExpectIterate(ctx, %s%s)", mi.argQuery, argOptions)
 }

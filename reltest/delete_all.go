@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -10,10 +11,9 @@ import (
 
 type deleteAll []*MockDeleteAll
 
-func (da *deleteAll) register(ctxData ctxData, options ...rel.Cascade) *MockDeleteAll {
+func (da *deleteAll) register(ctxData ctxData) *MockDeleteAll {
 	mda := &MockDeleteAll{
-		assert:     &Assert{ctxData: ctxData},
-		argOptions: options,
+		assert: &Assert{ctxData: ctxData},
 	}
 	*da = append(*da, mda)
 	return mda
@@ -29,7 +29,12 @@ func (da deleteAll) execute(ctx context.Context, record interface{}) error {
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mda := MockDeleteAll{argRecord: record}
+	mocks := ""
+	for i := range da {
+		mocks += "\n\t" + da[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mda, mda.ExpectString(), mocks))
 }
 
 // MockDeleteAll asserts and simulate Delete function for test.
@@ -38,7 +43,6 @@ type MockDeleteAll struct {
 	argRecord      interface{}
 	argRecordType  string
 	argRecordTable string
-	argOptions     []rel.Cascade
 	retError       error
 }
 
@@ -75,4 +79,23 @@ func (mda *MockDeleteAll) Success() *Assert {
 // ConnectionClosed sets this error to be returned.
 func (mda *MockDeleteAll) ConnectionClosed() *Assert {
 	return mda.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (mda MockDeleteAll) String() string {
+	argRecord := "<Any>"
+	if mda.argRecord != nil {
+		argRecord = fmt.Sprintf("%#v", mda.argRecord)
+	} else if mda.argRecordType != "" {
+		argRecord = fmt.Sprintf("<Type: %s>", mda.argRecordType)
+	} else if mda.argRecordTable != "" {
+		argRecord = fmt.Sprintf("<Table: %s>", mda.argRecordTable)
+	}
+
+	return fmt.Sprintf("DeleteAll(ctx, %s)", argRecord)
+}
+
+// ExpectString representation of mocked call.
+func (mda MockDeleteAll) ExpectString() string {
+	return fmt.Sprintf("ExpectDeleteAll().ForType(\"%T\")", mda.argRecord)
 }

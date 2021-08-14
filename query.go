@@ -287,6 +287,11 @@ func (q Query) Preload(field string) Query {
 	return q
 }
 
+// String describe query as string.
+func (q Query) String() string {
+	return "query todo"
+}
+
 func newQuery() Query {
 	return Query{
 		CascadeQuery: true,

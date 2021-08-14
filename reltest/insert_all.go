@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -28,7 +29,12 @@ func (ia insertAll) execute(ctx context.Context, records interface{}) error {
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mia := MockInsertAll{argRecord: records}
+	mocks := ""
+	for i := range ia {
+		mocks += "\n\t" + ia[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mia, mia.ExpectString(), mocks))
 }
 
 // MockInsertAll asserts and simulate Insert function for test.
@@ -41,44 +47,63 @@ type MockInsertAll struct {
 }
 
 // For assert calls for given record.
-func (mm *MockInsertAll) For(record interface{}) *MockInsertAll {
-	mm.argRecord = record
-	return mm
+func (mia *MockInsertAll) For(record interface{}) *MockInsertAll {
+	mia.argRecord = record
+	return mia
 }
 
 // ForType assert calls for given type.
 // Type must include package name, example: `model.User`.
-func (mm *MockInsertAll) ForType(typ string) *MockInsertAll {
-	mm.argRecordType = "*" + strings.TrimPrefix(typ, "*")
-	return mm
+func (mia *MockInsertAll) ForType(typ string) *MockInsertAll {
+	mia.argRecordType = "*" + strings.TrimPrefix(typ, "*")
+	return mia
 }
 
 // ForTable assert calls for given table.
-func (mm *MockInsertAll) ForTable(typ string) *MockInsertAll {
-	mm.argRecordTable = typ
-	return mm
+func (mia *MockInsertAll) ForTable(typ string) *MockInsertAll {
+	mia.argRecordTable = typ
+	return mia
 }
 
 // Error sets error to be returned.
-func (mm *MockInsertAll) Error(err error) *Assert {
-	mm.retError = err
-	return mm.assert
+func (mia *MockInsertAll) Error(err error) *Assert {
+	mia.retError = err
+	return mia.assert
 }
 
 // Success sets no error to be returned.
-func (mm *MockInsertAll) Success() *Assert {
-	return mm.Error(nil)
+func (mia *MockInsertAll) Success() *Assert {
+	return mia.Error(nil)
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mm *MockInsertAll) ConnectionClosed() *Assert {
-	return mm.Error(ErrConnectionClosed)
+func (mia *MockInsertAll) ConnectionClosed() *Assert {
+	return mia.Error(ErrConnectionClosed)
 }
 
 // NotUnique sets not unique error to be returned.
-func (mm *MockInsertAll) NotUnique(key string) *Assert {
-	return mm.Error(rel.ConstraintError{
+func (mia *MockInsertAll) NotUnique(key string) *Assert {
+	return mia.Error(rel.ConstraintError{
 		Key:  key,
 		Type: rel.UniqueConstraint,
 	})
+}
+
+// String representation of mocked call.
+func (mia MockInsertAll) String() string {
+	argRecord := "<Any>"
+	if mia.argRecord != nil {
+		argRecord = fmt.Sprintf("%#v", mia.argRecord)
+	} else if mia.argRecordType != "" {
+		argRecord = fmt.Sprintf("<Type: %s>", mia.argRecordType)
+	} else if mia.argRecordTable != "" {
+		argRecord = fmt.Sprintf("<Table: %s>", mia.argRecordTable)
+	}
+
+	return fmt.Sprintf("InsertAll(ctx, %s)", argRecord)
+}
+
+// ExpectString representation of mocked call.
+func (mia MockInsertAll) ExpectString() string {
+	return fmt.Sprintf("InsertAll().ForType(\"%T\")", mia.argRecord)
 }

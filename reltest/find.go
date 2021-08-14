@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/go-rel/rel"
@@ -18,20 +19,25 @@ func (f *find) register(ctxData ctxData, queriers ...rel.Querier) *MockFind {
 	return mf
 }
 
-func (f find) execute(ctx context.Context, records interface{}, queriers ...rel.Querier) error {
+func (f find) execute(ctx context.Context, record interface{}, queriers ...rel.Querier) error {
 	query := rel.Build("", queriers...)
 	for _, mf := range f {
 		if matchQuery(mf.argQuery, query) &&
 			mf.assert.call(ctx) {
 			if mf.argRecord != nil {
-				reflect.ValueOf(records).Elem().Set(reflect.ValueOf(mf.argRecord))
+				reflect.ValueOf(record).Elem().Set(reflect.ValueOf(mf.argRecord))
 			}
 
 			return mf.retError
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mf := MockFind{argQuery: query, argRecord: record}
+	mocks := ""
+	for i := range f {
+		mocks += "\n\t" + f[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mf, mf.ExpectString(), mocks))
 }
 
 // MockFind asserts and simulate find function for test.
@@ -63,4 +69,14 @@ func (mf *MockFind) ConnectionClosed() *Assert {
 // NotFound sets NotFoundError to be returned.
 func (mf *MockFind) NotFound() *Assert {
 	return mf.Error(rel.NotFoundError{})
+}
+
+// String representation of mocked call.
+func (mf MockFind) String() string {
+	return fmt.Sprintf("Find(ctx, <Any>, %s)", mf.argQuery)
+}
+
+// ExpectString representation of mocked call.
+func (mf MockFind) ExpectString() string {
+	return fmt.Sprintf("ExpectFind(%s)", mf.argQuery)
 }

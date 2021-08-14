@@ -2,6 +2,7 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-rel/rel"
 )
@@ -36,7 +37,12 @@ func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel
 		}
 	}
 
-	panic("TODO: Query doesn't match")
+	mua := MockUpdateAny{argQuery: query, argMutates: mutates}
+	mocks := ""
+	for i := range ua {
+		mocks += "\n\t" + ua[i].ExpectString()
+	}
+	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mua, mua.ExpectString(), mocks))
 }
 
 // MockUpdateAny asserts and simulate UpdateAny function for test.
@@ -72,4 +78,24 @@ func (mua *MockUpdateAny) Error(err error) *Assert {
 // ConnectionClosed sets this error to be returned.
 func (mua *MockUpdateAny) ConnectionClosed() *Assert {
 	return mua.Error(ErrConnectionClosed)
+}
+
+// String representation of mocked call.
+func (mua MockUpdateAny) String() string {
+	argMutates := ""
+	for i := range mua.argMutates {
+		argMutates += fmt.Sprintf(", %v", mua.argMutates[i])
+	}
+
+	return fmt.Sprintf("UpdateAny(ctx, %s%s)", mua.argQuery, argMutates)
+}
+
+// ExpectString representation of mocked call.
+func (mua MockUpdateAny) ExpectString() string {
+	argMutates := ""
+	for i := range mua.argMutates {
+		argMutates += fmt.Sprintf(", %v", mua.argMutates[i])
+	}
+
+	return fmt.Sprintf("ExpectUpdateAny(%s%s)", mua.argQuery, argMutates)
 }

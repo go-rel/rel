@@ -32,12 +32,17 @@ func (d delete) execute(ctx context.Context, record interface{}, options ...rel.
 		}
 	}
 
-	md := MockDelete{argRecord: record, argOptions: options}
-	mocks := ""
-	for i := range d {
-		mocks += "\n\t" + d[i].ExpectString()
+	panic(failExecuteMessage(MockDelete{argRecord: record, argOptions: options}, d))
+}
+
+func (d delete) assert(t T) bool {
+	for _, md := range d {
+		if !md.assert.assert(t, md) {
+			return false
+		}
 	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", md, md.ExpectString(), mocks))
+
+	return true
 }
 
 // MockDelete asserts and simulate Delete function for test.

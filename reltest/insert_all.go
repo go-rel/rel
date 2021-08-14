@@ -29,12 +29,7 @@ func (ia insertAll) execute(ctx context.Context, records interface{}) error {
 		}
 	}
 
-	mia := MockInsertAll{argRecord: records}
-	mocks := ""
-	for i := range ia {
-		mocks += "\n\t" + ia[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mia, mia.ExpectString(), mocks))
+	panic(failExecuteMessage(MockInsertAll{argRecord: records}, ia))
 }
 
 // MockInsertAll asserts and simulate Insert function for test.

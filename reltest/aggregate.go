@@ -3,7 +3,6 @@ package reltest
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	"github.com/go-rel/rel"
 )
@@ -31,18 +30,12 @@ func (a aggregate) execute(ctx context.Context, query rel.Query, aggregate strin
 		}
 	}
 
-	ma := MockAggregate{argQuery: query, argAggregate: aggregate, argField: field}
-	mocks := ""
-	for i := range a {
-		mocks += "\n\t" + a[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", ma, ma.ExpectString(), mocks))
+	panic(failExecuteMessage(MockAggregate{argQuery: query, argAggregate: aggregate, argField: field}, a))
 }
 
-func (a aggregate) assert(t *testing.T) bool {
+func (a aggregate) assert(t T) bool {
 	for _, ma := range a {
-		if !ma.assert.assert() {
-			t.Errorf("FAIL: The code you are testing needs to make %d more call(s):\n\t%s", ma.assert.repeatability-ma.assert.totalCalls, ma)
+		if !ma.assert.assert(t, ma) {
 			return false
 		}
 	}
@@ -80,10 +73,10 @@ func (ma *MockAggregate) ConnectionClosed() *Assert {
 
 // String representation of mocked call.
 func (ma MockAggregate) String() string {
-	return fmt.Sprintf("Aggregate(ctx, %s, %s, %s)", ma.argQuery, ma.argAggregate, ma.argField)
+	return fmt.Sprintf(`%sAggregate(ctx, %s, "%s", "%s")`, ma.assert.ctxData, ma.argQuery, ma.argAggregate, ma.argField)
 }
 
 // ExpectString representation of mocked call.
 func (ma MockAggregate) ExpectString() string {
-	return fmt.Sprintf("ExpectAggregate(%s, %s, %s)", ma.argQuery, ma.argAggregate, ma.argField)
+	return fmt.Sprintf(`%sExpectAggregate(%s, "%s", "%s")`, ma.assert.ctxData, ma.argQuery, ma.argAggregate, ma.argField)
 }

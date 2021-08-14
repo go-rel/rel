@@ -19,9 +19,9 @@ func (c *count) register(ctxData ctxData, collection string, queriers ...rel.Que
 	return mc
 }
 
-func (e count) execute(ctx context.Context, collection string, queriers ...rel.Querier) (int, error) {
+func (c count) execute(ctx context.Context, collection string, queriers ...rel.Querier) (int, error) {
 	query := rel.Build(collection, queriers...)
-	for _, mc := range e {
+	for _, mc := range c {
 		if mc.argCollection == collection &&
 			matchQuery(mc.argQuery, query) &&
 			mc.assert.call(ctx) {
@@ -29,12 +29,17 @@ func (e count) execute(ctx context.Context, collection string, queriers ...rel.Q
 		}
 	}
 
-	mc := MockCount{argCollection: collection, argQuery: query}
-	mocks := ""
-	for i := range e {
-		mocks += "\n\t" + e[i].ExpectString()
+	panic(failExecuteMessage(MockCount{argCollection: collection, argQuery: query}, c))
+}
+
+func (c count) assert(t T) bool {
+	for _, mc := range c {
+		if !mc.assert.assert(t, mc) {
+			return false
+		}
 	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mc, mc.ExpectString(), mocks))
+
+	return true
 }
 
 // MockCount asserts and simulate UpdateAny function for test.
@@ -66,10 +71,10 @@ func (mc *MockCount) ConnectionClosed() *Assert {
 
 // String representation of mocked call.
 func (mc MockCount) String() string {
-	return fmt.Sprintf("Count(ctx, %s, %s)", mc.argCollection, mc.argQuery)
+	return fmt.Sprintf(`Count(ctx, "%s", %s)`, mc.argCollection, mc.argQuery)
 }
 
 // ExpectString representation of mocked call.
 func (mc MockCount) ExpectString() string {
-	return fmt.Sprintf("ExpectCount(%s, %s)", mc.argCollection, mc.argQuery)
+	return fmt.Sprintf(`ExpectCount("%s", %s)`, mc.argCollection, mc.argQuery)
 }

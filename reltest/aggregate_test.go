@@ -46,3 +46,26 @@ func TestAggregate_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestAggregate_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectAggregate(rel.From("users"), "sum", "id")
+
+	assert.Panics(t, func() {
+		repo.Aggregate(context.TODO(), rel.From("books"), "sum", "id")
+	})
+	assert.False(t, repo.aggregate.assert(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tAggregate(ctx, query todo, \"sum\", \"id\")", nt.lastLog)
+}
+
+func TestAggregate_String(t *testing.T) {
+	var (
+		mockAggregate = MockAggregate{assert: &Assert{}, argQuery: rel.From("users"), argAggregate: "sum", argField: "*"}
+	)
+
+	assert.Equal(t, `Aggregate(ctx, query todo, "sum", "*")`, mockAggregate.String())
+	assert.Equal(t, `ExpectAggregate(query todo, "sum", "*")`, mockAggregate.ExpectString())
+}

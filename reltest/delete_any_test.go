@@ -107,3 +107,26 @@ func TestMustDeleteAny_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestDeleteAny_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDeleteAny(rel.From("users"))
+
+	assert.Panics(t, func() {
+		repo.DeleteAny(context.TODO(), rel.From("books"))
+	})
+	assert.False(t, repo.deleteAny.assert(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tDeleteAny(ctx, query todo)", nt.lastLog)
+}
+
+func TestDeleteAny_String(t *testing.T) {
+	var (
+		mockDeleteAny = MockDeleteAny{assert: &Assert{}, argQuery: rel.From("users")}
+	)
+
+	assert.Equal(t, `DeleteAny(ctx, query todo)`, mockDeleteAny.String())
+	assert.Equal(t, `ExpectDeleteAny(query todo)`, mockDeleteAny.ExpectString())
+}

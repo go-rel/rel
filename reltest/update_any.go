@@ -37,12 +37,7 @@ func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel
 		}
 	}
 
-	mua := MockUpdateAny{argQuery: query, argMutates: mutates}
-	mocks := ""
-	for i := range ua {
-		mocks += "\n\t" + ua[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mua, mua.ExpectString(), mocks))
+	panic(failExecuteMessage(MockUpdateAny{argQuery: query, argMutates: mutates}, ua))
 }
 
 // MockUpdateAny asserts and simulate UpdateAny function for test.

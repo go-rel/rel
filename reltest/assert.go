@@ -2,13 +2,15 @@ package reltest
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
+	"reflect"
 )
 
-var (
-	// ErrConnectionClosed is alias for sql.ErrConnDone.
-	ErrConnectionClosed = sql.ErrConnDone
-)
+// T is an interface wrapper around *testing.T
+type T interface {
+	Logf(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+}
 
 type Assert struct {
 	ctxData       ctxData
@@ -40,8 +42,37 @@ func (a *Assert) call(ctx context.Context) bool {
 	return true
 }
 
-func (a Assert) assert() bool {
-	return a.optional ||
+func (a Assert) assert(t T, mock interface{}) bool {
+	if a.optional ||
 		(a.repeatability == 0 && a.totalCalls > 0) ||
-		(a.repeatability != 0 && a.totalCalls >= a.repeatability)
+		(a.repeatability != 0 && a.totalCalls >= a.repeatability) {
+		return true
+	}
+
+	if a.repeatability > 0 {
+		t.Errorf("FAIL: The code you are testing needs to make %d more call(s):\n\t%s", a.repeatability-a.totalCalls, mock)
+	} else {
+		t.Errorf("FAIL: The code you are testing needs to call:\n\t%s", mock)
+	}
+
+	return false
+}
+
+func failExecuteMessage(call interface{}, mocks interface{}) string {
+	var (
+		mocksStr      string
+		callStr       = call.(interface{ String() string }).String()
+		expectCallStr = call.(interface{ ExpectString() string }).ExpectString()
+		rv            = reflect.ValueOf(mocks)
+	)
+
+	for i := 0; i < rv.Len(); i++ {
+		mocksStr += fmt.Sprintf("\n\t- %s", rv.Index(i).Interface())
+	}
+
+	if mocksStr == "" {
+		mocksStr = "None"
+	}
+
+	return fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\n\t%s\n\nMocked calls:%s\n\n", callStr, expectCallStr, mocksStr)
 }

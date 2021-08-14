@@ -43,12 +43,7 @@ func (p preload) execute(ctx context.Context, records interface{}, field string,
 		}
 	}
 
-	mp := MockPreload{argRecords: records, argField: field, argQuery: query}
-	mocks := ""
-	for i := range p {
-		mocks += "\n\t" + p[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mp, mp.ExpectString(), mocks))
+	panic(failExecuteMessage(MockPreload{argRecords: records, argField: field, argQuery: query}, p))
 }
 
 // MockPreload asserts and simulate Delete function for test.

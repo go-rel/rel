@@ -51,3 +51,26 @@ func TestExec_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestExec_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectExec("UPDATE users SET something = ? WHERE something2 = ?;", 1, 2)
+
+	assert.Panics(t, func() {
+		repo.Exec(context.TODO(), "UPDATE users SET something = ? WHERE something2 = ?;", 1, 2)
+	})
+	assert.False(t, repo.exec.assert(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tExec(ctx, \"UPDATE users SET something = ? WHERE something2 = ?;\", 1, 2)", nt.lastLog)
+}
+
+func TestExec_String(t *testing.T) {
+	var (
+		mockExec = MockExec{assert: &Assert{}, argStatement: "UPDATE users SET something = ? WHERE something2 = ?;", argArgs: []interface{}{1, 2}}
+	)
+
+	assert.Equal(t, "Exec(ctx, \"UPDATE users SET something = ? WHERE something2 = ?;\", 1, 2)", mockExec.String())
+	assert.Equal(t, "ExpectString(\"UPDATE users SET something = ? WHERE something2 = ?;\", 1, 2)", mockExec.ExpectString())
+}

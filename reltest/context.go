@@ -2,12 +2,21 @@ package reltest
 
 import (
 	"context"
+	"fmt"
 )
 
 type ctxKeyType uint8
 
 type ctxData struct {
 	txDepth int
+}
+
+func (cd ctxData) String() string {
+	if cd.txDepth != 0 {
+		return fmt.Sprintf("(Tx: %d) ", cd.txDepth)
+	}
+
+	return ""
 }
 
 var (

@@ -30,12 +30,7 @@ func (i iterate) execute(ctx context.Context, query rel.Query, options ...rel.It
 		}
 	}
 
-	mi := MockIterate{argQuery: query, argOptions: options}
-	mocks := ""
-	for x := range i {
-		mocks += "\n\t" + i[x].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mi, mi.ExpectString(), mocks))
+	panic(failExecuteMessage(MockIterate{argQuery: query, argOptions: options}, i))
 }
 
 type data interface {

@@ -71,3 +71,26 @@ func TestDeleteAll_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestDeleteAll_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDeleteAll().ForTable("users")
+
+	assert.Panics(t, func() {
+		repo.DeleteAll(context.TODO(), &[]Book{})
+	})
+	assert.False(t, repo.deleteAll.assert(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tDeleteAll(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestDeleteAll_String(t *testing.T) {
+	var (
+		mockDeleteAll = MockDeleteAll{assert: &Assert{}, argRecord: &[]Book{}}
+	)
+
+	assert.Equal(t, `DeleteAll(ctx, &[]reltest.Book{})`, mockDeleteAll.String())
+	assert.Equal(t, `ExpectDeleteAll().ForType("*[]reltest.Book")`, mockDeleteAll.ExpectString())
+}

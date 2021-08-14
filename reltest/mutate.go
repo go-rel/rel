@@ -33,12 +33,7 @@ func (m mutate) execute(ctx context.Context, record interface{}, mutators ...rel
 		}
 	}
 
-	mm := MockMutate{argRecord: record, argMutators: mutators}
-	mocks := ""
-	for i := range m {
-		mocks += "\n\t" + m[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mm, mm.ExpectString(), mocks))
+	panic(failExecuteMessage(MockMutate{argRecord: record, argMutators: mutators}, m))
 }
 
 // MockMutate asserts and simulate Insert function for test.

@@ -34,12 +34,17 @@ func (da deleteAny) execute(ctx context.Context, query rel.Query) (int, error) {
 		}
 	}
 
-	mda := MockDeleteAny{argQuery: query}
-	mocks := ""
-	for i := range da {
-		mocks += "\n\t" + da[i].ExpectString()
+	panic(failExecuteMessage(MockDeleteAny{argQuery: query}, da))
+}
+
+func (da deleteAny) assert(t T) bool {
+	for _, mda := range da {
+		if !mda.assert.assert(t, mda) {
+			return false
+		}
 	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mda, mda.ExpectString(), mocks))
+
+	return true
 }
 
 // MockDeleteAny asserts and simulate DeleteAny function for test.

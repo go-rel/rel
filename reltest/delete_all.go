@@ -29,12 +29,17 @@ func (da deleteAll) execute(ctx context.Context, record interface{}) error {
 		}
 	}
 
-	mda := MockDeleteAll{argRecord: record}
-	mocks := ""
-	for i := range da {
-		mocks += "\n\t" + da[i].ExpectString()
+	panic(failExecuteMessage(MockDeleteAll{argRecord: record}, da))
+}
+
+func (da deleteAll) assert(t T) bool {
+	for _, mda := range da {
+		if !mda.assert.assert(t, mda) {
+			return false
+		}
 	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mda, mda.ExpectString(), mocks))
+
+	return true
 }
 
 // MockDeleteAll asserts and simulate Delete function for test.
@@ -97,5 +102,5 @@ func (mda MockDeleteAll) String() string {
 
 // ExpectString representation of mocked call.
 func (mda MockDeleteAll) ExpectString() string {
-	return fmt.Sprintf("ExpectDeleteAll().ForType(\"%T\")", mda.argRecord)
+	return fmt.Sprintf(`ExpectDeleteAll().ForType("%T")`, mda.argRecord)
 }

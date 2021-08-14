@@ -27,12 +27,17 @@ func (e exec) execute(ctx context.Context, statement string, args ...interface{}
 		}
 	}
 
-	me := MockExec{argStatement: statement, argArgs: args}
-	mocks := ""
-	for i := range e {
-		mocks += "\n\t" + e[i].ExpectString()
+	panic(failExecuteMessage(MockExec{argStatement: statement, argArgs: args}, e))
+}
+
+func (e exec) assert(t T) bool {
+	for _, me := range e {
+		if !me.assert.assert(t, me) {
+			return false
+		}
 	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", me, me.ExpectString(), mocks))
+
+	return true
 }
 
 // MockExec asserts and simulate UpdateAny function for test.
@@ -67,18 +72,18 @@ func (me *MockExec) ConnectionClosed() *Assert {
 func (me MockExec) String() string {
 	args := ""
 	for i := range me.argArgs {
-		args += fmt.Sprintf(", %v", args[i])
+		args += fmt.Sprintf(", %v", me.argArgs[i])
 	}
 
-	return fmt.Sprintf("Exec(ctx, %s%s)", me.argStatement, args)
+	return fmt.Sprintf("Exec(ctx, \"%s\"%s)", me.argStatement, args)
 }
 
 // ExpectString representation of mocked call.
 func (me MockExec) ExpectString() string {
 	args := ""
 	for i := range me.argArgs {
-		args += fmt.Sprintf(", %v", args[i])
+		args += fmt.Sprintf(", %v", me.argArgs[i])
 	}
 
-	return fmt.Sprintf("ExpectString(%s%s)", me.argStatement, args)
+	return fmt.Sprintf("ExpectString(\"%s\"%s)", me.argStatement, args)
 }

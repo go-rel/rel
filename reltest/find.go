@@ -32,12 +32,7 @@ func (f find) execute(ctx context.Context, record interface{}, queriers ...rel.Q
 		}
 	}
 
-	mf := MockFind{argQuery: query, argRecord: record}
-	mocks := ""
-	for i := range f {
-		mocks += "\n\t" + f[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mf, mf.ExpectString(), mocks))
+	panic(failExecuteMessage(MockFind{argQuery: query, argRecord: record}, f))
 }
 
 // MockFind asserts and simulate find function for test.

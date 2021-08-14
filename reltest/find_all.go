@@ -32,12 +32,7 @@ func (fa findAll) execute(ctx context.Context, records interface{}, queriers ...
 		}
 	}
 
-	mfa := MockFindAll{argQuery: query, argRecords: records}
-	mocks := ""
-	for i := range fa {
-		mocks += "\n\t" + fa[i].ExpectString()
-	}
-	panic(fmt.Sprintf("FAIL: this call is not mocked:\n\t%s\nMaybe try adding mock:\t\n%s\n\nAvailable mocks:%s", mfa, mfa.ExpectString(), mocks))
+	panic(failExecuteMessage(MockFindAll{argQuery: query, argRecords: records}, fa))
 }
 
 // MockFindAll asserts and simulate find all function for test.

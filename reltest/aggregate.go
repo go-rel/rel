@@ -33,13 +33,14 @@ func (a aggregate) execute(ctx context.Context, query rel.Query, aggregate strin
 	panic(failExecuteMessage(MockAggregate{argQuery: query, argAggregate: aggregate, argField: field}, a))
 }
 
-func (a aggregate) assert(t T) bool {
-	for _, ma := range a {
+func (a *aggregate) assert(t T) bool {
+	for _, ma := range *a {
 		if !ma.assert.assert(t, ma) {
 			return false
 		}
 	}
 
+	*a = nil
 	return true
 }
 

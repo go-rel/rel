@@ -35,13 +35,14 @@ func (d delete) execute(ctx context.Context, record interface{}, options ...rel.
 	panic(failExecuteMessage(MockDelete{argRecord: record, argOptions: options}, d))
 }
 
-func (d delete) assert(t T) bool {
-	for _, md := range d {
+func (d *delete) assert(t T) bool {
+	for _, md := range *d {
 		if !md.assert.assert(t, md) {
 			return false
 		}
 	}
 
+	*d = nil
 	return true
 }
 

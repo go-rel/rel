@@ -57,7 +57,7 @@ func TestAggregate_assert(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.Aggregate(context.TODO(), rel.From("books"), "sum", "id")
 	})
-	assert.False(t, repo.aggregate.assert(nt))
+	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tAggregate(ctx, query todo, \"sum\", \"id\")", nt.lastLog)
 }
 

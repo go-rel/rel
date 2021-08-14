@@ -65,3 +65,26 @@ func TestFindAndCountAll_error(t *testing.T) {
 	assert.NotEqual(t, books, result)
 	repo.AssertExpectations(t)
 }
+
+func TestFindAndCountAll_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectFindAndCountAll(where.Eq("status", "paid"))
+
+	assert.Panics(t, func() {
+		repo.FindAndCountAll(context.TODO(), where.Eq("status", "pending"))
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFindAndCountAll(ctx, <Any>, query todo)", nt.lastLog)
+}
+
+func TestFindAndCountAll_String(t *testing.T) {
+	var (
+		mockFindAndCountAll = MockFindAndCountAll{assert: &Assert{}, argQuery: rel.Where(where.Eq("status", "paid"))}
+	)
+
+	assert.Equal(t, "FindAndCountAll(ctx, <Any>, query todo)", mockFindAndCountAll.String())
+	assert.Equal(t, "ExpectFindAndCountAll(query todo)", mockFindAndCountAll.ExpectString())
+}

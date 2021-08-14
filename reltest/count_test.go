@@ -57,7 +57,7 @@ func TestCount_assert(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.Count(context.TODO(), "books")
 	})
-	assert.False(t, repo.count.assert(nt))
+	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tCount(ctx, \"users\", query todo)", nt.lastLog)
 }
 

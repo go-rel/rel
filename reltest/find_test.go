@@ -49,3 +49,26 @@ func TestFind_noResult(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestFind_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectFind(where.Eq("status", "paid"))
+
+	assert.Panics(t, func() {
+		repo.Find(context.TODO(), where.Eq("status", "pending"))
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFind(ctx, <Any>, query todo)", nt.lastLog)
+}
+
+func TestFind_String(t *testing.T) {
+	var (
+		mockFind = MockFind{assert: &Assert{}, argQuery: rel.Where(where.Eq("status", "paid"))}
+	)
+
+	assert.Equal(t, "Find(ctx, <Any>, query todo)", mockFind.String())
+	assert.Equal(t, "ExpectFind(query todo)", mockFind.ExpectString())
+}

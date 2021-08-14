@@ -106,3 +106,26 @@ func TestMustUpdateAny_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestUpdateAny_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectUpdateAny(rel.From("users"))
+
+	assert.Panics(t, func() {
+		repo.UpdateAny(context.TODO(), rel.From("books"))
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tUpdateAny(ctx, query todo)", nt.lastLog)
+}
+
+func TestUpdateAny_String(t *testing.T) {
+	var (
+		mockUpdateAny = MockUpdateAny{assert: &Assert{}, argQuery: rel.From("users")}
+	)
+
+	assert.Equal(t, `UpdateAny(ctx, query todo)`, mockUpdateAny.String())
+	assert.Equal(t, `ExpectUpdateAny(query todo)`, mockUpdateAny.ExpectString())
+}

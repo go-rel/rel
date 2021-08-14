@@ -32,13 +32,14 @@ func (da deleteAll) execute(ctx context.Context, record interface{}) error {
 	panic(failExecuteMessage(MockDeleteAll{argRecord: record}, da))
 }
 
-func (da deleteAll) assert(t T) bool {
-	for _, mda := range da {
+func (da *deleteAll) assert(t T) bool {
+	for _, mda := range *da {
 		if !mda.assert.assert(t, mda) {
 			return false
 		}
 	}
 
+	*da = nil
 	return true
 }
 

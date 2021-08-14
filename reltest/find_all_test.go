@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
 	"github.com/stretchr/testify/assert"
 )
@@ -89,4 +90,27 @@ func TestFindAll_noMatch(t *testing.T) {
 		repo.FindAll(context.TODO(), &result, where.Eq("title", "b"))
 	})
 	repo.AssertExpectations(t)
+}
+
+func TestFindAll_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectFindAll(where.Eq("status", "paid"))
+
+	assert.Panics(t, func() {
+		repo.FindAll(context.TODO(), where.Eq("status", "pending"))
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFindAll(ctx, <Any>, query todo)", nt.lastLog)
+}
+
+func TestFindAll_String(t *testing.T) {
+	var (
+		mockFindAll = MockFindAll{assert: &Assert{}, argQuery: rel.Where(where.Eq("status", "paid"))}
+	)
+
+	assert.Equal(t, "FindAll(ctx, <Any>, query todo)", mockFindAll.String())
+	assert.Equal(t, "ExpectFindAll(query todo)", mockFindAll.ExpectString())
 }

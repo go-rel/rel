@@ -32,3 +32,26 @@ func TestInsertAll(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestInsertAll_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectInsertAll().ForTable("users")
+
+	assert.Panics(t, func() {
+		repo.InsertAll(context.TODO(), &[]Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tInsertAll(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestInsertAll_String(t *testing.T) {
+	var (
+		mockInsertAll = MockInsertAll{assert: &Assert{}, argRecord: &[]Book{}}
+	)
+
+	assert.Equal(t, "InsertAll(ctx, &[]reltest.Book{})", mockInsertAll.String())
+	assert.Equal(t, "InsertAll().ForType(\"*[]reltest.Book\")", mockInsertAll.ExpectString())
+}

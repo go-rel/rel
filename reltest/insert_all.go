@@ -32,6 +32,17 @@ func (ia insertAll) execute(ctx context.Context, records interface{}) error {
 	panic(failExecuteMessage(MockInsertAll{argRecord: records}, ia))
 }
 
+func (ia *insertAll) assert(t T) bool {
+	for _, mia := range *ia {
+		if !mia.assert.assert(t, mia) {
+			return false
+		}
+	}
+
+	*ia = nil
+	return true
+}
+
 // MockInsertAll asserts and simulate Insert function for test.
 type MockInsertAll struct {
 	assert         *Assert

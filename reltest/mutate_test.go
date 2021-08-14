@@ -174,6 +174,29 @@ func TestMutate_Insert_notUnique(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestInsert_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectInsert().ForTable("users")
+
+	assert.Panics(t, func() {
+		repo.Insert(context.TODO(), &Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tInsert(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestInsert_String(t *testing.T) {
+	var (
+		mockInsert = MockMutate{name: "Insert", assert: &Assert{}, argRecord: &Book{}}
+	)
+
+	assert.Equal(t, "Insert(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0})", mockInsert.String())
+	assert.Equal(t, "ExpectInsert().ForType(\"*reltest.Book\")", mockInsert.ExpectString())
+}
+
 func TestMutate_Update(t *testing.T) {
 	var (
 		repo   = New()
@@ -570,4 +593,27 @@ func TestMutate_Update_notUnique(t *testing.T) {
 		repo.Update(context.TODO(), &result, rel.Set("title", "Rel for dummies")),
 	)
 	repo.AssertExpectations(t)
+}
+
+func TestUpdate_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectUpdate().ForTable("users")
+
+	assert.Panics(t, func() {
+		repo.Update(context.TODO(), &Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tUpdate(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestUpdate_String(t *testing.T) {
+	var (
+		mockUpdate = MockMutate{name: "Update", assert: &Assert{}, argRecord: &Book{}}
+	)
+
+	assert.Equal(t, "Update(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0})", mockUpdate.String())
+	assert.Equal(t, "ExpectUpdate().ForType(\"*reltest.Book\")", mockUpdate.ExpectString())
 }

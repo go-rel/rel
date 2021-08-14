@@ -35,6 +35,17 @@ func (fa findAll) execute(ctx context.Context, records interface{}, queriers ...
 	panic(failExecuteMessage(MockFindAll{argQuery: query, argRecords: records}, fa))
 }
 
+func (fa *findAll) assert(t T) bool {
+	for _, mfa := range *fa {
+		if !mfa.assert.assert(t, mfa) {
+			return false
+		}
+	}
+
+	*fa = nil
+	return true
+}
+
 // MockFindAll asserts and simulate find all function for test.
 type MockFindAll struct {
 	assert     *Assert

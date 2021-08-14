@@ -62,7 +62,7 @@ func TestExec_assert(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.Exec(context.TODO(), "UPDATE users SET something = ? WHERE something2 = ?;", 1, 2)
 	})
-	assert.False(t, repo.exec.assert(nt))
+	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tExec(ctx, \"UPDATE users SET something = ? WHERE something2 = ?;\", 1, 2)", nt.lastLog)
 }
 

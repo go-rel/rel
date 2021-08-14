@@ -35,6 +35,17 @@ func (fca findAndCountAll) execute(ctx context.Context, records interface{}, que
 	panic(failExecuteMessage(MockFindAndCountAll{argQuery: query, argRecords: records}, fca))
 }
 
+func (fca *findAndCountAll) assert(t T) bool {
+	for _, mfca := range *fca {
+		if !mfca.assert.assert(t, mfca) {
+			return false
+		}
+	}
+
+	*fca = nil
+	return true
+}
+
 // MockFindAndCountAll asserts and simulate find and count all function for test.
 type MockFindAndCountAll struct {
 	assert     *Assert

@@ -36,6 +36,17 @@ func (m mutate) execute(ctx context.Context, record interface{}, mutators ...rel
 	panic(failExecuteMessage(MockMutate{argRecord: record, argMutators: mutators}, m))
 }
 
+func (m *mutate) assert(t T) bool {
+	for _, mm := range *m {
+		if !mm.assert.assert(t, mm) {
+			return false
+		}
+	}
+
+	*m = nil
+	return true
+}
+
 // MockMutate asserts and simulate Insert function for test.
 type MockMutate struct {
 	assert            *Assert

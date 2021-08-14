@@ -35,6 +35,17 @@ func (f find) execute(ctx context.Context, record interface{}, queriers ...rel.Q
 	panic(failExecuteMessage(MockFind{argQuery: query, argRecord: record}, f))
 }
 
+func (f *find) assert(t T) bool {
+	for _, mf := range *f {
+		if !mf.assert.assert(t, mf) {
+			return false
+		}
+	}
+
+	*f = nil
+	return true
+}
+
 // MockFind asserts and simulate find function for test.
 type MockFind struct {
 	assert    *Assert

@@ -32,13 +32,14 @@ func (c count) execute(ctx context.Context, collection string, queriers ...rel.Q
 	panic(failExecuteMessage(MockCount{argCollection: collection, argQuery: query}, c))
 }
 
-func (c count) assert(t T) bool {
-	for _, mc := range c {
+func (c *count) assert(t T) bool {
+	for _, mc := range *c {
 		if !mc.assert.assert(t, mc) {
 			return false
 		}
 	}
 
+	*c = nil
 	return true
 }
 

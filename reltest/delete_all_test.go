@@ -82,7 +82,7 @@ func TestDeleteAll_assert(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.DeleteAll(context.TODO(), &[]Book{})
 	})
-	assert.False(t, repo.deleteAll.assert(nt))
+	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tDeleteAll(ctx, <Table: users>)", nt.lastLog)
 }
 

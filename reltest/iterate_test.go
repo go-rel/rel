@@ -112,3 +112,26 @@ func TestIterate_error(t *testing.T) {
 	assert.Equal(t, ErrConnectionClosed, it.Next(&book))
 	repo.AssertExpectations(t)
 }
+
+func TestIterate_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectIterate(rel.From("users"))
+
+	assert.Panics(t, func() {
+		repo.Iterate(context.TODO(), rel.From("books"))
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tIterate(ctx, query todo)", nt.lastLog)
+}
+
+func TestIterate_String(t *testing.T) {
+	var (
+		mockIterate = MockIterate{assert: &Assert{}, argQuery: rel.From("users")}
+	)
+
+	assert.Equal(t, "Iterate(ctx, query todo)", mockIterate.String())
+	assert.Equal(t, "ExpectIterate(query todo)", mockIterate.ExpectString())
+}

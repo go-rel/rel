@@ -30,13 +30,14 @@ func (e exec) execute(ctx context.Context, statement string, args ...interface{}
 	panic(failExecuteMessage(MockExec{argStatement: statement, argArgs: args}, e))
 }
 
-func (e exec) assert(t T) bool {
-	for _, me := range e {
+func (e *exec) assert(t T) bool {
+	for _, me := range *e {
 		if !me.assert.assert(t, me) {
 			return false
 		}
 	}
 
+	*e = nil
 	return true
 }
 

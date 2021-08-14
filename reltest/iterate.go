@@ -33,6 +33,17 @@ func (i iterate) execute(ctx context.Context, query rel.Query, options ...rel.It
 	panic(failExecuteMessage(MockIterate{argQuery: query, argOptions: options}, i))
 }
 
+func (i *iterate) assert(t T) bool {
+	for _, mi := range *i {
+		if !mi.assert.assert(t, mi) {
+			return false
+		}
+	}
+
+	*i = nil
+	return true
+}
+
 type data interface {
 	Len() int
 	Get(index int) *rel.Document
@@ -114,5 +125,5 @@ func (mi MockIterate) ExpectString() string {
 		argOptions += fmt.Sprintf(", %v", mi.argOptions[i])
 	}
 
-	return fmt.Sprintf("ExpectIterate(ctx, %s%s)", mi.argQuery, argOptions)
+	return fmt.Sprintf("ExpectIterate(%s%s)", mi.argQuery, argOptions)
 }

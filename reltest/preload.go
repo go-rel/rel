@@ -46,6 +46,17 @@ func (p preload) execute(ctx context.Context, records interface{}, field string,
 	panic(failExecuteMessage(MockPreload{argRecords: records, argField: field, argQuery: query}, p))
 }
 
+func (p *preload) assert(t T) bool {
+	for _, mp := range *p {
+		if !mp.assert.assert(t, mp) {
+			return false
+		}
+	}
+
+	*p = nil
+	return true
+}
+
 // MockPreload asserts and simulate Delete function for test.
 type MockPreload struct {
 	assert         *Assert

@@ -37,13 +37,14 @@ func (da deleteAny) execute(ctx context.Context, query rel.Query) (int, error) {
 	panic(failExecuteMessage(MockDeleteAny{argQuery: query}, da))
 }
 
-func (da deleteAny) assert(t T) bool {
-	for _, mda := range da {
+func (da *deleteAny) assert(t T) bool {
+	for _, mda := range *da {
 		if !mda.assert.assert(t, mda) {
 			return false
 		}
 	}
 
+	*da = nil
 	return true
 }
 

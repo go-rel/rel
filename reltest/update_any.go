@@ -40,6 +40,17 @@ func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel
 	panic(failExecuteMessage(MockUpdateAny{argQuery: query, argMutates: mutates}, ua))
 }
 
+func (ua *updateAny) assert(t T) bool {
+	for _, mua := range *ua {
+		if !mua.assert.assert(t, mua) {
+			return false
+		}
+	}
+
+	*ua = nil
+	return true
+}
+
 // MockUpdateAny asserts and simulate UpdateAny function for test.
 type MockUpdateAny struct {
 	assert          *Assert

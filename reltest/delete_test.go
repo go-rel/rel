@@ -98,7 +98,7 @@ func TestDelete_assert(t *testing.T) {
 	assert.Panics(t, func() {
 		repo.Delete(context.TODO(), &Book{})
 	})
-	assert.False(t, repo.delete.assert(nt))
+	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tDelete(ctx, <Table: users>)", nt.lastLog)
 }
 

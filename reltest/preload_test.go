@@ -203,3 +203,26 @@ func TestPreload_error(t *testing.T) {
 	})
 	repo.AssertExpectations(t)
 }
+
+func TestPreload_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectPreload("books").ForType("reltest.User")
+
+	assert.Panics(t, func() {
+		repo.Preload(context.TODO(), &Book{}, "users")
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tPreload(<Type: *reltest.User>, books, query todo)", nt.lastLog)
+}
+
+func TestPreload_String(t *testing.T) {
+	var (
+		mockPreload = MockPreload{assert: &Assert{}, argRecords: &Book{}, argField: "users"}
+	)
+
+	assert.Equal(t, "Preload(&reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}, users, query todo)", mockPreload.String())
+	assert.Equal(t, "ExpectPreload(users, query todo).ForType(\"*reltest.Book\")", mockPreload.ExpectString())
+}

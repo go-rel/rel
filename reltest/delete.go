@@ -1,39 +1,78 @@
 package reltest
 
 import (
+	"context"
+	"reflect"
 	"strings"
 
 	"github.com/go-rel/rel"
-	"github.com/stretchr/testify/mock"
 )
 
-// Delete asserts and simulate delete function for test.
-type Delete struct {
-	*Expect
+type delete []*MockDelete
+
+func (d *delete) register(ctxData ctxData, options ...rel.Cascade) *MockDelete {
+	md := &MockDelete{ctxData: ctxData, argOptions: options}
+	*d = append(*d, md)
+	return md
 }
 
-// For match expect calls for given record.
-func (d *Delete) For(record interface{}) *Delete {
-	d.Arguments[1] = record
-	return d
+func (d delete) execute(ctx context.Context, record interface{}, options ...rel.Cascade) error {
+	for _, md := range d {
+		if fetchContext(ctx) == md.ctxData &&
+			(md.argRecord == nil || reflect.DeepEqual(md.argRecord, record)) &&
+			(md.argRecordType == "" || md.argRecordType == reflect.TypeOf(record).String()) &&
+			(md.argRecordTable == "" || md.argRecordTable == rel.NewDocument(record, true).Table()) &&
+			(md.argRecordContains == nil || matchContains(md.argRecordContains, record)) &&
+			reflect.DeepEqual(md.argOptions, options) {
+			return md.retError
+		}
+	}
+
+	panic("TODO: Query doesn't match")
 }
 
-// ForType match expect calls for given type.
+// MockDelete asserts and simulate Delete function for test.
+type MockDelete struct {
+	ctxData           ctxData
+	argRecord         interface{}
+	argRecordType     string
+	argRecordTable    string
+	argRecordContains interface{}
+	argOptions        []rel.Cascade
+	retError          error
+}
+
+// For expect calls for given record.
+func (md *MockDelete) For(record interface{}) *MockDelete {
+	md.argRecord = record
+	return md
+}
+
+// ForType expect calls for given type.
 // Type must include package name, example: `model.User`.
-func (d *Delete) ForType(typ string) *Delete {
-	return d.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
+func (md *MockDelete) ForType(typ string) *MockDelete {
+	md.argRecordType = "*" + strings.TrimPrefix(typ, "*")
+	return md
 }
 
-// ExpectDelete to be called.
-func ExpectDelete(r *Repository, options []rel.Cascade) *Delete {
-	return &Delete{
-		Expect: newExpect(r, "Delete", []interface{}{r.ctxData, mock.Anything, options}, []interface{}{nil}),
-	}
+// ForTable expect calls for given table.
+func (md *MockDelete) ForTable(typ string) *MockDelete {
+	md.argRecordTable = typ
+	return md
 }
 
-// ExpectDeleteAll to be called.
-func ExpectDeleteAll(r *Repository) *Delete {
-	return &Delete{
-		Expect: newExpect(r, "DeleteAll", []interface{}{r.ctxData, mock.Anything}, []interface{}{nil}),
-	}
+// ForContains expect calls to contains some value of given struct.
+func (md *MockDelete) ForContains(contains interface{}) *MockDelete {
+	md.argRecordContains = contains
+	return md
+}
+
+// Error sets error to be returned.
+func (md *MockDelete) Error(err error) {
+	md.retError = err
+}
+
+// ConnectionClosed sets this error to be returned.
+func (md *MockDelete) ConnectionClosed() {
+	md.Error(ErrConnectionClosed)
 }

@@ -156,3 +156,26 @@ func matchAssocMutation(a rel.AssocMutation, b rel.AssocMutation) bool {
 
 	return true
 }
+
+// match a contained in b
+func matchContains(a interface{}, b interface{}) bool {
+	var (
+		rva = reflect.Indirect(reflect.ValueOf(a))
+		rta = rva.Type()
+		rvb = reflect.Indirect(reflect.ValueOf(b))
+	)
+
+	for i := 0; i < rva.NumField(); i++ {
+		fva := rva.Field(i)
+		if fva.IsZero() {
+			continue
+		}
+
+		fvb := rvb.FieldByName(rta.Field(i).Name)
+		if !fvb.IsValid() || !reflect.DeepEqual(rva.Interface(), fvb.Interface()) {
+			return true
+		}
+	}
+
+	return false
+}

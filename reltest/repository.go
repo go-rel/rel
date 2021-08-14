@@ -16,6 +16,8 @@ type Repository struct {
 	findAll         findAll
 	findAndCountAll findAndCountAll
 	updateAny       updateAny
+	delete          delete
+	deleteAll       deleteAll
 	deleteAny       deleteAny
 	mock            mock.Mock
 	ctxData         ctxData
@@ -216,7 +218,7 @@ func (r *Repository) ExpectUpdateAny(query rel.Query, mutates ...rel.Mutate) *Mo
 
 // Delete provides a mock function with given fields: record
 func (r *Repository) Delete(ctx context.Context, record interface{}, options ...rel.Cascade) error {
-	return r.mock.Called(fetchContext(ctx), record, options).Error(0)
+	return r.delete.execute(ctx, record, options...)
 }
 
 // MustDelete provides a mock function with given fields: record
@@ -225,13 +227,13 @@ func (r *Repository) MustDelete(ctx context.Context, record interface{}, options
 }
 
 // ExpectDelete apply mocks and expectations for Delete
-func (r *Repository) ExpectDelete(options ...rel.Cascade) *Delete {
-	return ExpectDelete(r, options)
+func (r *Repository) ExpectDelete(options ...rel.Cascade) *MockDelete {
+	return r.delete.register(r.ctxData, options...)
 }
 
 // DeleteAll provides DeleteAll mock function with given fields: records
 func (r *Repository) DeleteAll(ctx context.Context, records interface{}) error {
-	return r.mock.Called(fetchContext(ctx), records).Error(0)
+	return r.deleteAll.execute(ctx, records)
 }
 
 // MustDeleteAll provides a mock function with given fields: record
@@ -240,8 +242,8 @@ func (r *Repository) MustDeleteAll(ctx context.Context, record interface{}) {
 }
 
 // ExpectDeleteAll apply mocks and expectations for DeleteAll
-func (r *Repository) ExpectDeleteAll() *Delete {
-	return ExpectDeleteAll(r)
+func (r *Repository) ExpectDeleteAll() *MockDeleteAll {
+	return r.deleteAll.register(r.ctxData)
 }
 
 // DeleteAny provides a mock function with given fields: query

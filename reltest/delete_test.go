@@ -24,7 +24,7 @@ func TestDelete(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestDelete_forType(t *testing.T) {
+func TestDelete_ForType(t *testing.T) {
 	var (
 		repo = New()
 	)
@@ -34,6 +34,38 @@ func TestDelete_forType(t *testing.T) {
 	repo.AssertExpectations(t)
 
 	repo.ExpectDelete().ForType("reltest.Book")
+	assert.NotPanics(t, func() {
+		repo.MustDelete(context.TODO(), &Book{ID: 1})
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestDelete_ForTable(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete().ForTable("books")
+	assert.Nil(t, repo.Delete(context.TODO(), &Book{ID: 1}))
+	repo.AssertExpectations(t)
+
+	repo.ExpectDelete().ForTable("books")
+	assert.NotPanics(t, func() {
+		repo.MustDelete(context.TODO(), &Book{ID: 1})
+	})
+	repo.AssertExpectations(t)
+}
+
+func TestDelete_ForContains(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete().ForContains(Book{Title: "Golang"})
+	assert.Nil(t, repo.Delete(context.TODO(), &Book{ID: 1, Title: "Golang"}))
+	repo.AssertExpectations(t)
+
+	repo.ExpectDelete().ForContains(Book{Title: "Golang"})
 	assert.NotPanics(t, func() {
 		repo.MustDelete(context.TODO(), &Book{ID: 1})
 	})
@@ -52,22 +84,6 @@ func TestDelete_error(t *testing.T) {
 	repo.ExpectDelete().ConnectionClosed()
 	assert.Panics(t, func() {
 		repo.MustDelete(context.TODO(), &Book{ID: 1})
-	})
-	repo.AssertExpectations(t)
-}
-
-func TestDeleteAll(t *testing.T) {
-	var (
-		repo = New()
-	)
-
-	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
-	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
-	repo.AssertExpectations(t)
-
-	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
-	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
 	repo.AssertExpectations(t)
 }

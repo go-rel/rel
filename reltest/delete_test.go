@@ -99,7 +99,7 @@ func TestDelete_assert(t *testing.T) {
 		repo.Delete(context.TODO(), &Book{})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tDelete(ctx, <Table: users>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Table: users>)", nt.lastLog)
 }
 
 func TestDelete_String(t *testing.T) {

@@ -118,7 +118,7 @@ func TestUpdateAny_assert(t *testing.T) {
 		repo.UpdateAny(context.TODO(), rel.From("books"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tUpdateAny(ctx, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tUpdateAny(ctx, query todo)", nt.lastLog)
 }
 
 func TestUpdateAny_String(t *testing.T) {

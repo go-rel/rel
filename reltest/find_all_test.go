@@ -103,7 +103,7 @@ func TestFindAll_assert(t *testing.T) {
 		repo.FindAll(context.TODO(), where.Eq("status", "pending"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFindAll(ctx, <Any>, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tFindAll(ctx, <Any>, query todo)", nt.lastLog)
 }
 
 func TestFindAll_String(t *testing.T) {

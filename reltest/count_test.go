@@ -58,7 +58,7 @@ func TestCount_assert(t *testing.T) {
 		repo.Count(context.TODO(), "books")
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tCount(ctx, \"users\", query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tCount(ctx, \"users\", query todo)", nt.lastLog)
 }
 
 func TestCount_String(t *testing.T) {

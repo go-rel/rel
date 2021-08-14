@@ -215,7 +215,7 @@ func TestPreload_assert(t *testing.T) {
 		repo.Preload(context.TODO(), &Book{}, "users")
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tPreload(<Type: *reltest.User>, books, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tPreload(<Type: *reltest.User>, books, query todo)", nt.lastLog)
 }
 
 func TestPreload_String(t *testing.T) {

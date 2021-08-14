@@ -77,7 +77,7 @@ func TestFindAndCountAll_assert(t *testing.T) {
 		repo.FindAndCountAll(context.TODO(), where.Eq("status", "pending"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFindAndCountAll(ctx, <Any>, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tFindAndCountAll(ctx, <Any>, query todo)", nt.lastLog)
 }
 
 func TestFindAndCountAll_String(t *testing.T) {

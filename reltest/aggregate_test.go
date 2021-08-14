@@ -58,7 +58,7 @@ func TestAggregate_assert(t *testing.T) {
 		repo.Aggregate(context.TODO(), rel.From("books"), "sum", "id")
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tAggregate(ctx, query todo, \"sum\", \"id\")", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tAggregate(ctx, query todo, \"sum\", \"id\")", nt.lastLog)
 }
 
 func TestAggregate_String(t *testing.T) {

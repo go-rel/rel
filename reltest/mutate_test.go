@@ -185,7 +185,7 @@ func TestInsert_assert(t *testing.T) {
 		repo.Insert(context.TODO(), &Book{})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tInsert(ctx, <Table: users>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Table: users>)", nt.lastLog)
 }
 
 func TestInsert_String(t *testing.T) {
@@ -606,7 +606,7 @@ func TestUpdate_assert(t *testing.T) {
 		repo.Update(context.TODO(), &Book{})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tUpdate(ctx, <Table: users>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tUpdate(ctx, <Table: users>)", nt.lastLog)
 }
 
 func TestUpdate_String(t *testing.T) {

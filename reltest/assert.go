@@ -51,9 +51,9 @@ func (a Assert) assert(t T, mock interface{}) bool {
 
 	// TODO: stacktrace not correct
 	if a.repeatability > 0 {
-		t.Errorf("FAIL: The code you are testing needs to make %d more call(s):\n\t%s", a.repeatability-a.totalCalls, mock)
+		t.Errorf("FAIL: Need to make %d more call(s) to satisfy mock:\n\t%s", a.repeatability-a.totalCalls, mock)
 	} else {
-		t.Errorf("FAIL: The code you are testing needs to call:\n\t%s", mock)
+		t.Errorf("FAIL: Mock defined but not called:\n\t%s", mock)
 	}
 
 	return false

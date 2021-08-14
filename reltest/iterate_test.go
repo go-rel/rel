@@ -124,7 +124,7 @@ func TestIterate_assert(t *testing.T) {
 		repo.Iterate(context.TODO(), rel.From("books"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tIterate(ctx, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tIterate(ctx, query todo)", nt.lastLog)
 }
 
 func TestIterate_String(t *testing.T) {

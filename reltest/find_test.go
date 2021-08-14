@@ -61,7 +61,7 @@ func TestFind_assert(t *testing.T) {
 		repo.Find(context.TODO(), where.Eq("status", "pending"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: The code you are testing needs to call:\n\tFind(ctx, <Any>, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tFind(ctx, <Any>, query todo)", nt.lastLog)
 }
 
 func TestFind_String(t *testing.T) {

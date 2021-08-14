@@ -9,7 +9,11 @@ import (
 type count []*MockCount
 
 func (c *count) register(ctxData ctxData, collection string, queriers ...rel.Querier) *MockCount {
-	mc := &MockCount{ctxData: ctxData, argCollection: collection, argQuery: rel.Build(collection, queriers...)}
+	mc := &MockCount{
+		assert:        &Assert{ctxData: ctxData},
+		argCollection: collection,
+		argQuery:      rel.Build(collection, queriers...),
+	}
 	*c = append(*c, mc)
 	return mc
 }
@@ -17,9 +21,9 @@ func (c *count) register(ctxData ctxData, collection string, queriers ...rel.Que
 func (e count) execute(ctx context.Context, collection string, queriers ...rel.Querier) (int, error) {
 	query := rel.Build(collection, queriers...)
 	for _, me := range e {
-		if fetchContext(ctx) == me.ctxData &&
-			me.argCollection == collection &&
-			matchQuery(me.argQuery, query) {
+		if me.argCollection == collection &&
+			matchQuery(me.argQuery, query) &&
+			me.assert.call(ctx) {
 			return me.retCount, me.retError
 		}
 	}
@@ -29,7 +33,7 @@ func (e count) execute(ctx context.Context, collection string, queriers ...rel.Q
 
 // MockCount asserts and simulate UpdateAny function for test.
 type MockCount struct {
-	ctxData       ctxData
+	assert        *Assert
 	argCollection string
 	argQuery      rel.Query
 	retCount      int
@@ -37,16 +41,19 @@ type MockCount struct {
 }
 
 // Result sets the result of this query.
-func (me *MockCount) Result(count int) {
+func (me *MockCount) Result(count int) *Assert {
 	me.retCount = count
+	return me.assert
 }
 
 // Error sets error to be returned.
-func (me *MockCount) Error(err error) {
+func (me *MockCount) Error(err error) *Assert {
 	me.retError = err
+	return me.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (me *MockCount) ConnectionClosed() {
+func (me *MockCount) ConnectionClosed() *Assert {
 	me.Error(ErrConnectionClosed)
+	return me.assert
 }

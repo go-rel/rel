@@ -10,7 +10,10 @@ import (
 type find []*MockFind
 
 func (f *find) register(ctxData ctxData, queriers ...rel.Querier) *MockFind {
-	mf := &MockFind{ctxData: ctxData, argQuery: rel.Build("", queriers...)}
+	mf := &MockFind{
+		assert:   &Assert{ctxData: ctxData},
+		argQuery: rel.Build("", queriers...),
+	}
 	*f = append(*f, mf)
 	return mf
 }
@@ -18,8 +21,8 @@ func (f *find) register(ctxData ctxData, queriers ...rel.Querier) *MockFind {
 func (f find) execute(ctx context.Context, records interface{}, queriers ...rel.Querier) error {
 	query := rel.Build("", queriers...)
 	for _, mf := range f {
-		if fetchContext(ctx) == mf.ctxData &&
-			matchQuery(mf.argQuery, query) {
+		if matchQuery(mf.argQuery, query) &&
+			mf.assert.call(ctx) {
 			if mf.argRecord != nil {
 				reflect.ValueOf(records).Elem().Set(reflect.ValueOf(mf.argRecord))
 			}
@@ -33,36 +36,31 @@ func (f find) execute(ctx context.Context, records interface{}, queriers ...rel.
 
 // MockFind asserts and simulate find function for test.
 type MockFind struct {
-	ctxData   ctxData
+	assert    *Assert
 	argQuery  rel.Query
 	argRecord interface{}
 	retError  error
 }
 
 // Result sets the result of this query.
-func (mf *MockFind) Result(result interface{}) {
+func (mf *MockFind) Result(result interface{}) *Assert {
 	mf.argQuery.Table = rel.NewDocument(result, true).Table()
 	mf.argRecord = result
+	return mf.assert
 }
 
 // Error sets error to be returned.
-func (mf *MockFind) Error(err error) {
+func (mf *MockFind) Error(err error) *Assert {
 	mf.retError = err
+	return mf.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mf *MockFind) ConnectionClosed() {
-	mf.Error(ErrConnectionClosed)
+func (mf *MockFind) ConnectionClosed() *Assert {
+	return mf.Error(ErrConnectionClosed)
 }
 
 // NotFound sets NotFoundError to be returned.
-func (mf *MockFind) NotFound() {
-	mf.Error(rel.NotFoundError{})
-}
-
-// ExpectFind to be called with given field and queries.
-func ExpectFind(queriers []rel.Querier) *MockFind {
-	return &MockFind{
-		argQuery: rel.Build("", queriers...),
-	}
+func (mf *MockFind) NotFound() *Assert {
+	return mf.Error(rel.NotFoundError{})
 }

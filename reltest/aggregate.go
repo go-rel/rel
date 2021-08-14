@@ -9,17 +9,22 @@ import (
 type aggregate []*MockAggregate
 
 func (a *aggregate) register(ctxData ctxData, query rel.Query, aggregate string, field string) *MockAggregate {
-	ma := &MockAggregate{ctxData: ctxData, argQuery: query, argAggregate: aggregate, argField: field}
+	ma := &MockAggregate{
+		assert:       &Assert{ctxData: ctxData},
+		argQuery:     query,
+		argAggregate: aggregate,
+		argField:     field,
+	}
 	*a = append(*a, ma)
 	return ma
 }
 
 func (a aggregate) execute(ctx context.Context, query rel.Query, aggregate string, field string) (int, error) {
 	for _, ma := range a {
-		if fetchContext(ctx) == ma.ctxData &&
-			matchQuery(ma.argQuery, query) &&
+		if matchQuery(ma.argQuery, query) &&
 			ma.argAggregate == aggregate &&
-			ma.argField == field {
+			ma.argField == field &&
+			ma.assert.call(ctx) {
 			return ma.retCount, ma.retError
 		}
 	}
@@ -29,7 +34,7 @@ func (a aggregate) execute(ctx context.Context, query rel.Query, aggregate strin
 
 // MockAggregate asserts and simulate UpdateAny function for test.
 type MockAggregate struct {
-	ctxData      ctxData
+	assert       *Assert
 	argQuery     rel.Query
 	argAggregate string
 	argField     string
@@ -38,16 +43,19 @@ type MockAggregate struct {
 }
 
 // Result sets the result of this query.
-func (me *MockAggregate) Result(count int) {
+func (me *MockAggregate) Result(count int) *Assert {
 	me.retCount = count
+	return me.assert
 }
 
 // Error sets error to be returned.
-func (me *MockAggregate) Error(err error) {
+func (me *MockAggregate) Error(err error) *Assert {
 	me.retError = err
+	return me.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (me *MockAggregate) ConnectionClosed() {
+func (me *MockAggregate) ConnectionClosed() *Assert {
 	me.Error(ErrConnectionClosed)
+	return me.assert
 }

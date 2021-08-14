@@ -9,14 +9,18 @@ import (
 type deleteAny []*MockDeleteAny
 
 func (da *deleteAny) register(ctxData ctxData, query rel.Query) *MockDeleteAny {
-	mda := &MockDeleteAny{ctxData: ctxData, argQuery: query}
+	mda := &MockDeleteAny{
+		assert:   &Assert{ctxData: ctxData},
+		argQuery: query,
+	}
 	*da = append(*da, mda)
 	return mda
 }
 
 func (da deleteAny) execute(ctx context.Context, query rel.Query) (int, error) {
 	for _, mda := range da {
-		if fetchContext(ctx) == mda.ctxData && matchQuery(mda.argQuery, query) {
+		if matchQuery(mda.argQuery, query) &&
+			mda.assert.call(ctx) {
 			if query.Table == "" {
 				panic("reltest: Cannot call DeleteAny without table. use rel.From(tableName)")
 			}
@@ -34,8 +38,8 @@ func (da deleteAny) execute(ctx context.Context, query rel.Query) (int, error) {
 
 // MockDeleteAny asserts and simulate DeleteAny function for test.
 type MockDeleteAny struct {
+	assert          *Assert
 	unsafe          bool
-	ctxData         ctxData
 	argQuery        rel.Query
 	retDeletedCount int
 	retError        error
@@ -53,12 +57,18 @@ func (mda *MockDeleteAny) DeletedCount(deletedCount int) {
 }
 
 // Error sets error to be returned.
-func (mda *MockDeleteAny) Error(err error) {
+func (mda *MockDeleteAny) Error(err error) *Assert {
 	mda.retDeletedCount = 0
 	mda.retError = err
+	return mda.assert
+}
+
+// Success sets no error to be returned.
+func (mda *MockDeleteAny) Success() *Assert {
+	return mda.Error(nil)
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mda *MockDeleteAny) ConnectionClosed() {
-	mda.Error(ErrConnectionClosed)
+func (mda *MockDeleteAny) ConnectionClosed() *Assert {
+	return mda.Error(ErrConnectionClosed)
 }

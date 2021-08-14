@@ -10,7 +10,10 @@ import (
 type findAndCountAll []*MockFindAndCountAll
 
 func (fca *findAndCountAll) register(ctxData ctxData, queriers ...rel.Querier) *MockFindAndCountAll {
-	mfca := &MockFindAndCountAll{ctxData: ctxData, argQuery: rel.Build("", queriers...)}
+	mfca := &MockFindAndCountAll{
+		assert:   &Assert{ctxData: ctxData},
+		argQuery: rel.Build("", queriers...),
+	}
 	*fca = append(*fca, mfca)
 	return mfca
 }
@@ -18,7 +21,8 @@ func (fca *findAndCountAll) register(ctxData ctxData, queriers ...rel.Querier) *
 func (fca findAndCountAll) execute(ctx context.Context, records interface{}, queriers ...rel.Querier) (int, error) {
 	query := rel.Build("", queriers...)
 	for _, mfca := range fca {
-		if fetchContext(ctx) == mfca.ctxData && matchQuery(mfca.argQuery, query) {
+		if matchQuery(mfca.argQuery, query) &&
+			mfca.assert.call(ctx) {
 			if mfca.argRecords != nil {
 				reflect.ValueOf(records).Elem().Set(reflect.ValueOf(mfca.argRecords))
 			}
@@ -32,7 +36,7 @@ func (fca findAndCountAll) execute(ctx context.Context, records interface{}, que
 
 // MockFindAndCountAll asserts and simulate find and count all function for test.
 type MockFindAndCountAll struct {
-	ctxData    ctxData
+	assert     *Assert
 	argQuery   rel.Query
 	argRecords interface{}
 	retCount   int
@@ -40,18 +44,20 @@ type MockFindAndCountAll struct {
 }
 
 // Result sets the result of this query.
-func (mfca *MockFindAndCountAll) Result(result interface{}, count int) {
+func (mfca *MockFindAndCountAll) Result(result interface{}, count int) *Assert {
 	mfca.argQuery.Table = rel.NewCollection(result, true).Table()
 	mfca.argRecords = result
 	mfca.retCount = count
+	return mfca.assert
 }
 
 // Error sets error to be returned.
-func (mfca *MockFindAndCountAll) Error(err error) {
+func (mfca *MockFindAndCountAll) Error(err error) *Assert {
 	mfca.retError = err
+	return mfca.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mfca *MockFindAndCountAll) ConnectionClosed() {
-	mfca.Error(ErrConnectionClosed)
+func (mfca *MockFindAndCountAll) ConnectionClosed() *Assert {
+	return mfca.Error(ErrConnectionClosed)
 }

@@ -11,17 +11,19 @@ import (
 type insertAll []*MockInsertAll
 
 func (ia *insertAll) register(ctxData ctxData) *MockInsertAll {
-	mia := &MockInsertAll{ctxData: ctxData}
+	mia := &MockInsertAll{
+		assert: &Assert{ctxData: ctxData},
+	}
 	*ia = append(*ia, mia)
 	return mia
 }
 
 func (ia insertAll) execute(ctx context.Context, records interface{}) error {
 	for _, mia := range ia {
-		if fetchContext(ctx) == mia.ctxData &&
-			(mia.argRecord == nil || reflect.DeepEqual(mia.argRecord, records)) &&
+		if (mia.argRecord == nil || reflect.DeepEqual(mia.argRecord, records)) &&
 			(mia.argRecordType == "" || mia.argRecordType == reflect.TypeOf(records).String()) &&
-			(mia.argRecordTable == "" || mia.argRecordTable == rel.NewCollection(records, true).Table()) {
+			(mia.argRecordTable == "" || mia.argRecordTable == rel.NewCollection(records, true).Table()) &&
+			mia.assert.call(ctx) {
 			return mia.retError
 		}
 	}
@@ -31,46 +33,51 @@ func (ia insertAll) execute(ctx context.Context, records interface{}) error {
 
 // MockInsertAll asserts and simulate Insert function for test.
 type MockInsertAll struct {
-	ctxData        ctxData
+	assert         *Assert
 	argRecord      interface{}
 	argRecordType  string
 	argRecordTable string
-	argMutators    []rel.Mutator
 	retError       error
 }
 
-// For expect calls for given record.
+// For assert calls for given record.
 func (mm *MockInsertAll) For(record interface{}) *MockInsertAll {
 	mm.argRecord = record
 	return mm
 }
 
-// ForType expect calls for given type.
+// ForType assert calls for given type.
 // Type must include package name, example: `model.User`.
 func (mm *MockInsertAll) ForType(typ string) *MockInsertAll {
 	mm.argRecordType = "*" + strings.TrimPrefix(typ, "*")
 	return mm
 }
 
-// ForTable expect calls for given table.
+// ForTable assert calls for given table.
 func (mm *MockInsertAll) ForTable(typ string) *MockInsertAll {
 	mm.argRecordTable = typ
 	return mm
 }
 
 // Error sets error to be returned.
-func (mm *MockInsertAll) Error(err error) {
+func (mm *MockInsertAll) Error(err error) *Assert {
 	mm.retError = err
+	return mm.assert
+}
+
+// Success sets no error to be returned.
+func (mm *MockInsertAll) Success() *Assert {
+	return mm.Error(nil)
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mm *MockInsertAll) ConnectionClosed() {
-	mm.Error(ErrConnectionClosed)
+func (mm *MockInsertAll) ConnectionClosed() *Assert {
+	return mm.Error(ErrConnectionClosed)
 }
 
 // NotUnique sets not unique error to be returned.
-func (mm *MockInsertAll) NotUnique(key string) {
-	mm.Error(rel.ConstraintError{
+func (mm *MockInsertAll) NotUnique(key string) *Assert {
+	return mm.Error(rel.ConstraintError{
 		Key:  key,
 		Type: rel.UniqueConstraint,
 	})

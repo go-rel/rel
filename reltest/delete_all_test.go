@@ -13,13 +13,13 @@ func TestDeleteAll(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll().For(&Book{ID: 1})
-	assert.Nil(t, repo.DeleteAll(context.TODO(), &Book{ID: 1}))
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll().For(&Book{ID: 1})
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), &Book{ID: 1})
+		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
 	repo.AssertExpectations(t)
 }
@@ -29,13 +29,13 @@ func TestDeleteAll_ForType(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll().ForType("reltest.Book")
-	assert.Nil(t, repo.DeleteAll(context.TODO(), &Book{ID: 1}))
+	repo.ExpectDeleteAll().ForType("[]reltest.Book")
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll().ForType("reltest.Book")
+	repo.ExpectDeleteAll().ForType("[]reltest.Book")
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), &Book{ID: 1})
+		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
 	repo.AssertExpectations(t)
 }
@@ -46,12 +46,12 @@ func TestDeleteAll_ForTable(t *testing.T) {
 	)
 
 	repo.ExpectDeleteAll().ForTable("books")
-	assert.Nil(t, repo.DeleteAll(context.TODO(), &Book{ID: 1}))
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll().ForTable("books")
 	assert.NotPanics(t, func() {
-		repo.MustDeleteAll(context.TODO(), &Book{ID: 1})
+		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
 	repo.AssertExpectations(t)
 }
@@ -62,12 +62,12 @@ func TestDeleteAll_error(t *testing.T) {
 	)
 
 	repo.ExpectDeleteAll().ConnectionClosed()
-	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(context.TODO(), &Book{ID: 1}))
+	assert.Equal(t, sql.ErrConnDone, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
 	repo.AssertExpectations(t)
 
 	repo.ExpectDeleteAll().ConnectionClosed()
 	assert.Panics(t, func() {
-		repo.MustDeleteAll(context.TODO(), &Book{ID: 1})
+		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
 	repo.AssertExpectations(t)
 }

@@ -10,7 +10,10 @@ import (
 type findAll []*MockFindAll
 
 func (fa *findAll) register(ctxData ctxData, queriers ...rel.Querier) *MockFindAll {
-	mfa := &MockFindAll{ctxData: ctxData, argQuery: rel.Build("", queriers...)}
+	mfa := &MockFindAll{
+		assert:   &Assert{ctxData: ctxData},
+		argQuery: rel.Build("", queriers...),
+	}
 	*fa = append(*fa, mfa)
 	return mfa
 }
@@ -18,7 +21,8 @@ func (fa *findAll) register(ctxData ctxData, queriers ...rel.Querier) *MockFindA
 func (fa findAll) execute(ctx context.Context, records interface{}, queriers ...rel.Querier) error {
 	query := rel.Build("", queriers...)
 	for _, mfa := range fa {
-		if fetchContext(ctx) == mfa.ctxData && matchQuery(mfa.argQuery, query) {
+		if matchQuery(mfa.argQuery, query) &&
+			mfa.assert.call(ctx) {
 			if mfa.argRecords != nil {
 				reflect.ValueOf(records).Elem().Set(reflect.ValueOf(mfa.argRecords))
 			}
@@ -32,24 +36,26 @@ func (fa findAll) execute(ctx context.Context, records interface{}, queriers ...
 
 // MockFindAll asserts and simulate find all function for test.
 type MockFindAll struct {
-	ctxData    ctxData
+	assert     *Assert
 	argQuery   rel.Query
 	argRecords interface{}
 	retError   error
 }
 
 // Result sets the result of this query.
-func (mfa *MockFindAll) Result(result interface{}) {
+func (mfa *MockFindAll) Result(result interface{}) *Assert {
 	mfa.argQuery.Table = rel.NewCollection(result, true).Table()
 	mfa.argRecords = result
+	return mfa.assert
 }
 
 // Error sets error to be returned.
-func (mfa *MockFindAll) Error(err error) {
+func (mfa *MockFindAll) Error(err error) *Assert {
 	mfa.retError = err
+	return mfa.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mfa *MockFindAll) ConnectionClosed() {
-	mfa.Error(ErrConnectionClosed)
+func (mfa *MockFindAll) ConnectionClosed() *Assert {
+	return mfa.Error(ErrConnectionClosed)
 }

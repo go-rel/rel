@@ -11,7 +11,11 @@ import (
 type preload []*MockPreload
 
 func (p *preload) register(ctxData ctxData, field string, queriers ...rel.Querier) *MockPreload {
-	mp := &MockPreload{ctxData: ctxData, argField: field, argQuery: rel.Build("", queriers...)}
+	mp := &MockPreload{
+		assert:   &Assert{ctxData: ctxData},
+		argField: field,
+		argQuery: rel.Build("", queriers...),
+	}
 	*p = append(*p, mp)
 	return mp
 }
@@ -19,10 +23,10 @@ func (p *preload) register(ctxData ctxData, field string, queriers ...rel.Querie
 func (p preload) execute(ctx context.Context, records interface{}, field string, queriers ...rel.Querier) error {
 	query := rel.Build("", queriers...)
 	for _, mp := range p {
-		if fetchContext(ctx) == mp.ctxData &&
-			(mp.argRecords == nil || reflect.DeepEqual(mp.argRecords, records)) &&
+		if (mp.argRecords == nil || reflect.DeepEqual(mp.argRecords, records)) &&
 			(mp.argRecordsType == "" || mp.argRecordsType == reflect.TypeOf(records).String()) &&
-			matchQuery(mp.argQuery, query) {
+			matchQuery(mp.argQuery, query) &&
+			mp.assert.call(ctx) {
 
 			if mp.result != nil {
 				var (
@@ -43,7 +47,7 @@ func (p preload) execute(ctx context.Context, records interface{}, field string,
 
 // MockPreload asserts and simulate Delete function for test.
 type MockPreload struct {
-	ctxData        ctxData
+	assert         *Assert
 	result         interface{}
 	argRecords     interface{}
 	argRecordsType string
@@ -52,32 +56,34 @@ type MockPreload struct {
 	retError       error
 }
 
-// Result sets the result of preload.
-func (mp *MockPreload) Result(result interface{}) {
-	mp.result = result
-}
-
-// For expect calls for given record.
+// For assert calls for given record.
 func (md *MockPreload) For(records interface{}) *MockPreload {
 	md.argRecords = records
 	return md
 }
 
-// ForType expect calls for given type.
+// ForType assert calls for given type.
 // Type must include package name, example: `model.User`.
 func (md *MockPreload) ForType(typ string) *MockPreload {
 	md.argRecordsType = "*" + strings.TrimPrefix(typ, "*")
 	return md
 }
 
+// Result sets the result of preload.
+func (mp *MockPreload) Result(result interface{}) *Assert {
+	mp.result = result
+	return mp.assert
+}
+
 // Error sets error to be returned.
-func (md *MockPreload) Error(err error) {
-	md.retError = err
+func (mp *MockPreload) Error(err error) *Assert {
+	mp.retError = err
+	return mp.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (md *MockPreload) ConnectionClosed() {
-	md.Error(ErrConnectionClosed)
+func (mp *MockPreload) ConnectionClosed() *Assert {
+	return mp.Error(ErrConnectionClosed)
 }
 
 type slice interface {

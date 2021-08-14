@@ -85,7 +85,7 @@ func TestFindAll_noMatch(t *testing.T) {
 	)
 
 	repo.ExpectFindAll(where.Eq("title", "a"))
-	assert.PanicsWithError(t, "TODO: Query doesn't match", func() {
+	assert.Panics(t, func() {
 		repo.FindAll(context.TODO(), &result, where.Eq("title", "b"))
 	})
 	repo.AssertExpectations(t)

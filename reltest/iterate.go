@@ -11,16 +11,20 @@ import (
 type iterate []*MockIterate
 
 func (i *iterate) register(ctxData ctxData, query rel.Query, options ...rel.IteratorOption) *MockIterate {
-	mi := &MockIterate{ctxData: ctxData, argQuery: query, argOptions: options}
+	mi := &MockIterate{
+		assert:     &Assert{ctxData: ctxData},
+		argQuery:   query,
+		argOptions: options,
+	}
 	*i = append(*i, mi)
 	return mi
 }
 
 func (i iterate) execute(ctx context.Context, query rel.Query, options ...rel.IteratorOption) rel.Iterator {
 	for _, mi := range i {
-		if fetchContext(ctx) == mi.ctxData &&
-			reflect.DeepEqual(mi.argOptions, options) &&
-			matchQuery(mi.argQuery, query) {
+		if reflect.DeepEqual(mi.argOptions, options) &&
+			matchQuery(mi.argQuery, query) &&
+			mi.assert.call(ctx) {
 			return mi
 		}
 	}
@@ -35,7 +39,7 @@ type data interface {
 
 // MockIterate asserts and simulate Delete function for test.
 type MockIterate struct {
-	ctxData    ctxData
+	assert     *Assert
 	result     data
 	current    int
 	err        error
@@ -44,7 +48,7 @@ type MockIterate struct {
 }
 
 // Result sets the result of preload.
-func (mi *MockIterate) Result(result interface{}) {
+func (mi *MockIterate) Result(result interface{}) *Assert {
 	rt := reflect.TypeOf(result)
 	if rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
@@ -55,16 +59,18 @@ func (mi *MockIterate) Result(result interface{}) {
 	} else {
 		mi.result = rel.NewDocument(result, true)
 	}
+	return mi.assert
 }
 
 // Error sets error to be returned.
-func (mi *MockIterate) Error(err error) {
+func (mi *MockIterate) Error(err error) *Assert {
 	mi.err = err
+	return mi.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mi *MockIterate) ConnectionClosed() {
-	mi.Error(ErrConnectionClosed)
+func (mi *MockIterate) ConnectionClosed() *Assert {
+	return mi.Error(ErrConnectionClosed)
 }
 
 func (mi MockIterate) Close() error {

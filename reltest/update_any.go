@@ -9,16 +9,21 @@ import (
 type updateAny []*MockUpdateAny
 
 func (ua *updateAny) register(ctxData ctxData, query rel.Query, mutates ...rel.Mutate) *MockUpdateAny {
-	mua := &MockUpdateAny{ctxData: ctxData, argQuery: query, argMutates: mutates}
+	mua := &MockUpdateAny{
+		assert:     &Assert{ctxData: ctxData},
+		ctxData:    ctxData,
+		argQuery:   query,
+		argMutates: mutates,
+	}
 	*ua = append(*ua, mua)
 	return mua
 }
 
 func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel.Mutate) (int, error) {
 	for _, mua := range ua {
-		if fetchContext(ctx) == mua.ctxData &&
-			matchQuery(mua.argQuery, query) &&
-			matchMutates(mua.argMutates, mutates) {
+		if matchQuery(mua.argQuery, query) &&
+			matchMutates(mua.argMutates, mutates) &&
+			mua.assert.call(ctx) {
 			if query.Table == "" {
 				panic("reltest: Cannot call UpdateAny without table. use rel.From(tableName)")
 			}
@@ -36,6 +41,7 @@ func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel
 
 // MockUpdateAny asserts and simulate UpdateAny function for test.
 type MockUpdateAny struct {
+	assert          *Assert
 	unsafe          bool
 	ctxData         ctxData
 	argQuery        rel.Query
@@ -51,17 +57,19 @@ func (mua *MockUpdateAny) Unsafe() *MockUpdateAny {
 }
 
 // UpdatedCount set the returned deleted count of this function.
-func (mua *MockUpdateAny) UpdatedCount(updatedCount int) {
+func (mua *MockUpdateAny) UpdatedCount(updatedCount int) *Assert {
 	mua.retUpdatedCount = updatedCount
+	return mua.assert
 }
 
 // Error sets error to be returned.
-func (mua *MockUpdateAny) Error(err error) {
+func (mua *MockUpdateAny) Error(err error) *Assert {
 	mua.retUpdatedCount = 0
 	mua.retError = err
+	return mua.assert
 }
 
 // ConnectionClosed sets this error to be returned.
-func (mua *MockUpdateAny) ConnectionClosed() {
-	mua.Error(ErrConnectionClosed)
+func (mua *MockUpdateAny) ConnectionClosed() *Assert {
+	return mua.Error(ErrConnectionClosed)
 }

@@ -15,6 +15,9 @@ type Repository struct {
 	find            find
 	findAll         findAll
 	findAndCountAll findAndCountAll
+	insert          mutate
+	insertAll       insertAll
+	update          mutate
 	updateAny       updateAny
 	delete          delete
 	deleteAll       deleteAll
@@ -143,10 +146,8 @@ func (r *Repository) ExpectFindAndCountAll(queriers ...rel.Querier) *MockFindAnd
 
 // Insert provides a mock function with given fields: record, mutators
 func (r *Repository) Insert(ctx context.Context, record interface{}, mutators ...rel.Mutator) error {
-	ret := r.mock.Called(fetchContext(ctx), record, mutators)
-
 	r.repo.Insert(ctx, record, mutators...)
-	return ret.Error(0)
+	return r.insert.execute(ctx, record, mutators...)
 }
 
 // MustInsert provides a mock function with given fields: record, mutators
@@ -155,16 +156,14 @@ func (r *Repository) MustInsert(ctx context.Context, record interface{}, mutator
 }
 
 // ExpectInsert apply mocks and expectations for Insert
-func (r *Repository) ExpectInsert(mutators ...rel.Mutator) *Mutate {
-	return ExpectInsert(r, mutators)
+func (r *Repository) ExpectInsert(mutators ...rel.Mutator) *MockMutate {
+	return r.insert.register(r.ctxData, mutators...)
 }
 
 // InsertAll records.
 func (r *Repository) InsertAll(ctx context.Context, records interface{}) error {
-	ret := r.mock.Called(fetchContext(ctx), records)
-
 	r.repo.InsertAll(ctx, records)
-	return ret.Error(0)
+	return r.insertAll.execute(ctx, records)
 }
 
 // MustInsertAll records.
@@ -173,19 +172,17 @@ func (r *Repository) MustInsertAll(ctx context.Context, records interface{}) {
 }
 
 // ExpectInsertAll records.
-func (r *Repository) ExpectInsertAll() *Mutate {
-	return ExpectInsertAll(r)
+func (r *Repository) ExpectInsertAll() *MockInsertAll {
+	return r.insertAll.register(r.ctxData)
 }
 
 // Update provides a mock function with given fields: record, mutators
 func (r *Repository) Update(ctx context.Context, record interface{}, mutators ...rel.Mutator) error {
-	ret := r.mock.Called(fetchContext(ctx), record, mutators)
-
 	if err := r.repo.Update(ctx, record, mutators...); err != nil {
 		return err
 	}
 
-	return ret.Error(0)
+	return r.update.execute(ctx, record, mutators...)
 }
 
 // MustUpdate provides a mock function with given fields: record, mutators
@@ -194,8 +191,8 @@ func (r *Repository) MustUpdate(ctx context.Context, record interface{}, mutator
 }
 
 // ExpectUpdate apply mocks and expectations for Update
-func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *Mutate {
-	return ExpectUpdate(r, mutators)
+func (r *Repository) ExpectUpdate(mutators ...rel.Mutator) *MockMutate {
+	return r.update.register(r.ctxData, mutators...)
 }
 
 // UpdateAny provides a mock function with given fields: query
@@ -218,6 +215,7 @@ func (r *Repository) ExpectUpdateAny(query rel.Query, mutates ...rel.Mutate) *Mo
 
 // Delete provides a mock function with given fields: record
 func (r *Repository) Delete(ctx context.Context, record interface{}, options ...rel.Cascade) error {
+	r.repo.Delete(ctx, record)
 	return r.delete.execute(ctx, record, options...)
 }
 
@@ -233,6 +231,7 @@ func (r *Repository) ExpectDelete(options ...rel.Cascade) *MockDelete {
 
 // DeleteAll provides DeleteAll mock function with given fields: records
 func (r *Repository) DeleteAll(ctx context.Context, records interface{}) error {
+	r.repo.DeleteAll(ctx, records)
 	return r.deleteAll.execute(ctx, records)
 }
 

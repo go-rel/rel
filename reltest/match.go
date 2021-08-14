@@ -125,6 +125,27 @@ func matchMutation(a rel.Mutation, b rel.Mutation) bool {
 	return true
 }
 
+func matchMutators(a []rel.Mutator, b []rel.Mutator) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		switch va := a[i].(type) {
+		case rel.Mutate:
+			if vb, ok := b[i].(rel.Mutate); !ok || !matchMutate(va, vb) {
+				return false
+			}
+		default:
+			if !reflect.DeepEqual(va, b[i]) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 func matchMutate(a rel.Mutate, b rel.Mutate) bool {
 	return a.Type == b.Type && a.Field == b.Field && (a.Value == b.Value || a.Value == Any)
 }

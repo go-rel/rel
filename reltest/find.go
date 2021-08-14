@@ -18,7 +18,8 @@ func (f *find) register(ctxData ctxData, queriers ...rel.Querier) *MockFind {
 func (f find) execute(ctx context.Context, records interface{}, queriers ...rel.Querier) error {
 	query := rel.Build("", queriers...)
 	for _, mf := range f {
-		if fetchContext(ctx) == mf.ctxData && matchQuery(mf.argQuery, query) {
+		if fetchContext(ctx) == mf.ctxData &&
+			matchQuery(mf.argQuery, query) {
 			if mf.argRecord != nil {
 				reflect.ValueOf(records).Elem().Set(reflect.ValueOf(mf.argRecord))
 			}
@@ -37,11 +38,6 @@ type MockFind struct {
 	argRecord interface{}
 	retError  error
 }
-
-// // Match returns true if call is expected.
-// func (mf MockFind) Match(ctx context.Context, query rel.Query) bool {
-// 	return matchQuery(f.ExpectedQuery, query)
-// }
 
 // Result sets the result of this query.
 func (mf *MockFind) Result(result interface{}) {

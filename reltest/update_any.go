@@ -16,7 +16,9 @@ func (ua *updateAny) register(ctxData ctxData, query rel.Query, mutates ...rel.M
 
 func (ua updateAny) execute(ctx context.Context, query rel.Query, mutates ...rel.Mutate) (int, error) {
 	for _, mua := range ua {
-		if fetchContext(ctx) == mua.ctxData && matchQuery(mua.argQuery, query) && matchMutates(mua.argMutates, mutates) {
+		if fetchContext(ctx) == mua.ctxData &&
+			matchQuery(mua.argQuery, query) &&
+			matchMutates(mua.argMutates, mutates) {
 			if query.Table == "" {
 				panic("reltest: Cannot call UpdateAny without table. use rel.From(tableName)")
 			}

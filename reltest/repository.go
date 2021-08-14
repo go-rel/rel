@@ -25,6 +25,7 @@ type Repository struct {
 	deleteAll       deleteAll
 	deleteAny       deleteAny
 	exec            exec
+	preload         preload
 	mock            mock.Mock
 	ctxData         ctxData
 }
@@ -266,7 +267,7 @@ func (r *Repository) ExpectDeleteAny(query rel.Query) *MockDeleteAny {
 
 // Preload provides a mock function with given fields: records, field, queriers
 func (r *Repository) Preload(ctx context.Context, records interface{}, field string, queriers ...rel.Querier) error {
-	return r.mock.Called(fetchContext(ctx), records, field, queriers).Error(0)
+	return r.preload.execute(ctx, records, field, queriers...)
 }
 
 // MustPreload provides a mock function with given fields: records, field, queriers
@@ -275,8 +276,8 @@ func (r *Repository) MustPreload(ctx context.Context, records interface{}, field
 }
 
 // ExpectPreload apply mocks and expectations for Preload
-func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *Preload {
-	return ExpectPreload(r, field, queriers)
+func (r *Repository) ExpectPreload(field string, queriers ...rel.Querier) *MockPreload {
+	return r.preload.register(r.ctxData, field, queriers...)
 }
 
 // Exec raw statement.

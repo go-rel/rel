@@ -1,51 +1,83 @@
 package reltest
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
 	"github.com/go-rel/rel"
-	"github.com/stretchr/testify/mock"
 )
 
-// Preload asserts and simulate preload function for test.
-type Preload struct {
-	*Expect
+type preload []*MockPreload
+
+func (p *preload) register(ctxData ctxData, field string, queriers ...rel.Querier) *MockPreload {
+	mp := &MockPreload{ctxData: ctxData, argField: field, argQuery: rel.Build("", queriers...)}
+	*p = append(*p, mp)
+	return mp
 }
 
-// Result sets the result of Preload query.
-func (p *Preload) Result(records interface{}) {
-	p.Run(func(args mock.Arguments) {
-		var (
-			target = asSlice(args[1], false)
-			result = asSlice(records, true)
-			path   = strings.Split(args[2].(string), ".")
-		)
+func (p preload) execute(ctx context.Context, records interface{}, field string, queriers ...rel.Querier) error {
+	query := rel.Build("", queriers...)
+	for _, mp := range p {
+		if fetchContext(ctx) == mp.ctxData &&
+			(mp.argRecords == nil || reflect.DeepEqual(mp.argRecords, records)) &&
+			(mp.argRecordsType == "" || mp.argRecordsType == reflect.TypeOf(records).String()) &&
+			matchQuery(mp.argQuery, query) {
 
-		preload(target, result, path)
-	})
-}
+			if mp.result != nil {
+				var (
+					target = asSlice(records, false)
+					result = asSlice(mp.result, true)
+					path   = strings.Split(field, ".")
+				)
 
-// For match expect calls for given record.
-func (p *Preload) For(record interface{}) *Preload {
-	p.Arguments[1] = record
-	return p
-}
+				execPreload(target, result, path)
+			}
 
-// ForType match expect calls for given type.
-// Type must include package name, example: `model.User`.
-func (p *Preload) ForType(typ string) *Preload {
-	return p.For(mock.AnythingOfType("*" + strings.TrimPrefix(typ, "*")))
-}
-
-// ExpectPreload to be called with given field and queries.
-func ExpectPreload(r *Repository, field string, queriers []rel.Querier) *Preload {
-	return &Preload{
-		Expect: newExpect(r, "Preload",
-			[]interface{}{r.ctxData, mock.Anything, field, queriers},
-			[]interface{}{nil},
-		),
+			return mp.retError
+		}
 	}
+
+	panic("TODO: Query doesn't match")
+}
+
+// MockPreload asserts and simulate Delete function for test.
+type MockPreload struct {
+	ctxData        ctxData
+	result         interface{}
+	argRecords     interface{}
+	argRecordsType string
+	argField       string
+	argQuery       rel.Query
+	retError       error
+}
+
+// Result sets the result of preload.
+func (mp *MockPreload) Result(result interface{}) {
+	mp.result = result
+}
+
+// For expect calls for given record.
+func (md *MockPreload) For(records interface{}) *MockPreload {
+	md.argRecords = records
+	return md
+}
+
+// ForType expect calls for given type.
+// Type must include package name, example: `model.User`.
+func (md *MockPreload) ForType(typ string) *MockPreload {
+	md.argRecordsType = "*" + strings.TrimPrefix(typ, "*")
+	return md
+}
+
+// Error sets error to be returned.
+func (md *MockPreload) Error(err error) {
+	md.retError = err
+}
+
+// ConnectionClosed sets this error to be returned.
+func (md *MockPreload) ConnectionClosed() {
+	md.Error(ErrConnectionClosed)
 }
 
 type slice interface {
@@ -74,7 +106,7 @@ func asSlice(v interface{}, readonly bool) slice {
 	return sl
 }
 
-func preload(target slice, result slice, path []string) {
+func execPreload(target slice, result slice, path []string) {
 	type frame struct {
 		index int
 		doc   *rel.Document

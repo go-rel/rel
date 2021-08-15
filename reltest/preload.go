@@ -107,12 +107,12 @@ func (mp MockPreload) String() string {
 		argRecords = fmt.Sprintf("<Type: %s>", mp.argRecordsType)
 	}
 
-	return fmt.Sprintf("Preload(%s, %s, %s)", argRecords, mp.argField, mp.argQuery)
+	return fmt.Sprintf("Preload(ctx, %s, %q, %s)", argRecords, mp.argField, mp.argQuery)
 }
 
 // ExpectString representation of mocked call.
 func (mp MockPreload) ExpectString() string {
-	return fmt.Sprintf("ExpectPreload(%s, %s).ForType(\"%T\")", mp.argField, mp.argQuery, mp.argRecords)
+	return fmt.Sprintf("ExpectPreload(%q, %s).ForType(\"%T\")", mp.argField, mp.argQuery, mp.argRecords)
 }
 
 type slice interface {

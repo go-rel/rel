@@ -112,13 +112,13 @@ func TestUpdateAny_assert(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectUpdateAny(rel.From("users"))
+	repo.ExpectUpdateAny(rel.From("users"), rel.Set("name", Any))
 
 	assert.Panics(t, func() {
-		repo.UpdateAny(context.TODO(), rel.From("books"))
+		repo.UpdateAny(context.TODO(), rel.From("books"), rel.Set("name", "rel"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tUpdateAny(ctx, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tUpdateAny(ctx, query todo, rel.Set(\"name\", <Any>))", nt.lastLog)
 }
 
 func TestUpdateAny_String(t *testing.T) {

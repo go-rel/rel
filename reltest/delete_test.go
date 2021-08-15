@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/go-rel/rel"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,11 +14,11 @@ func TestDelete(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDelete().For(&Book{ID: 1})
+	repo.ExpectDelete().For(&Book{ID: 1}).Success()
 	assert.Nil(t, repo.Delete(context.TODO(), &Book{ID: 1}))
 	repo.AssertExpectations(t)
 
-	repo.ExpectDelete().For(&Book{ID: 1})
+	repo.ExpectDelete().For(&Book{ID: 1}).Success()
 	assert.NotPanics(t, func() {
 		repo.MustDelete(context.TODO(), &Book{ID: 1})
 	})
@@ -67,7 +68,7 @@ func TestDelete_ForContains(t *testing.T) {
 
 	repo.ExpectDelete().ForContains(Book{Title: "Golang"})
 	assert.NotPanics(t, func() {
-		repo.MustDelete(context.TODO(), &Book{ID: 1})
+		repo.MustDelete(context.TODO(), &Book{ID: 1, Title: "Golang"})
 	})
 	repo.AssertExpectations(t)
 }
@@ -88,7 +89,17 @@ func TestDelete_error(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestDelete_assert(t *testing.T) {
+func TestDelete_noMatchCascade(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	assert.Panics(t, func() {
+		repo.Delete(context.TODO(), &Book{}, rel.Cascade(true))
+	})
+}
+
+func TestDelete_assertForTable(t *testing.T) {
 	var (
 		repo = New()
 	)
@@ -100,6 +111,48 @@ func TestDelete_assert(t *testing.T) {
 	})
 	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestDelete_assertForType(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete().ForType("[]User")
+
+	assert.Panics(t, func() {
+		repo.Delete(context.TODO(), &Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Type: *[]User>)", nt.lastLog)
+}
+
+func TestDelete_assertForContains(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete().ForContains(Book{ID: 3})
+
+	assert.Panics(t, func() {
+		repo.Delete(context.TODO(), &Book{ID: 1})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Contains: reltest.Book{ID:3, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}>)", nt.lastLog)
+}
+
+func TestDelete_assertCascade(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete(rel.Cascade(true))
+
+	assert.Panics(t, func() {
+		repo.Delete(context.TODO(), &Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Any>, rel.Cascade(true))", nt.lastLog)
 }
 
 func TestDelete_String(t *testing.T) {

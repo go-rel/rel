@@ -104,7 +104,7 @@ func (md MockDelete) String() string {
 	if md.argRecord != nil {
 		argRecord = fmt.Sprintf("%#v", md.argRecord)
 	} else if md.argRecordContains != nil {
-		argRecord = fmt.Sprintf("<Contains: %#v>", md.argRecord)
+		argRecord = fmt.Sprintf("<Contains: %#v>", md.argRecordContains)
 	} else if md.argRecordType != "" {
 		argRecord = fmt.Sprintf("<Type: %s>", md.argRecordType)
 	} else if md.argRecordTable != "" {

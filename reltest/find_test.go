@@ -50,15 +50,28 @@ func TestFind_noResult(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestFind_assert(t *testing.T) {
+func TestFind_connectionClosed(t *testing.T) {
 	var (
-		repo = New()
+		result Book
+		repo   = New()
 	)
 
-	repo.ExpectFind(where.Eq("status", "paid"))
+	repo.ExpectFind(where.Eq("id", 2)).ConnectionClosed()
+
+	assert.Equal(t, ErrConnectionClosed, repo.Find(context.TODO(), &result, where.Eq("id", 2)))
+	repo.AssertExpectations(t)
+}
+
+func TestFind_assert(t *testing.T) {
+	var (
+		repo   = New()
+		result Book
+	)
+
+	repo.ExpectFind(where.Eq("title", "go"))
 
 	assert.Panics(t, func() {
-		repo.Find(context.TODO(), where.Eq("status", "pending"))
+		repo.Find(context.TODO(), &result, where.Eq("title", "golang"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: Mock defined but not called:\n\tFind(ctx, <Any>, query todo)", nt.lastLog)

@@ -27,10 +27,10 @@ func TestDeleteAny_wildcard(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", Any))).DeletedCount(1)
+	repo.ExpectDeleteAny(rel.From("books").Where(where.Eq("id", Any))).Success()
 	deletedCount, err := repo.DeleteAny(context.TODO(), rel.From("books").Where(where.Eq("id", 1)))
 	assert.Nil(t, err)
-	assert.Equal(t, 1, deletedCount)
+	assert.Equal(t, 0, deletedCount)
 	repo.AssertExpectations(t)
 }
 

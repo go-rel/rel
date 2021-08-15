@@ -118,20 +118,20 @@ func TestIterate_assert(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectIterate(rel.From("users"))
+	repo.ExpectIterate(rel.From("users"), rel.BatchSize(10))
 
 	assert.Panics(t, func() {
 		repo.Iterate(context.TODO(), rel.From("books"))
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tIterate(ctx, query todo)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tIterate(ctx, query todo, rel.BatchSize(10))", nt.lastLog)
 }
 
 func TestIterate_String(t *testing.T) {
 	var (
-		mockIterate = MockIterate{assert: &Assert{}, argQuery: rel.From("users")}
+		mockIterate = MockIterate{assert: &Assert{}, argQuery: rel.From("users"), argOptions: []rel.IteratorOption{rel.BatchSize(10), rel.Start(1), rel.Finish(10)}}
 	)
 
-	assert.Equal(t, "Iterate(ctx, query todo)", mockIterate.String())
-	assert.Equal(t, "ExpectIterate(query todo)", mockIterate.ExpectString())
+	assert.Equal(t, "Iterate(ctx, query todo, rel.BatchSize(10), rel.Start(rel.start{1}), rel.Finish(rel.finish{10}))", mockIterate.String())
+	assert.Equal(t, "ExpectIterate(query todo, rel.BatchSize(10), rel.Start(rel.start{1}), rel.Finish(rel.finish{10}))", mockIterate.ExpectString())
 }

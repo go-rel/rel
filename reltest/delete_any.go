@@ -64,8 +64,9 @@ func (mda *MockDeleteAny) Unsafe() *MockDeleteAny {
 }
 
 // DeletedCount set the returned deleted count of this function.
-func (mda *MockDeleteAny) DeletedCount(deletedCount int) {
+func (mda *MockDeleteAny) DeletedCount(deletedCount int) *Assert {
 	mda.retDeletedCount = deletedCount
+	return mda.assert
 }
 
 // Error sets error to be returned.

@@ -13,11 +13,11 @@ func TestDeleteAll(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}}).Success()
 	assert.Nil(t, repo.DeleteAll(context.TODO(), &[]Book{{ID: 1}}))
 	repo.AssertExpectations(t)
 
-	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}}).Success()
 	assert.NotPanics(t, func() {
 		repo.MustDeleteAll(context.TODO(), &[]Book{{ID: 1}})
 	})
@@ -72,7 +72,7 @@ func TestDeleteAll_error(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestDeleteAll_assert(t *testing.T) {
+func TestDeleteAll_assertForTable(t *testing.T) {
 	var (
 		repo = New()
 	)
@@ -84,6 +84,20 @@ func TestDeleteAll_assert(t *testing.T) {
 	})
 	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDeleteAll(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestDeleteAll_assertForType(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDeleteAll().ForType("[]User")
+
+	assert.Panics(t, func() {
+		repo.DeleteAll(context.TODO(), &[]Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDeleteAll(ctx, <Type: *[]User>)", nt.lastLog)
 }
 
 func TestDeleteAll_String(t *testing.T) {

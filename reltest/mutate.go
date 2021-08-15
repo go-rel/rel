@@ -114,7 +114,7 @@ func (mm MockMutate) String() string {
 	if mm.argRecord != nil {
 		argRecord = fmt.Sprintf("%#v", mm.argRecord)
 	} else if mm.argRecordContains != nil {
-		argRecord = fmt.Sprintf("<Contains: %#v>", mm.argRecord)
+		argRecord = fmt.Sprintf("<Contains: %#v>", mm.argRecordContains)
 	} else if mm.argRecordType != "" {
 		argRecord = fmt.Sprintf("<Type: %s>", mm.argRecordType)
 	} else if mm.argRecordTable != "" {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/go-rel/rel"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,12 +21,12 @@ func TestInsertAll(t *testing.T) {
 		}
 	)
 
-	repo.ExpectInsertAll()
+	repo.ExpectInsertAll().Success()
 	assert.Nil(t, repo.InsertAll(context.TODO(), &results))
 	assert.Equal(t, books, results)
 	repo.AssertExpectations(t)
 
-	repo.ExpectInsertAll()
+	repo.ExpectInsertAll().Success()
 	assert.NotPanics(t, func() {
 		repo.MustInsertAll(context.TODO(), &results)
 		assert.Equal(t, books, results)
@@ -33,7 +34,39 @@ func TestInsertAll(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestInsertAll_error(t *testing.T) {
+	var (
+		repo    = New()
+		results []Book
+	)
+
+	repo.ExpectInsertAll().ConnectionClosed()
+	assert.Equal(t, ErrConnectionClosed, repo.InsertAll(context.TODO(), &results))
+	repo.AssertExpectations(t)
+
+	repo.ExpectInsertAll().NotUnique("title")
+	assert.Equal(t, rel.ConstraintError{
+		Key:  "title",
+		Type: rel.UniqueConstraint,
+	}, repo.InsertAll(context.TODO(), &results))
+	repo.AssertExpectations(t)
+}
+
 func TestInsertAll_assert(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectInsertAll().For(&[]Book{{Title: "Golang"}})
+
+	assert.Panics(t, func() {
+		repo.InsertAll(context.TODO(), &[]Book{{Title: "Go"}})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsertAll(ctx, &[]reltest.Book{reltest.Book{ID:0, Title:\"Golang\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}})", nt.lastLog)
+}
+
+func TestInsertAll_assertForTable(t *testing.T) {
 	var (
 		repo = New()
 	)
@@ -45,6 +78,20 @@ func TestInsertAll_assert(t *testing.T) {
 	})
 	assert.False(t, repo.AssertExpectations(nt))
 	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsertAll(ctx, <Table: users>)", nt.lastLog)
+}
+
+func TestInsertAll_assertForType(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectInsertAll().ForType("[]User")
+
+	assert.Panics(t, func() {
+		repo.InsertAll(context.TODO(), &[]Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsertAll(ctx, <Type: *[]User>)", nt.lastLog)
 }
 
 func TestInsertAll_String(t *testing.T) {

@@ -193,10 +193,10 @@ func matchContains(a interface{}, b interface{}) bool {
 		}
 
 		fvb := rvb.FieldByName(rta.Field(i).Name)
-		if !fvb.IsValid() || !reflect.DeepEqual(rva.Interface(), fvb.Interface()) {
-			return true
+		if !fvb.IsValid() || !reflect.DeepEqual(fva.Interface(), fvb.Interface()) {
+			return false
 		}
 	}
 
-	return false
+	return true
 }

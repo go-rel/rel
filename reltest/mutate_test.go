@@ -16,12 +16,12 @@ func TestMutate_Insert(t *testing.T) {
 		book   = Book{ID: 1, Title: "Golang for dummies"}
 	)
 
-	repo.ExpectInsert()
+	repo.ExpectInsert().Success()
 	assert.Nil(t, repo.Insert(context.TODO(), &result))
 	assert.Equal(t, book, result)
 	repo.AssertExpectations(t)
 
-	repo.ExpectInsert()
+	repo.ExpectInsert().Success()
 	assert.NotPanics(t, func() {
 		repo.MustInsert(context.TODO(), &result)
 		assert.Equal(t, book, result)
@@ -153,7 +153,6 @@ func TestMutate_Insert_unknownField(t *testing.T) {
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
-	repo.ExpectInsert(rel.Set("titles", "Rel for dummies"))
 	assert.Panics(t, func() {
 		_ = repo.Insert(context.TODO(), &result, rel.Set("titles", "Rel for dummies"))
 	})
@@ -174,7 +173,7 @@ func TestMutate_Insert_notUnique(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestInsert_assert(t *testing.T) {
+func TestInsert_assertForTable(t *testing.T) {
 	var (
 		repo = New()
 	)
@@ -188,13 +187,41 @@ func TestInsert_assert(t *testing.T) {
 	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Table: users>)", nt.lastLog)
 }
 
-func TestInsert_String(t *testing.T) {
+func TestInsert_assertForType(t *testing.T) {
 	var (
-		mockInsert = MockMutate{name: "Insert", assert: &Assert{}, argRecord: &Book{}}
+		repo = New()
 	)
 
-	assert.Equal(t, "Insert(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0})", mockInsert.String())
-	assert.Equal(t, "ExpectInsert().ForType(\"*reltest.Book\")", mockInsert.ExpectString())
+	repo.ExpectInsert().ForType("[]User")
+
+	assert.Panics(t, func() {
+		repo.Insert(context.TODO(), &Book{})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Type: *[]User>)", nt.lastLog)
+}
+
+func TestInsert_assertForContains(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectInsert().ForContains(Book{Title: "Go"})
+
+	assert.Panics(t, func() {
+		repo.Insert(context.TODO(), &Book{Title: "Golang"})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Contains: reltest.Book{ID:0, Title:\"Go\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}>)", nt.lastLog)
+}
+
+func TestInsert_String(t *testing.T) {
+	var (
+		mockInsert = MockMutate{name: "Insert", assert: &Assert{}, argRecord: &Book{}, argMutators: []rel.Mutator{rel.Set("title", "go"), rel.Set("id", 1)}}
+	)
+
+	assert.Equal(t, "Insert(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}, rel.Set(\"title\", go), rel.Set(\"id\", 1))", mockInsert.String())
+	assert.Equal(t, "ExpectInsert(rel.Set(\"title\", go), rel.Set(\"id\", 1)).ForType(\"*reltest.Book\")", mockInsert.ExpectString())
 }
 
 func TestMutate_Update(t *testing.T) {
@@ -378,7 +405,6 @@ func TestMutate_Update_incOrDecFieldNotExists(t *testing.T) {
 		result = Book{ID: 2, Views: 10}
 	)
 
-	repo.ExpectUpdate(rel.Inc("watistis"))
 	assert.Panics(t, func() {
 		assert.Nil(t, repo.Update(context.TODO(), &result, rel.Inc("watistis")))
 	})
@@ -392,7 +418,6 @@ func TestMutate_Update_incOrDecFieldInvalid(t *testing.T) {
 		result = Book{ID: 2, Views: 10}
 	)
 
-	repo.ExpectUpdate(rel.Inc("title"))
 	assert.Panics(t, func() {
 		assert.Nil(t, repo.Update(context.TODO(), &result, rel.Inc("title")))
 	})
@@ -485,7 +510,6 @@ func TestMutate_Update_belongsToInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "abstract_id",
 		Type: rel.ForeignKeyConstraint,
@@ -510,7 +534,6 @@ func TestMutate_Update_hasOneInconsistentPk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mut)
 	assert.Panics(t, func() {
 		_ = repo.Update(context.TODO(), &result, mut)
 	})
@@ -533,7 +556,6 @@ func TestMutate_Update_hasOneInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
@@ -559,7 +581,6 @@ func TestMutate_Update_hasManyInconsistentFk(t *testing.T) {
 		}
 	)
 
-	repo.ExpectUpdate(mut)
 	assert.Equal(t, rel.ConstraintError{
 		Key:  "book_id",
 		Type: rel.ForeignKeyConstraint,
@@ -574,7 +595,6 @@ func TestMutate_Update_unknownField(t *testing.T) {
 		result = Book{ID: 2, Title: "Golang for dummies"}
 	)
 
-	repo.ExpectUpdate(rel.Set("titles", "Rel for dummies"))
 	assert.Panics(t, func() {
 		_ = repo.Update(context.TODO(), &result, rel.Set("titles", "Rel for dummies"))
 	})

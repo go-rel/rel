@@ -72,6 +72,20 @@ func TestDeleteAll_error(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestDeleteAll_assertFor(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDeleteAll().For(&[]Book{{ID: 1}})
+
+	assert.Panics(t, func() {
+		repo.DeleteAll(context.TODO(), &[]Book{{ID: 2}})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDeleteAll(ctx, &[]reltest.Book{reltest.Book{ID: 1}})", nt.lastLog)
+}
+
 func TestDeleteAll_assertForTable(t *testing.T) {
 	var (
 		repo = New()

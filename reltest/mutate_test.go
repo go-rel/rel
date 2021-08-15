@@ -212,7 +212,7 @@ func TestInsert_assertForContains(t *testing.T) {
 		repo.Insert(context.TODO(), &Book{Title: "Golang"})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Contains: reltest.Book{ID:0, Title:\"Go\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsert(ctx, <Contains: reltest.Book{Title: Go}>)", nt.lastLog)
 }
 
 func TestInsert_String(t *testing.T) {
@@ -220,7 +220,7 @@ func TestInsert_String(t *testing.T) {
 		mockInsert = MockMutate{name: "Insert", assert: &Assert{}, argRecord: &Book{}, argMutators: []rel.Mutator{rel.Set("title", "go"), rel.Set("id", 1)}}
 	)
 
-	assert.Equal(t, "Insert(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}, rel.Set(\"title\", go), rel.Set(\"id\", 1))", mockInsert.String())
+	assert.Equal(t, "Insert(ctx, &reltest.Book{}, rel.Set(\"title\", go), rel.Set(\"id\", 1))", mockInsert.String())
 	assert.Equal(t, "ExpectInsert(rel.Set(\"title\", go), rel.Set(\"id\", 1)).ForType(\"*reltest.Book\")", mockInsert.ExpectString())
 }
 
@@ -634,6 +634,6 @@ func TestUpdate_String(t *testing.T) {
 		mockUpdate = MockMutate{name: "Update", assert: &Assert{}, argRecord: &Book{}}
 	)
 
-	assert.Equal(t, "Update(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0})", mockUpdate.String())
+	assert.Equal(t, "Update(ctx, &reltest.Book{})", mockUpdate.String())
 	assert.Equal(t, "ExpectUpdate().ForType(\"*reltest.Book\")", mockUpdate.ExpectString())
 }

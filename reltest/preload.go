@@ -102,7 +102,7 @@ func (mp *MockPreload) ConnectionClosed() *Assert {
 func (mp MockPreload) String() string {
 	argRecords := "<Any>"
 	if mp.argRecords != nil {
-		argRecords = fmt.Sprintf("%#v", mp.argRecords)
+		argRecords = csprint(mp.argRecords, true)
 	} else if mp.argRecordsType != "" {
 		argRecords = fmt.Sprintf("<Type: %s>", mp.argRecordsType)
 	}

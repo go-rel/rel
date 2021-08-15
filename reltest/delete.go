@@ -102,9 +102,9 @@ func (md *MockDelete) ConnectionClosed() *Assert {
 func (md MockDelete) String() string {
 	argRecord := "<Any>"
 	if md.argRecord != nil {
-		argRecord = fmt.Sprintf("%#v", md.argRecord)
+		argRecord = csprint(md.argRecord, true)
 	} else if md.argRecordContains != nil {
-		argRecord = fmt.Sprintf("<Contains: %#v>", md.argRecordContains)
+		argRecord = fmt.Sprintf("<Contains: %s>", csprint(md.argRecordContains, true))
 	} else if md.argRecordType != "" {
 		argRecord = fmt.Sprintf("<Type: %s>", md.argRecordType)
 	} else if md.argRecordTable != "" {

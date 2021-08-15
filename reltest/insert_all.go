@@ -99,7 +99,7 @@ func (mia *MockInsertAll) NotUnique(key string) *Assert {
 func (mia MockInsertAll) String() string {
 	argRecord := "<Any>"
 	if mia.argRecord != nil {
-		argRecord = fmt.Sprintf("%#v", mia.argRecord)
+		argRecord = csprint(mia.argRecord, true)
 	} else if mia.argRecordType != "" {
 		argRecord = fmt.Sprintf("<Type: %s>", mia.argRecordType)
 	} else if mia.argRecordTable != "" {

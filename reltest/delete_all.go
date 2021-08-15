@@ -91,7 +91,7 @@ func (mda *MockDeleteAll) ConnectionClosed() *Assert {
 func (mda MockDeleteAll) String() string {
 	argRecord := "<Any>"
 	if mda.argRecord != nil {
-		argRecord = fmt.Sprintf("%#v", mda.argRecord)
+		argRecord = csprint(mda.argRecord, true)
 	} else if mda.argRecordType != "" {
 		argRecord = fmt.Sprintf("<Type: %s>", mda.argRecordType)
 	} else if mda.argRecordTable != "" {

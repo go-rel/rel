@@ -220,9 +220,9 @@ func TestPreload_assert(t *testing.T) {
 
 func TestPreload_String(t *testing.T) {
 	var (
-		mockPreload = MockPreload{assert: &Assert{}, argRecords: &Book{}, argField: "users"}
+		mockPreload = MockPreload{assert: &Assert{}, argRecords: &Book{ID: 1}, argField: "users"}
 	)
 
-	assert.Equal(t, "Preload(&reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}, users, query todo)", mockPreload.String())
+	assert.Equal(t, "Preload(&reltest.Book{ID: 1}, users, query todo)", mockPreload.String())
 	assert.Equal(t, "ExpectPreload(users, query todo).ForType(\"*reltest.Book\")", mockPreload.ExpectString())
 }

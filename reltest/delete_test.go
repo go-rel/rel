@@ -99,6 +99,20 @@ func TestDelete_noMatchCascade(t *testing.T) {
 	})
 }
 
+func TestDelete_assertFor(t *testing.T) {
+	var (
+		repo = New()
+	)
+
+	repo.ExpectDelete().For(&Book{ID: 2})
+
+	assert.Panics(t, func() {
+		repo.Delete(context.TODO(), &Book{ID: 1})
+	})
+	assert.False(t, repo.AssertExpectations(nt))
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, &reltest.Book{ID: 2})", nt.lastLog)
+}
+
 func TestDelete_assertForTable(t *testing.T) {
 	var (
 		repo = New()
@@ -118,13 +132,13 @@ func TestDelete_assertForType(t *testing.T) {
 		repo = New()
 	)
 
-	repo.ExpectDelete().ForType("[]User")
+	repo.ExpectDelete().ForType("User")
 
 	assert.Panics(t, func() {
 		repo.Delete(context.TODO(), &Book{})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Type: *[]User>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Type: *User>)", nt.lastLog)
 }
 
 func TestDelete_assertForContains(t *testing.T) {
@@ -138,7 +152,7 @@ func TestDelete_assertForContains(t *testing.T) {
 		repo.Delete(context.TODO(), &Book{ID: 1})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Contains: reltest.Book{ID:3, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}>)", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tDelete(ctx, <Contains: reltest.Book{ID: 3}>)", nt.lastLog)
 }
 
 func TestDelete_assertCascade(t *testing.T) {
@@ -160,6 +174,6 @@ func TestDelete_String(t *testing.T) {
 		mockDelete = MockDelete{assert: &Assert{}, argRecord: &Book{}}
 	)
 
-	assert.Equal(t, "Delete(ctx, &reltest.Book{ID:0, Title:\"\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0})", mockDelete.String())
+	assert.Equal(t, "Delete(ctx, &reltest.Book{})", mockDelete.String())
 	assert.Equal(t, "ExpectDelete().ForType(\"*reltest.Book\")", mockDelete.ExpectString())
 }

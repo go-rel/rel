@@ -63,7 +63,7 @@ func TestInsertAll_assert(t *testing.T) {
 		repo.InsertAll(context.TODO(), &[]Book{{Title: "Go"}})
 	})
 	assert.False(t, repo.AssertExpectations(nt))
-	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsertAll(ctx, &[]reltest.Book{reltest.Book{ID:0, Title:\"Golang\", Author:reltest.Author{ID:0, Name:\"\", Books:[]reltest.Book(nil)}, AuthorID:(*int)(nil), Ratings:[]reltest.Rating(nil), Poster:reltest.Poster{ID:0, Image:\"\", BookID:0}, AbstractID:0, Abstract:reltest.Abstract{ID:0, Content:\"\"}, Views:0}})", nt.lastLog)
+	assert.Equal(t, "FAIL: Mock defined but not called:\n\tInsertAll(ctx, &[]reltest.Book{reltest.Book{Title: Golang}})", nt.lastLog)
 }
 
 func TestInsertAll_assertForTable(t *testing.T) {

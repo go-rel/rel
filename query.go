@@ -294,10 +294,6 @@ func (q Query) Preload(field string) Query {
 
 // String describe query as string.
 func (q Query) String() string {
-	// if q.empty {
-	// 	return ""
-	// }
-
 	if q.SQLQuery.Statement != "" {
 		return q.SQLQuery.String()
 	}

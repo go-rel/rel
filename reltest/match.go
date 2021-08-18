@@ -46,6 +46,7 @@ func matchJoinQuery(a []rel.JoinQuery, b []rel.JoinQuery) bool {
 	}
 
 	for i := range a {
+		// TODO: argument support any
 		if a[i].Mode != b[i].Mode || a[i].Table != b[i].Table || a[i].From != b[i].From || a[i].To != b[i].To || reflect.DeepEqual(a[i].Arguments, b[i].Arguments) {
 			return false
 		}

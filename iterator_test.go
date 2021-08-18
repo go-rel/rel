@@ -3,6 +3,7 @@ package rel
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 
@@ -159,4 +160,14 @@ func TestIterator_queryError(t *testing.T) {
 	}
 
 	adapter.AssertExpectations(t)
+}
+
+func TestIteratorOption_String(t *testing.T) {
+	assert.Equal(t, "rel.BatchSize(10)", fmt.Sprint(BatchSize(10)))
+	assert.Equal(t, "rel.Start(20)", fmt.Sprint(Start(20)))
+	assert.Equal(t, "rel.Start(20, 21)", fmt.Sprint(Start(20, 21)))
+	assert.Equal(t, "rel.Start(\"abc\")", fmt.Sprint(Start("abc")))
+	assert.Equal(t, "rel.Finish(30)", fmt.Sprint(Finish(30)))
+	assert.Equal(t, "rel.Finish(30, 31)", fmt.Sprint(Finish(30, 31)))
+	assert.Equal(t, "rel.Finish(\"def\")", fmt.Sprint(Finish("def")))
 }

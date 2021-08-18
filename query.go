@@ -1,5 +1,10 @@
 package rel
 
+import (
+	"strconv"
+	"strings"
+)
+
 // Querier interface defines contract to be used for query builder.
 type Querier interface {
 	Build(*Query)
@@ -97,7 +102,7 @@ func (q Query) Build(query *Query) {
 			query.GroupQuery = q.GroupQuery
 		}
 
-		query.SortQuery = append(query.SortQuery, q.SortQuery...)
+		q.SortQuery = append(q.SortQuery, query.SortQuery...)
 
 		if q.OffsetQuery != 0 {
 			query.OffsetQuery = q.OffsetQuery
@@ -285,6 +290,114 @@ func (q Query) Cascade(c bool) Query {
 func (q Query) Preload(field string) Query {
 	q.PreloadQuery = append(q.PreloadQuery, field)
 	return q
+}
+
+// String describe query as string.
+func (q Query) String() string {
+	// if q.empty {
+	// 	return ""
+	// }
+
+	if q.SQLQuery.Statement != "" {
+		return q.SQLQuery.String()
+	}
+
+	var builder strings.Builder
+	builder.WriteString("rel")
+
+	if q.Table != "" {
+		builder.WriteString(".From(\"")
+		builder.WriteString(q.Table)
+		builder.WriteString("\")")
+	}
+
+	if len(q.SelectQuery.Fields) != 0 {
+		builder.WriteString(".Select(\"")
+		builder.WriteString(strings.Join(q.SelectQuery.Fields, "\", \""))
+		builder.WriteString("\")")
+	}
+
+	if q.SelectQuery.OnlyDistinct {
+		builder.WriteString(".Distinct()")
+	}
+
+	for _, jq := range q.JoinQuery {
+		builder.WriteString(".JoinWith(\"")
+		builder.WriteString(jq.Mode)
+		builder.WriteString("\", \"")
+		builder.WriteString(jq.Table)
+		builder.WriteString("\", \"")
+		builder.WriteString(jq.From)
+		builder.WriteString("\", \"")
+		builder.WriteString(jq.To)
+		builder.WriteString("\")")
+	}
+
+	if !q.WhereQuery.None() {
+		builder.WriteString(".Where(")
+		builder.WriteString(q.WhereQuery.String())
+		builder.WriteByte(')')
+	}
+
+	if len(q.GroupQuery.Fields) != 0 {
+		builder.WriteString(".Group(\"")
+		builder.WriteString(strings.Join(q.GroupQuery.Fields, "\", \""))
+		builder.WriteString("\")")
+
+		if !q.GroupQuery.Filter.None() {
+			builder.WriteString(".Having(")
+			builder.WriteString(q.GroupQuery.Filter.String())
+			builder.WriteByte(')')
+		}
+	}
+
+	for _, sq := range q.SortQuery {
+		if sq.Asc() {
+			builder.WriteString(".SortAsc(\"")
+		} else {
+			builder.WriteString(".SortDesc(\"")
+		}
+		builder.WriteString(sq.Field)
+		builder.WriteString("\")")
+	}
+
+	if q.LimitQuery > 0 {
+		builder.WriteString(".Limit(")
+		builder.WriteString(strconv.Itoa(int(q.LimitQuery)))
+		builder.WriteString(")")
+	}
+
+	if q.OffsetQuery > 0 {
+		builder.WriteString(".Offset(")
+		builder.WriteString(strconv.Itoa(int(q.OffsetQuery)))
+		builder.WriteString(")")
+	}
+
+	if q.LockQuery != "" {
+		builder.WriteString(".Lock(\"")
+		builder.WriteString(string(q.LockQuery))
+		builder.WriteString("\")")
+	}
+
+	if q.UnscopedQuery {
+		builder.WriteString(".Unscoped()")
+	}
+
+	if q.ReloadQuery {
+		builder.WriteString(".Reload()")
+	}
+
+	if !q.CascadeQuery {
+		builder.WriteString(".Cascade(false)")
+	}
+
+	if len(q.PreloadQuery) != 0 {
+		builder.WriteString(".Preload(\"")
+		builder.WriteString(strings.Join(q.PreloadQuery, "\", \""))
+		builder.WriteString("\")")
+	}
+
+	return builder.String()
 }
 
 func newQuery() Query {

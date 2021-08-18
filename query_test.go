@@ -18,8 +18,11 @@ func TestQuerier(t *testing.T) {
 		query    rel.Query
 	}{
 		{
-			name: "where id=1",
+			name: "rel.Where(where.Eq(\"id\", 1))",
 			queriers: [][]rel.Querier{
+				{
+					rel.Where(where.Eq("id", 1)),
+				},
 				{
 					where.Eq("id", 1),
 				},
@@ -33,8 +36,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where id=1 and age<10",
+			name: "rel.Where(where.And(where.Eq(\"id\", 1), where.Lt(\"age\", 10)))",
 			queriers: [][]rel.Querier{
+				{
+					rel.Where(where.And(where.Eq("id", 1), where.Lt("age", 10))),
+				},
 				{
 					where.Eq("id", 1).AndLt("age", 10),
 				},
@@ -54,7 +60,7 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where age>10 limit 10 offset 10 order by name asc, age desc",
+			name: "rel.Where(where.Gt(\"age\", 10)).SortAsc(\"name\").SortDesc(\"age\").Limit(10).Offset(10)",
 			queriers: [][]rel.Querier{
 				{
 					rel.Where(where.Gt("age", 10)).Limit(10).Offset(10).Sort("name").SortDesc("age"),
@@ -78,8 +84,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "select sum(amount), name from transactions join users group by name offset 10 limit 5",
+			name: "rel.From(\"transactions\").Select(\"sum(amount)\", \"name\").JoinWith(\"JOIN\", \"users\", \"\", \"\").Group(\"name\").Having(where.Gt(\"amount\", 10)).Limit(5).Offset(10)",
 			queriers: [][]rel.Querier{
+				{
+					rel.From("transactions").Select("sum(amount)", "name").JoinWith("JOIN", "users", "", "").Group("name").Having(where.Gt("amount", 10)).Limit(5).Offset(10),
+				},
 				{
 					rel.From("transactions").Select("sum(amount)", "name").Join("users").Group("name").Having(where.Gt("amount", 10)).Offset(10).Limit(5),
 				},
@@ -111,8 +120,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where id=1 unscoped",
+			name: "rel.Where(where.Eq(\"id\", 1)).Unscoped()",
 			queriers: [][]rel.Querier{
+				{
+					rel.Where(where.Eq("id", 1)).Unscoped(),
+				},
 				{
 					where.Eq("id", 1), rel.Unscoped(true),
 				},
@@ -124,8 +136,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where id=1 preload",
+			name: "rel.Where(where.Eq(\"id\", 1)).Preload(\"users\")",
 			queriers: [][]rel.Querier{
+				{
+					rel.Where(where.Eq("id", 1)).Preload("users"),
+				},
 				{
 					where.Eq("id", 1), rel.Preload("users"), rel.Cascade(true),
 				},
@@ -137,8 +152,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where id=1 for update",
+			name: "rel.Where(where.Eq(\"id\", 1)).Lock(\"FOR UPDATE\")",
 			queriers: [][]rel.Querier{
+				{
+					rel.Where(where.Eq("id", 1)).Lock("FOR UPDATE"),
+				},
 				{
 					where.Eq("id", 1), rel.ForUpdate(),
 				},
@@ -150,8 +168,11 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "where id=1, from user group age for update",
+			name: "rel.Select(\"status\", \"count(id)\").Where(where.And(where.Nil(\"deleted_at\"), where.Ne(\"status\", \"paid\"))).Group(\"status\").Lock(\"FOR UPDATE\")",
 			queriers: [][]rel.Querier{
+				{
+					rel.Select("status", "count(id)").Where(where.And(where.Nil("deleted_at"), where.Ne("status", "paid"))).Group("status").Lock("FOR UPDATE"),
+				},
 				{
 					where.Nil("deleted_at"),
 					rel.Select("status", "count(id)").Group("status").Where(where.Ne("status", "paid")).Lock("FOR UPDATE"),
@@ -166,14 +187,49 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
-			name: "sql query",
+			name: "rel.Distinct().Where(where.And(where.Gt(\"rating\", 4), where.Lt(\"price\", 1000))).Cascade(false)",
+			queriers: [][]rel.Querier{
+				{
+					rel.Select().Distinct().Where(where.Gt("rating", 4).AndLt("price", 1000)).Cascade(false),
+				},
+				{
+					rel.Select().Distinct(),
+					where.Gt("rating", 4),
+					where.Lt("price", 1000),
+					rel.Cascade(false),
+				},
+			},
+			query: rel.Query{
+				SelectQuery: rel.SelectQuery{OnlyDistinct: true},
+				WhereQuery:  where.Gt("rating", 4).AndLt("price", 1000),
+			},
+		},
+		{
+			name: "rel.SQL(\"SELECT 1;\")",
 			queriers: [][]rel.Querier{
 				{
 					rel.SQL("SELECT 1;"),
 				},
 			},
 			query: rel.Query{
-				SQLQuery:     rel.SQL("SELECT 1;"),
+				SQLQuery: rel.SQLQuery{
+					Statement: "SELECT 1;",
+				},
+				CascadeQuery: true,
+			},
+		},
+		{
+			name: "rel.SQL(\"SELECT ?;\", 1)",
+			queriers: [][]rel.Querier{
+				{
+					rel.SQL("SELECT ?;", 1),
+				},
+			},
+			query: rel.Query{
+				SQLQuery: rel.SQLQuery{
+					Statement: "SELECT ?;",
+					Values:    []interface{}{1},
+				},
 				CascadeQuery: true,
 			},
 		},
@@ -182,7 +238,9 @@ func TestQuerier(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, b := range test.queriers {
-				assert.Equal(t, test.query, rel.Build("", b...))
+				query := rel.Build("", b...)
+				assert.Equal(t, test.query, query)
+				assert.Equal(t, test.name, query.String())
 			}
 		})
 	}

@@ -871,7 +871,7 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 			continue
 		}
 
-		if col, loaded := assoc.Collection(); loaded && col.Len() != 0 {
+		if col, loaded := assoc.Collection(); loaded {
 			var (
 				table  = col.Table()
 				fField = assoc.ForeignField()

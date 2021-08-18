@@ -72,226 +72,228 @@ func BenchmarkFilterQuery_slice4(b *testing.B) {
 	result = query
 }
 
-var filter1 = Eq("id", 1)
-var filter2 = Ne("name", "foo")
-var filter3 = Gt("score", 80)
-var filter4 = Lt("avg", 10)
-
 func TestFilterQuery_None(t *testing.T) {
 	assert.True(t, FilterQuery{}.None())
 	assert.True(t, And().None())
 	assert.True(t, Not().None())
 
-	assert.False(t, And(filter1).None())
-	assert.False(t, And(filter1, filter2).None())
-	assert.False(t, filter1.None())
+	assert.False(t, And(Eq("id", 1)).None())
+	assert.False(t, And(Eq("id", 1), Ne("name", "foo")).None())
+	assert.False(t, Eq("id", 1).None())
 }
 
 func TestFilterQuery_And(t *testing.T) {
 	tests := []struct {
-		Case      string
-		Operation FilterQuery
-		Result    FilterQuery
+		name   string
+		filter FilterQuery
+		result FilterQuery
 	}{
 		{
-			`FilterQuery{}.And()`,
-			FilterQuery{}.And(),
-			And(),
+			name:   "",
+			filter: FilterQuery{}.And(),
+			result: And(),
 		},
 		{
-			`FilterQuery{}.And(filter1)`,
-			FilterQuery{}.And(filter1),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: FilterQuery{}.And(Eq("id", 1)),
+			result: Eq("id", 1),
 		},
 		{
-			`FilterQuery{}.And(filter1).And()`,
-			FilterQuery{}.And(filter1).And(),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: FilterQuery{}.And(Eq("id", 1)).And(),
+			result: Eq("id", 1),
 		},
 		{
-			`FilterQuery{}.And(filter1, filter2)`,
-			FilterQuery{}.And(filter1, filter2),
-			And(filter1, filter2),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: FilterQuery{}.And(Eq("id", 1), Ne("name", "foo")),
+			result: And(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`FilterQuery{}.And(filter1, filter2).And()`,
-			FilterQuery{}.And(filter1, filter2).And(),
-			And(filter1, filter2),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: FilterQuery{}.And(Eq("id", 1), Ne("name", "foo")).And(),
+			result: And(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`FilterQuery{}.And(filter1, filter2, filter3)`,
-			FilterQuery{}.And(filter1, filter2, filter3),
-			And(filter1, filter2, filter3),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: FilterQuery{}.And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
+			result: And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`FilterQuery{}.And(filter1, filter2, filter3).And()`,
-			FilterQuery{}.And(filter1, filter2, filter3).And(),
-			And(filter1, filter2, filter3),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: FilterQuery{}.And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)).And(),
+			result: And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`filter1.And(filter2)`,
-			filter1.And(filter2),
-			And(filter1, filter2),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: Eq("id", 1).And(Ne("name", "foo")),
+			result: And(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`filter1.And(filter2).And()`,
-			filter1.And(filter2).And(),
-			And(filter1, filter2),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: Eq("id", 1).And(Ne("name", "foo")).And(),
+			result: And(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`filter1.And(filter2).And(filter3)`,
-			filter1.And(filter2).And(filter3),
-			And(filter1, filter2, filter3),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: Eq("id", 1).And(Ne("name", "foo")).And(Gt("score", 80)),
+			result: And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`filter1.And(filter2).And(filter3).And()`,
-			filter1.And(filter2).And(filter3).And(),
-			And(filter1, filter2, filter3),
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: Eq("id", 1).And(Ne("name", "foo")).And(Gt("score", 80)).And(),
+			result: And(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
+		},
+		{
+			name:   "where.And(where.Eq(\"id\", 1), where.Fragment(\"name = ?\", \"name\"))",
+			filter: Eq("id", 1).AndFragment("name = ?", "name"),
+			result: And(Eq("id", 1), FilterFragment("name = ?", "name")),
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.result, tt.filter)
+			assert.Equal(t, tt.name, tt.filter.String())
 		})
 	}
 }
 
 func TestFilterQuery_Or(t *testing.T) {
 	tests := []struct {
-		Case      string
-		Operation FilterQuery
-		Result    FilterQuery
+		name   string
+		filter FilterQuery
+		result FilterQuery
 	}{
 		{
-			`FilterQuery{}.Or()`,
-			FilterQuery{}.Or(),
-			Or(),
+			name:   "",
+			filter: FilterQuery{}.Or(),
+			result: Or(),
 		},
 		{
-			`FilterQuery{}.Or(filter1)`,
-			FilterQuery{}.Or(filter1),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: FilterQuery{}.Or(Eq("id", 1)),
+			result: Eq("id", 1),
 		},
 		{
-			`FilterQuery{}.Or(filter1).Or()`,
-			FilterQuery{}.Or(filter1).Or(),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: FilterQuery{}.Or(Eq("id", 1)).Or(),
+			result: Eq("id", 1),
 		},
 		{
-			`FilterQuery{}.Or(filter1, filter2)`,
-			FilterQuery{}.Or(filter1, filter2),
-			Or(filter1, filter2),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: FilterQuery{}.Or(Eq("id", 1), Ne("name", "foo")),
+			result: Or(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`FilterQuery{}.Or(filter1, filter2).Or()`,
-			FilterQuery{}.Or(filter1, filter2).Or(),
-			Or(filter1, filter2),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: FilterQuery{}.Or(Eq("id", 1), Ne("name", "foo")).Or(),
+			result: Or(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`FilterQuery{}.Or(filter1, filter2, filter3)`,
-			FilterQuery{}.Or(filter1, filter2, filter3),
-			Or(filter1, filter2, filter3),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: FilterQuery{}.Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
+			result: Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`FilterQuery{}.Or(filter1, filter2, filter3).Or()`,
-			FilterQuery{}.Or(filter1, filter2, filter3).Or(),
-			Or(filter1, filter2, filter3),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: FilterQuery{}.Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)).Or(),
+			result: Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`filter1.Or(filter2)`,
-			filter1.Or(filter2),
-			Or(filter1, filter2),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: Eq("id", 1).Or(Ne("name", "foo")),
+			result: Or(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`filter1.Or(filter2).Or()`,
-			filter1.Or(filter2).Or(),
-			Or(filter1, filter2),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: Eq("id", 1).Or(Ne("name", "foo")).Or(),
+			result: Or(Eq("id", 1), Ne("name", "foo")),
 		},
 		{
-			`filter1.Or(filter2).Or(filter3)`,
-			filter1.Or(filter2).Or(filter3),
-			Or(filter1, filter2, filter3),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: Eq("id", 1).Or(Ne("name", "foo")).Or(Gt("score", 80)),
+			result: Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 		{
-			`filter1.Or(filter2).Or(filter3).Or()`,
-			filter1.Or(filter2).Or(filter3).Or(),
-			Or(filter1, filter2, filter3),
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80))",
+			filter: Eq("id", 1).Or(Ne("name", "foo")).Or(Gt("score", 80)).Or(),
+			result: Or(Eq("id", 1), Ne("name", "foo"), Gt("score", 80)),
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.result, tt.filter)
+			assert.Equal(t, tt.name, tt.filter.String())
 		})
 	}
 }
 
 func TestAnd(t *testing.T) {
 	tests := []struct {
-		Case      string
-		Operation FilterQuery
-		Result    FilterQuery
+		name   string
+		filter FilterQuery
+		result FilterQuery
 	}{
 		{
-			`And()`,
-			And(),
-			FilterQuery{Type: FilterAndOp},
+			name:   "",
+			filter: And(),
+			result: FilterQuery{Type: FilterAndOp},
 		},
 		{
-			`And(filter1)`,
-			And(filter1),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: And(Eq("id", 1)),
+			result: Eq("id", 1),
 		},
 		{
-			`And(filter1, filter2)`,
-			And(filter1, filter2),
-			FilterQuery{
+			name:   "where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: And(Eq("id", 1), Ne("name", "foo")),
+			result: FilterQuery{
 				Type:  FilterAndOp,
-				Inner: []FilterQuery{filter1, filter2},
+				Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 			},
 		},
 		{
-			`And(filter1, Or(filter2, filter3))`,
-			And(filter1, Or(filter2, filter3)),
-			FilterQuery{
+			name:   "where.And(where.Eq(\"id\", 1), where.Or(where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80)))",
+			filter: And(Eq("id", 1), Or(Ne("name", "foo"), Gt("score", 80))),
+			result: FilterQuery{
 				Type: FilterAndOp,
 				Inner: []FilterQuery{
-					filter1,
+					Eq("id", 1),
 					{
 						Type:  FilterOrOp,
-						Inner: []FilterQuery{filter2, filter3},
+						Inner: []FilterQuery{Ne("name", "foo"), Gt("score", 80)},
 					},
 				},
 			},
 		},
 		{
-			`And(Or(filter1, filter2), filter3)`,
-			And(Or(filter1, filter2), filter3),
-			FilterQuery{
+			name:   "where.And(where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\")), where.Gt(\"score\", 80))",
+			filter: And(Or(Eq("id", 1), Ne("name", "foo")), Gt("score", 80)),
+			result: FilterQuery{
 				Type: FilterAndOp,
 				Inner: []FilterQuery{
 					{
 						Type:  FilterOrOp,
-						Inner: []FilterQuery{filter1, filter2},
+						Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 					},
-					filter3,
+					Gt("score", 80),
 				},
 			},
 		},
 		{
-			`And(Or(filter1, filter2), Or(filter3, filter4))`,
-			And(Or(filter1, filter2), Or(filter3, filter4)),
-			FilterQuery{
+			name:   "where.And(where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\")), where.Or(where.Gt(\"score\", 80), where.Lt(\"avg\", 10)))",
+			filter: And(Or(Eq("id", 1), Ne("name", "foo")), Or(Gt("score", 80), Lt("avg", 10))),
+			result: FilterQuery{
 				Type: FilterAndOp,
 				Inner: []FilterQuery{
 					{
 						Type:  FilterOrOp,
-						Inner: []FilterQuery{filter1, filter2},
+						Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 					},
 					{
 						Type:  FilterOrOp,
-						Inner: []FilterQuery{filter3, filter4},
+						Inner: []FilterQuery{Gt("score", 80), Lt("avg", 10)},
 					},
 				},
 			},
@@ -299,77 +301,78 @@ func TestAnd(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.result, tt.filter)
+			assert.Equal(t, tt.name, tt.filter.String())
 		})
 	}
 }
 
 func TestOr(t *testing.T) {
 	tests := []struct {
-		Case      string
-		Operation FilterQuery
-		Result    FilterQuery
+		name   string
+		filter FilterQuery
+		result FilterQuery
 	}{
 		{
-			`Or()`,
-			Or(),
-			FilterQuery{Type: FilterOrOp},
+			name:   "",
+			filter: Or(),
+			result: FilterQuery{Type: FilterOrOp},
 		},
 		{
-			`Or(filter1)`,
-			Or(filter1),
-			filter1,
+			name:   "where.Eq(\"id\", 1)",
+			filter: Or(Eq("id", 1)),
+			result: Eq("id", 1),
 		},
 		{
-			`Or(filter1, filter2)`,
-			Or(filter1, filter2),
-			FilterQuery{
+			name:   "where.Or(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\"))",
+			filter: Or(Eq("id", 1), Ne("name", "foo")),
+			result: FilterQuery{
 				Type:  FilterOrOp,
-				Inner: []FilterQuery{filter1, filter2},
+				Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 			},
 		},
 		{
-			`Or(filter1, And(filter2, filter3))`,
-			Or(filter1, And(filter2, filter3)),
-			FilterQuery{
+			name:   "where.Or(where.Eq(\"id\", 1), where.And(where.Ne(\"name\", \"foo\"), where.Gt(\"score\", 80)))",
+			filter: Or(Eq("id", 1), And(Ne("name", "foo"), Gt("score", 80))),
+			result: FilterQuery{
 				Type: FilterOrOp,
 				Inner: []FilterQuery{
-					filter1,
+					Eq("id", 1),
 					{
 						Type:  FilterAndOp,
-						Inner: []FilterQuery{filter2, filter3},
+						Inner: []FilterQuery{Ne("name", "foo"), Gt("score", 80)},
 					},
 				},
 			},
 		},
 		{
-			`Or(And(filter1, filter2), filter3)`,
-			Or(And(filter1, filter2), filter3),
-			FilterQuery{
+			name:   "where.Or(where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\")), where.Gt(\"score\", 80))",
+			filter: Or(And(Eq("id", 1), Ne("name", "foo")), Gt("score", 80)),
+			result: FilterQuery{
 				Type: FilterOrOp,
 				Inner: []FilterQuery{
 					{
 						Type:  FilterAndOp,
-						Inner: []FilterQuery{filter1, filter2},
+						Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 					},
-					filter3,
+					Gt("score", 80),
 				},
 			},
 		},
 		{
-			`Or(And(filter1, filter2), And(filter3, filter4))`,
-			Or(And(filter1, filter2), And(filter3, filter4)),
-			FilterQuery{
+			name:   "where.Or(where.And(where.Eq(\"id\", 1), where.Ne(\"name\", \"foo\")), where.And(where.Gt(\"score\", 80), where.Lt(\"avg\", 10)))",
+			filter: Or(And(Eq("id", 1), Ne("name", "foo")), And(Gt("score", 80), Lt("avg", 10))),
+			result: FilterQuery{
 				Type: FilterOrOp,
 				Inner: []FilterQuery{
 					{
 						Type:  FilterAndOp,
-						Inner: []FilterQuery{filter1, filter2},
+						Inner: []FilterQuery{Eq("id", 1), Ne("name", "foo")},
 					},
 					{
 						Type:  FilterAndOp,
-						Inner: []FilterQuery{filter3, filter4},
+						Inner: []FilterQuery{Gt("score", 80), Lt("avg", 10)},
 					},
 				},
 			},
@@ -377,8 +380,9 @@ func TestOr(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Case, func(t *testing.T) {
-			assert.Equal(t, tt.Result, tt.Operation)
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.result, tt.filter)
+			assert.Equal(t, tt.name, tt.filter.String())
 		})
 	}
 }

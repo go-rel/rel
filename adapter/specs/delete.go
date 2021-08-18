@@ -84,26 +84,47 @@ func DeleteHasOne(t *testing.T, repo rel.Repository) {
 
 // DeleteHasMany tests delete specifications.
 func DeleteHasMany(t *testing.T, repo rel.Repository) {
-	var (
-		user = User{
-			Name: "user",
-			Age:  100,
-			Addresses: []Address{
-				{Name: "address 1"},
-				{Name: "address 2"},
+	tests := []struct {
+		name string
+		user User
+	}{
+		{
+			name: "with empty has many",
+			user: User{
+				Name:      "user",
+				Age:       100,
+				Addresses: []Address{},
 			},
-		}
-	)
+		},
+		{
+			name: "with non-empty has many",
+			user: User{
+				Name: "user",
+				Age:  100,
+				Addresses: []Address{
+					{Name: "address 1"},
+					{Name: "address 2"},
+				},
+			},
+		},
+	}
 
-	repo.MustInsert(ctx, &user)
-	assert.NotEqual(t, 0, user.ID)
-	assert.NotEqual(t, 0, user.Addresses[0].ID)
-	assert.NotEqual(t, 0, user.Addresses[1].ID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.MustInsert(ctx, &tt.user)
+			assert.NotEqual(t, 0, tt.user.ID)
+			for _, addr := range tt.user.Addresses {
+				assert.NotEqual(t, 0, addr.ID)
+			}
 
-	assert.Nil(t, repo.Delete(ctx, &user, rel.Cascade(true)))
-	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", user.ID)))
-	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", user.Addresses[0].ID)))
-	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", user.Addresses[1].ID)))
+			assert.Nil(t, repo.Delete(ctx, &tt.user, rel.Cascade(true)))
+			assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", tt.user.ID)))
+
+			for _, addr := range tt.user.Addresses {
+				assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", addr.ID)))
+			}
+		})
+	}
 }
 
 // DeleteAny tests delete all specifications.

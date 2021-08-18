@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -125,4 +126,14 @@ func TestApplyMutation_Cascade(t *testing.T) {
 
 	assert.Equal(t, mutation, Apply(doc, mutators...))
 	assert.Equal(t, "string", record.Field1)
+}
+
+func TestMutator_String(t *testing.T) {
+	assert.Equal(t, "rel.Set(\"field\", 1)", fmt.Sprint(Set("field", 1)))
+	assert.Equal(t, "rel.Set(\"field\", true)", fmt.Sprint(Set("field", true)))
+	assert.Equal(t, "rel.Set(\"field\", \"value\")", fmt.Sprint(Set("field", "value")))
+	assert.Equal(t, "rel.IncBy(\"count\", -1)", fmt.Sprint(Dec("count")))
+	assert.Equal(t, "rel.IncBy(\"count\", 1)", fmt.Sprint(Inc("count")))
+	assert.Equal(t, "rel.SetFragment(\"field = (?, ?, ?)\", 1, true, \"value\")", fmt.Sprint(SetFragment("field = (?, ?, ?)", 1, true, "value")))
+	assert.Equal(t, "rel.Cascade(true)", fmt.Sprint(Cascade(true)))
 }

@@ -164,11 +164,11 @@ func (m Mutate) String() string {
 	str := "≤Invalid Mutator>"
 	switch m.Type {
 	case ChangeSetOp:
-		str = fmt.Sprintf("rel.Set(\"%s\", %v)", m.Field, m.Value)
+		str = fmt.Sprintf("rel.Set(\"%s\", %s)", m.Field, fmtiface(m.Value))
 	case ChangeIncOp:
-		str = fmt.Sprintf("rel.IncBy(\"%s\", %v)", m.Field, m.Value)
+		str = fmt.Sprintf("rel.IncBy(\"%s\", %s)", m.Field, fmtiface(m.Value))
 	case ChangeFragmentOp:
-		str = fmt.Sprintf("rel.SetFragment(\"%s\", %v)", m.Field, m.Value)
+		str = fmt.Sprintf("rel.SetFragment(\"%s\", %s)", m.Field, fmtifaces(m.Value.([]interface{})))
 	}
 
 	return str

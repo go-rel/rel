@@ -9,42 +9,24 @@ import (
 type FilterOp int
 
 func (fo FilterOp) String() string {
-	var str string
-	switch fo {
-	case FilterAndOp:
-		str = "And"
-	case FilterOrOp:
-		str = "Or"
-	case FilterNotOp:
-		str = "Not"
-	case FilterEqOp:
-		str = "Eq"
-	case FilterNeOp:
-		str = "Ne"
-	case FilterLtOp:
-		str = "Lt"
-	case FilterLteOp:
-		str = "Lte"
-	case FilterGtOp:
-		str = "Gt"
-	case FilterGteOp:
-		str = "Gte"
-	case FilterNilOp:
-		str = "Nil"
-	case FilterNotNilOp:
-		str = "NotNil"
-	case FilterInOp:
-		str = "InOp"
-	case FilterNinOp:
-		str = "Nin"
-	case FilterLikeOp:
-		str = "Like"
-	case FilterNotLikeOp:
-		str = "NotLike"
-	case FilterFragmentOp:
-		str = "Fragment"
-	}
-	return str
+	return [...]string{
+		"And",
+		"Or",
+		"Not",
+		"Eq",
+		"Ne",
+		"Lt",
+		"Lte",
+		"Gt",
+		"Gte",
+		"Nil",
+		"NotNil",
+		"In",
+		"Nin",
+		"Like",
+		"NotLike",
+		"Fragment",
+	}[fo]
 }
 
 const (

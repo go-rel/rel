@@ -187,6 +187,24 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
+			name: "rel.Distinct().Where(where.And(where.Gt(\"rating\", 4), where.Lt(\"price\", 1000))).Cascade(false)",
+			queriers: [][]rel.Querier{
+				{
+					rel.Select().Distinct().Where(where.Gt("rating", 4).AndLt("price", 1000)).Cascade(false),
+				},
+				{
+					rel.Select().Distinct(),
+					where.Gt("rating", 4),
+					where.Lt("price", 1000),
+					rel.Cascade(false),
+				},
+			},
+			query: rel.Query{
+				SelectQuery: rel.SelectQuery{OnlyDistinct: true},
+				WhereQuery:  where.Gt("rating", 4).AndLt("price", 1000),
+			},
+		},
+		{
 			name: "rel.SQL(\"SELECT 1;\")",
 			queriers: [][]rel.Querier{
 				{

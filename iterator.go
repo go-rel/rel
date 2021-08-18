@@ -41,7 +41,7 @@ func (s start) apply(i *iterator) {
 
 // String representation.
 func (s start) String() string {
-	return fmt.Sprintf("rel.Start(%#v)", s)
+	return fmt.Sprintf("rel.Start(%s)", fmtifaces(s))
 }
 
 // Start specifies the primary value to start from (inclusive).
@@ -57,7 +57,7 @@ func (f finish) apply(i *iterator) {
 
 // String representation.
 func (f finish) String() string {
-	return fmt.Sprintf("rel.Finish(%#v)", f)
+	return fmt.Sprintf("rel.Finish(%s)", fmtifaces(f))
 }
 
 // Finish specifies the primary value to finish at (inclusive).

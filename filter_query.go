@@ -2,10 +2,32 @@ package rel
 
 import (
 	"errors"
+	"strings"
 )
 
 // FilterOp defines enumeration of all supported filter types.
 type FilterOp int
+
+func (fo FilterOp) String() string {
+	return [...]string{
+		"And",
+		"Or",
+		"Not",
+		"Eq",
+		"Ne",
+		"Lt",
+		"Lte",
+		"Gt",
+		"Gte",
+		"Nil",
+		"NotNil",
+		"In",
+		"Nin",
+		"Like",
+		"NotLike",
+		"Fragment",
+	}[fo]
+}
 
 const (
 	// FilterAndOp is filter type for and operator.
@@ -67,6 +89,56 @@ func (fq FilterQuery) None() bool {
 		fq.Type == FilterOrOp ||
 		fq.Type == FilterNotOp) &&
 		len(fq.Inner) == 0
+}
+
+func (fq FilterQuery) String() string {
+	if fq.None() {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.WriteString("where.")
+	builder.WriteString(fq.Type.String())
+	builder.WriteByte('(')
+
+	switch fq.Type {
+	case FilterAndOp, FilterOrOp, FilterNotOp:
+		for i := range fq.Inner {
+			if i > 0 {
+				builder.WriteString(", ")
+			}
+
+			builder.WriteString(fq.Inner[i].String())
+		}
+	case FilterEqOp, FilterNeOp, FilterLtOp, FilterLteOp, FilterGtOp, FilterGteOp:
+		builder.WriteByte('"')
+		builder.WriteString(fq.Field)
+		builder.WriteString("\", ")
+		builder.WriteString(fmtiface(fq.Value))
+	case FilterNilOp, FilterNotNilOp, FilterLikeOp, FilterNotLikeOp:
+		builder.WriteByte('"')
+		builder.WriteString(fq.Field)
+		builder.WriteByte('"')
+	case FilterInOp, FilterNinOp:
+		builder.WriteByte('"')
+		builder.WriteString(fq.Field)
+		builder.WriteString("\", ")
+		builder.WriteString(fmtifaces(fq.Value.([]interface{})))
+	case FilterFragmentOp:
+		v := fq.Value.([]interface{})
+		builder.WriteByte('"')
+		builder.WriteString(fq.Field)
+		builder.WriteByte('"')
+
+		if len(v) > 0 {
+			builder.WriteString(", ")
+			builder.WriteString(fmtifaces(v))
+		}
+	}
+
+	builder.WriteByte(')')
+
+	return builder.String()
 }
 
 // And wraps filters using and.

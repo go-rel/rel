@@ -2,6 +2,7 @@ package rel
 
 import (
 	"context"
+	"fmt"
 	"io"
 )
 
@@ -22,6 +23,11 @@ func (bs batchSize) apply(i *iterator) {
 	i.batchSize = int(bs)
 }
 
+// String representation.
+func (bs batchSize) String() string {
+	return fmt.Sprintf("rel.BatchSize(%d)", bs)
+}
+
 // BatchSize specifies the size of iterator batch. Defaults to 1000.
 func BatchSize(size int) IteratorOption {
 	return batchSize(size)
@@ -33,6 +39,11 @@ func (s start) apply(i *iterator) {
 	i.start = s
 }
 
+// String representation.
+func (s start) String() string {
+	return fmt.Sprintf("rel.Start(%s)", fmtifaces(s))
+}
+
 // Start specifies the primary value to start from (inclusive).
 func Start(id ...interface{}) IteratorOption {
 	return start(id)
@@ -42,6 +53,11 @@ type finish []interface{}
 
 func (f finish) apply(i *iterator) {
 	i.finish = f
+}
+
+// String representation.
+func (f finish) String() string {
+	return fmt.Sprintf("rel.Finish(%s)", fmtifaces(f))
 }
 
 // Finish specifies the primary value to finish at (inclusive).

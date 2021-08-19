@@ -159,6 +159,21 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 	mutation.Add(m)
 }
 
+// String representation
+func (m Mutate) String() string {
+	str := "≤Invalid Mutator>"
+	switch m.Type {
+	case ChangeSetOp:
+		str = fmt.Sprintf("rel.Set(\"%s\", %s)", m.Field, fmtiface(m.Value))
+	case ChangeIncOp:
+		str = fmt.Sprintf("rel.IncBy(\"%s\", %s)", m.Field, fmtiface(m.Value))
+	case ChangeFragmentOp:
+		str = fmt.Sprintf("rel.SetFragment(\"%s\", %s)", m.Field, fmtifaces(m.Value.([]interface{})))
+	}
+
+	return str
+}
+
 // Set create a mutate using set operation.
 func Set(field string, value interface{}) Mutate {
 	return Mutate{
@@ -196,7 +211,7 @@ func DecBy(field string, n int) Mutate {
 	}
 }
 
-// SetFragment create a mutate operation using randoc fragment operation.
+// SetFragment create a mutate operation using fragment operation.
 // Only available for Update.
 func SetFragment(raw string, args ...interface{}) Mutate {
 	return Mutate{
@@ -235,6 +250,10 @@ func (c Cascade) Build(query *Query) {
 // Apply mutation.
 func (c Cascade) Apply(doc *Document, mutation *Mutation) {
 	mutation.Cascade = c
+}
+
+func (c Cascade) String() string {
+	return fmt.Sprintf("rel.Cascade(%t)", c)
 }
 
 // ErrorFunc allows conversion REL's error to Application custom errors.

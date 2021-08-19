@@ -1,8 +1,10 @@
 package rel
 
 import (
+	"fmt"
 	"math"
 	"reflect"
+	"strings"
 )
 
 func indirect(rv reflect.Value) interface{} {
@@ -116,4 +118,24 @@ func isDeepZero(rv reflect.Value, depth int) bool {
 	default:
 		return true
 	}
+}
+
+func fmtiface(v interface{}) string {
+	if str, ok := v.(string); ok {
+		return "\"" + str + "\""
+	}
+
+	return fmt.Sprint(v)
+}
+
+func fmtifaces(v []interface{}) string {
+	var str strings.Builder
+	for i := range v {
+		if i > 0 {
+			str.WriteString(", ")
+		}
+		str.WriteString(fmtiface(v[i]))
+	}
+
+	return str.String()
 }

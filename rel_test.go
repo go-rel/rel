@@ -21,7 +21,7 @@ type User struct {
 	Age          int
 	Transactions []Transaction `ref:"id" fk:"user_id"`
 	Address      Address       `autosave:"true"`
-	WorkAddress  Address
+	WorkAddress  *Address
 	UserRoles    []UserRole `autosave:"true"`
 	Emails       []Email    `autosave:"true"`
 

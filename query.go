@@ -393,7 +393,10 @@ func (q Query) String() string {
 		builder.WriteString("\")")
 	}
 
-	return builder.String()
+	if str := builder.String(); str != "rel" {
+		return str
+	}
+	return ""
 }
 
 func newQuery() Query {

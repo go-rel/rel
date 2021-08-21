@@ -102,7 +102,7 @@ func (q Query) Build(query *Query) {
 			query.GroupQuery = q.GroupQuery
 		}
 
-		q.SortQuery = append(q.SortQuery, query.SortQuery...)
+		query.SortQuery = append(query.SortQuery, q.SortQuery...)
 
 		if q.OffsetQuery != 0 {
 			query.OffsetQuery = q.OffsetQuery
@@ -393,7 +393,10 @@ func (q Query) String() string {
 		builder.WriteString("\")")
 	}
 
-	return builder.String()
+	if str := builder.String(); str != "rel" {
+		return str
+	}
+	return ""
 }
 
 func newQuery() Query {

@@ -233,6 +233,15 @@ func TestQuerier(t *testing.T) {
 				CascadeQuery: true,
 			},
 		},
+		{
+			name: "",
+			queriers: [][]rel.Querier{
+				{
+					rel.Build(""),
+				},
+			},
+			query: rel.Build(""),
+		},
 	}
 
 	for _, test := range tests {

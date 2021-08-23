@@ -2854,6 +2854,51 @@ func TestRepository_Preload_hasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Preload_ptrHasOne(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{ID: 10}
+		address = Address{ID: 100, UserID: &user.ID}
+		cur     = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(address.ID, *address.UserID).Times(2)
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &user, "work_address"))
+	assert.Equal(t, &address, user.WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrHasOne_notFound_null(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{ID: 10}
+		cur     = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &user, "work_address"))
+	assert.Nil(t, user.WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Preload_sliceHasOne(t *testing.T) {
 	var (
 		adapter   = &testAdapter{}
@@ -2885,6 +2930,60 @@ func TestRepository_Preload_sliceHasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Preload_ptrSliceHasOne(t *testing.T) {
+	var (
+		adapter   = &testAdapter{}
+		repo      = New(adapter)
+		users     = []User{{ID: 10}, {ID: 20}}
+		addresses = []Address{
+			{ID: 100, UserID: &users[0].ID},
+			{ID: 200, UserID: &users[1].ID},
+		}
+		cur = &testCursor{}
+	)
+
+	// one of these, because of map ordering
+	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(addresses[0].ID, *addresses[0].UserID).Twice()
+	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "work_address"))
+	assert.Equal(t, &addresses[0], users[0].WorkAddress)
+	assert.Equal(t, &addresses[1], users[1].WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrSliceHasOne_notFound_null(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []User{{ID: 10}, {ID: 20}}
+		cur     = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "work_address"))
+	assert.Nil(t, users[0].WorkAddress)
+	assert.Nil(t, users[1].WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Preload_nestedHasOne(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}
@@ -2906,6 +3005,55 @@ func TestRepository_Preload_nestedHasOne(t *testing.T) {
 
 	assert.Nil(t, repo.Preload(context.TODO(), &transaction, "buyer.address"))
 	assert.Equal(t, address, transaction.Buyer.Address)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrNestedHasOne(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{
+			Buyer: User{ID: 10},
+		}
+		address = Address{ID: 100, UserID: &transaction.Buyer.ID}
+		cur     = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(address.ID, *address.UserID).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &transaction, "buyer.work_address"))
+	assert.Equal(t, &address, transaction.Buyer.WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrNestedHasOne_notFound_null(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = Transaction{
+			Buyer: User{ID: 10},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &transaction, "buyer.work_address"))
+	assert.Nil(t, transaction.Buyer.WorkAddress)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -2940,6 +3088,66 @@ func TestRepository_Preload_sliceNestedHasOne(t *testing.T) {
 	assert.Nil(t, repo.Preload(context.TODO(), &transactions, "buyer.address"))
 	assert.Equal(t, addresses[0], transactions[0].Buyer.Address)
 	assert.Equal(t, addresses[1], transactions[1].Buyer.Address)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrSliceNestedHasOne(t *testing.T) {
+	var (
+		adapter      = &testAdapter{}
+		repo         = New(adapter)
+		transactions = []Transaction{
+			{Buyer: User{ID: 10}},
+			{Buyer: User{ID: 20}},
+		}
+		addresses = []Address{
+			{ID: 100, UserID: &transactions[0].Buyer.ID},
+			{ID: 200, UserID: &transactions[1].Buyer.ID},
+		}
+		cur = &testCursor{}
+	)
+
+	// one of these, because of map ordering
+	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(addresses[0].ID, *addresses[0].UserID).Twice()
+	cur.MockScan(addresses[1].ID, *addresses[1].UserID).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &transactions, "buyer.work_address"))
+	assert.Equal(t, &addresses[0], transactions[0].Buyer.WorkAddress)
+	assert.Equal(t, &addresses[1], transactions[1].Buyer.WorkAddress)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrSliceNestedHasOne_notFound_null(t *testing.T) {
+	var (
+		adapter      = &testAdapter{}
+		repo         = New(adapter)
+		transactions = []Transaction{
+			{Buyer: User{ID: 10}},
+			{Buyer: User{ID: 20}},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &transactions, "buyer.work_address"))
+	assert.Nil(t, transactions[0].Buyer.WorkAddress)
+	assert.Nil(t, transactions[1].Buyer.WorkAddress)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
@@ -3183,6 +3391,28 @@ func TestRepository_Preload_nullBelongsTo(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Preload_ptrBelongsTo_notFound_null(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		userID  = 10
+		address = Address{UserID: &userID}
+		cur     = &testCursor{}
+	)
+
+	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &address, "user"))
+	assert.Nil(t, address.User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Preload_sliceBelongsTo(t *testing.T) {
 	var (
 		adapter      = &testAdapter{}
@@ -3244,6 +3474,36 @@ func TestRepository_Preload_ptrSliceBelongsTo(t *testing.T) {
 	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user"))
 	assert.Equal(t, users[0], *addresses[0].User)
 	assert.Equal(t, users[1], *addresses[1].User)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_ptrSliceBelongsTo_notFound_null(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []User{
+			{ID: 10, Name: "Del Piero"},
+			{ID: 20, Name: "Nedved"},
+		}
+		addresses = []Address{
+			{UserID: &users[0].ID},
+			{UserID: &users[1].ID},
+		}
+		cur = &testCursor{}
+	)
+
+	adapter.On("Query", From("users").Where(In("id", 10, 20))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("users").Where(In("id", 20, 10))).Return(cur, nil).Maybe()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name"}, nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user"))
+	assert.Nil(t, addresses[0].User)
+	assert.Nil(t, addresses[1].User)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

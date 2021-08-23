@@ -1041,7 +1041,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 			if assocs.Type() == HasMany {
 				target, targetLoaded = assocs.Collection()
 			} else {
-				target, targetLoaded = assocs.Document()
+				target, targetLoaded = assocs.LazyDocument()
 			}
 
 			target.Reset()

@@ -335,8 +335,14 @@ func (d Document) Association(name string) Association {
 func (d Document) Reset() {
 }
 
-// Add returns this document, this is a noop for compatibility with collection.
+// Add returns this document.
 func (d *Document) Add() *Document {
+	// if d.rv is a null pointer, set it to a new struct.
+	if d.rv.Kind() == reflect.Ptr && d.rv.IsNil() {
+		d.rv.Set(reflect.New(d.rv.Type().Elem()))
+		d.rv = d.rv.Elem()
+	}
+
 	return d
 }
 
@@ -382,7 +388,9 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 			panic("rel: must be a pointer to struct")
 		}
 	} else {
-		rv = rv.Elem()
+		if !rv.IsNil() {
+			rv = rv.Elem()
+		}
 		rt = rt.Elem()
 	}
 

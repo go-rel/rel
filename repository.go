@@ -990,75 +990,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 	scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
 	defer scanFinish(nil)
 
-	err = scanMulti(cur, keyField, keyType, targets)
-	if err != nil {
-		return err
-	}
-
-	return cleanUpAssociationFields(records, field, path)
-}
-
-// cleanUpAssociationFields sets the value of the corresponding "has one" or "belongs to" association field
-// to a zero value if the preload fails (not found).
-func cleanUpAssociationFields(sl slice, field string, path []string) error {
-	type frame struct {
-		index int
-		doc   *Document
-	}
-
-	var (
-		stack = make([]frame, sl.Len())
-	)
-
-	// init stack
-	for i := 0; i < len(stack); i++ {
-		stack[i] = frame{index: 0, doc: sl.Get(i)}
-	}
-
-	for len(stack) > 0 {
-		var (
-			n      = len(stack) - 1
-			top    = stack[n]
-			assocs = top.doc.Association(path[top.index])
-		)
-
-		stack = stack[:n]
-
-		if top.index == len(path)-1 {
-			if assocs.Type() != HasMany {
-				if assocs.IsZero() {
-					top.doc.SetValue(path[len(path)-1], nil)
-				}
-			}
-		} else {
-			if assocs.Type() == HasMany {
-				var (
-					col, loaded = assocs.Collection()
-				)
-
-				if !loaded {
-					continue
-				}
-
-				stack = append(stack, make([]frame, col.Len())...)
-				for i := 0; i < col.Len(); i++ {
-					stack[n+i] = frame{
-						index: top.index + 1,
-						doc:   col.Get(i),
-					}
-				}
-			} else {
-				if doc, loaded := assocs.Document(); loaded {
-					stack = append(stack, frame{
-						index: top.index + 1,
-						doc:   doc,
-					})
-				}
-			}
-		}
-	}
-
-	return nil
+	return scanMulti(cur, keyField, keyType, targets)
 }
 
 func (r repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier) {
@@ -1109,7 +1041,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 			if assocs.Type() == HasMany {
 				target, targetLoaded = assocs.Collection()
 			} else {
-				target, targetLoaded = assocs.Document()
+				target, targetLoaded = assocs.LazyDocument()
 			}
 
 			target.Reset()

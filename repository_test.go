@@ -3252,6 +3252,7 @@ func TestRepository_Preload_nestedNullHasMany(t *testing.T) {
 	)
 
 	assert.Nil(t, repo.Preload(context.TODO(), &address, "user.transactions"))
+	assert.Nil(t, address.User)
 
 	adapter.AssertExpectations(t)
 }
@@ -3323,7 +3324,7 @@ func TestRepository_Preload_nestedNullSliceHasMany(t *testing.T) {
 
 	assert.Nil(t, repo.Preload(context.TODO(), &addresses, "user.transactions"))
 	assert.Equal(t, transactions[:2], addresses[0].User.Transactions)
-	assert.Equal(t, []Transaction(nil), addresses[1].User.Transactions)
+	assert.Nil(t, addresses[1].User)
 	assert.Equal(t, transactions[2:], addresses[2].User.Transactions)
 
 	adapter.AssertExpectations(t)

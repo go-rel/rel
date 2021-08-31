@@ -11,11 +11,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var now NowTimeFunc
+
 func init() {
-	t := now().Truncate(time.Second)
-	now = func() time.Time {
+	t := time.Now().Truncate(time.Second)
+	NowFunc = func() time.Time {
 		return t
 	}
+	now = NowFunc
 }
 
 func createCursor(row int) *testCursor {

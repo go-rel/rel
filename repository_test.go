@@ -1285,29 +1285,6 @@ func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
-func TestRepository_Update_notFound(t *testing.T) {
-	var (
-		user     = User{ID: 1}
-		adapter  = &testAdapter{}
-		repo     = New(adapter)
-		mutators = []Mutator{
-			Set("name", "name"),
-			Set("updated_at", now()),
-		}
-		mutates = map[string]Mutate{
-			"name":       Set("name", "name"),
-			"updated_at": Set("updated_at", now()),
-		}
-		queries = From("users").Where(Eq("id", user.ID))
-	)
-
-	adapter.On("Update", queries, "id", mutates).Return(0, nil).Once()
-
-	assert.Equal(t, NotFoundError{}, repo.Update(context.TODO(), &user, mutators...))
-
-	adapter.AssertExpectations(t)
-}
-
 func TestRepository_Update_reload(t *testing.T) {
 	var (
 		user     = User{ID: 1}
@@ -2497,20 +2474,6 @@ func TestRepository_Delete_compositePrimaryKey(t *testing.T) {
 	adapter.On("Delete", From("user_roles").Where(Eq("user_id", userRole.UserID).AndEq("role_id", userRole.RoleID))).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Delete(context.TODO(), &userRole))
-
-	adapter.AssertExpectations(t)
-}
-
-func TestRepository_Delete_notFound(t *testing.T) {
-	var (
-		adapter = &testAdapter{}
-		repo    = New(adapter)
-		user    = User{ID: 1}
-	)
-
-	adapter.On("Delete", From("users").Where(Eq("id", user.ID))).Return(0, nil).Once()
-
-	assert.Equal(t, NotFoundError{}, repo.Delete(context.TODO(), &user))
 
 	adapter.AssertExpectations(t)
 }

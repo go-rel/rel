@@ -55,7 +55,7 @@ func UpdateNotFound(t *testing.T, repo rel.Repository) {
 	)
 
 	// update unchanged
-	assert.Equal(t, rel.NotFoundError{}, repo.Update(ctx, &user))
+	assert.Equal(t, nil, repo.Update(ctx, &user))
 }
 
 // UpdateHasManyInsert tests specification for updating a record and inserting has many association.

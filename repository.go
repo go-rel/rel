@@ -508,10 +508,8 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 			pField = doc.PrimaryField()
 		}
 
-		if updatedCount, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
+		if _, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
 			return mutation.ErrorFunc.transform(err)
-		} else if updatedCount == 0 {
-			return NotFoundError{}
 		}
 
 		if mutation.Reload {
@@ -797,11 +795,7 @@ func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery,
 		}
 	}
 
-	deletedCount, err := r.deleteAny(cw, doc.data.flag, query)
-	if err == nil && deletedCount == 0 {
-		err = NotFoundError{}
-	}
-
+	_, err := r.deleteAny(cw, doc.data.flag, query)
 	if err == nil && cascade {
 		if err := r.deleteBelongsTo(cw, doc, cascade); err != nil {
 			return err

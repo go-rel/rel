@@ -2,7 +2,7 @@
 //
 // Usage:
 //	// open mysql connection.
-//      // note: `clientFoundRows=true` is required for update and delete to works correctly.
+//	// note: `clientFoundRows=true` is required for update and delete to works correctly.
 //	adapter, err := mysql.Open("root@(127.0.0.1:3306)/rel_test?clientFoundRows=true&charset=utf8&parseTime=True&loc=Local")
 //	if err != nil {
 //		panic(err)

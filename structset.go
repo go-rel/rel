@@ -6,11 +6,13 @@ import (
 )
 
 var (
-	NowFunc NowTimeFunc = defaultNow
+	Now NowFunc = func() time.Time {
+		return time.Now().Truncate(time.Second)
+	}
 )
 
-// NowTimeFunc is the type of function that returns the current time.
-type NowTimeFunc func() time.Time
+// NowFunc is the type of function that returns the current time.
+type NowFunc func() time.Time
 
 // Structset can be used as mutation for repository insert or update operation.
 // This will save every field in struct and it's association as long as it's loaded.
@@ -24,7 +26,7 @@ type Structset struct {
 func (s Structset) Apply(doc *Document, mut *Mutation) {
 	var (
 		pFields = s.doc.PrimaryFields()
-		t       = NowFunc()
+		t       = Now()
 	)
 
 	for _, field := range s.doc.Fields() {
@@ -133,8 +135,4 @@ func newStructset(doc *Document, skipZero bool) Structset {
 // NewStructset from a struct.
 func NewStructset(record interface{}, skipZero bool) Structset {
 	return newStructset(NewDocument(record), skipZero)
-}
-
-func defaultNow() time.Time {
-	return time.Now().Truncate(time.Second)
 }

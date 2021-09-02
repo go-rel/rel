@@ -11,14 +11,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var now NowTimeFunc
-
 func init() {
 	t := time.Now().Truncate(time.Second)
-	NowFunc = func() time.Time {
+	Now = func() time.Time {
 		return t
 	}
-	now = NowFunc
 }
 
 func createCursor(row int) *testCursor {
@@ -658,8 +655,8 @@ func TestRepository_Insert(t *testing.T) {
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
 			"age":        Set("age", 0),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
+			"created_at": Set("created_at", Now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 	)
 
@@ -669,8 +666,8 @@ func TestRepository_Insert(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 	}, user)
 
 	adapter.AssertExpectations(t)
@@ -708,13 +705,13 @@ func TestRepository_Insert_sets(t *testing.T) {
 		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
+			Set("created_at", Now()),
+			Set("updated_at", Now()),
 		}
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
+			"created_at": Set("created_at", Now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 	)
 
@@ -724,8 +721,8 @@ func TestRepository_Insert_sets(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 	}, user)
 
 	adapter.AssertExpectations(t)
@@ -756,8 +753,8 @@ func TestRepository_Insert_saveBelongsTo(t *testing.T) {
 		User: &User{
 			ID:        userID,
 			Name:      "name",
-			CreatedAt: now(),
-			UpdatedAt: now(),
+			CreatedAt: Now(),
+			UpdatedAt: Now(),
 		},
 	}, profile)
 
@@ -830,8 +827,8 @@ func TestRepository_Insert_saveHasOne(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		Address: Address{
 			ID:     addressID,
 			UserID: &userID,
@@ -861,8 +858,8 @@ func TestRepository_Insert_saveHasOneCascadeDisabled(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        userID,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		Address: Address{
 			Street: "street",
 		},
@@ -916,8 +913,8 @@ func TestRepository_Insert_saveHasMany(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		UserRoles: []UserRole{
 			{UserID: 1, RoleID: 2},
 		},
@@ -944,8 +941,8 @@ func TestRepository_Insert_saveHasManyCascadeDisabled(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		UserRoles: []UserRole{
 			{RoleID: 2},
 		},
@@ -984,13 +981,13 @@ func TestRepository_Insert_error(t *testing.T) {
 		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
-			Set("created_at", now()),
-			Set("updated_at", now()),
+			Set("created_at", Now()),
+			Set("updated_at", Now()),
 		}
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
+			"created_at": Set("created_at", Now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		err = errors.New("error")
 	)
@@ -1072,14 +1069,14 @@ func TestRepository_InsertAll(t *testing.T) {
 			{
 				"name":       Set("name", "name1"),
 				"age":        Set("age", 0),
-				"created_at": Set("created_at", now()),
-				"updated_at": Set("updated_at", now()),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 			{
 				"name":       Set("name", "name2"),
 				"age":        Set("age", 12),
-				"created_at": Set("created_at", now()),
-				"updated_at": Set("updated_at", now()),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}
 	)
@@ -1088,8 +1085,8 @@ func TestRepository_InsertAll(t *testing.T) {
 
 	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
 	assert.Equal(t, []User{
-		{ID: 1, Name: "name1", Age: 0, CreatedAt: now(), UpdatedAt: now()},
-		{ID: 2, Name: "name2", Age: 12, CreatedAt: now(), UpdatedAt: now()},
+		{ID: 1, Name: "name1", Age: 0, CreatedAt: Now(), UpdatedAt: Now()},
+		{ID: 2, Name: "name2", Age: 12, CreatedAt: Now(), UpdatedAt: Now()},
 	}, users)
 
 	adapter.AssertExpectations(t)
@@ -1157,15 +1154,15 @@ func TestRepository_Update(t *testing.T) {
 		user    = User{
 			ID:        1,
 			Name:      "name",
-			CreatedAt: now(),
-			UpdatedAt: now(),
+			CreatedAt: Now(),
+			UpdatedAt: Now(),
 		}
 		mutates = map[string]Mutate{
 			"id":         Set("id", 1),
 			"name":       Set("name", "name"),
 			"age":        Set("age", 0),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
+			"created_at": Set("created_at", Now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		queries = From("users").Where(Eq("id", user.ID))
 	)
@@ -1176,8 +1173,8 @@ func TestRepository_Update(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 	}, user)
 
 	adapter.AssertExpectations(t)
@@ -1216,11 +1213,11 @@ func TestRepository_Update_sets(t *testing.T) {
 		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
-			Set("updated_at", now()),
+			Set("updated_at", Now()),
 		}
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
-			"updated_at": Set("updated_at", now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		queries = From("users").Where(Eq("id", user.ID))
 	)
@@ -1231,7 +1228,7 @@ func TestRepository_Update_sets(t *testing.T) {
 	assert.Equal(t, User{
 		ID:        1,
 		Name:      "name",
-		UpdatedAt: now(),
+		UpdatedAt: Now(),
 	}, user)
 
 	adapter.AssertExpectations(t)
@@ -1295,11 +1292,11 @@ func TestRepository_Update_notFound(t *testing.T) {
 		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
-			Set("updated_at", now()),
+			Set("updated_at", Now()),
 		}
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
-			"updated_at": Set("updated_at", now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		queries = From("users").Where(Eq("id", user.ID))
 	)
@@ -1390,8 +1387,8 @@ func TestRepository_Update_saveBelongsTo(t *testing.T) {
 		User: &User{
 			ID:        1,
 			Name:      "name",
-			UpdatedAt: now(),
-			CreatedAt: now(),
+			UpdatedAt: Now(),
+			CreatedAt: Now(),
 		},
 	}, profile)
 
@@ -1480,8 +1477,8 @@ func TestRepository_Update_saveHasOne(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        userID,
-		UpdatedAt: now(),
-		CreatedAt: now(),
+		UpdatedAt: Now(),
+		CreatedAt: Now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1512,8 +1509,8 @@ func TestRepository_Update_saveHasOneCascadeDisabled(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
 		ID:        userID,
-		UpdatedAt: now(),
-		CreatedAt: now(),
+		UpdatedAt: Now(),
+		CreatedAt: Now(),
 		Address: Address{
 			ID:     1,
 			Street: "street",
@@ -1570,8 +1567,8 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user))
 	assert.Equal(t, User{
 		ID:        10,
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		UserRoles: []UserRole{
 			{UserID: 10, RoleID: 2},
 		},
@@ -1597,8 +1594,8 @@ func TestRepository_Update_saveHasManyCascadeDisabled(t *testing.T) {
 	assert.Nil(t, repo.Update(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
 		ID:        10,
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		UserRoles: []UserRole{
 			{RoleID: 2},
 		},
@@ -1648,11 +1645,11 @@ func TestRepository_Update_error(t *testing.T) {
 		repo     = New(adapter)
 		mutators = []Mutator{
 			Set("name", "name"),
-			Set("updated_at", now()),
+			Set("updated_at", Now()),
 		}
 		mutates = map[string]Mutate{
 			"name":       Set("name", "name"),
-			"updated_at": Set("updated_at", now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		queries = From("users").Where(Eq("id", user.ID))
 	)
@@ -1677,14 +1674,14 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 				"user": Map{
 					"name":       "buyer1",
 					"age":        20,
-					"updated_at": now(),
+					"updated_at": Now(),
 				},
 			},
 		)
 		mutates = map[string]Mutate{
 			"name":       Set("name", "buyer1"),
 			"age":        Set("age", 20),
-			"updated_at": Set("updated_at", now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		q = Build("users", Eq("id", 1))
 	)
@@ -1698,7 +1695,7 @@ func TestRepository_saveBelongsTo_update(t *testing.T) {
 			ID:        userID,
 			Name:      "buyer1",
 			Age:       20,
-			UpdatedAt: now(),
+			UpdatedAt: Now(),
 		},
 	}, profile)
 
@@ -1718,14 +1715,14 @@ func TestRepository_saveBelongsTo_updateError(t *testing.T) {
 				"user": Map{
 					"name":       "buyer1",
 					"age":        20,
-					"updated_at": now(),
+					"updated_at": Now(),
 				},
 			},
 		)
 		mutates = map[string]Mutate{
 			"name":       Set("name", "buyer1"),
 			"age":        Set("age", 20),
-			"updated_at": Set("updated_at", now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		q = Build("users", Eq("id", 1))
 	)
@@ -1816,16 +1813,16 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 				"user": Map{
 					"name":       "buyer1",
 					"age":        20,
-					"created_at": now(),
-					"updated_at": now(),
+					"created_at": Now(),
+					"updated_at": Now(),
 				},
 			},
 		)
 		mutates = map[string]Mutate{
 			"name":       Set("name", "buyer1"),
 			"age":        Set("age", 20),
-			"created_at": Set("created_at", now()),
-			"updated_at": Set("updated_at", now()),
+			"created_at": Set("created_at", Now()),
+			"updated_at": Set("updated_at", Now()),
 		}
 		q = Build("users")
 	)
@@ -2378,8 +2375,8 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
 		ID:        1,
-		CreatedAt: now(),
-		UpdatedAt: now(),
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
 		Emails: []Email{
 			{ID: 3, UserID: 1, Email: "email3@gmail.com"},
 			{ID: 4, UserID: 1, Email: "email4@gmail.com"},
@@ -2525,7 +2522,7 @@ func TestRepository_Delete_softDelete(t *testing.T) {
 		address = Address{ID: 1}
 		query   = From("addresses").Where(Eq("id", address.ID))
 		mutates = map[string]Mutate{
-			"deleted_at": Set("deleted_at", now()),
+			"deleted_at": Set("deleted_at", Now()),
 		}
 	)
 
@@ -2627,7 +2624,7 @@ func TestRepository_Delete_hasOne(t *testing.T) {
 			},
 		}
 		addressMut = map[string]Mutate{
-			"deleted_at": Set("deleted_at", now()),
+			"deleted_at": Set("deleted_at", Now()),
 		}
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2682,7 +2679,7 @@ func TestRepository_Delete_hasOneError(t *testing.T) {
 			},
 		}
 		addressMut = map[string]Mutate{
-			"deleted_at": Set("deleted_at", now()),
+			"deleted_at": Set("deleted_at", Now()),
 		}
 		adapter = &testAdapter{}
 		repo    = New(adapter)

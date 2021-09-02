@@ -155,7 +155,7 @@ func TestChangeset(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "User 2"),
 				"age":        Set("age", 21),
-				"updated_at": Set("updated_at", now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}, Apply(doc, changeset))
 	})
@@ -211,7 +211,7 @@ func TestChangeset_byte_slice(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"password":   Set("password", []byte("bar")),
 				"metadata":   Set("metadata", json.RawMessage(`{}`)),
-				"updated_at": Set("updated_at", now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}, Apply(doc, changeset))
 	})
@@ -304,7 +304,7 @@ func TestChangeset_belongsTo(t *testing.T) {
 							Cascade: true,
 							Mutates: map[string]Mutate{
 								"name":       Set("name", "User Satu"),
-								"updated_at": Set("updated_at", now()),
+								"updated_at": Set("updated_at", Now()),
 							},
 						},
 					},
@@ -363,8 +363,8 @@ func TestChangeset_belongsTo_new(t *testing.T) {
 							Mutates: map[string]Mutate{
 								"name":       Set("name", "User Satu"),
 								"age":        Set("age", 20),
-								"created_at": Set("created_at", now()),
-								"updated_at": Set("updated_at", now()),
+								"created_at": Set("created_at", Now()),
+								"updated_at": Set("updated_at", Now()),
 							},
 						},
 					},

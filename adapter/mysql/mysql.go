@@ -2,7 +2,8 @@
 //
 // Usage:
 //	// open mysql connection.
-//	adapter, err := mysql.Open("root@(127.0.0.1:3306)/rel_test?charset=utf8&parseTime=True&loc=Local")
+//      // note: `clientFoundRows=true` is required for update and delete to works correctly.
+//	adapter, err := mysql.Open("root@(127.0.0.1:3306)/rel_test?clientFoundRows=true&charset=utf8&parseTime=True&loc=Local")
 //	if err != nil {
 //		panic(err)
 //	}
@@ -40,6 +41,7 @@ var (
 )
 
 // New mysql adapter using existing connection.
+// Existing connection nneds to be created with `clientFoundRows=true` options for update and delete to works correctly.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

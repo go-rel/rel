@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	t := time.Now().Truncate(time.Second)
+	t := Now()
 	Now = func() time.Time {
 		return t
 	}

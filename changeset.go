@@ -60,7 +60,7 @@ func (c Changeset) Changes() map[string]interface{} {
 // Apply mutation.
 func (c Changeset) Apply(doc *Document, mut *Mutation) {
 	var (
-		t = now().Truncate(time.Second)
+		t = Now()
 	)
 
 	for i, field := range c.doc.Fields() {

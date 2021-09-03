@@ -73,7 +73,7 @@ func TestScanOne(t *testing.T) {
 		user User
 		cur  = &testCursor{}
 		doc  = NewDocument(&user)
-		now  = now()
+		now  = Now()
 	)
 
 	cur.On("Close").Return(nil).Once()
@@ -111,7 +111,7 @@ func TestScanAll(t *testing.T) {
 		users []User
 		cur   = &testCursor{}
 		col   = NewCollection(&users)
-		now   = now()
+		now   = Now()
 	)
 
 	cur.On("Close").Return(nil).Once()
@@ -185,7 +185,7 @@ func TestScanMulti(t *testing.T) {
 			10: {NewCollection(&users1), NewCollection(&users2)},
 			11: {NewCollection(&users3)},
 		}
-		now = now()
+		now = Now()
 	)
 
 	cur.On("Close").Return(nil).Once()
@@ -237,7 +237,7 @@ func TestScanMulti_scanError(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Once()
-	cur.MockScan(11, "Nedved", 46, now, now).Once()
+	cur.MockScan(11, "Nedved", 46, Now, Now).Once()
 	cur.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(err).Once()
 
 	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))

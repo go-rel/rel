@@ -44,8 +44,8 @@ func TestStructset(t *testing.T) {
 				"id":         Set("id", 1),
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
-				"created_at": Set("created_at", now()),
-				"updated_at": Set("updated_at", now()),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}
 	)
@@ -64,8 +64,8 @@ func TestStructset_skipZeroPrimaryKey(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"name":       Set("name", "Luffy"),
 				"age":        Set("age", 0),
-				"created_at": Set("created_at", now()),
-				"updated_at": Set("updated_at", now()),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}
 	)
@@ -85,8 +85,8 @@ func TestStructset_skipZero(t *testing.T) {
 			Mutates: map[string]Mutate{
 				"id":         Set("id", 1),
 				"name":       Set("name", "Luffy"),
-				"created_at": Set("created_at", now()),
-				"updated_at": Set("updated_at", now()),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
 			},
 		}
 	)
@@ -117,7 +117,7 @@ func TestStructset_withAssoc(t *testing.T) {
 			Set("name", "Luffy"),
 			Set("age", 20),
 			Set("created_at", createdAt),
-			Set("updated_at", now()),
+			Set("updated_at", Now()),
 		)
 		trx1Mod = Apply(NewDocument(&Transaction{}),
 			Set("id", 1),

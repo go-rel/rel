@@ -936,7 +936,7 @@ func (r repository) MustDeleteAny(ctx context.Context, query Query) int {
 
 func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {
 	if flag.Is(HasDeletedAt) {
-		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", now())}
+		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", Now())}
 		return cw.adapter.Update(cw.ctx, query, "", mutates)
 	}
 

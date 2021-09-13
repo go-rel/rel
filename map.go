@@ -2,6 +2,7 @@ package rel
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Map can be used as mutation for repository insert or update operation.
@@ -66,6 +67,39 @@ func (m Map) Apply(doc *Document, mutation *Mutation) {
 			mutation.Add(Set(field, v))
 		}
 	}
+}
+
+func (m Map) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("rel.Map{")
+	for k, v := range m {
+		if builder.Len() > len("rel.Map{") {
+			builder.WriteString(", ")
+		}
+		builder.WriteByte('"')
+		builder.WriteString(k)
+		builder.WriteString("\": ")
+
+		switch im := v.(type) {
+		case Map:
+			builder.WriteString(im.String())
+		case []Map:
+			builder.WriteString("[]rel.Map{")
+			for i := range im {
+				if i > 0 {
+					builder.WriteString(", ")
+				}
+				builder.WriteString(im[i].String())
+			}
+			builder.WriteString("}")
+		default:
+			builder.WriteString(fmtiface(v)) // TODO: use compact struct print (reltest.csprint)
+		}
+	}
+	builder.WriteString("}")
+
+	return builder.String()
 }
 
 func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {

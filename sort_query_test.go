@@ -8,9 +8,9 @@ import (
 )
 
 func TestSortQuery_Asc(t *testing.T) {
-	assert.True(t, rel.NewSortAsc("score").Asc())
+	assert.True(t, rel.SortAsc("score").Asc())
 }
 
 func TestSortQuery_Desc(t *testing.T) {
-	assert.True(t, rel.NewSortDesc("score").Desc())
+	assert.True(t, rel.SortDesc("score").Desc())
 }

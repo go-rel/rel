@@ -21,8 +21,8 @@ func (sq SortQuery) Desc() bool {
 	return sq.Sort < 0
 }
 
-// NewSortAsc sorts field with ascending sort.
-func NewSortAsc(field string) SortQuery {
+// SortAsc sorts field with ascending sort.
+func SortAsc(field string) SortQuery {
 	return SortQuery{
 		Field: field,
 		Sort:  1,
@@ -30,9 +30,21 @@ func NewSortAsc(field string) SortQuery {
 }
 
 // NewSortDesc sorts field with descending sort.
-func NewSortDesc(field string) SortQuery {
+func SortDesc(field string) SortQuery {
 	return SortQuery{
 		Field: field,
 		Sort:  -1,
 	}
 }
+
+var (
+	// NewSortAsc sorts field with ascending sort.
+	//
+	// Deprecated: use SortAsc instead
+	NewSortAsc = SortAsc
+
+	// NewSortDesc sorts field with descending sort.
+	//
+	// Deprecated: use SortDesc instead
+	NewSortDesc = SortDesc
+)

@@ -13,6 +13,8 @@ func (sq SelectQuery) Distinct() SelectQuery {
 }
 
 // NewSelect query.
+//
+// Deprecated: use Select instead
 func NewSelect(fields ...string) SelectQuery {
 	return SelectQuery{
 		Fields: fields,

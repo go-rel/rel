@@ -241,3 +241,24 @@ func TestMap_replacingPrimaryKey(t *testing.T) {
 		Apply(doc, Cascade(false), data)
 	})
 }
+
+func TestMap_String(t *testing.T) {
+	var (
+		data = Map{
+			"name": "Luffy",
+			"age":  20,
+			"transactions": []Map{
+				{"item": "Sword"},
+				{"item": "Shield"},
+			},
+			"address": Map{
+				"street": "Grove Street",
+			},
+		}
+	)
+
+	assert.Contains(t, data.String(), "\"name\": \"Luffy\"")
+	assert.Contains(t, data.String(), "\"age\": 20")
+	assert.Contains(t, data.String(), "\"transactions\": []rel.Map{rel.Map{\"item\": \"Sword\"}, rel.Map{\"item\": \"Shield\"}}")
+	assert.Contains(t, data.String(), "\"address\": rel.Map{\"street\": \"Grove Street\"}")
+}

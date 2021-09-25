@@ -1,16 +1,38 @@
 name: Bump minor version
+
 on: workflow_dispatch
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
-        fetch-depth: '0'
-    - name: Bump minor version and push tag
-      uses: anothrNick/github-tag-action@1.36.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
-        DEFAULT_BUMP: minor
+        ssh-key: "${{ secrets.PUSH_TAG_PRIVATE_KEY }}"
+
+    - name: Bump version
+      run: |
+        git fetch --tags
+        # This suppress an error occurred when the repository is a complete one.
+        git fetch --prune --unshallow || true
+        # Get a latest tag in the shape of semver.
+        latest_tag=''
+        for ref in $(git for-each-ref --sort=-creatordate --format '%(refname)' refs/tags); do
+          tag="${ref#refs/tags/}"
+          if echo "${tag}" | grep -Eq '^v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$'; then
+            latest_tag="${tag}"
+            break
+          fi
+        done
+        if [ "${latest_tag}" = '' ]; then
+          latest_tag="v0.0.0"
+        fi
+        # bump version
+        npm install -g semver
+        new_tag=v$(semver $latest_tag -i minor)
+        echo "::debug::New tag is $new_tag"
+        # push new tag
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git tag -a $new_tag -m "$new_tag"
+        git push origin $new_tag

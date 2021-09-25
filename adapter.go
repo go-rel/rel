@@ -6,6 +6,8 @@ import (
 
 // Adapter interface
 type Adapter interface {
+	Close() error
+
 	Instrumentation(instrumenter Instrumenter)
 	Ping(ctx context.Context) error
 	Aggregate(ctx context.Context, query Query, mode string, field string) (int, error)

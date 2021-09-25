@@ -1,5 +1,7 @@
 // Package mysql wraps mysql driver as an adapter for REL.
 //
+// Deprecated: Please use github.com/go-rel/mysql instead.
+//
 // Usage:
 //	// open mysql connection.
 //	// note: `clientFoundRows=true` is required for update and delete to works correctly.

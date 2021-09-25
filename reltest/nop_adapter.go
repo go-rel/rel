@@ -9,6 +9,10 @@ import (
 type nopAdapter struct {
 }
 
+func (na *nopAdapter) Close() error {
+	return nil
+}
+
 func (na *nopAdapter) Instrumentation(instrumenter rel.Instrumenter) {
 }
 

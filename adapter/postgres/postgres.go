@@ -1,5 +1,7 @@
 // Package postgres wraps postgres (pq) driver as an adapter for REL.
 //
+// Deprecated: Please use github.com/go-rel/postgres instead.
+//
 // Usage:
 //	// open postgres connection.
 //	adapter, err := postgres.Open("postgres://postgres@localhost/rel_test?sslmode=disable")

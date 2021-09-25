@@ -28,3 +28,11 @@ func TestNopAdapter_Exec(t *testing.T) {
 	assert.Zero(t, lastInsertedID)
 	assert.Nil(t, err)
 }
+
+func TestNopAdapter_Clos3(t *testing.T) {
+	var (
+		adapter = &nopAdapter{}
+	)
+
+	assert.Nil(t, adapter.Close())
+}

@@ -1,5 +1,7 @@
 // Package sqlite3 wraps go-sqlite3 driver as an adapter for rel.
 //
+// Deprecated: Please use github.com/go-rel/sqlite3 instead.
+//
 // Usage:
 //	// open sqlite3 connection.
 //	adapter, err := sqlite3.Open("dev.db")

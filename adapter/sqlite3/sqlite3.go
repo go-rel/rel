@@ -42,6 +42,8 @@ var (
 )
 
 // New sqlite adapter using existing connection.
+//
+// Deprecated: Please use github.com/go-rel/sqlite3 instead.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

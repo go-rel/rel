@@ -336,6 +336,8 @@ func (r *Repository) AssertExpectations(t *testing.T) bool {
 }
 
 // New test repository.
+//
+// Deprecated: Use github.com/go-rel/reltest instead.
 func New() *Repository {
 	return &Repository{
 		repo: rel.New(&nopAdapter{}),

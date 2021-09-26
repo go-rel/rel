@@ -43,6 +43,8 @@ var (
 )
 
 // New postgres adapter using existing connection.
+//
+// Deprecated: Please use github.com/go-rel/postgres instead.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

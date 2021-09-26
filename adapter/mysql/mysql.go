@@ -44,6 +44,8 @@ var (
 
 // New mysql adapter using existing connection.
 // Existing connection nneds to be created with `clientFoundRows=true` options for update and delete to works correctly.
+//
+// Deprecated: Please use github.com/go-rel/mysql instead.
 func New(database *db.DB) *Adapter {
 	return &Adapter{
 		Adapter: &sql.Adapter{

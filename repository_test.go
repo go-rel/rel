@@ -194,7 +194,7 @@ func TestRepository_Find_softDelete(t *testing.T) {
 		address Address
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		query   = From("addresses").Limit(1)
+		query   = From("user_addresses").Limit(1)
 		cur     = createCursor(1)
 	)
 
@@ -213,7 +213,7 @@ func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
 		address Address
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		query   = From("addresses").Limit(1).Unscoped()
+		query   = From("user_addresses").Limit(1).Unscoped()
 		cur     = createCursor(1)
 	)
 
@@ -259,7 +259,7 @@ func TestRepository_Find_withPreload(t *testing.T) {
 	)
 
 	adapter.On("Query", query).Return(cur, nil).Once()
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
 		Return(curPreload, nil).Once()
 
 	curPreload.On("Close").Return(nil).Once()
@@ -286,7 +286,7 @@ func TestRepository_Find_withPreloadError(t *testing.T) {
 	)
 
 	adapter.On("Query", query).Return(cur, nil).Once()
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).
 		Return(&testCursor{}, err).Once()
 
 	assert.Equal(t, err, repo.Find(context.TODO(), &user, query))
@@ -401,7 +401,7 @@ func TestRepository_FindAll_softDelete(t *testing.T) {
 		addresses []Address
 		adapter   = &testAdapter{}
 		repo      = New(adapter)
-		query     = From("addresses").Limit(1)
+		query     = From("user_addresses").Limit(1)
 		cur       = createCursor(2)
 	)
 
@@ -421,7 +421,7 @@ func TestRepository_FindAll_softDeleteUnscoped(t *testing.T) {
 		addresses []Address
 		adapter   = &testAdapter{}
 		repo      = New(adapter)
-		query     = From("addresses").Limit(1).Unscoped()
+		query     = From("user_addresses").Limit(1).Unscoped()
 		cur       = createCursor(2)
 	)
 
@@ -463,7 +463,7 @@ func TestRepository_FindAll_withPreload(t *testing.T) {
 		addresses  []Address
 		adapter    = &testAdapter{}
 		repo       = New(adapter)
-		query      = From("addresses").Preload("user")
+		query      = From("user_addresses").Preload("user")
 		cur        = &testCursor{}
 		curPreload = createCursor(0)
 	)
@@ -493,7 +493,7 @@ func TestRepository_FindAll_withPreloadError(t *testing.T) {
 		addresses  []Address
 		adapter    = &testAdapter{}
 		repo       = New(adapter)
-		query      = From("addresses").Preload("user")
+		query      = From("user_addresses").Preload("user")
 		cur        = &testCursor{}
 		curPreload = &testCursor{}
 		err        = errors.New("error")
@@ -820,7 +820,7 @@ func TestRepository_Insert_saveHasOne(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
-	adapter.On("Insert", From("addresses"), mock.Anything).Return(addressID, nil).Once()
+	adapter.On("Insert", From("user_addresses"), mock.Anything).Return(addressID, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user))
@@ -884,7 +884,7 @@ func TestRepository_Insert_saveHasOneError(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
-	adapter.On("Insert", From("addresses"), mock.Anything).Return(0, err).Once()
+	adapter.On("Insert", From("user_addresses"), mock.Anything).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
@@ -1245,7 +1245,7 @@ func TestRepository_Update_softDelete(t *testing.T) {
 		mutates = map[string]Mutate{
 			"street": Set("street", "street"),
 		}
-		queries = From("addresses").Where(Eq("id", address.ID))
+		queries = From("user_addresses").Where(Eq("id", address.ID))
 	)
 
 	adapter.On("Update", queries.Where(Nil("deleted_at")), "id", mutates).Return(1, nil).Once()
@@ -1271,7 +1271,7 @@ func TestRepository_Update_softDeleteUnscoped(t *testing.T) {
 		mutates = map[string]Mutate{
 			"street": Set("street", "street"),
 		}
-		queries = From("addresses").Where(Eq("id", address.ID)).Unscoped()
+		queries = From("user_addresses").Where(Eq("id", address.ID)).Unscoped()
 	)
 
 	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
@@ -1471,7 +1471,7 @@ func TestRepository_Update_saveHasOne(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, nil).Once()
+	adapter.On("Update", From("user_addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user))
@@ -1539,7 +1539,7 @@ func TestRepository_Update_saveHasOneError(t *testing.T) {
 
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, err).Once()
+	adapter.On("Update", From("user_addresses").Where(Eq("id", 1).AndEq("user_id", 10).AndNil("deleted_at")), "id", mock.Anything).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &user))
@@ -1868,7 +1868,7 @@ func TestRepository_saveHasOne_update(t *testing.T) {
 		mutates = map[string]Mutate{
 			"street": Set("street", "street1"),
 		}
-		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
+		q = Build("user_addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
 	)
 
 	adapter.On("Update", q, "id", mutates).Return(1, nil).Once()
@@ -1895,7 +1895,7 @@ func TestRepository_saveHasOne_updateError(t *testing.T) {
 		mutates = map[string]Mutate{
 			"street": Set("street", "street1"),
 		}
-		q = Build("addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
+		q = Build("user_addresses").Where(Eq("id", 2).AndEq("user_id", 1).AndNil("deleted_at"))
 	)
 
 	adapter.On("Update", q, "id", mutates).Return(0, errors.New("update error")).Once()
@@ -1951,7 +1951,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 			"street":  Set("street", "street1"),
 			"user_id": Set("user_id", 1),
 		}
-		q = Build("addresses")
+		q = Build("user_addresses")
 	)
 
 	adapter.On("Insert", q, mutates).Return(2, nil).Once()
@@ -1987,7 +1987,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 			"street":  Set("street", "street1"),
 			"user_id": Set("user_id", 1),
 		}
-		q = Build("addresses")
+		q = Build("user_addresses")
 	)
 
 	adapter.On("Insert", q, mutates).Return(nil, errors.New("insert error")).Once()
@@ -2439,7 +2439,7 @@ func TestRepository_UpdateAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		query   = From("addresses").Where(Eq("user_id", 1))
+		query   = From("user_addresses").Where(Eq("user_id", 1))
 		mutates = map[string]Mutate{
 			"notes": Set("notes", "notes"),
 		}
@@ -2458,7 +2458,7 @@ func TestRepository_MustUpdateAny(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		query   = From("addresses").Where(Eq("user_id", 1))
+		query   = From("user_addresses").Where(Eq("user_id", 1))
 		mutates = map[string]Mutate{
 			"notes": Set("notes", "notes"),
 		}
@@ -2520,7 +2520,7 @@ func TestRepository_Delete_softDelete(t *testing.T) {
 		adapter = &testAdapter{}
 		repo    = New(adapter)
 		address = Address{ID: 1}
-		query   = From("addresses").Where(Eq("id", address.ID))
+		query   = From("user_addresses").Where(Eq("id", address.ID))
 		mutates = map[string]Mutate{
 			"deleted_at": Set("deleted_at", Now()),
 		}
@@ -2631,7 +2631,7 @@ func TestRepository_Delete_hasOne(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, nil).Once()
+	adapter.On("Update", From("user_addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, nil).Once()
 	adapter.On("Delete", From("users").Where(Eq("id", 10))).Return(1, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
@@ -2687,7 +2687,7 @@ func TestRepository_Delete_hasOneError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Update", From("addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, err).Once()
+	adapter.On("Update", From("user_addresses").Where(Eq("id", 1).AndEq("user_id", 10)), "", addressMut).Return(1, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Delete(context.TODO(), &user, Cascade(true)))
@@ -2839,7 +2839,7 @@ func TestRepository_Preload_hasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2863,7 +2863,7 @@ func TestRepository_Preload_ptrHasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2878,7 +2878,7 @@ func TestRepository_Preload_ptrHasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_Preload_ptrHasOne_notFound_null(t *testing.T) {
+func TestRepository_Preload_ptrHasOne_notFound_nil(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
@@ -2886,7 +2886,7 @@ func TestRepository_Preload_ptrHasOne_notFound_null(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2912,8 +2912,8 @@ func TestRepository_Preload_sliceHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2943,8 +2943,8 @@ func TestRepository_Preload_ptrSliceHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2969,8 +2969,8 @@ func TestRepository_Preload_ptrSliceHasOne_notFound_null(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -2995,7 +2995,7 @@ func TestRepository_Preload_nestedHasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3021,7 +3021,7 @@ func TestRepository_Preload_ptrNestedHasOne(t *testing.T) {
 		cur     = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3046,7 +3046,7 @@ func TestRepository_Preload_ptrNestedHasOne_notFound_null(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3075,8 +3075,8 @@ func TestRepository_Preload_sliceNestedHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3109,8 +3109,8 @@ func TestRepository_Preload_ptrSliceNestedHasOne(t *testing.T) {
 	)
 
 	// one of these, because of map ordering
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3138,8 +3138,8 @@ func TestRepository_Preload_ptrSliceNestedHasOne_notFound_null(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
-	adapter.On("Query", From("addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10, 20).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 20, 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
@@ -3525,7 +3525,7 @@ func TestRepository_Preload_sliceNestedBelongsTo(t *testing.T) {
 		cur = &testCursor{}
 	)
 
-	adapter.On("Query", From("addresses").Where(In("id", 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
+	adapter.On("Query", From("user_addresses").Where(In("id", 10).AndNil("deleted_at"))).Return(cur, nil).Maybe()
 
 	cur.On("Close").Return(nil).Once()
 	cur.On("Fields").Return([]string{"id", "street"}, nil).Once()

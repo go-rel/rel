@@ -61,9 +61,9 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 	// infer table name
 	assert.Equal(t, "_items", doc.Table())
 
-	// never cache
+	// cache
 	_, cached := tablesCache.Load(rt)
-	assert.False(t, cached)
+	assert.True(t, cached)
 }
 
 func TestDocument_Primary(t *testing.T) {

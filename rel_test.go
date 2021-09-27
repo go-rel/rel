@@ -88,6 +88,10 @@ type Address struct {
 	DeletedAt *time.Time
 }
 
+func (a Address) Table() string {
+	return "user_addresses"
+}
+
 type Profile struct {
 	ID     int
 	Name   string

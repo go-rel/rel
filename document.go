@@ -80,20 +80,12 @@ func (d Document) ReflectValue() reflect.Value {
 
 // Table returns name of the table.
 func (d Document) Table() string {
-	if tn, ok := d.v.(table); ok {
-		return tn.Table()
-	}
-
 	// TODO: handle anonymous struct
 	return tableName(d.rt)
 }
 
 // PrimaryFields column name of this document.
 func (d Document) PrimaryFields() []string {
-	if p, ok := d.v.(primary); ok {
-		return p.PrimaryFields()
-	}
-
 	if len(d.data.primaryField) == 0 {
 		panic("rel: failed to infer primary key for type " + d.rt.String())
 	}
@@ -571,8 +563,13 @@ func tableName(rt reflect.Type) string {
 		return name.(string)
 	}
 
-	name := inflection.Plural(rt.Name())
-	name = snaker.CamelToSnake(name)
+	var name string
+	if rt.Implements(rtTable) {
+		name = reflect.Zero(rt).Interface().(table).Table()
+	} else {
+		name = inflection.Plural(rt.Name())
+		name = snaker.CamelToSnake(name)
+	}
 
 	tablesCache.Store(rt, name)
 

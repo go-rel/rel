@@ -8,6 +8,7 @@ type Index struct {
 	Unique   bool
 	Columns  []string
 	Optional bool
+	Filter   FilterQuery
 	Options  string
 }
 

@@ -28,7 +28,6 @@ type Key struct {
 	Columns   []string
 	Rename    string
 	Reference ForeignKeyReference
-	Filter    FilterQuery
 	Options   string
 }
 

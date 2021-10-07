@@ -187,6 +187,14 @@ func (fq FilterQuery) or(other FilterQuery) FilterQuery {
 	return Or(fq, other)
 }
 
+func (fq FilterQuery) applyKey(key *Key) {
+	key.Filter = fq
+}
+
+func (fq FilterQuery) applyIndex(index *Index) {
+	index.Filter = fq
+}
+
 // AndEq append equal expression using and.
 func (fq FilterQuery) AndEq(field string, value interface{}) FilterQuery {
 	return fq.and(Eq(field, value))

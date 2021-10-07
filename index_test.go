@@ -41,6 +41,29 @@ func TestCreateUniqueIndex(t *testing.T) {
 	}, index)
 }
 
+func TestCreateFilteredUniqueIndex(t *testing.T) {
+	var (
+		options = []IndexOption{
+			Options("options"),
+			Eq("deleted", false),
+		}
+		index = createUniqueIndex("table", "add_idx", []string{"add"}, options)
+	)
+
+	assert.Equal(t, Index{
+		Table:   "table",
+		Name:    "add_idx",
+		Unique:  true,
+		Columns: []string{"add"},
+		Filter: FilterQuery{
+			Type:  FilterEqOp,
+			Field: "deleted",
+			Value: false,
+		},
+		Options: "options",
+	}, index)
+}
+
 func TestDropIndex(t *testing.T) {
 	var (
 		options = []IndexOption{

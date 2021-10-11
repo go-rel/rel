@@ -216,5 +216,29 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 	)
 	defer m.Rollback(ctx)
 
+	m.Register(12,
+		func(schema *rel.Schema) {
+			tm := time.Now()
+			schema.CreateTableIfNotExists("dummies3", func(t *rel.Table) {
+				t.ID("id")
+				t.Int("field1")
+				t.Float("field2", rel.Default(float32(1.337)))
+				t.DateTime("created_at", rel.Default(tm))
+				t.DateTime("updated_at", rel.Default(tm))
+				t.Bool("is_active", rel.Default(true))
+			})
+			schema.CreateUniqueIndex("dummies3", "dummies3_field1_active_uq", []string{"field1"}, rel.Eq("is_active", true))
+			schema.CreateUniqueIndex("dummies3", "dummies3_field2_uq", []string{"field2"}, rel.Gt("field1", 12))
+			schema.CreateUniqueIndex("dummies3", "dummies3_field1_time_uq", []string{"field2"}, rel.Gt("created_at", &tm))
+		},
+		func(schema *rel.Schema) {
+			schema.DropIndex("dummies3", "dummies3_field1_time_uq")
+			schema.DropIndex("dummies3", "dummies3_field2_uq")
+			schema.DropIndex("dummies3", "dummies3_field1_active_uq")
+			schema.DropTableIfExists("dummies3")
+		},
+	)
+	defer m.Rollback(ctx)
+
 	m.Migrate(ctx)
 }

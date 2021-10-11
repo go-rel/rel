@@ -224,7 +224,7 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 				t.Int("field1")
 				t.Float("field2", rel.Default(float32(1.337)))
 				t.DateTime("created_at", rel.Default(tm))
-				t.DateTime("updated_at", rel.Default(&tm))
+				t.DateTime("updated_at", rel.Default(tm))
 				t.Bool("is_active", rel.Default(true))
 			})
 			schema.CreateUniqueIndex("dummies3", "dummies3_field1_active_uq", []string{"field1"}, rel.Eq("is_active", true))

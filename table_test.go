@@ -97,6 +97,14 @@ func TestTable(t *testing.T) {
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
+	t.Run("JSON", func(t *testing.T) {
+		table.JSON("json")
+		assert.Equal(t, Column{
+			Name: "json",
+			Type: JSON,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
 	t.Run("Date", func(t *testing.T) {
 		table.Date("date")
 		assert.Equal(t, Column{

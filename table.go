@@ -72,6 +72,11 @@ func (t *Table) Text(name string, options ...ColumnOption) {
 	t.Column(name, Text, options...)
 }
 
+// JSON defines a column with name and JSON type.
+func (t *Table) JSON(name string, options ...ColumnOption) {
+	t.Column(name, JSON, options...)
+}
+
 // Date defines a column with name and Date type.
 func (t *Table) Date(name string, options ...ColumnOption) {
 	t.Column(name, Date, options...)

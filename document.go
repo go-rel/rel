@@ -28,6 +28,8 @@ const (
 	HasUpdatedAt
 	// HasDeletedAt flag.
 	HasDeletedAt
+	// HasDeleted flag.
+	HasDeleted
 )
 
 var (
@@ -35,6 +37,7 @@ var (
 	primariesCache    sync.Map
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
+	rtBool            = reflect.TypeOf(false)
 	rtTable           = reflect.TypeOf((*table)(nil)).Elem()
 	rtPrimary         = reflect.TypeOf((*primary)(nil)).Elem()
 )
@@ -427,14 +430,14 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() != reflect.Struct {
-			data.fields = append(data.fields, name)
-			continue
-		}
-
 		if flag := extractFlag(typ, name); flag != Invalid {
 			data.fields = append(data.fields, name)
 			data.flag |= flag
+			continue
+		}
+
+		if typ.Kind() != reflect.Struct {
+			data.fields = append(data.fields, name)
 			continue
 		}
 
@@ -476,7 +479,7 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 
 func extractFlag(rt reflect.Type, name string) DocumentFlag {
 	flag := Invalid
-	if rt != rtTime {
+	if rt != rtTime && rt != rtBool {
 		return flag
 	}
 
@@ -487,6 +490,8 @@ func extractFlag(rt reflect.Type, name string) DocumentFlag {
 		flag = HasUpdatedAt
 	case "deleted_at":
 		flag = HasDeletedAt
+	case "deleted":
+		flag = HasDeleted
 	}
 
 	return flag

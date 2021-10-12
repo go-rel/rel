@@ -208,6 +208,25 @@ func TestRepository_Find_softDelete(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Find_softAltDelete(t *testing.T) {
+	var (
+		repository UserRepository
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("user_repositories").Limit(1)
+		cur        = createCursor(1)
+	)
+
+	adapter.On("Query", query.Where(Eq("deleted", false))).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.Find(context.TODO(), &repository, query))
+	assert.Equal(t, 10, repository.ID)
+	assert.False(t, cur.Next())
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Find_softDeleteUnscoped(t *testing.T) {
 	var (
 		address Address
@@ -2529,6 +2548,25 @@ func TestRepository_Delete_softDelete(t *testing.T) {
 	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Delete(context.TODO(), &address))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Delete_softAltDelete(t *testing.T) {
+	var (
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		repository = UserRepository{ID: 1}
+		query      = From("user_repositories").Where(Eq("id", repository.ID))
+		mutates    = map[string]Mutate{
+			"updated_at": Set("updated_at", Now()),
+			"deleted":    Set("deleted", true),
+		}
+	)
+
+	adapter.On("Update", query, "", mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &repository))
 
 	adapter.AssertExpectations(t)
 }

@@ -240,5 +240,19 @@ func Migrate(t *testing.T, repo rel.Repository, flags ...Flag) {
 	)
 	defer m.Rollback(ctx)
 
+	m.Register(13,
+		func(schema *rel.Schema) {
+			schema.CreateTableIfNotExists("options", func(t *rel.Table) {
+				t.ID("id")
+				t.String("name")
+				t.JSON("value")
+			})
+		},
+		func(schema *rel.Schema) {
+			schema.DropTableIfExists("options")
+		},
+	)
+	defer m.Rollback(ctx)
+
 	m.Migrate(ctx)
 }

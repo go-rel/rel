@@ -56,6 +56,8 @@ func MapColumn(column *rel.Column) (string, int, int) {
 	case rel.Text:
 		typ = "TEXT"
 		m = column.Limit
+	case rel.JSON:
+		typ = "TEXT"
 	case rel.Date:
 		typ = "DATE"
 		timeLayout = "2006-01-02"

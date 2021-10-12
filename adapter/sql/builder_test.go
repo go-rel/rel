@@ -83,13 +83,14 @@ func TestBuilder_Table(t *testing.T) {
 			},
 		},
 		{
-			result: "CREATE TABLE IF NOT EXISTS `products` (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `raw` BOOL);",
+			result: "CREATE TABLE IF NOT EXISTS `products` (`id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `data` TEXT, `raw` BOOL);",
 			table: rel.Table{
 				Op:       rel.SchemaCreate,
 				Name:     "products",
 				Optional: true,
 				Definitions: []rel.TableDefinition{
 					rel.Column{Name: "id", Type: rel.BigID},
+					rel.Column{Name: "data", Type: rel.JSON},
 					rel.Raw("`raw` BOOL"),
 				},
 			},

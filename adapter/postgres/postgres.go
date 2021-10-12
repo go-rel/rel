@@ -181,6 +181,8 @@ func mapColumnFunc(column *rel.Column) (string, int, int) {
 	case rel.Int, rel.BigInt, rel.Text:
 		column.Limit = 0
 		typ, m, n = sql.MapColumn(column)
+	case rel.JSON:
+		typ = "JSONB"
 	default:
 		typ, m, n = sql.MapColumn(column)
 	}

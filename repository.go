@@ -943,7 +943,7 @@ func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query)
 	}
 	if hasDeleted {
 		mutates["deleted"] = Set("deleted", true)
-		if flag.Is(HasUpdatedAt) && !flag.Is(HasDeletedAt) {
+		if flag.Is(HasUpdatedAt) && !hasDeletedAt {
 			mutates["updated_at"] = Set("updated_at", Now())
 		}
 	}

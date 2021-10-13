@@ -1123,10 +1123,10 @@ func (r repository) withDefaultScope(ddata documentData, query Query, preload bo
 		return query
 	}
 
-	if ddata.flag.Is(HasDeletedAt) {
-		query = query.Where(Nil("deleted_at"))
-	} else if ddata.flag.Is(HasDeleted) {
+	if ddata.flag.Is(HasDeleted) {
 		query = query.Where(Eq("deleted", false))
+	} else if ddata.flag.Is(HasDeletedAt) {
+		query = query.Where(Nil("deleted_at"))
 	}
 
 	if preload && bool(query.CascadeQuery) {

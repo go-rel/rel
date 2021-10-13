@@ -2571,6 +2571,28 @@ func TestRepository_Delete_softAltDelete(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_InvalidSoftDeleteFieldTypes(t *testing.T) {
+	type InvalidField struct {
+		ID        int
+		CreatedAt bool
+		UpdatedAt bool
+		DeletedAt bool
+		Deleted   time.Time
+	}
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		record  = InvalidField{ID: 1}
+		query   = From("invalid_fields").Where(Eq("id", record.ID))
+	)
+
+	adapter.On("Delete", query).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Delete(context.TODO(), &record))
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Delete_belongsTo(t *testing.T) {
 	var (
 		userID  = 1

@@ -479,18 +479,27 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 
 func extractFlag(rt reflect.Type, name string) DocumentFlag {
 	flag := Invalid
-	if rt != rtTime && rt != rtBool {
-		return flag
-	}
 
 	switch name {
 	case "created_at", "inserted_at":
+		if rt != rtTime {
+			break
+		}
 		flag = HasCreatedAt
 	case "updated_at":
+		if rt != rtTime {
+			break
+		}
 		flag = HasUpdatedAt
 	case "deleted_at":
+		if rt != rtTime {
+			break
+		}
 		flag = HasDeletedAt
 	case "deleted":
+		if rt != rtBool {
+			break
+		}
 		flag = HasDeleted
 	}
 

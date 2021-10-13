@@ -113,3 +113,12 @@ type UserRole struct {
 	UserID int `db:",primary"`
 	RoleID int `db:",primary"`
 }
+
+type UserRepository struct {
+	ID        int
+	Name      string
+	User      *User `autosave:"true"`
+	UserID    *int
+	UpdatedAt *time.Time
+	Deleted   bool
+}

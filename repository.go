@@ -935,8 +935,19 @@ func (r repository) MustDeleteAny(ctx context.Context, query Query) int {
 }
 
 func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query) (int, error) {
-	if flag.Is(HasDeletedAt) {
-		mutates := map[string]Mutate{"deleted_at": Set("deleted_at", Now())}
+	hasDeletedAt := flag.Is(HasDeletedAt)
+	hasDeleted := flag.Is(HasDeleted)
+	mutates := make(map[string]Mutate, 1)
+	if hasDeletedAt {
+		mutates["deleted_at"] = Set("deleted_at", Now())
+	}
+	if hasDeleted {
+		mutates["deleted"] = Set("deleted", true)
+		if flag.Is(HasUpdatedAt) && !hasDeletedAt {
+			mutates["updated_at"] = Set("updated_at", Now())
+		}
+	}
+	if hasDeletedAt || hasDeleted {
 		return cw.adapter.Update(cw.ctx, query, "", mutates)
 	}
 
@@ -1112,7 +1123,9 @@ func (r repository) withDefaultScope(ddata documentData, query Query, preload bo
 		return query
 	}
 
-	if ddata.flag.Is(HasDeletedAt) {
+	if ddata.flag.Is(HasDeleted) {
+		query = query.Where(Eq("deleted", false))
+	} else if ddata.flag.Is(HasDeletedAt) {
 		query = query.Where(Nil("deleted_at"))
 	}
 

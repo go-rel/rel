@@ -28,6 +28,8 @@ const (
 	HasUpdatedAt
 	// HasDeletedAt flag.
 	HasDeletedAt
+	// HasDeleted flag.
+	HasDeleted
 )
 
 var (
@@ -35,6 +37,7 @@ var (
 	primariesCache    sync.Map
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
+	rtBool            = reflect.TypeOf(false)
 	rtTable           = reflect.TypeOf((*table)(nil)).Elem()
 	rtPrimary         = reflect.TypeOf((*primary)(nil)).Elem()
 )
@@ -427,14 +430,14 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() != reflect.Struct {
-			data.fields = append(data.fields, name)
-			continue
-		}
-
 		if flag := extractFlag(typ, name); flag != Invalid {
 			data.fields = append(data.fields, name)
 			data.flag |= flag
+			continue
+		}
+
+		if typ.Kind() != reflect.Struct {
+			data.fields = append(data.fields, name)
 			continue
 		}
 
@@ -474,22 +477,33 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 	return data
 }
 
-func extractFlag(rt reflect.Type, name string) DocumentFlag {
-	flag := Invalid
-	if rt != rtTime {
-		return flag
-	}
-
+func extractTimeFlag(name string) DocumentFlag {
 	switch name {
 	case "created_at", "inserted_at":
-		flag = HasCreatedAt
+		return HasCreatedAt
 	case "updated_at":
-		flag = HasUpdatedAt
+		return HasUpdatedAt
 	case "deleted_at":
-		flag = HasDeletedAt
+		return HasDeletedAt
 	}
+	return Invalid
+}
 
-	return flag
+func extractBoolFlag(name string) DocumentFlag {
+	if name == "deleted" {
+		return HasDeleted
+	}
+	return Invalid
+}
+
+func extractFlag(rt reflect.Type, name string) DocumentFlag {
+	if rt == rtTime {
+		return extractTimeFlag(name)
+	}
+	if rt == rtBool {
+		return extractBoolFlag(name)
+	}
+	return Invalid
 }
 
 func fieldName(sf reflect.StructField) string {

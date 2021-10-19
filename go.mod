@@ -4,7 +4,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jinzhu/inflection v1.0.0
 	github.com/lib/pq v1.10.3
-	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/onsi/ginkgo v1.15.0 // indirect
 	github.com/onsi/gomega v1.10.5 // indirect
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e

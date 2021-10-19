@@ -319,7 +319,7 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 		return 0, err
 	}
 
-	return r.aggregate(cw, query, "count", "*")
+	return r.aggregate(cw, r.withDefaultScope(col.data, query, false), "count", "*")
 }
 
 func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {

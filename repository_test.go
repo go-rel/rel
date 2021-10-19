@@ -621,6 +621,29 @@ func TestRepository_FindAndCountAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAndCountAll_softDelete(t *testing.T) {
+	var (
+		addresses []Address
+		adapter   = &testAdapter{}
+		repo      = New(adapter)
+		query     = From("user_addresses").Limit(10)
+		cur       = createCursor(2)
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Aggregate", query.Where(Nil("deleted_at")).Limit(0), "count", "*").Return(2, nil).Once()
+
+	count, err := repo.FindAndCountAll(context.TODO(), &addresses, query)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, count)
+	assert.Len(t, addresses, 2)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 10, addresses[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_FindAndCountAll_error(t *testing.T) {
 	var (
 		users   []User

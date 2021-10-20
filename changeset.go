@@ -28,7 +28,7 @@ func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface
 	}
 
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return bytes.Compare(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes()) != 0
+		return !bytes.Equal(reflect.ValueOf(old).Bytes(), reflect.ValueOf(new).Bytes())
 	}
 
 	return !(typ.Comparable() && old == new)

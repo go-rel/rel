@@ -140,18 +140,18 @@ func (q Query) Distinct() Query {
 }
 
 // Join current table with other table.
-func (q Query) Join(table string) Query {
-	return q.JoinOn(table, "", "")
+func (q Query) Join(table string, filter ...FilterQuery) Query {
+	return q.JoinOn(table, "", "", filter...)
 }
 
 // JoinOn current table with other table.
-func (q Query) JoinOn(table string, from string, to string) Query {
-	return q.JoinWith("JOIN", table, from, to)
+func (q Query) JoinOn(table string, from string, to string, filter ...FilterQuery) Query {
+	return q.JoinWith("JOIN", table, from, to, filter...)
 }
 
 // JoinWith current table with other table with custom join mode.
-func (q Query) JoinWith(mode string, table string, from string, to string) Query {
-	NewJoinWith(mode, table, from, to).Build(&q) // TODO: ensure this always called last
+func (q Query) JoinWith(mode string, table string, from string, to string, filter ...FilterQuery) Query {
+	NewJoinWith(mode, table, from, to, filter...).Build(&q) // TODO: ensure this always called last
 
 	return q
 }

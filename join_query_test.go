@@ -16,6 +16,42 @@ func TestJoinWith(t *testing.T) {
 	}, rel.NewJoinWith("JOIN", "transactions", "user_id", "id"))
 }
 
+func TestJoinWithFilter(t *testing.T) {
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "transactions",
+		From:  "user_id",
+		To:    "id",
+		Filter: rel.FilterQuery{
+			Type:  rel.FilterEqOp,
+			Field: "deleted",
+			Value: false,
+		},
+	}, rel.NewJoinWith("JOIN", "transactions", "user_id", "id", rel.Eq("deleted", false)))
+}
+
+func TestJoinWithMultipleFilters(t *testing.T) {
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "transactions",
+		Filter: rel.FilterQuery{
+			Type: rel.FilterAndOp,
+			Inner: []rel.FilterQuery{
+				{
+					Type:  rel.FilterEqOp,
+					Field: "user_id",
+					Value: 5,
+				},
+				{
+					Type:  rel.FilterEqOp,
+					Field: "deleted",
+					Value: false,
+				},
+			},
+		},
+	}, rel.NewJoin("transactions", rel.Eq("user_id", 5), rel.Eq("deleted", false)))
+}
+
 func TestJoinFragment(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
 		Mode:      "JOIN transactions ON id=?",

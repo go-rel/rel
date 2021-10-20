@@ -1172,6 +1172,11 @@ func TestBuilder_Filter(t *testing.T) {
 			where.In("field", "value1", "value2", "value3"),
 		},
 		{
+			"1=0",
+			nil,
+			where.In("field", []interface{}{}...),
+		},
+		{
 			"`field` NOT IN (?)",
 			[]interface{}{"value1"},
 			where.Nin("field", "value1"),
@@ -1185,6 +1190,11 @@ func TestBuilder_Filter(t *testing.T) {
 			"`field` NOT IN (?,?,?)",
 			[]interface{}{"value1", "value2", "value3"},
 			where.Nin("field", "value1", "value2", "value3"),
+		},
+		{
+			"1=1",
+			nil,
+			where.Nin("field", []interface{}{}...),
 		},
 		{
 			"`field` LIKE ?",

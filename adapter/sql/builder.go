@@ -787,15 +787,23 @@ func (b *Builder) buildInclusion(buffer *Buffer, filter rel.FilterQuery) {
 		values = filter.Value.([]interface{})
 	)
 
-	buffer.WriteString(Escape(b.config, filter.Field))
-
-	if filter.Type == rel.FilterInOp {
-		buffer.WriteString(" IN ")
+	if len(values) == 0 {
+		if filter.Type == rel.FilterInOp {
+			buffer.WriteString("1=0")
+		} else {
+			buffer.WriteString("1=1")
+		}
 	} else {
-		buffer.WriteString(" NOT IN ")
-	}
+		buffer.WriteString(Escape(b.config, filter.Field))
 
-	b.buildValueList(buffer, values)
+		if filter.Type == rel.FilterInOp {
+			buffer.WriteString(" IN ")
+		} else {
+			buffer.WriteString(" NOT IN ")
+		}
+
+		b.buildValueList(buffer, values)
+	}
 }
 
 func (b *Builder) ph() string {

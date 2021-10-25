@@ -234,6 +234,25 @@ func TestQuerier(t *testing.T) {
 			},
 		},
 		{
+			name: "rel.UsePrimary().From(\"rel_schema_versions\")",
+			queriers: [][]rel.Querier{
+				{
+					rel.From("rel_schema_versions").UsePrimary(),
+				},
+				{
+					rel.From("rel_schema_versions"), rel.UsePrimary(),
+				},
+				{
+					rel.UsePrimary(), rel.From("rel_schema_versions"),
+				},
+			},
+			query: rel.Query{
+				Table:        "rel_schema_versions",
+				CascadeQuery: true,
+				UsePrimaryDb: true,
+			},
+		},
+		{
 			name: "",
 			queriers: [][]rel.Querier{
 				{

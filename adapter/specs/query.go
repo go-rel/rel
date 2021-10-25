@@ -2,6 +2,7 @@ package specs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/sort"
@@ -26,6 +27,9 @@ func Query(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &Address{Name: "address1", UserID: &user.ID})
 	repo.MustInsert(ctx, &Address{Name: "address2", UserID: &user.ID})
 	repo.MustInsert(ctx, &Address{Name: "address3", UserID: &user.ID})
+
+	// wait for replication
+	time.Sleep(time.Second)
 
 	tests := []rel.Querier{
 		where.Eq("id", user.ID),

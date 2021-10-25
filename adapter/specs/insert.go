@@ -2,6 +2,7 @@ package specs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -27,6 +28,9 @@ func Insert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "male", user.Gender)
 	assert.Equal(t, 23, user.Age)
 	assert.Equal(t, &note, user.Note)
+
+	// wait for replication
+	time.Sleep(time.Second)
 
 	var (
 		queried User

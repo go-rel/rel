@@ -2,6 +2,7 @@ package specs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -20,6 +21,9 @@ func Delete(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &address)
 	assert.NotEqual(t, 0, address.ID)
 	assert.NotEqual(t, 0, address.User.ID)
+
+	// wait for replication
+	time.Sleep(time.Second)
 
 	assert.Nil(t, repo.Delete(ctx, &address))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", address.ID)))
@@ -58,6 +62,9 @@ func DeleteBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, address.ID)
 	assert.NotEqual(t, 0, address.User.ID)
 
+	// wait for replication
+	time.Sleep(time.Second)
+
 	assert.Nil(t, repo.Delete(ctx, &address, rel.Cascade(true)))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", address.ID)))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", address.User.ID)))
@@ -76,6 +83,9 @@ func DeleteHasOne(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &user)
 	assert.NotEqual(t, 0, user.ID)
 	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
+
+	// wait for replication
+	time.Sleep(time.Second)
 
 	assert.Nil(t, repo.Delete(ctx, &user, rel.Cascade(true)))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", user.ID)))
@@ -117,6 +127,9 @@ func DeleteHasMany(t *testing.T, repo rel.Repository) {
 				assert.NotEqual(t, 0, addr.ID)
 			}
 
+			// wait for replication
+			time.Sleep(time.Second)
+
 			assert.Nil(t, repo.Delete(ctx, &tt.user, rel.Cascade(true)))
 			assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", tt.user.ID)))
 
@@ -132,6 +145,9 @@ func DeleteAny(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "other delete", Age: 110})
+
+	// wait for replication
+	time.Sleep(time.Second)
 
 	tests := []rel.Query{
 		rel.From("users").Where(where.Eq("name", "delete")),

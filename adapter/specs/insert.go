@@ -2,7 +2,6 @@ package specs
 
 import (
 	"testing"
-	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -29,8 +28,7 @@ func Insert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, 23, user.Age)
 	assert.Equal(t, &note, user.Note)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	var (
 		queried User
@@ -72,6 +70,8 @@ func InsertHasMany(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "addresses")
 
@@ -100,6 +100,8 @@ func InsertHasOne(t *testing.T, repo rel.Repository) {
 	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
+
+	waitForReplication()
 
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "primary_address")
@@ -133,6 +135,8 @@ func InsertBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "male", address.User.Gender)
 	assert.Equal(t, 23, address.User.Age)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
 	repo.MustPreload(ctx, &result, "user")
 
@@ -165,6 +169,8 @@ func Inserts(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("Insert", func(t *testing.T) {
 			assert.Nil(t, repo.Insert(ctx, record))
+
+			waitForReplication()
 			assertRecord(t, repo, record)
 		})
 	}
@@ -214,6 +220,8 @@ func InsertAll(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("InsertAll", func(t *testing.T) {
 			assert.Nil(t, repo.InsertAll(ctx, record))
+
+			waitForReplication()
 			assertRecords(t, repo, record)
 		})
 	}
@@ -230,6 +238,8 @@ func InsertAllPartialCustomPrimary(t *testing.T, repo rel.Repository) {
 	for _, record := range tests {
 		t.Run("InsertAll", func(t *testing.T) {
 			assert.Nil(t, repo.InsertAll(ctx, record))
+
+			waitForReplication()
 			assertRecords(t, repo, record)
 		})
 	}

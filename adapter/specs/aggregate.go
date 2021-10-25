@@ -2,7 +2,6 @@ package specs
 
 import (
 	"testing"
-	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -18,8 +17,7 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 
 	repo.MustInsert(ctx, &user)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	tests := []rel.Query{
 		rel.From("users").Where(where.Eq("id", user.ID)),

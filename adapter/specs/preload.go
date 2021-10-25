@@ -2,7 +2,6 @@ package specs
 
 import (
 	"testing"
-	"time"
 
 	"github.com/go-rel/rel"
 	"github.com/go-rel/rel/where"
@@ -35,8 +34,7 @@ func PreloadHasMany(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
@@ -53,8 +51,7 @@ func PreloadHasManyWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
@@ -75,8 +72,7 @@ func PreloadHasManySlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.FindAll(ctx, &result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
@@ -93,8 +89,7 @@ func PreloadHasOne(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
@@ -111,8 +106,7 @@ func PreloadHasOneWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.ID))
 	assert.Nil(t, err)
@@ -132,8 +126,7 @@ func PreloadHasOneSlice(t *testing.T, repo rel.Repository) {
 		}
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.FindAll(ctx, &result, where.In("id", users[0].ID, users[1].ID))
 	assert.Nil(t, err)
@@ -151,8 +144,7 @@ func PreloadBelongsTo(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
@@ -171,8 +163,7 @@ func PreloadBelongsToWithQuery(t *testing.T, repo rel.Repository) {
 		user   = createPreloadUser(repo)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	err := repo.Find(ctx, &result, where.Eq("id", user.Addresses[0].ID))
 	assert.Nil(t, err)
@@ -192,8 +183,7 @@ func PreloadBelongsToSlice(t *testing.T, repo rel.Repository) {
 		resultLen = len(result)
 	)
 
-	// wait for replication
-	time.Sleep(time.Second)
+	waitForReplication()
 
 	user.Addresses = nil
 

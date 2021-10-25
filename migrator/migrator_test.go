@@ -63,7 +63,7 @@ func TestMigrator(t *testing.T) {
 	})
 
 	t.Run("Migrate", func(t *testing.T) {
-		repo.ExpectFindAll(rel.NewSortAsc("version")).
+		repo.ExpectFindAll(rel.UsePrimary().SortAsc("version")).
 			Result(versions{{ID: 1, Version: 20200829115100}})
 
 		repo.ExpectTransaction(func(repo *reltest.Repository) {
@@ -78,7 +78,7 @@ func TestMigrator(t *testing.T) {
 	})
 
 	t.Run("Rollback", func(t *testing.T) {
-		repo.ExpectFindAll(rel.NewSortAsc("version")).
+		repo.ExpectFindAll(rel.UsePrimary().SortAsc("version")).
 			Result(versions{
 				{ID: 1, Version: 20200828100000},
 				{ID: 2, Version: 20200829084000},
@@ -189,7 +189,7 @@ func TestMigrator_Sync(t *testing.T) {
 			migrator.Register(2, nfn, nfn)
 			migrator.Register(1, nfn, nfn)
 
-			repo.ExpectFindAll(rel.NewSortAsc("version")).Result(test.applied)
+			repo.ExpectFindAll(rel.UsePrimary().SortAsc("version")).Result(test.applied)
 
 			if test.isPanic {
 				assert.Panics(t, func() {

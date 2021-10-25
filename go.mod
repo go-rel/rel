@@ -1,6 +1,7 @@
 module github.com/go-rel/rel
 
 require (
+	github.com/go-rel/reltest v0.3.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jinzhu/inflection v1.0.0
 	github.com/lib/pq v1.10.3

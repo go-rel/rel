@@ -1366,7 +1366,7 @@ func TestRepository_Update_reload(t *testing.T) {
 	)
 
 	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
-	adapter.On("Query", queries.Limit(1)).Return(cur, nil).Once()
+	adapter.On("Query", queries.Limit(1).UsePrimary()).Return(cur, nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user, mutators...))
 	assert.False(t, cur.Next())
@@ -1392,7 +1392,7 @@ func TestRepository_Update_reloadError(t *testing.T) {
 	)
 
 	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
-	adapter.On("Query", queries.Limit(1)).Return(cur, err).Once()
+	adapter.On("Query", queries.Limit(1).UsePrimary()).Return(cur, err).Once()
 
 	assert.Equal(t, err, repo.Update(context.TODO(), &user, mutators...))
 

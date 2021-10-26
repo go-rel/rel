@@ -420,20 +420,20 @@ func From(table string) Query {
 }
 
 // Join create a query with chainable syntax, using join as the starting point.
-func Join(table string) Query {
-	return JoinOn(table, "", "")
+func Join(table string, filter ...FilterQuery) Query {
+	return JoinOn(table, "", "", filter...)
 }
 
 // JoinOn create a query with chainable syntax, using join as the starting point.
-func JoinOn(table string, from string, to string) Query {
-	return JoinWith("JOIN", table, from, to)
+func JoinOn(table string, from string, to string, filter ...FilterQuery) Query {
+	return JoinWith("JOIN", table, from, to, filter...)
 }
 
 // JoinWith create a query with chainable syntax, using join as the starting point.
-func JoinWith(mode string, table string, from string, to string) Query {
+func JoinWith(mode string, table string, from string, to string, filter ...FilterQuery) Query {
 	query := newQuery()
 	query.JoinQuery = []JoinQuery{
-		NewJoinWith(mode, table, from, to),
+		NewJoinWith(mode, table, from, to, filter...),
 	}
 	return query
 }

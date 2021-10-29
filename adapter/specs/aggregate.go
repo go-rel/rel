@@ -17,6 +17,8 @@ func Aggregate(t *testing.T, repo rel.Repository) {
 
 	repo.MustInsert(ctx, &user)
 
+	waitForReplication()
+
 	tests := []rel.Query{
 		rel.From("users").Where(where.Eq("id", user.ID)),
 		rel.From("users").Where(where.Eq("name", "name1")),

@@ -76,6 +76,7 @@ type Query struct {
 	ReloadQuery   Reload
 	CascadeQuery  Cascade
 	PreloadQuery  []string
+	UsePrimaryDb  bool
 }
 
 // Build query.
@@ -116,8 +117,9 @@ func (q Query) Build(query *Query) {
 			query.LockQuery = q.LockQuery
 		}
 
-		query.ReloadQuery = q.ReloadQuery
-		query.CascadeQuery = q.CascadeQuery
+		query.ReloadQuery = query.ReloadQuery || q.ReloadQuery
+		query.CascadeQuery = query.CascadeQuery || q.CascadeQuery
+		query.UsePrimaryDb = query.UsePrimaryDb || q.UsePrimaryDb
 	}
 }
 
@@ -292,6 +294,12 @@ func (q Query) Preload(field string) Query {
 	return q
 }
 
+// UsePrimary database.
+func (q Query) UsePrimary() Query {
+	q.UsePrimaryDb = true
+	return q
+}
+
 // String describe query as string.
 func (q Query) String() string {
 	if q.SQLQuery.Statement != "" {
@@ -300,6 +308,10 @@ func (q Query) String() string {
 
 	var builder strings.Builder
 	builder.WriteString("rel")
+
+	if q.UsePrimaryDb {
+		builder.WriteString(".UsePrimary()")
+	}
 
 	if q.Table != "" {
 		builder.WriteString(".From(\"")
@@ -451,6 +463,12 @@ func Joinf(expr string, args ...interface{}) Query {
 func Where(filters ...FilterQuery) Query {
 	query := newQuery()
 	query.WhereQuery = And(filters...)
+	return query
+}
+
+func UsePrimary() Query {
+	query := newQuery()
+	query.UsePrimaryDb = true
 	return query
 }
 

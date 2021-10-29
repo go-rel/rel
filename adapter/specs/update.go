@@ -39,6 +39,8 @@ func Update(t *testing.T, repo rel.Repository) {
 		queried User
 	)
 
+	waitForReplication()
+
 	user.Addresses = nil
 	err = repo.Find(ctx, &queried, where.Eq("id", user.ID))
 	assert.Nil(t, err)
@@ -88,6 +90,8 @@ func UpdateHasManyInsert(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "addresses")
 
@@ -120,6 +124,8 @@ func UpdateHasManyUpdate(t *testing.T, repo rel.Repository) {
 	assert.NotZero(t, user.Addresses[0].ID)
 	assert.Equal(t, user.ID, *user.Addresses[0].UserID)
 	assert.Equal(t, "new address", user.Addresses[0].Name)
+
+	waitForReplication()
 
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "addresses")
@@ -160,6 +166,8 @@ func UpdateHasManyReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, "primary", user.Addresses[0].Name)
 	assert.Equal(t, "work", user.Addresses[1].Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "addresses")
 
@@ -188,6 +196,8 @@ func UpdateHasOneInsert(t *testing.T, repo rel.Repository) {
 	assert.NotZero(t, user.PrimaryAddress.ID)
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "primary", user.PrimaryAddress.Name)
+
+	waitForReplication()
 
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "primary_address")
@@ -219,6 +229,8 @@ func UpdateHasOneUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "updated primary", user.PrimaryAddress.Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "primary_address")
 
@@ -249,6 +261,8 @@ func UpdateHasOneReplace(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, user.ID, *user.PrimaryAddress.UserID)
 	assert.Equal(t, "replaced primary", user.PrimaryAddress.Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	repo.MustPreload(ctx, &result, "primary_address")
 
@@ -275,6 +289,8 @@ func UpdateBelongsToInsert(t *testing.T, repo rel.Repository) {
 	assert.NotZero(t, address.User.ID)
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "inserted user", address.User.Name)
+
+	waitForReplication()
 
 	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
 	repo.MustPreload(ctx, &result, "user")
@@ -306,6 +322,8 @@ func UpdateBelongsToUpdate(t *testing.T, repo rel.Repository) {
 	assert.Equal(t, *address.UserID, address.User.ID)
 	assert.Equal(t, "updated user", address.User.Name)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", address.ID))
 	repo.MustPreload(ctx, &result, "user")
 
@@ -324,11 +342,15 @@ func UpdateAtomic(t *testing.T, repo rel.Repository) {
 	assert.Nil(t, repo.Update(ctx, &user, rel.Inc("age")))
 	assert.Equal(t, 11, user.Age)
 
+	waitForReplication()
+
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	assert.Equal(t, result, user)
 
 	assert.Nil(t, repo.Update(ctx, &user, rel.Dec("age")))
 	assert.Equal(t, 10, user.Age)
+
+	waitForReplication()
 
 	repo.MustFind(ctx, &result, where.Eq("id", user.ID))
 	assert.Equal(t, result, user)
@@ -382,6 +404,8 @@ func UpdateAny(t *testing.T, repo rel.Repository) {
 			updatedCount, err := repo.UpdateAny(ctx, query, rel.Set("name", name))
 			assert.Nil(t, err)
 			assert.NotZero(t, updatedCount)
+
+			waitForReplication()
 
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
 			assert.Zero(t, len(result))

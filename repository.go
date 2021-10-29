@@ -515,7 +515,7 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 		}
 
 		if mutation.Reload {
-			if err := r.find(cw, doc, query); err != nil {
+			if err := r.find(cw, doc, query.UsePrimary()); err != nil {
 				return err
 			}
 		}

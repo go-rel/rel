@@ -22,8 +22,10 @@ func Delete(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, address.User.ID)
 
 	assert.Nil(t, repo.Delete(ctx, &address))
-	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", address.ID)))
 
+	waitForReplication()
+
+	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", address.ID)))
 	// not deleted because cascade disabled
 	assert.Nil(t, repo.Find(ctx, &User{}, where.Eq("id", address.User.ID)))
 }
@@ -42,6 +44,8 @@ func DeleteAll(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, addresses[1].ID)
 
 	assert.Nil(t, repo.DeleteAll(ctx, &addresses))
+
+	waitForReplication()
 	assert.Zero(t, repo.MustCount(ctx, "addresses", where.In("id", addresses[0].ID, addresses[1].ID)))
 }
 
@@ -59,6 +63,9 @@ func DeleteBelongsTo(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, address.User.ID)
 
 	assert.Nil(t, repo.Delete(ctx, &address, rel.Cascade(true)))
+
+	waitForReplication()
+
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", address.ID)))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", address.User.ID)))
 }
@@ -78,6 +85,9 @@ func DeleteHasOne(t *testing.T, repo rel.Repository) {
 	assert.NotEqual(t, 0, user.PrimaryAddress.ID)
 
 	assert.Nil(t, repo.Delete(ctx, &user, rel.Cascade(true)))
+
+	waitForReplication()
+
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", user.ID)))
 	assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", user.PrimaryAddress.ID)))
 }
@@ -118,8 +128,10 @@ func DeleteHasMany(t *testing.T, repo rel.Repository) {
 			}
 
 			assert.Nil(t, repo.Delete(ctx, &tt.user, rel.Cascade(true)))
-			assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", tt.user.ID)))
 
+			waitForReplication()
+
+			assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &User{}, where.Eq("id", tt.user.ID)))
 			for _, addr := range tt.user.Addresses {
 				assert.Equal(t, rel.NotFoundError{}, repo.Find(ctx, &Address{}, where.Eq("id", addr.ID)))
 			}
@@ -132,6 +144,8 @@ func DeleteAny(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "delete", Age: 100})
 	repo.MustInsert(ctx, &User{Name: "other delete", Age: 110})
+
+	waitForReplication()
 
 	tests := []rel.Query{
 		rel.From("users").Where(where.Eq("name", "delete")),
@@ -147,6 +161,8 @@ func DeleteAny(t *testing.T, repo rel.Repository) {
 			deletedCount, err := repo.DeleteAny(ctx, query)
 			assert.Nil(t, err)
 			assert.NotZero(t, deletedCount)
+
+			waitForReplication()
 
 			assert.Nil(t, repo.FindAll(ctx, &result, query))
 			assert.Zero(t, len(result))

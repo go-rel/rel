@@ -27,6 +27,8 @@ func Query(t *testing.T, repo rel.Repository) {
 	repo.MustInsert(ctx, &Address{Name: "address2", UserID: &user.ID})
 	repo.MustInsert(ctx, &Address{Name: "address3", UserID: &user.ID})
 
+	waitForReplication()
+
 	tests := []rel.Querier{
 		where.Eq("id", user.ID),
 		rel.Where(where.Eq("id", user.ID)),

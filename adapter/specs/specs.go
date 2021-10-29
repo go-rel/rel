@@ -88,3 +88,8 @@ func assertConstraint(t *testing.T, err error, ctype rel.ConstraintType, key str
 	assert.True(t, strings.Contains(cerr.Key, key))
 	assert.Equal(t, ctype, cerr.Type)
 }
+
+func waitForReplication() {
+	// wait for replication
+	time.Sleep(5 * time.Millisecond)
+}

@@ -80,7 +80,7 @@ func (m *Migrator) sync(ctx context.Context) {
 	var (
 		versions versions
 		vi       int
-		adapter  = m.repo.Adapter(ctx).(rel.Adapter)
+		adapter  = m.repo.Adapter(ctx)
 	)
 
 	if !m.versionTableExists {
@@ -88,7 +88,7 @@ func (m *Migrator) sync(ctx context.Context) {
 		m.versionTableExists = true
 	}
 
-	m.repo.MustFindAll(ctx, &versions, rel.NewSortAsc("version"))
+	m.repo.MustFindAll(ctx, &versions, rel.UsePrimary().SortAsc("version"))
 	sort.Sort(m.versions)
 
 	for i := range m.versions {
@@ -155,7 +155,7 @@ func (m *Migrator) Rollback(ctx context.Context) {
 }
 
 func (m *Migrator) run(ctx context.Context, migrations []rel.Migration) {
-	adapter := m.repo.Adapter(ctx).(rel.Adapter)
+	adapter := m.repo.Adapter(ctx)
 	for _, migration := range migrations {
 		if fn, ok := migration.(rel.Do); ok {
 			check(fn(m.repo))

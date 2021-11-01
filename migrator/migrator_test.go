@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-rel/rel"
-	"github.com/go-rel/rel/reltest"
+	"github.com/go-rel/reltest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,6 +60,8 @@ func TestMigrator(t *testing.T) {
 		assert.Equal(t, 20200829084000, migrator.versions[0].Version)
 		assert.Equal(t, 20200828100000, migrator.versions[1].Version)
 		assert.Equal(t, 20200829115100, migrator.versions[2].Version)
+
+		repo.AssertExpectations(t)
 	})
 
 	t.Run("Migrate", func(t *testing.T) {
@@ -75,6 +77,7 @@ func TestMigrator(t *testing.T) {
 		})
 
 		migrator.Migrate(ctx)
+		repo.AssertExpectations(t)
 	})
 
 	t.Run("Rollback", func(t *testing.T) {
@@ -91,6 +94,7 @@ func TestMigrator(t *testing.T) {
 		})
 
 		migrator.Rollback(ctx)
+		repo.AssertExpectations(t)
 	})
 }
 
@@ -202,6 +206,8 @@ func TestMigrator_Sync(t *testing.T) {
 
 				assert.Equal(t, test.synced, migrator.versions)
 			}
+
+			repo.AssertExpectations(t)
 		})
 	}
 }

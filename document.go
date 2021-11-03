@@ -534,9 +534,6 @@ func fieldName(sf reflect.StructField) string {
 }
 
 func searchPrimary(rt reflect.Type) ([]string, []int) {
-	if rt.Kind() == reflect.Ptr {
-		rt = rt.Elem()
-	}
 	if result, cached := primariesCache.Load(rt); cached {
 		p := result.(primaryData)
 		return p.field, p.index

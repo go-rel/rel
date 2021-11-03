@@ -527,6 +527,36 @@ func TestRepository_FindAll_withPreload(t *testing.T) {
 	curPreload.AssertExpectations(t)
 }
 
+func TestRepository_FindAll_withPreloadPointer(t *testing.T) {
+	var (
+		addresses  []*Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("user_addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, nil).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
 func TestRepository_FindAll_withPreloadError(t *testing.T) {
 	var (
 		addresses  []Address

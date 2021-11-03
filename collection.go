@@ -193,9 +193,6 @@ func newCollection(v interface{}, rv reflect.Value, readonly bool) *Collection {
 		rv = rv.Elem()
 		rt = rt.Elem()
 	}
-	if rt.Kind() == reflect.Ptr {
-		rt = rt.Elem()
-	}
 
 	if rt.Kind() != reflect.Slice {
 		panic("rel: must be a slice or pointer to a slice")

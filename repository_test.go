@@ -415,6 +415,26 @@ func TestRepository_FindAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAllPointer(t *testing.T) {
+	var (
+		users   []*User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1)
+		cur     = createCursor(2)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &users, query))
+	assert.Len(t, users, 2)
+	assert.Equal(t, 10, users[0].ID)
+	assert.Equal(t, 10, users[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_FindAll_softDelete(t *testing.T) {
 	var (
 		addresses []Address

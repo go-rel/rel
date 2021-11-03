@@ -135,6 +135,10 @@ func (c Collection) Add() *Document {
 		drv   = reflect.Zero(typ)
 	)
 
+	if typ.Kind() == reflect.Ptr && drv.IsNil() {
+		drv = reflect.New(drv.Type().Elem())
+	}
+
 	c.rv.Set(reflect.Append(c.rv, drv))
 
 	return NewDocument(c.rv.Index(index).Addr())
@@ -187,6 +191,9 @@ func newCollection(v interface{}, rv reflect.Value, readonly bool) *Collection {
 		}
 	} else {
 		rv = rv.Elem()
+		rt = rt.Elem()
+	}
+	if rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
 	}
 

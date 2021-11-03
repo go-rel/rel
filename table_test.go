@@ -20,16 +20,26 @@ func TestTable(t *testing.T) {
 	t.Run("ID", func(t *testing.T) {
 		table.ID("id")
 		assert.Equal(t, Column{
-			Name: "id",
-			Type: ID,
+			Name:    "id",
+			Type:    ID,
+			Primary: true,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("BigID", func(t *testing.T) {
 		table.BigID("big_id")
 		assert.Equal(t, Column{
-			Name: "big_id",
-			Type: BigID,
+			Name:    "big_id",
+			Type:    BigID,
+			Primary: true,
+		}, table.Definitions[len(table.Definitions)-1])
+	})
+
+	t.Run("IDNotPrimaryKey", func(t *testing.T) {
+		table.ID("id", Primary(false))
+		assert.Equal(t, Column{
+			Name: "id",
+			Type: ID,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 

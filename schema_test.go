@@ -32,7 +32,7 @@ func TestSchema_CreateTable(t *testing.T) {
 		Op:   SchemaCreate,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID},
+			Column{Name: "id", Type: ID, Primary: true},
 			Column{Name: "name", Type: String},
 			Column{Name: "description", Type: Text},
 		},
@@ -47,7 +47,7 @@ func TestSchema_CreateTable(t *testing.T) {
 		Name:     "wishlists",
 		Optional: true,
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID},
+			Column{Name: "id", Type: ID, Primary: true},
 		},
 	}, schema.Migrations[1])
 

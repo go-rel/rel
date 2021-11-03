@@ -23,12 +23,14 @@ func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
 // ID defines a column with name and ID type.
 // the resulting database type will depends on database.
 func (t *Table) ID(name string, options ...ColumnOption) {
+	options = append([]ColumnOption{Primary(true)}, options...)
 	t.Column(name, ID, options...)
 }
 
 // BigID defines a column with name and Big ID type.
 // the resulting database type will depends on database.
 func (t *Table) BigID(name string, options ...ColumnOption) {
+	options = append([]ColumnOption{Primary(true)}, options...)
 	t.Column(name, BigID, options...)
 }
 

@@ -9,7 +9,7 @@ var (
 	// And compares other filters using and.
 	And = rel.And
 
-	// Or compares other filters using and.
+	// Or compares other filters using or.
 	Or = rel.Or
 
 	// Not wraps filters using not.

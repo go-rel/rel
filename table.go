@@ -17,6 +17,9 @@ type Table struct {
 
 // Column defines a column with name and type.
 func (t *Table) Column(name string, typ ColumnType, options ...ColumnOption) {
+	if typ == BigID || typ == ID {
+		options = append([]ColumnOption{Primary(true)}, options...)
+	}
 	t.Definitions = append(t.Definitions, createColumn(name, typ, options))
 }
 

@@ -36,6 +36,13 @@ func applyKeyOptions(key *Key, options []KeyOption) {
 	}
 }
 
+// Primary set column as primary.
+type Primary bool
+
+func (r Primary) applyColumn(column *Column) {
+	column.Primary = bool(r)
+}
+
 // Unique set column as unique.
 type Unique bool
 

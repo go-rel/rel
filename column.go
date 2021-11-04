@@ -40,6 +40,7 @@ type Column struct {
 	Name      string
 	Type      ColumnType
 	Rename    string
+	Primary   bool
 	Unique    bool
 	Required  bool
 	Unsigned  bool

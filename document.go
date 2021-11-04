@@ -276,10 +276,15 @@ func (d Document) Scanners(fields []string) []interface{} {
 		result = make([]interface{}, len(fields))
 	)
 
+	val := d.rv
+	if val.Kind() == reflect.Ptr {
+		val = reflect.Indirect(val)
+	}
+
 	for index, field := range fields {
 		if structIndex, ok := d.data.index[field]; ok {
 			var (
-				fv = d.rv.Field(structIndex)
+				fv = val.Field(structIndex)
 				ft = fv.Type()
 			)
 
@@ -388,6 +393,9 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 		}
 		rt = rt.Elem()
 	}
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
 
 	if rt.Kind() != reflect.Struct {
 		panic("rel: must be a struct or pointer to a struct")
@@ -402,6 +410,9 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 }
 
 func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
 	if data, cached := documentDataCache.Load(rt); cached {
 		return data.(documentData)
 	}
@@ -572,6 +583,9 @@ func searchPrimary(rt reflect.Type) ([]string, []int) {
 }
 
 func tableName(rt reflect.Type) string {
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
 	// check for cache
 	if name, cached := tablesCache.Load(rt); cached {
 		return name.(string)

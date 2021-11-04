@@ -333,7 +333,7 @@ func And(inner ...FilterQuery) FilterQuery {
 	}
 }
 
-// Or compares other filters using and.
+// Or compares other filters using or.
 func Or(inner ...FilterQuery) FilterQuery {
 	if len(inner) == 1 {
 		return inner[0]

@@ -415,6 +415,26 @@ func TestRepository_FindAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_FindAllPointer(t *testing.T) {
+	var (
+		users   []*User
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		query   = From("users").Limit(1)
+		cur     = createCursor(2)
+	)
+
+	adapter.On("Query", query).Return(cur, nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &users, query))
+	assert.Len(t, users, 2)
+	assert.Equal(t, 10, users[0].ID)
+	assert.Equal(t, 10, users[1].ID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_FindAll_softDelete(t *testing.T) {
 	var (
 		addresses []Address
@@ -480,6 +500,36 @@ func TestRepository_FindAll_withCascade(t *testing.T) {
 func TestRepository_FindAll_withPreload(t *testing.T) {
 	var (
 		addresses  []Address
+		adapter    = &testAdapter{}
+		repo       = New(adapter)
+		query      = From("user_addresses").Preload("user")
+		cur        = &testCursor{}
+		curPreload = createCursor(0)
+	)
+
+	adapter.On("Query", query.Where(Nil("deleted_at"))).Return(cur, nil).Once()
+	adapter.On("Query", From("users").Where(In("id", 20))).
+		Return(curPreload, nil).Once()
+
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(10, 20)
+	cur.On("Next").Return(false).Once()
+	cur.On("Close").Return(nil).Once()
+
+	assert.Nil(t, repo.FindAll(context.TODO(), &addresses, query))
+	assert.Len(t, addresses, 1)
+	assert.Equal(t, 10, addresses[0].ID)
+	assert.Equal(t, 20, *addresses[0].UserID)
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+	curPreload.AssertExpectations(t)
+}
+
+func TestRepository_FindAll_withPreloadPointer(t *testing.T) {
+	var (
+		addresses  []*Address
 		adapter    = &testAdapter{}
 		repo       = New(adapter)
 		query      = From("user_addresses").Preload("user")

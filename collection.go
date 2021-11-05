@@ -78,10 +78,9 @@ func (c Collection) PrimaryValues() []interface{} {
 			)
 
 			for j := 0; j < idxLen; j++ {
-				if item := c.rv.Index(j); item.Kind() == reflect.Ptr && item.IsNil() {
-					continue
+				if item := c.rvIndex(j); item.IsValid() {
+					values = append(values, item.Field(index[i]).Interface())
 				}
-				values = append(values, c.rvIndex(j).Field(index[i]).Interface())
 			}
 
 			pValues[i] = values
@@ -93,10 +92,11 @@ func (c Collection) PrimaryValues() []interface{} {
 		)
 
 		for i := 0; i < c.rv.Len(); i++ {
-			if item := c.rv.Index(i); item.Kind() == reflect.Ptr && item.IsNil() {
+			item := c.rvIndex(i)
+			if !item.IsValid() {
 				continue
 			}
-			for j, id := range c.rvIndex(i).Interface().(primary).PrimaryValues() {
+			for j, id := range item.Interface().(primary).PrimaryValues() {
 				tmp[j] = append(tmp[j], id)
 			}
 		}

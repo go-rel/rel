@@ -415,7 +415,7 @@ func TestRepository_FindAll(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
-func TestRepository_FindAllPointer(t *testing.T) {
+func TestRepository_FindAll_ptrElem(t *testing.T) {
 	var (
 		users   []*User
 		adapter = &testAdapter{}

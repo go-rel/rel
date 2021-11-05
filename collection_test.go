@@ -146,6 +146,24 @@ func TestCollection_Primary_usingElemInterface(t *testing.T) {
 	primariesCache.Delete(rt)
 }
 
+func TestCollection_Primary_usingElemInterface_ptrElem(t *testing.T) {
+	var (
+		records = []*Item{
+			{UUID: "abc123"},
+			{UUID: "def456"},
+			nil,
+		}
+		rt  = reflect.TypeOf(records).Elem()
+		col = NewCollection(&records)
+	)
+
+	// infer primary key
+	assert.Equal(t, "_uuid", col.PrimaryField())
+	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+
+	primariesCache.Delete(rt)
+}
+
 func TestCollection_Primary_usingTag(t *testing.T) {
 	var (
 		records = []struct {

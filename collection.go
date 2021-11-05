@@ -77,7 +77,7 @@ func (c Collection) PrimaryValues() []interface{} {
 			)
 
 			for j := range values {
-				values[j] = c.get(j).Field(index[i]).Interface()
+				values[j] = c.rvIndex(j).Field(index[i]).Interface()
 			}
 
 			pValues[i] = values
@@ -89,7 +89,7 @@ func (c Collection) PrimaryValues() []interface{} {
 		)
 
 		for i := 0; i < c.rv.Len(); i++ {
-			for j, id := range c.get(i).Interface().(primary).PrimaryValues() {
+			for j, id := range c.rvIndex(i).Interface().(primary).PrimaryValues() {
 				tmp[j] = append(tmp[j], id)
 			}
 		}
@@ -112,13 +112,13 @@ func (c Collection) PrimaryValue() interface{} {
 	panic("rel: composite primary key is not supported")
 }
 
-func (c Collection) get(index int) reflect.Value {
+func (c Collection) rvIndex(index int) reflect.Value {
 	return reflect.Indirect(c.rv.Index(index))
 }
 
 // Get an element from the underlying slice as a document.
 func (c Collection) Get(index int) *Document {
-	return NewDocument(c.get(index).Addr())
+	return NewDocument(c.rvIndex(index).Addr())
 }
 
 // Len of the underlying slice.
@@ -145,7 +145,7 @@ func (c Collection) Add() *Document {
 
 	c.rv.Set(reflect.Append(c.rv, drv))
 
-	return NewDocument(c.get(index).Addr())
+	return NewDocument(c.rvIndex(index).Addr())
 }
 
 // Truncate collection.

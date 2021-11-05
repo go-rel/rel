@@ -131,7 +131,7 @@ func (a Association) ReferenceField() string {
 
 // ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
-	return indirect(a.rv.Field(a.data.referenceIndex))
+	return indirectInterface(a.rv.Field(a.data.referenceIndex))
 }
 
 // ForeignField of the association.
@@ -154,7 +154,7 @@ func (a Association) ForeignValue() interface{} {
 		rv = rv.Elem()
 	}
 
-	return indirect(rv.Field(a.data.foreignIndex))
+	return indirectInterface(rv.Field(a.data.foreignIndex))
 }
 
 // Through return intermediary association.

@@ -2953,7 +2953,7 @@ func TestRepository_DeleteAll_ptrElem(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		users   = []*User{{ID: 1}}
+		users   = []*User{{ID: 1}, nil}
 	)
 
 	adapter.On("Delete", From("users").Where(In("id", users[0].ID))).Return(1, nil).Once()

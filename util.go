@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func indirect(rv reflect.Value) interface{} {
+func indirectInterface(rv reflect.Value) interface{} {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {
 			return nil
@@ -17,6 +17,14 @@ func indirect(rv reflect.Value) interface{} {
 	}
 
 	return rv.Interface()
+}
+
+func indirectReflectType(rt reflect.Type) reflect.Type {
+	if rt.Kind() == reflect.Ptr {
+		return rt.Elem()
+	}
+
+	return rt
 }
 
 func must(err error) {

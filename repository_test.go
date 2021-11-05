@@ -1215,6 +1215,41 @@ func TestRepository_InsertAll_compositePrimaryFields(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_InsertAll_ptrElem(t *testing.T) {
+	var (
+		users = []*User{
+			{Name: "name1"},
+			{Name: "name2", Age: 12},
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		mutates = []map[string]Mutate{
+			{
+				"name":       Set("name", "name1"),
+				"age":        Set("age", 0),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
+			},
+			{
+				"name":       Set("name", "name2"),
+				"age":        Set("age", 12),
+				"created_at": Set("created_at", Now()),
+				"updated_at": Set("updated_at", Now()),
+			},
+		}
+	)
+
+	adapter.On("InsertAll", From("users"), mock.Anything, mutates).Return([]interface{}{1, 2}, nil).Once()
+
+	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
+	assert.Equal(t, []*User{
+		{ID: 1, Name: "name1", Age: 0, CreatedAt: Now(), UpdatedAt: Now()},
+		{ID: 2, Name: "name2", Age: 12, CreatedAt: Now(), UpdatedAt: Now()},
+	}, users)
+
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_InsertAll_empty(t *testing.T) {
 	var (
 		users   []User
@@ -2908,6 +2943,20 @@ func TestRepository_DeleteAll_emptySlice(t *testing.T) {
 		repo    = New(adapter)
 		users   = []User{}
 	)
+
+	assert.Nil(t, repo.DeleteAll(context.TODO(), &users))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_DeleteAll_ptrElem(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = []*User{{ID: 1}}
+	)
+
+	adapter.On("Delete", From("users").Where(In("id", users[0].ID))).Return(1, nil).Once()
 
 	assert.Nil(t, repo.DeleteAll(context.TODO(), &users))
 

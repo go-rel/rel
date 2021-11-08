@@ -106,7 +106,7 @@ func isDeepZero(rv reflect.Value, depth int) bool {
 	case reflect.Array:
 		// check one level deeper if it's an uuid ([16]byte)
 		if depth == 0 && rv.Type().Elem().Kind() == reflect.Uint8 && rv.Len() == 16 {
-			depth = 1
+			depth += 1
 		}
 
 		for i := 0; i < rv.Len(); i++ {

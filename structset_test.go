@@ -217,3 +217,22 @@ func TestStructset_differentStructMissingField(t *testing.T) {
 		Apply(doc, NewStructset(&user, true))
 	})
 }
+
+func TestStructset_uuid(t *testing.T) {
+	// package like https://github.com/google/uuid use [16]byte to represent uuid
+	var (
+		uuid   = [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		record = struct {
+			UUID [16]byte `db:",primary"`
+		}{UUID: uuid}
+		doc      = NewDocument(&record)
+		mutation = Mutation{
+			Cascade: true,
+			Mutates: map[string]Mutate{
+				"uuid": Set("uuid", uuid),
+			},
+		}
+	)
+
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&record, false)))
+}

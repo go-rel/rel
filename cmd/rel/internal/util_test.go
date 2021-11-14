@@ -87,7 +87,7 @@ func TestGetDatabaseInfo(t *testing.T) {
 		defer os.Setenv("SQLITE3_DATABASE", "")
 
 		adapter, driver, url := getDatabaseInfo()
-		assert.Equal(t, "github.com/go-rel/rel/sqlite3", adapter)
+		assert.Equal(t, "github.com/go-rel/sqlite3", adapter)
 		assert.Equal(t, "github.com/mattn/go-sqlite3", driver)
 		assert.Equal(t, "test.db", url)
 	})

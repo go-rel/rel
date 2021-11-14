@@ -27,27 +27,3 @@ jobs:
         run: |
           sleep 15
           go test -race -tags=mysql ./...
-
-  postgres:
-    name: Postgres
-    strategy:
-      matrix:
-        postgres: [9, 10, 11, 12, 13]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v2
-      - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql version: ${{ matrix.postgres }}
-          postgresql db: rel_test
-          postgresql user: rel
-          postgresql password: rel
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-      - env:
-          POSTGRESQL_DATABASE: postgres://rel:rel@localhost/rel_test
-        run: |
-          sleep 15
-          go test -race -tags=postgres ./...

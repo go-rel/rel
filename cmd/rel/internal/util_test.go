@@ -11,7 +11,7 @@ import (
 
 func TestGetDatabaseInfo(t *testing.T) {
 	t.Run("database", func(t *testing.T) {
-		os.Setenv("DATABASE_ADAPTER", "github.com/go-rel/rel/mysql")
+		os.Setenv("DATABASE_ADAPTER", "github.com/go-rel/mysql")
 		os.Setenv("DATABASE_DRIVER", "github.com/go-sql-driver/mysql")
 		os.Setenv("DATABASE_URL", "user:password@(localhost:3306)/db?charset=utf8&parseTime=True&loc=Local")
 
@@ -20,7 +20,7 @@ func TestGetDatabaseInfo(t *testing.T) {
 		defer os.Setenv("DATABASE_URL", "")
 
 		adapter, driver, url := getDatabaseInfo()
-		assert.Equal(t, "github.com/go-rel/rel/mysql", adapter)
+		assert.Equal(t, "github.com/go-rel/mysql", adapter)
 		assert.Equal(t, "github.com/go-sql-driver/mysql", driver)
 		assert.Equal(t, "user:password@(localhost:3306)/db?charset=utf8&parseTime=True&loc=Local", url)
 	})
@@ -39,7 +39,7 @@ func TestGetDatabaseInfo(t *testing.T) {
 		defer os.Setenv("MYSQL_PASSWORD", "")
 
 		adapter, driver, url := getDatabaseInfo()
-		assert.Equal(t, "github.com/go-rel/rel/mysql", adapter)
+		assert.Equal(t, "github.com/go-rel/mysql", adapter)
 		assert.Equal(t, "github.com/go-sql-driver/mysql", driver)
 		assert.Equal(t, "user:password@(localhost:3306)/db?charset=utf8&parseTime=True&loc=Local", url)
 	})
@@ -58,7 +58,7 @@ func TestGetDatabaseInfo(t *testing.T) {
 		defer os.Setenv("POSTGRES_PASSWORD", "")
 
 		adapter, driver, url := getDatabaseInfo()
-		assert.Equal(t, "github.com/go-rel/rel/postgres", adapter)
+		assert.Equal(t, "github.com/go-rel/postgres", adapter)
 		assert.Equal(t, "github.com/lib/pq", driver)
 		assert.Equal(t, "postgres://user:password@localhost:5432/db?sslmode=disable", url)
 	})
@@ -77,7 +77,7 @@ func TestGetDatabaseInfo(t *testing.T) {
 		defer os.Setenv("POSTGRESQL_PASSWORD", "")
 
 		adapter, driver, url := getDatabaseInfo()
-		assert.Equal(t, "github.com/go-rel/rel/postgres", adapter)
+		assert.Equal(t, "github.com/go-rel/postgres", adapter)
 		assert.Equal(t, "github.com/lib/pq", driver)
 		assert.Equal(t, "postgres://user:password@localhost:5432/db?sslmode=disable", url)
 	})

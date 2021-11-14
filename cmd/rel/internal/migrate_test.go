@@ -29,7 +29,7 @@ func TestExecMigrate(t *testing.T) {
 			args = []string{
 				"rel",
 				"migrate",
-				"-adapter=github.com/go-rel/rel/adapter/sqlite3",
+				"-adapter=github.com/go-rel/rel/sqlite3",
 				"-driver=github.com/mattn/go-sqlite3",
 				"-dsn=:memory:",
 				"-dir=db",
@@ -47,7 +47,7 @@ func TestExecMigrate(t *testing.T) {
 				"migrate",
 				"-dir=testdata/migrations",
 				"-module=github.com/go-rel/rel/cmd/rel/internal",
-				"-adapter=github.com/go-rel/rel/adapter/sqlite3",
+				"-adapter=github.com/go-rel/rel/sqlite3",
 				"-driver=github.com/mattn/go-sqlite3",
 				"-dsn=:memory:",
 				"-verbose=false",

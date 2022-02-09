@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 
@@ -20,17 +21,18 @@ const (
 )
 
 type associationKey struct {
-	rt    reflect.Type
-	index int
+	rt reflect.Type
+	// string repr of index, because []int is not hashable
+	index string
 }
 
 type associationData struct {
 	typ            AssociationType
 	targetIndex    []int
 	referenceField string
-	referenceIndex int
+	referenceIndex []int
 	foreignField   string
-	foreignIndex   int
+	foreignIndex   []int
 	through        string
 	autoload       bool
 	autosave       bool
@@ -131,7 +133,7 @@ func (a Association) ReferenceField() string {
 
 // ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
-	return indirectInterface(a.rv.Field(a.data.referenceIndex))
+	return indirectInterface(a.rv.FieldByIndex(a.data.referenceIndex))
 }
 
 // ForeignField of the association.
@@ -154,7 +156,7 @@ func (a Association) ForeignValue() interface{} {
 		rv = rv.Elem()
 	}
 
-	return indirectInterface(rv.Field(a.data.foreignIndex))
+	return indirectInterface(rv.FieldByIndex(a.data.foreignIndex))
 }
 
 // Through return intermediary association.
@@ -172,7 +174,7 @@ func (a Association) Autosave() bool {
 	return a.data.autosave
 }
 
-func newAssociation(rv reflect.Value, index int) Association {
+func newAssociation(rv reflect.Value, index []int) Association {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -183,11 +185,11 @@ func newAssociation(rv reflect.Value, index int) Association {
 	}
 }
 
-func extractAssociationData(rt reflect.Type, index int) associationData {
+func extractAssociationData(rt reflect.Type, index []int) associationData {
 	var (
 		key = associationKey{
 			rt:    rt,
-			index: index,
+			index: fmt.Sprint(index),
 		}
 	)
 
@@ -196,7 +198,7 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	}
 
 	var (
-		sf        = rt.Field(index)
+		sf        = rt.FieldByIndex(index)
 		ft        = sf.Type
 		ref       = sf.Tag.Get("ref")
 		fk        = sf.Tag.Get("fk")

@@ -121,7 +121,7 @@ func TestAssociation_Document(t *testing.T) {
 			var (
 				rv          = reflect.ValueOf(test.data)
 				sf, _       = rv.Type().Elem().FieldByName(test.field)
-				assoc       = newAssociation(rv, sf.Index[0])
+				assoc       = newAssociation(rv, sf.Index)
 				doc, loaded = assoc.Document()
 			)
 
@@ -269,7 +269,7 @@ func TestAssociation_Collection(t *testing.T) {
 			var (
 				rv          = reflect.ValueOf(test.data)
 				sf, _       = rv.Type().Elem().FieldByName(test.field)
-				assoc       = newAssociation(rv, sf.Index[0])
+				assoc       = newAssociation(rv, sf.Index)
 				col, loaded = assoc.Collection()
 			)
 

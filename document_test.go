@@ -192,11 +192,37 @@ func TestDocument_Index(t *testing.T) {
 			E []*float64 `db:"-"`
 		}{}
 		doc   = NewDocument(&record)
-		index = map[string]int{
-			"a": 0,
-			"b": 1,
-			"c": 2,
-			"D": 3,
+		index = map[string][]int{
+			"a": {0},
+			"b": {1},
+			"c": {2},
+			"D": {3},
+		}
+	)
+
+	assert.Equal(t, index, doc.Index())
+}
+
+func TestDocument_IndexNested(t *testing.T) {
+	type firstEmbedded struct {
+		A int
+		B int
+	}
+	type secondEmbedded struct {
+		D float32
+	}
+	var (
+		record = struct {
+			firstEmbedded
+			C string
+			secondEmbedded
+		}{}
+		doc   = NewDocument(&record)
+		index = map[string][]int{
+			"a": {0, 0},
+			"b": {0, 1},
+			"c": {1},
+			"d": {2, 0},
 		}
 	)
 

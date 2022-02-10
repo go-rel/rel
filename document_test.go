@@ -83,6 +83,21 @@ func TestDocument_Primary(t *testing.T) {
 	assert.Equal(t, 2, doc.PrimaryValue())
 }
 
+func TestDocument_PrimaryEmbedded(t *testing.T) {
+	type UserWrapper struct {
+		User
+		ActivityScore float32
+	}
+
+	var (
+		record = UserWrapper{User: User{ID: 1}}
+		doc    = NewDocument(&record)
+	)
+
+	assert.Equal(t, "id", doc.PrimaryField())
+	assert.Equal(t, 1, doc.PrimaryValue())
+}
+
 func TestDocument_Primary_usingInterface(t *testing.T) {
 	var (
 		record = Item{
@@ -203,30 +218,44 @@ func TestDocument_Index(t *testing.T) {
 	assert.Equal(t, index, doc.Index())
 }
 
-func TestDocument_IndexNested(t *testing.T) {
-	type firstEmbedded struct {
+func TestDocument_IndexEmbedded(t *testing.T) {
+	type FirstEmbedded struct {
 		A int
 		B int
 	}
-	type secondEmbedded struct {
+	type SecondEmbedded struct {
 		D float32
 	}
 	var (
 		record = struct {
-			firstEmbedded
-			C string
-			secondEmbedded
+			FirstEmbedded `db:"first_"`
+			C             string
+			*SecondEmbedded
 		}{}
 		doc   = NewDocument(&record)
 		index = map[string][]int{
-			"a": {0, 0},
-			"b": {0, 1},
-			"c": {1},
-			"d": {2, 0},
+			"first_a": {0, 0},
+			"first_b": {0, 1},
+			"c":       {1},
+			"d":       {2, 0},
 		}
 	)
 
 	assert.Equal(t, index, doc.Index())
+}
+
+func TestDocument_EmbeddedNameConfict(t *testing.T) {
+	type Embedded struct {
+		Name string
+	}
+	record := struct {
+		Embedded
+		Name string
+	}{}
+
+	assert.Panics(t, func() {
+		NewDocument(&record)
+	})
 }
 
 func TestDocument_Types(t *testing.T) {
@@ -363,6 +392,22 @@ func TestDocument_SetValue(t *testing.T) {
 	})
 }
 
+func TestDocument_SetValueEmbedded(t *testing.T) {
+	type Embedded struct {
+		ID   int
+		Name string
+	}
+	var (
+		record struct {
+			Embedded
+			Number float64
+		}
+		doc = NewDocument(&record)
+	)
+
+	assert.True(t, doc.SetValue("id", 1))
+}
+
 func TestDocument_Scanners(t *testing.T) {
 	var (
 		address = "address"
@@ -394,6 +439,27 @@ func TestDocument_Scanners(t *testing.T) {
 	)
 
 	assert.Equal(t, scanners, doc.Scanners(fields))
+}
+
+func TestDocument_ScannersInitPointers(t *testing.T) {
+	type Embedded1 struct {
+		ID int
+	}
+	type Embedded2 struct {
+		Embedded1
+	}
+	type Embedded3 struct {
+		*Embedded2
+	}
+	var (
+		record = struct {
+			*Embedded3
+		}{}
+		doc = NewDocument(&record)
+		_   = doc.Scanners([]string{"id"})
+	)
+	assert.NotNil(t, record.Embedded2)
+	assert.NotNil(t, record.Embedded2.Embedded1)
 }
 
 func TestDocument_Slice(t *testing.T) {
@@ -460,6 +526,21 @@ func TestDocument_Association(t *testing.T) {
 			assert.Equal(t, test.preload, doc.Preload())
 		})
 	}
+}
+
+func TestDocument_AssociationEmbedded(t *testing.T) {
+	var (
+		testHasOne  = []string{"user_address", "user_work_address"}
+		testHasMany = []string{"user_transactions", "user_user_roles", "user_emails", "user_roles", "user_follows", "user_followeds", "user_followings", "user_followers"}
+		record      = struct {
+			User  `db:"user_"`
+			Score float32
+		}{}
+		doc = NewDocument(&record)
+	)
+
+	assert.Equal(t, testHasOne, doc.HasOne())
+	assert.Equal(t, testHasMany, doc.HasMany())
 }
 
 func TestDocument_Association_notFOund(t *testing.T) {

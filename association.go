@@ -1,8 +1,8 @@
 package rel
 
 import (
-	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/serenize/snaker"
@@ -185,11 +185,21 @@ func newAssociation(rv reflect.Value, index []int) Association {
 	}
 }
 
+// Encode index slice into single string
+func encodeIndices(indices []int) string {
+	var out = ""
+	for _, index := range indices {
+		out += "/"
+		out += strconv.Itoa(index)
+	}
+	return out
+}
+
 func extractAssociationData(rt reflect.Type, index []int) associationData {
 	var (
 		key = associationKey{
 			rt:    rt,
-			index: fmt.Sprint(index),
+			index: encodeIndices(index),
 		}
 	)
 
@@ -202,7 +212,7 @@ func extractAssociationData(rt reflect.Type, index []int) associationData {
 		ft        = sf.Type
 		ref       = sf.Tag.Get("ref")
 		fk        = sf.Tag.Get("fk")
-		fName     = fieldName(sf)
+		fName, _  = fieldName(sf)
 		assocData = associationData{
 			targetIndex: sf.Index,
 			through:     sf.Tag.Get("through"),

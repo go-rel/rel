@@ -242,21 +242,6 @@ func (d Document) SetValue(field string, value interface{}) bool {
 	return false
 }
 
-// Init pointers to embedded structs for index path
-func initPointersForIndices(rv reflect.Value, indices []int) {
-	for depth := 0; depth < len(indices)-1; depth += 1 {
-		field := rv.Field(indices[depth])
-		if field.Kind() == reflect.Ptr {
-			if field.IsNil() {
-				field.Set(reflect.New(field.Type().Elem()))
-			}
-			rv = field.Elem()
-		} else {
-			rv = field
-		}
-	}
-}
-
 // Scanners returns slice of sql.Scanner for given fields.
 func (d Document) Scanners(fields []string) []interface{} {
 	var (
@@ -265,10 +250,6 @@ func (d Document) Scanners(fields []string) []interface{} {
 
 	for index, field := range fields {
 		if structIndex, ok := d.data.index[field]; ok {
-			if len(structIndex) > 1 {
-				initPointersForIndices(d.rv, structIndex)
-			}
-
 			var (
 				fv = d.rv.FieldByIndex(structIndex)
 				ft = fv.Type()
@@ -425,11 +406,18 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 		panic("rel: must be a struct or pointer to a struct")
 	}
 
+	documentData := extractDocumentData(rt, false)
+	for _, path := range documentData.index {
+		if len(path) > 1 {
+			initPointersForIndices(rv, path)
+		}
+	}
+
 	return &Document{
 		v:    v,
 		rv:   rv,
 		rt:   rt,
-		data: extractDocumentData(rt, false),
+		data: documentData,
 	}
 }
 
@@ -519,6 +507,21 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 	}
 
 	return data
+}
+
+// Init pointers to embedded structs for index path
+func initPointersForIndices(rv reflect.Value, indices []int) {
+	for depth := 0; depth < len(indices)-1; depth += 1 {
+		field := rv.Field(indices[depth])
+		if field.Kind() == reflect.Ptr {
+			if field.IsNil() {
+				field.Set(reflect.New(field.Type().Elem()))
+			}
+			rv = field.Elem()
+		} else {
+			rv = field
+		}
+	}
 }
 
 func extractTimeFlag(name string) DocumentFlag {

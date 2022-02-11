@@ -242,34 +242,6 @@ func (d Document) SetValue(field string, value interface{}) bool {
 	return false
 }
 
-func setPointerValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
-	if ft.Elem() != rt && !rt.AssignableTo(ft.Elem()) {
-		return false
-	}
-
-	if fv.IsNil() {
-		fv.Set(reflect.New(ft.Elem()))
-	}
-	fv.Elem().Set(rv)
-
-	return true
-}
-
-func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv reflect.Value) bool {
-	var (
-		rk = rt.Kind()
-		fk = ft.Kind()
-	)
-
-	// prevents unintentional conversion
-	if (rk >= reflect.Int || rk <= reflect.Uint64) && fk == reflect.String {
-		return false
-	}
-
-	fv.Set(rv.Convert(ft))
-	return true
-}
-
 // Init pointers to embedded structs for index path
 func initPointersForIndices(rv reflect.Value, indices []int) {
 	for depth := 0; depth < len(indices)-1; depth += 1 {

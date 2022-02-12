@@ -336,16 +336,14 @@ func (d Document) fieldByIndex(index []int) reflect.Value {
 }
 
 // Adds a prefix to field names
-func prefixFieldNames(fieldNames []string, prefix string) []string {
+func appendWithPrefix(target, fieldNames []string, prefix string) []string {
 	if prefix == "" {
-		return fieldNames
+		return append(target, fieldNames...)
 	}
-	// this copy is necessary as embedded structs can be reused
-	newNames := make([]string, len(fieldNames))
-	for i, name := range fieldNames {
-		newNames[i] = prefix + name
+	for _, name := range fieldNames {
+		target = append(target, prefix+name)
 	}
-	return newNames
+	return target
 }
 
 // Adds a field index and checks for conflicts
@@ -361,18 +359,15 @@ func (d *documentData) mergeEmbedded(other documentData, indexPrefix int, namePr
 	for name, path := range other.index {
 		d.addFieldIndex(namePrefix+name, append([]int{indexPrefix}, path...))
 	}
-	appendWithPrefix := func(slice, newNames []string) []string {
-		return append(slice, prefixFieldNames(newNames, namePrefix)...)
-	}
-	d.fields = appendWithPrefix(d.fields, other.fields)
-	d.belongsTo = appendWithPrefix(d.belongsTo, other.belongsTo)
-	d.hasOne = appendWithPrefix(d.hasOne, other.hasOne)
-	d.hasMany = appendWithPrefix(d.hasMany, other.hasMany)
-	d.primaryField = appendWithPrefix(d.primaryField, other.primaryField)
+	d.fields = appendWithPrefix(d.fields, other.fields, namePrefix)
+	d.belongsTo = appendWithPrefix(d.belongsTo, other.belongsTo, namePrefix)
+	d.hasOne = appendWithPrefix(d.hasOne, other.hasOne, namePrefix)
+	d.hasMany = appendWithPrefix(d.hasMany, other.hasMany, namePrefix)
+	d.primaryField = appendWithPrefix(d.primaryField, other.primaryField, namePrefix)
 	for index := range other.primaryIndex {
 		d.primaryIndex = append(d.primaryIndex, append([]int{indexPrefix}, index))
 	}
-	d.preload = appendWithPrefix(d.preload, other.preload)
+	d.preload = appendWithPrefix(d.preload, other.preload, namePrefix)
 	d.flag |= other.flag
 }
 

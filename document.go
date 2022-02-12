@@ -121,7 +121,7 @@ func (d Document) PrimaryValues() []interface{} {
 	)
 
 	for i := range pValues {
-		pValues[i] = d.rv.FieldByIndex(d.data.primaryIndex[i]).Interface()
+		pValues[i] = d.fieldByIndex(d.data.primaryIndex[i]).Interface()
 	}
 
 	return pValues
@@ -186,7 +186,7 @@ func (d Document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
 		var (
 			value interface{}
-			fv    = d.rv.FieldByIndex(i)
+			fv    = d.fieldByIndex(i)
 			ft    = fv.Type()
 		)
 
@@ -210,7 +210,7 @@ func (d Document) SetValue(field string, value interface{}) bool {
 		var (
 			rv reflect.Value
 			rt reflect.Type
-			fv = d.rv.FieldByIndex(i)
+			fv = d.fieldByIndex(i)
 			ft = fv.Type()
 		)
 
@@ -251,7 +251,7 @@ func (d Document) Scanners(fields []string) []interface{} {
 	for index, field := range fields {
 		if structIndex, ok := d.data.index[field]; ok {
 			var (
-				fv = d.rv.FieldByIndex(structIndex)
+				fv = d.fieldByIndex(structIndex)
 				ft = fv.Type()
 			)
 
@@ -326,6 +326,13 @@ func (d *Document) Len() int {
 // Flag returns true if struct contains specified flag.
 func (d Document) Flag(flag DocumentFlag) bool {
 	return d.data.flag.Is(flag)
+}
+
+func (d Document) fieldByIndex(index []int) reflect.Value {
+	if len(index) > 1 {
+		initPointersForIndices(d.rv, index)
+	}
+	return d.rv.FieldByIndex(index)
 }
 
 // Adds a prefix to field names
@@ -406,18 +413,11 @@ func newDocument(v interface{}, rv reflect.Value, readonly bool) *Document {
 		panic("rel: must be a struct or pointer to a struct")
 	}
 
-	documentData := extractDocumentData(rt, false)
-	for _, path := range documentData.index {
-		if len(path) > 1 {
-			initPointersForIndices(rv, path)
-		}
-	}
-
 	return &Document{
 		v:    v,
 		rv:   rv,
 		rt:   rt,
-		data: documentData,
+		data: extractDocumentData(rt, false),
 	}
 }
 

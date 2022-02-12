@@ -3,6 +3,7 @@ package rel
 import (
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/serenize/snaker"
@@ -187,12 +188,12 @@ func newAssociation(rv reflect.Value, index []int) Association {
 
 // Encode index slice into single string
 func encodeIndices(indices []int) string {
-	var out = ""
+	var sb strings.Builder
 	for _, index := range indices {
-		out += "/"
-		out += strconv.Itoa(index)
+		sb.WriteString("/")
+		sb.WriteString(strconv.Itoa(index))
 	}
-	return out
+	return sb.String()
 }
 
 func extractAssociationData(rt reflect.Type, index []int) associationData {

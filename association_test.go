@@ -150,6 +150,40 @@ func TestAssociation_Document(t *testing.T) {
 	}
 }
 
+func TestAssociation_Embedded(t *testing.T) {
+	type EmbeddedID struct {
+		ID int
+	}
+	type Purchase struct {
+		EmbeddedID
+	}
+	type PurchaseInfo struct {
+		PurchaseID int
+		Purchase   *Purchase
+	}
+	type Item struct {
+		EmbeddedID
+		PurchaseInfo
+	}
+
+	var (
+		purchase = &Purchase{EmbeddedID: EmbeddedID{ID: 1}}
+		item     = &Item{EmbeddedID: EmbeddedID{ID: 1},
+			PurchaseInfo: PurchaseInfo{Purchase: purchase, PurchaseID: purchase.ID}}
+		rv        = reflect.ValueOf(item)
+		sf, _     = rv.Type().Elem().FieldByName("Purchase")
+		assoc     = newAssociation(rv, sf.Index)
+		_, loaded = assoc.Document()
+	)
+
+	assert.Equal(t, AssociationType(BelongsTo), assoc.Type())
+	assert.True(t, loaded)
+	assert.Equal(t, "purchase_id", assoc.ReferenceField())
+	assert.Equal(t, item.ID, assoc.ReferenceValue())
+	assert.Equal(t, "id", assoc.ForeignField())
+	assert.Equal(t, purchase.ID, assoc.ForeignValue())
+}
+
 func TestAssociation_Collection(t *testing.T) {
 	var (
 		transaction = &Transaction{ID: 1}

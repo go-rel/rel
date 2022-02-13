@@ -2,8 +2,6 @@ package rel
 
 import (
 	"reflect"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/serenize/snaker"
@@ -67,7 +65,7 @@ func (a Association) LazyDocument() (*Document, bool) {
 
 func (a Association) document(lazy bool) (*Document, bool) {
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, !lazy)
 	)
 
 	switch rv.Kind() {
@@ -98,7 +96,7 @@ func (a Association) document(lazy bool) (*Document, bool) {
 // If association is zero, second return value will be false.
 func (a Association) Collection() (*Collection, bool) {
 	var (
-		rv     = a.rv.FieldByIndex(a.data.targetIndex)
+		rv     = reflectValueFieldByIndex(a.rv, a.data.targetIndex, true)
 		loaded = !rv.IsNil()
 	)
 
@@ -121,7 +119,7 @@ func (a Association) Collection() (*Collection, bool) {
 // IsZero returns true if association is not loaded.
 func (a Association) IsZero() bool {
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, false)
 	)
 
 	return isDeepZero(reflect.Indirect(rv), 1)
@@ -134,7 +132,7 @@ func (a Association) ReferenceField() string {
 
 // ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
-	return indirectInterface(a.rv.FieldByIndex(a.data.referenceIndex))
+	return indirectInterface(reflectValueFieldByIndex(a.rv, a.data.referenceIndex, false))
 }
 
 // ForeignField of the association.
@@ -150,14 +148,14 @@ func (a Association) ForeignValue() interface{} {
 	}
 
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, false)
 	)
 
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
 
-	return indirectInterface(rv.FieldByIndex(a.data.foreignIndex))
+	return indirectInterface(reflectValueFieldByIndex(rv, a.data.foreignIndex, false))
 }
 
 // Through return intermediary association.
@@ -186,16 +184,6 @@ func newAssociation(rv reflect.Value, index []int) Association {
 	}
 }
 
-// Encode index slice into single string
-func encodeIndices(indices []int) string {
-	var sb strings.Builder
-	for _, index := range indices {
-		sb.WriteString("/")
-		sb.WriteString(strconv.Itoa(index))
-	}
-	return sb.String()
-}
-
 func extractAssociationData(rt reflect.Type, index []int) associationData {
 	var (
 		key = associationKey{
@@ -215,7 +203,7 @@ func extractAssociationData(rt reflect.Type, index []int) associationData {
 		fk        = sf.Tag.Get("fk")
 		fName, _  = fieldName(sf)
 		assocData = associationData{
-			targetIndex: sf.Index,
+			targetIndex: index,
 			through:     sf.Tag.Get("through"),
 			autoload:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autoload") == "true",
 			autosave:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autosave") == "true",

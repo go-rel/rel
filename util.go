@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -179,4 +180,44 @@ func fmtifaces(v []interface{}) string {
 	}
 
 	return str.String()
+}
+
+// Encode index slice into single string
+func encodeIndices(indices []int) string {
+	var sb strings.Builder
+	for _, index := range indices {
+		sb.WriteString("/")
+		sb.WriteString(strconv.Itoa(index))
+	}
+	return sb.String()
+}
+
+// Get field by index and init pointers on path if flag is true
+func reflectValueFieldByIndex(rv reflect.Value, index []int, init bool) reflect.Value {
+	if len(index) == 1 {
+		return rv.Field(index[0])
+	}
+	if rv.Kind() != reflect.Struct {
+		panic("rel: value must be a struct")
+	}
+
+	for depth := 0; depth < len(index)-1; depth += 1 {
+		field := rv.Field(index[depth])
+
+		if field.Kind() != reflect.Ptr {
+			rv = field
+			continue
+		}
+
+		if field.IsNil() {
+			if !init {
+				targetType := field.Type().Elem().FieldByIndex(index[depth+1:]).Type
+				return reflect.Zero(reflect.PtrTo(targetType))
+			}
+			field.Set(reflect.New(field.Type().Elem()))
+		}
+
+		rv = field.Elem()
+	}
+	return rv.Field(index[len(index)-1])
 }

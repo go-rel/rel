@@ -121,12 +121,7 @@ func (d Document) PrimaryValues() []interface{} {
 	)
 
 	for i := range pValues {
-		value, ok := d.fieldByIndex(d.data.primaryIndex[i], false)
-		if ok {
-			pValues[i] = value.Interface()
-		} else {
-			pValues[i] = nil
-		}
+		pValues[i] = reflectValueFieldByIndex(d.rv, d.data.primaryIndex[i], false).Interface()
 	}
 
 	return pValues
@@ -189,10 +184,7 @@ func (d Document) Type(field string) (reflect.Type, bool) {
 // Value returns value of given field. if field does not exist, second returns value will be false.
 func (d Document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
-		fv, ok := d.fieldByIndex(i, false)
-		if !ok {
-			return nil, true
-		}
+		fv := reflectValueFieldByIndex(d.rv, i, false)
 
 		var (
 			value interface{}
@@ -217,10 +209,10 @@ func (d Document) Value(field string) (interface{}, bool) {
 func (d Document) SetValue(field string, value interface{}) bool {
 	if i, ok := d.data.index[field]; ok {
 		var (
-			rv    reflect.Value
-			rt    reflect.Type
-			fv, _ = d.fieldByIndex(i, true)
-			ft    = fv.Type()
+			rv reflect.Value
+			rt reflect.Type
+			fv = reflectValueFieldByIndex(d.rv, i, true)
+			ft = fv.Type()
 		)
 
 		switch v := value.(type) {
@@ -260,8 +252,8 @@ func (d Document) Scanners(fields []string) []interface{} {
 	for index, field := range fields {
 		if structIndex, ok := d.data.index[field]; ok {
 			var (
-				fv, _ = d.fieldByIndex(structIndex, true)
-				ft    = fv.Type()
+				fv = reflectValueFieldByIndex(d.rv, structIndex, true)
+				ft = fv.Type()
 			)
 
 			if ft.Kind() == reflect.Ptr {
@@ -335,16 +327,6 @@ func (d *Document) Len() int {
 // Flag returns true if struct contains specified flag.
 func (d Document) Flag(flag DocumentFlag) bool {
 	return d.data.flag.Is(flag)
-}
-
-// Get field by index. Flag is false if this field is inaccessible
-func (d Document) fieldByIndex(index []int, init bool) (reflect.Value, bool) {
-	if len(index) > 1 {
-		if valid := checkPointersForIndices(d.rv, index, init); !valid {
-			return reflect.ValueOf(nil), false
-		}
-	}
-	return d.rv.FieldByIndex(index), true
 }
 
 // Adds a prefix to field names
@@ -514,29 +496,6 @@ func extractDocumentData(rt reflect.Type, skipAssoc bool) documentData {
 	}
 
 	return data
-}
-
-// Check pointers to embedded structs for index path
-// Returns false if pointers are invalid and init is false
-func checkPointersForIndices(rv reflect.Value, indices []int, init bool) bool {
-	for depth := 0; depth < len(indices)-1; depth += 1 {
-		field := rv.Field(indices[depth])
-
-		if field.Kind() != reflect.Ptr {
-			rv = field
-			continue
-		}
-
-		if field.IsNil() {
-			if !init {
-				return false
-			}
-			field.Set(reflect.New(field.Type().Elem()))
-		}
-
-		rv = field.Elem()
-	}
-	return true
 }
 
 func extractTimeFlag(name string) DocumentFlag {

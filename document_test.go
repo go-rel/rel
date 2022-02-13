@@ -329,6 +329,39 @@ func TestDocument_Value(t *testing.T) {
 	})
 }
 
+func TestDocument_ValueEmbedded(t *testing.T) {
+	type Embedded struct {
+		ID int
+	}
+	var (
+		record = struct {
+			*Embedded
+			Name string
+		}{}
+		doc = NewDocument(&record)
+	)
+
+	value, ok := doc.Value("id")
+	assert.True(t, ok)
+	assert.Nil(t, value)
+
+	value = doc.PrimaryValue()
+	assert.Nil(t, value)
+
+	doc.SetValue("id", 1)
+
+	value, ok = doc.Value("id")
+	assert.True(t, ok)
+	assert.Equal(t, 1, value)
+
+	value = doc.PrimaryValue()
+	assert.Equal(t, 1, value)
+
+	value, ok = doc.Value("name")
+	assert.True(t, ok)
+	assert.Equal(t, "", value)
+}
+
 func TestDocument_SetValue(t *testing.T) {
 	var (
 		record struct {

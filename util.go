@@ -197,9 +197,6 @@ func reflectValueFieldByIndex(rv reflect.Value, index []int, init bool) reflect.
 	if len(index) == 1 {
 		return rv.Field(index[0])
 	}
-	if rv.Kind() != reflect.Struct {
-		panic("rel: value must be a struct")
-	}
 
 	for depth := 0; depth < len(index)-1; depth += 1 {
 		field := rv.Field(index[depth])

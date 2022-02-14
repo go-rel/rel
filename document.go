@@ -184,10 +184,10 @@ func (d Document) Type(field string) (reflect.Type, bool) {
 // Value returns value of given field. if field does not exist, second returns value will be false.
 func (d Document) Value(field string) (interface{}, bool) {
 	if i, ok := d.data.index[field]; ok {
-		fv := reflectValueFieldByIndex(d.rv, i, false)
 
 		var (
 			value interface{}
+			fv    = reflectValueFieldByIndex(d.rv, i, false)
 			ft    = fv.Type()
 		)
 

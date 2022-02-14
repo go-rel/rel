@@ -193,6 +193,7 @@ func encodeIndices(indices []int) string {
 }
 
 // Get field by index and init pointers on path if flag is true
+//  modified from: https://cs.opensource.google/go/go/+/refs/tags/go1.17.7:src/reflect/value.go;l=1228-1245;bpv
 func reflectValueFieldByIndex(rv reflect.Value, index []int, init bool) reflect.Value {
 	if len(index) == 1 {
 		return rv.Field(index[0])

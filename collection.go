@@ -79,7 +79,7 @@ func (c Collection) PrimaryValues() []interface{} {
 
 			for j := 0; j < idxLen; j++ {
 				if item := c.rvIndex(j); item.IsValid() {
-					values = append(values, item.Field(index[i]).Interface())
+					values = append(values, reflectValueFieldByIndex(item, index[i], false).Interface())
 				}
 			}
 

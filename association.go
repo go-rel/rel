@@ -20,17 +20,18 @@ const (
 )
 
 type associationKey struct {
-	rt    reflect.Type
-	index int
+	rt reflect.Type
+	// string repr of index, because []int is not hashable
+	index string
 }
 
 type associationData struct {
 	typ            AssociationType
 	targetIndex    []int
 	referenceField string
-	referenceIndex int
+	referenceIndex []int
 	foreignField   string
-	foreignIndex   int
+	foreignIndex   []int
 	through        string
 	autoload       bool
 	autosave       bool
@@ -64,7 +65,7 @@ func (a Association) LazyDocument() (*Document, bool) {
 
 func (a Association) document(lazy bool) (*Document, bool) {
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, !lazy)
 	)
 
 	switch rv.Kind() {
@@ -95,7 +96,7 @@ func (a Association) document(lazy bool) (*Document, bool) {
 // If association is zero, second return value will be false.
 func (a Association) Collection() (*Collection, bool) {
 	var (
-		rv     = a.rv.FieldByIndex(a.data.targetIndex)
+		rv     = reflectValueFieldByIndex(a.rv, a.data.targetIndex, true)
 		loaded = !rv.IsNil()
 	)
 
@@ -118,7 +119,7 @@ func (a Association) Collection() (*Collection, bool) {
 // IsZero returns true if association is not loaded.
 func (a Association) IsZero() bool {
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, false)
 	)
 
 	return isDeepZero(reflect.Indirect(rv), 1)
@@ -131,7 +132,7 @@ func (a Association) ReferenceField() string {
 
 // ReferenceValue of the association.
 func (a Association) ReferenceValue() interface{} {
-	return indirectInterface(a.rv.Field(a.data.referenceIndex))
+	return indirectInterface(reflectValueFieldByIndex(a.rv, a.data.referenceIndex, false))
 }
 
 // ForeignField of the association.
@@ -147,14 +148,14 @@ func (a Association) ForeignValue() interface{} {
 	}
 
 	var (
-		rv = a.rv.FieldByIndex(a.data.targetIndex)
+		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, false)
 	)
 
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
 
-	return indirectInterface(rv.Field(a.data.foreignIndex))
+	return indirectInterface(reflectValueFieldByIndex(rv, a.data.foreignIndex, false))
 }
 
 // Through return intermediary association.
@@ -172,7 +173,7 @@ func (a Association) Autosave() bool {
 	return a.data.autosave
 }
 
-func newAssociation(rv reflect.Value, index int) Association {
+func newAssociation(rv reflect.Value, index []int) Association {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -183,11 +184,11 @@ func newAssociation(rv reflect.Value, index int) Association {
 	}
 }
 
-func extractAssociationData(rt reflect.Type, index int) associationData {
+func extractAssociationData(rt reflect.Type, index []int) associationData {
 	var (
 		key = associationKey{
 			rt:    rt,
-			index: index,
+			index: encodeIndices(index),
 		}
 	)
 
@@ -196,13 +197,13 @@ func extractAssociationData(rt reflect.Type, index int) associationData {
 	}
 
 	var (
-		sf        = rt.Field(index)
+		sf        = rt.FieldByIndex(index)
 		ft        = sf.Type
 		ref       = sf.Tag.Get("ref")
 		fk        = sf.Tag.Get("fk")
-		fName     = fieldName(sf)
+		fName, _  = fieldName(sf)
 		assocData = associationData{
-			targetIndex: sf.Index,
+			targetIndex: index,
 			through:     sf.Tag.Get("through"),
 			autoload:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autoload") == "true",
 			autosave:    sf.Tag.Get("auto") == "true" || sf.Tag.Get("autosave") == "true",

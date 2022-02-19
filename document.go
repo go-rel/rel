@@ -30,6 +30,8 @@ const (
 	HasDeletedAt
 	// HasDeleted flag.
 	HasDeleted
+	// Versioning
+	HasVersioning
 )
 
 var (
@@ -38,6 +40,7 @@ var (
 	documentDataCache sync.Map
 	rtTime            = reflect.TypeOf(time.Time{})
 	rtBool            = reflect.TypeOf(false)
+	rtInt             = reflect.TypeOf(int(0))
 	rtTable           = reflect.TypeOf((*table)(nil)).Elem()
 	rtPrimary         = reflect.TypeOf((*primary)(nil)).Elem()
 )
@@ -517,12 +520,22 @@ func extractBoolFlag(name string) DocumentFlag {
 	return Invalid
 }
 
+func extractIntFlag(name string) DocumentFlag {
+	if name == "lock_version" {
+		return HasVersioning
+	}
+	return Invalid
+}
+
 func extractFlag(rt reflect.Type, name string) DocumentFlag {
 	if rt == rtTime {
 		return extractTimeFlag(name)
 	}
 	if rt == rtBool {
 		return extractBoolFlag(name)
+	}
+	if rt == rtInt {
+		return extractIntFlag(name)
 	}
 	return Invalid
 }

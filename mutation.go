@@ -12,12 +12,17 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
+	return apply(doc, true, true, mutators...)
+}
+
+// apply applies given mutators with customized default values
+func apply(doc *Document, cascade, applyStructset bool, mutators ...Mutator) Mutation {
 	var (
 		optionsCount int
 		mutation     = Mutation{
 			Unscoped: false,
 			Reload:   false,
-			Cascade:  true,
+			Cascade:  Cascade(cascade),
 		}
 	)
 
@@ -32,7 +37,7 @@ func Apply(doc *Document, mutators ...Mutator) Mutation {
 	}
 
 	// fallback to structset.
-	if optionsCount == len(mutators) {
+	if applyStructset && optionsCount == len(mutators) {
 		newStructset(doc, false).Apply(doc, &mutation)
 	}
 
@@ -125,9 +130,10 @@ const (
 
 // Mutate stores mutation instruction.
 type Mutate struct {
-	Type  ChangeOp
-	Field string
-	Value interface{}
+	Type     ChangeOp
+	Field    string
+	Value    interface{}
+	NoReload Reload
 }
 
 // Apply mutation.
@@ -140,7 +146,9 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 			invalid = true
 		}
 	case ChangeFragmentOp:
-		mutation.Reload = true
+		if !m.NoReload {
+			mutation.Reload = true
+		}
 	default:
 		if typ, ok := doc.Type(m.Field); ok {
 			kind := typ.Kind()
@@ -149,7 +157,9 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 			invalid = true
 		}
 
-		mutation.Reload = true
+		if !m.NoReload {
+			mutation.Reload = true
+		}
 	}
 
 	if invalid {
@@ -172,6 +182,12 @@ func (m Mutate) String() string {
 	}
 
 	return str
+}
+
+// Skip reloading after update
+func (m Mutate) SkipReload() Mutate {
+	m.NoReload = true
+	return m
 }
 
 // Set create a mutate using set operation.

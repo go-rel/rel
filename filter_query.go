@@ -393,6 +393,11 @@ func Eq(field string, value interface{}) FilterQuery {
 	}
 }
 
+// Eq expression for version lock
+func LockVersion(version int) FilterQuery {
+	return Eq("lock_version", version)
+}
+
 // Ne compares that left value is not equal to right value.
 func Ne(field string, value interface{}) FilterQuery {
 	return FilterQuery{

@@ -104,11 +104,11 @@ type Repository interface {
 	MustUpdateAny(ctx context.Context, query Query, mutates ...Mutate) int
 
 	// Delete a record.
-	Delete(ctx context.Context, record interface{}, options ...Cascade) error
+	Delete(ctx context.Context, record interface{}, mutators ...Mutator) error
 
 	// MustDelete a record.
 	// It'll panic if any error eccured.
-	MustDelete(ctx context.Context, record interface{}, options ...Cascade)
+	MustDelete(ctx context.Context, record interface{}, mutators ...Mutator)
 
 	// DeleteAll records.
 	// Does not supports application cascade delete.
@@ -491,6 +491,18 @@ func (r repository) Update(ctx context.Context, record interface{}, mutators ...
 	return r.update(cw, doc, mutation, filter)
 }
 
+func (r repository) lockVersion(doc Document, unscoped Unscoped) (int, bool) {
+	if unscoped {
+		return 0, false
+	}
+	if doc.Flag(HasVersioning) {
+		versionRaw, _ := doc.Value("lock_version")
+		version, _ := versionRaw.(int)
+		return version, true
+	}
+	return 0, false
+}
+
 func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
 	if mutation.Cascade {
 		if err := r.saveBelongsTo(cw, doc, &mutation); err != nil {
@@ -500,8 +512,18 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 
 	if !mutation.IsMutatesEmpty() {
 		var (
+			baseQueries = []Querier{filter, mutation.Unscoped, mutation.Cascade}
+			queries     = baseQueries
+		)
+
+		if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
+			Inc("lock_version").SkipReload().Apply(doc, &mutation)
+			queries = append(queries, LockVersion(version))
+		}
+
+		var (
 			pField string
-			query  = r.withDefaultScope(doc.data, Build(doc.Table(), filter, mutation.Unscoped, mutation.Cascade), false)
+			query  = r.withDefaultScope(doc.data, Build(doc.Table(), queries...), false)
 		)
 
 		if len(doc.data.primaryField) == 1 {
@@ -515,9 +537,12 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 		}
 
 		if mutation.Reload {
-			if err := r.find(cw, doc, query.UsePrimary()); err != nil {
+			baseQuery := r.withDefaultScope(doc.data, Build(doc.Table(), baseQueries...), false)
+			if err := r.find(cw, doc, baseQuery.UsePrimary()); err != nil {
 				return err
 			}
+		} else if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
+			doc.SetValue("lock_version", version+1)
 		}
 	}
 
@@ -758,37 +783,39 @@ func (r repository) MustUpdateAny(ctx context.Context, query Query, mutates ...M
 	return updatedCount
 }
 
-func (r repository) Delete(ctx context.Context, record interface{}, options ...Cascade) error {
+func (r repository) Delete(ctx context.Context, record interface{}, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
 
 	var (
-		cw      = fetchContext(ctx, r.rootAdapter)
-		doc     = NewDocument(record)
-		cascade = Cascade(false)
+		cw       = fetchContext(ctx, r.rootAdapter)
+		doc      = NewDocument(record)
+		mutation = apply(nil, false, false, mutators...)
 	)
 
-	if len(options) > 0 {
-		cascade = options[0]
-	}
-
-	if cascade {
+	if mutation.Cascade {
 		return r.transaction(cw, func(cw contextWrapper) error {
-			return r.delete(cw, doc, filterDocument(doc), cascade)
+			return r.delete(cw, doc, filterDocument(doc), mutation)
 		})
 	}
 
-	return r.delete(cw, doc, filterDocument(doc), cascade)
+	return r.delete(cw, doc, filterDocument(doc), mutation)
 }
 
-func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery, cascade Cascade) error {
+func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery, mutation Mutation) error {
+	var filters []Querier = []Querier{filter, mutation.Unscoped}
+
+	if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
+		filters = append(filters, LockVersion(version))
+	}
+
 	var (
 		table = doc.Table()
-		query = Build(table, filter)
+		query = Build(table, filters...)
 	)
 
-	if cascade {
-		if err := r.deleteHasOne(cw, doc, cascade); err != nil {
+	if mutation.Cascade {
+		if err := r.deleteHasOne(cw, doc, true); err != nil {
 			return err
 		}
 
@@ -802,8 +829,8 @@ func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery,
 		err = NotFoundError{}
 	}
 
-	if err == nil && cascade {
-		if err := r.deleteBelongsTo(cw, doc, cascade); err != nil {
+	if err == nil && mutation.Cascade {
+		if err := r.deleteBelongsTo(cw, doc, true); err != nil {
 			return err
 		}
 	}
@@ -827,7 +854,7 @@ func (r repository) deleteBelongsTo(cw contextWrapper, doc *Document, cascade Ca
 				return err
 			}
 
-			if err := r.delete(cw, assocDoc, filter, cascade); err != nil {
+			if err := r.delete(cw, assocDoc, filter, Mutation{Cascade: cascade}); err != nil {
 				return err
 			}
 		}
@@ -852,7 +879,7 @@ func (r repository) deleteHasOne(cw contextWrapper, doc *Document, cascade Casca
 				return err
 			}
 
-			if err := r.delete(cw, assocDoc, filter, cascade); err != nil {
+			if err := r.delete(cw, assocDoc, filter, Mutation{Cascade: cascade}); err != nil {
 				return err
 			}
 		}
@@ -888,8 +915,8 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	return nil
 }
 
-func (r repository) MustDelete(ctx context.Context, record interface{}, options ...Cascade) {
-	must(r.Delete(ctx, record, options...))
+func (r repository) MustDelete(ctx context.Context, record interface{}, mutators ...Mutator) {
+	must(r.Delete(ctx, record, mutators...))
 }
 
 func (r repository) DeleteAll(ctx context.Context, records interface{}) error {

@@ -3958,3 +3958,70 @@ func TestRepository_Transaction_runtimeError(t *testing.T) {
 
 	adapter.AssertExpectations(t)
 }
+
+func TestRepository_LockVersion_Update(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = VersionedTransaction{
+			Transaction: Transaction{
+				ID:   1,
+				Item: "item",
+			},
+			LockVersion: 5,
+		}
+		unscopedMutates = map[string]Mutate{
+			"item": Set("item", "new item"),
+		}
+		mutates = map[string]Mutate{
+			"item":         unscopedMutates["item"],
+			"lock_version": Inc("lock_version").SkipReload(),
+		}
+		baseQueries = From("transactions").Where(Eq("id", transaction.ID))
+		queries     = baseQueries.Where(Eq("lock_version", transaction.LockVersion))
+	)
+
+	// update and increment lock
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
+	assert.Nil(t, repo.Update(context.TODO(), &transaction, Set("item", "new item")))
+
+	assert.Equal(t, 5+1, transaction.LockVersion)
+
+	// try to update with expired lock
+	transaction.LockVersion = 5
+	adapter.On("Update", queries, "id", mutates).Return(0, nil).Once()
+	err := repo.Update(context.TODO(), &transaction, Set("item", "new item"))
+	assert.ErrorIs(t, err, NotFoundError{})
+
+	// unscoped
+	adapter.On("Update", baseQueries.Unscoped(), "id", unscopedMutates).Return(1, nil).Once()
+	assert.Nil(t, repo.Update(context.TODO(), &transaction, Set("item", "new item"), Unscoped(true)))
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_LockVersion_Delete(t *testing.T) {
+	var (
+		adapter     = &testAdapter{}
+		repo        = New(adapter)
+		transaction = VersionedTransaction{
+			Transaction: Transaction{
+				ID:   1,
+				Item: "item",
+			},
+			LockVersion: 5,
+		}
+		baseQueries = From("transactions").Where(Eq("id", transaction.ID))
+		queries     = baseQueries.Where(Eq("lock_version", transaction.LockVersion))
+	)
+
+	// delete
+	adapter.On("Delete", queries).Return(1, nil).Once()
+	assert.Nil(t, repo.Delete(context.TODO(), &transaction))
+
+	// unscoped
+	adapter.On("Delete", baseQueries.Unscoped()).Return(1, nil).Once()
+	assert.Nil(t, repo.Delete(context.TODO(), &transaction, Unscoped(true)))
+
+	adapter.AssertExpectations(t)
+}

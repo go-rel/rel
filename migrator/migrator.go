@@ -42,6 +42,8 @@ func (v versions) Swap(i, j int) {
 }
 
 // Migrator is a migration manager that handles migration logic.
+//
+// Deprecated: use github.com/go-rel/migration instead
 type Migrator struct {
 	repo               rel.Repository
 	instrumenter       rel.Instrumenter

@@ -26,7 +26,7 @@ import (
 	_ "{{.Driver}}"
 	db "{{.Adapter}}"
 	"github.com/go-rel/rel"
-	"github.com/go-rel/rel/migrator"
+	"github.com/go-rel/migration"
 
 	"{{.Package}}"
 )
@@ -72,7 +72,7 @@ func main() {
 
 	var (
 		repo = rel.New(adapter)
-		m    = migrator.New(repo)
+		m    = migration.New(repo)
 	)
 
 	log.SetFlags(0)

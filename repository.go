@@ -511,38 +511,8 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 	}
 
 	if !mutation.IsMutatesEmpty() {
-		var (
-			baseQueries = []Querier{filter, mutation.Unscoped, mutation.Cascade}
-			queries     = baseQueries
-		)
-
-		if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
-			Inc("lock_version").SkipReload().Apply(doc, &mutation)
-			queries = append(queries, LockVersion(version))
-		}
-
-		var (
-			pField string
-			query  = r.withDefaultScope(doc.data, Build(doc.Table(), queries...), false)
-		)
-
-		if len(doc.data.primaryField) == 1 {
-			pField = doc.PrimaryField()
-		}
-
-		if updatedCount, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
-			return mutation.ErrorFunc.transform(err)
-		} else if updatedCount == 0 {
-			return NotFoundError{}
-		}
-
-		if mutation.Reload {
-			baseQuery := r.withDefaultScope(doc.data, Build(doc.Table(), baseQueries...), false)
-			if err := r.find(cw, doc, baseQuery.UsePrimary()); err != nil {
-				return err
-			}
-		} else if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
-			doc.SetValue("lock_version", version+1)
+		if err := r.applyMutates(cw, doc, mutation, filter); err != nil {
+			return err
 		}
 	}
 
@@ -554,6 +524,43 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 		if err := r.saveHasMany(cw, doc, &mutation, false); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
+	var (
+		baseQueries = []Querier{filter, mutation.Unscoped, mutation.Cascade}
+		queries     = baseQueries
+	)
+	if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
+		Inc("lock_version").SkipReload().Apply(doc, &mutation)
+		queries = append(queries, LockVersion(version))
+	}
+
+	var (
+		pField string
+		query  = r.withDefaultScope(doc.data, Build(doc.Table(), queries...), false)
+	)
+
+	if len(doc.data.primaryField) == 1 {
+		pField = doc.PrimaryField()
+	}
+
+	if updatedCount, err := cw.adapter.Update(cw.ctx, query, pField, mutation.Mutates); err != nil {
+		return mutation.ErrorFunc.transform(err)
+	} else if updatedCount == 0 {
+		return NotFoundError{}
+	}
+
+	if mutation.Reload {
+		baseQuery := r.withDefaultScope(doc.data, Build(doc.Table(), baseQueries...), false)
+		if err := r.find(cw, doc, baseQuery.UsePrimary()); err != nil {
+			return err
+		}
+	} else if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
+		doc.SetValue("lock_version", version+1)
 	}
 
 	return nil
@@ -790,7 +797,7 @@ func (r repository) Delete(ctx context.Context, record interface{}, mutators ...
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
 		doc      = NewDocument(record)
-		mutation = apply(nil, false, false, mutators...)
+		mutation = applyMutators(nil, false, false, mutators...)
 	)
 
 	if mutation.Cascade {

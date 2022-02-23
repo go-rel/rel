@@ -12,11 +12,11 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
-	return apply(doc, true, true, mutators...)
+	return applyMutators(doc, true, true, mutators...)
 }
 
-// apply applies given mutators with customized default values
-func apply(doc *Document, cascade, applyStructset bool, mutators ...Mutator) Mutation {
+// apply given mutators with customized default values
+func applyMutators(doc *Document, cascade, applyStructset bool, mutators ...Mutator) Mutation {
 	var (
 		optionsCount int
 		mutation     = Mutation{
@@ -186,8 +186,12 @@ func (m Mutate) String() string {
 
 // Skip reloading after update
 func (m Mutate) SkipReload() Mutate {
-	m.NoReload = true
-	return m
+	return Mutate{
+		Type:     m.Type,
+		Field:    m.Field,
+		Value:    m.Value,
+		NoReload: true,
+	}
 }
 
 // Set create a mutate using set operation.

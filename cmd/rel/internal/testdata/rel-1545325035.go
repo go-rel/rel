@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -7,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
-	db "github.com/go-rel/sqlite3"
-	"github.com/go-rel/rel"
 	"github.com/go-rel/migration"
+	"github.com/go-rel/rel"
+	db "github.com/go-rel/sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/go-rel/rel/cmd/rel/internal/testdata/migrations"
 )
@@ -63,9 +62,7 @@ func main() {
 	repo.Instrumentation(logger)
 	m.Instrumentation(logger)
 
-	
 	m.Register(1, migrations.MigrateCreateSamples, migrations.RollbackCreateSamples)
-	
 
 	m.Migrate(ctx)
 }

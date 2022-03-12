@@ -41,13 +41,13 @@ func (ta *testAdapter) Query(ctx context.Context, query Query) (Cursor, error) {
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate) (interface{}, error) {
-	args := ta.Called(query, mutates)
+func (ta *testAdapter) Insert(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate, onConflict OnConflict) (interface{}, error) {
+	args := ta.Called(query, mutates, onConflict)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(ctx context.Context, query Query, primaryField string, fields []string, mutates []map[string]Mutate) ([]interface{}, error) {
-	args := ta.Called(query, fields, mutates)
+func (ta *testAdapter) InsertAll(ctx context.Context, query Query, primaryField string, fields []string, mutates []map[string]Mutate, onConflict OnConflict) ([]interface{}, error) {
+	args := ta.Called(query, fields, mutates, onConflict)
 	return args.Get(0).([]interface{}), args.Error(1)
 }
 

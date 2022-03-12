@@ -16,6 +16,4 @@ func TestOnConflict(t *testing.T) {
 	assert.Equal(t, OnConflict{Keys: []string{"id"}, Replace: true}, OnConflictKeysReplace([]string{"id"}))
 
 	assert.Equal(t, OnConflict{Fragment: "sql", FragmentArgs: []interface{}{1}}, OnConflictFragment("sql", 1))
-	assert.Equal(t, OnConflict{Keys: []string{"id"}, Fragment: "sql", FragmentArgs: []interface{}{1}}, OnConflictKeyFragment("id", "sql", 1))
-	assert.Equal(t, OnConflict{Keys: []string{"id"}, Fragment: "sql", FragmentArgs: []interface{}{1}}, OnConflictKeysFragment([]string{"id"}, "sql", 1))
 }

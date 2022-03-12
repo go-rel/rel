@@ -11,7 +11,7 @@ type OnConflict struct {
 
 // Apply mutation.
 func (ocm OnConflict) Apply(doc *Document, mutation *Mutation) {
-	if ocm.Keys == nil {
+	if ocm.Keys == nil && ocm.Fragment == "" {
 		ocm.Keys = doc.PrimaryFields()
 	}
 
@@ -56,21 +56,9 @@ func OnConflictKeysReplace(keys []string) OnConflict {
 	return OnConflict{Keys: keys, Replace: true}
 }
 
-// OnConflictFragment insertion when conflict happens.
+// OnConflictFragment allows to write custom sql for on conflict.
+//
+// This will add custom sql after ON CONFLICT, example: ON CONFLICT [FRAGMENT]
 func OnConflictFragment(sql string, args ...interface{}) OnConflict {
 	return OnConflict{Fragment: sql, FragmentArgs: args}
-}
-
-// OnConflictKeyFragment insertion when conflict happens on specific keys.
-//
-// Specifying key is not supported by all database and may be ignored.
-func OnConflictKeyFragment(key string, sql string, args ...interface{}) OnConflict {
-	return OnConflictKeysFragment([]string{key}, sql, args...)
-}
-
-// OnConflictKeysFragment insertion when conflict happens on specific keys.
-//
-// Specifying key is not supported by all database and may be ignored.
-func OnConflictKeysFragment(keys []string, sql string, args ...interface{}) OnConflict {
-	return OnConflict{Keys: keys, Fragment: sql, FragmentArgs: args}
 }

@@ -130,10 +130,9 @@ const (
 
 // Mutate stores mutation instruction.
 type Mutate struct {
-	Type     ChangeOp
-	Field    string
-	Value    interface{}
-	NoReload Reload
+	Type  ChangeOp
+	Field string
+	Value interface{}
 }
 
 // Apply mutation.
@@ -146,9 +145,7 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 			invalid = true
 		}
 	case ChangeFragmentOp:
-		if !m.NoReload {
-			mutation.Reload = true
-		}
+		mutation.Reload = true
 	default:
 		if typ, ok := doc.Type(m.Field); ok {
 			kind := typ.Kind()
@@ -156,10 +153,7 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 		} else {
 			invalid = true
 		}
-
-		if !m.NoReload {
-			mutation.Reload = true
-		}
+		mutation.Reload = true
 	}
 
 	if invalid {
@@ -182,16 +176,6 @@ func (m Mutate) String() string {
 	}
 
 	return str
-}
-
-// Skip reloading after update
-func (m Mutate) SkipReload() Mutate {
-	return Mutate{
-		Type:     m.Type,
-		Field:    m.Field,
-		Value:    m.Value,
-		NoReload: true,
-	}
 }
 
 // Set create a mutate using set operation.

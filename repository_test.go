@@ -3975,7 +3975,7 @@ func TestRepository_LockVersion_Update(t *testing.T) {
 		}
 		mutates = map[string]Mutate{
 			"item":         unscopedMutates["item"],
-			"lock_version": Inc("lock_version").SkipReload(),
+			"lock_version": Set("lock_version", 6),
 		}
 		baseQueries = From("transactions").Where(Eq("id", transaction.ID))
 		queries     = baseQueries.Where(Eq("lock_version", transaction.LockVersion))
@@ -3992,6 +3992,7 @@ func TestRepository_LockVersion_Update(t *testing.T) {
 	adapter.On("Update", queries, "id", mutates).Return(0, nil).Once()
 	err := repo.Update(context.TODO(), &transaction, Set("item", "new item"))
 	assert.ErrorIs(t, err, NotFoundError{})
+	assert.Equal(t, 5, transaction.LockVersion)
 
 	// unscoped
 	adapter.On("Update", baseQueries.Unscoped(), "id", unscopedMutates).Return(1, nil).Once()

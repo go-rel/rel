@@ -529,14 +529,20 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 	return nil
 }
 
-func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) error {
+func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) (dbError error) {
 	var (
 		baseQueries = []Querier{filter, mutation.Unscoped, mutation.Cascade}
 		queries     = baseQueries
 	)
+
 	if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
-		Inc("lock_version").SkipReload().Apply(doc, &mutation)
+		Set("lock_version", version+1).Apply(doc, &mutation)
 		queries = append(queries, LockVersion(version))
+		defer func() {
+			if dbError != nil {
+				doc.SetValue("lock_version", version)
+			}
+		}()
 	}
 
 	var (
@@ -559,8 +565,6 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 		if err := r.find(cw, doc, baseQuery.UsePrimary()); err != nil {
 			return err
 		}
-	} else if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
-		doc.SetValue("lock_version", version+1)
 	}
 
 	return nil

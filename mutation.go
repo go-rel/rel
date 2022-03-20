@@ -28,7 +28,7 @@ func applyMutators(doc *Document, cascade, applyStructset bool, mutators ...Muta
 
 	for i := range mutators {
 		switch mut := mutators[i].(type) {
-		case Unscoped, Reload, Cascade:
+		case Unscoped, Reload, Cascade, OnConflict:
 			optionsCount++
 			mut.Apply(doc, &mutation)
 		default:
@@ -53,12 +53,13 @@ type AssocMutation struct {
 // Mutation represents value to be inserted or updated to database.
 // It's not safe to be used multiple time. some operation my alter mutation data.
 type Mutation struct {
-	Mutates   map[string]Mutate
-	Assoc     map[string]AssocMutation
-	Unscoped  Unscoped
-	Reload    Reload
-	Cascade   Cascade
-	ErrorFunc ErrorFunc
+	Mutates    map[string]Mutate
+	Assoc      map[string]AssocMutation
+	OnConflict OnConflict
+	Unscoped   Unscoped
+	Reload     Reload
+	Cascade    Cascade
+	ErrorFunc  ErrorFunc
 }
 
 func (m *Mutation) initMutates() {

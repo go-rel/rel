@@ -79,12 +79,12 @@ type Repository interface {
 
 	// InsertAll records.
 	// Does not supports application cascade insert.
-	InsertAll(ctx context.Context, records interface{}) error
+	InsertAll(ctx context.Context, records interface{}, mutators ...Mutator) error
 
 	// MustInsertAll records.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade insert.
-	MustInsertAll(ctx context.Context, records interface{})
+	MustInsertAll(ctx context.Context, records interface{}, mutators ...Mutator)
 
 	// Update a record in database.
 	// It'll panic if any error occurred.
@@ -369,7 +369,7 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 		pField = pFields[0]
 	}
 
-	pValue, err := cw.adapter.Insert(cw.ctx, queriers, pField, mutation.Mutates)
+	pValue, err := cw.adapter.Insert(cw.ctx, queriers, pField, mutation.Mutates, mutation.OnConflict)
 	if err != nil {
 		return mutation.ErrorFunc.transform(err)
 	}
@@ -396,7 +396,7 @@ func (r repository) MustInsert(ctx context.Context, record interface{}, mutators
 	must(r.Insert(ctx, record, mutators...))
 }
 
-func (r repository) InsertAll(ctx context.Context, records interface{}) error {
+func (r repository) InsertAll(ctx context.Context, records interface{}, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-insert-all", "inserting multiple records")
 	defer finish(nil)
 
@@ -412,14 +412,19 @@ func (r repository) InsertAll(ctx context.Context, records interface{}) error {
 
 	for i := range muts {
 		doc := col.Get(i)
-		muts[i] = Apply(doc, newStructset(doc, false))
+		if i == 0 {
+			// only need to apply options from first one
+			muts[i] = Apply(doc, mutators...)
+		} else {
+			muts[i] = Apply(doc)
+		}
 	}
 
 	return r.insertAll(cw, col, muts)
 }
 
-func (r repository) MustInsertAll(ctx context.Context, records interface{}) {
-	must(r.InsertAll(ctx, records))
+func (r repository) MustInsertAll(ctx context.Context, records interface{}, mutators ...Mutator) {
+	must(r.InsertAll(ctx, records, mutators...))
 }
 
 // TODO: support assocs
@@ -432,6 +437,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 		pField      string
 		pFields     = col.PrimaryFields()
 		queriers    = Build(col.Table())
+		onConflict  = mutation[0].OnConflict
 		fields      = make([]string, 0, len(mutation[0].Mutates))
 		fieldMap    = make(map[string]struct{}, len(mutation[0].Mutates))
 		bulkMutates = make([]map[string]Mutate, len(mutation))
@@ -452,7 +458,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 		pField = pFields[0]
 	}
 
-	ids, err := cw.adapter.InsertAll(cw.ctx, queriers, pField, fields, bulkMutates)
+	ids, err := cw.adapter.InsertAll(cw.ctx, queriers, pField, fields, bulkMutates, onConflict)
 	if err != nil {
 		return mutation[0].ErrorFunc.transform(err)
 	}

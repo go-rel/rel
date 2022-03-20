@@ -752,7 +752,7 @@ func TestRepository_Insert(t *testing.T) {
 		}
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(1, nil).Once()
+	adapter.On("Insert", From("users"), mutates, OnConflict{}).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user))
 	assert.Equal(t, User{
@@ -779,7 +779,7 @@ func TestRepository_Insert_compositePrimaryFields(t *testing.T) {
 		}
 	)
 
-	adapter.On("Insert", From("user_roles"), mutates).Return(0, nil).Once()
+	adapter.On("Insert", From("user_roles"), mutates, OnConflict{}).Return(0, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &userRole))
 	assert.Equal(t, UserRole{
@@ -807,7 +807,7 @@ func TestRepository_Insert_sets(t *testing.T) {
 		}
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(1, nil).Once()
+	adapter.On("Insert", From("users"), mutates, OnConflict{}).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user, mutators...))
 	assert.Equal(t, User{
@@ -833,8 +833,8 @@ func TestRepository_Insert_saveBelongsTo(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
-	adapter.On("Insert", From("profiles"), mock.Anything).Return(profileID, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(userID, nil).Once()
+	adapter.On("Insert", From("profiles"), mock.Anything, OnConflict{}).Return(profileID, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &profile))
@@ -864,7 +864,7 @@ func TestRepository_Insert_saveBelongsToCascadeDisabled(t *testing.T) {
 		addressID = 2
 	)
 
-	adapter.On("Insert", From("profiles"), mock.Anything).Return(addressID, nil).Once()
+	adapter.On("Insert", From("profiles"), mock.Anything, OnConflict{}).Return(addressID, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &profile, Cascade(false)))
 	assert.Equal(t, Profile{
@@ -888,7 +888,7 @@ func TestRepository_Insert_saveBelongsToError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(0, err).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &profile))
@@ -911,8 +911,8 @@ func TestRepository_Insert_saveHasOne(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
-	adapter.On("Insert", From("user_addresses"), mock.Anything).Return(addressID, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(userID, nil).Once()
+	adapter.On("Insert", From("user_addresses"), mock.Anything, OnConflict{}).Return(addressID, nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user))
@@ -944,7 +944,7 @@ func TestRepository_Insert_saveHasOneCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(userID, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
@@ -975,8 +975,8 @@ func TestRepository_Insert_saveHasOneError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(userID, nil).Once()
-	adapter.On("Insert", From("user_addresses"), mock.Anything).Return(0, err).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(userID, nil).Once()
+	adapter.On("Insert", From("user_addresses"), mock.Anything, OnConflict{}).Return(0, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
@@ -997,8 +997,8 @@ func TestRepository_Insert_saveHasMany(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything).Return([]interface{}(nil), nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(1, nil).Once()
+	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything, OnConflict{}).Return([]interface{}(nil), nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user))
@@ -1027,7 +1027,7 @@ func TestRepository_Insert_saveHasManyCascadeDisabled(t *testing.T) {
 		repo    = New(adapter)
 	)
 
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(1, nil).Once()
 
 	assert.Nil(t, repo.Insert(context.TODO(), &user, Cascade(false)))
 	assert.Equal(t, User{
@@ -1057,8 +1057,8 @@ func TestRepository_Insert_saveHasManyError(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, nil).Once()
-	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything).Return([]interface{}{}, err).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(1, nil).Once()
+	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything, OnConflict{}).Return([]interface{}{}, err).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user))
@@ -1084,7 +1084,7 @@ func TestRepository_Insert_error(t *testing.T) {
 		err = errors.New("error")
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(0, err).Once()
+	adapter.On("Insert", From("users"), mutates, OnConflict{}).Return(0, err).Once()
 
 	assert.Equal(t, err, repo.Insert(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
@@ -1106,7 +1106,7 @@ func TestRepository_Insert_customError(t *testing.T) {
 		}
 	)
 
-	adapter.On("Insert", From("users"), mutates).Return(0, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), mutates, OnConflict{}).Return(0, errors.New("error")).Once()
 
 	assert.Equal(t, errors.New("custom error"), repo.Insert(context.TODO(), &user, mutators...))
 	assert.Panics(t, func() { repo.MustInsert(context.TODO(), &user, mutators...) })
@@ -1127,7 +1127,7 @@ func TestRepository_Insert_customErrorNested(t *testing.T) {
 	)
 
 	adapter.On("Begin").Return(nil).Once()
-	adapter.On("Insert", From("users"), mock.Anything).Return(1, errors.New("error")).Once()
+	adapter.On("Insert", From("users"), mock.Anything, OnConflict{}).Return(1, errors.New("error")).Once()
 	adapter.On("Rollback").Return(nil).Once()
 
 	assert.Equal(t, errors.New("error"), repo.Insert(context.TODO(), &profile,
@@ -1173,7 +1173,7 @@ func TestRepository_InsertAll(t *testing.T) {
 		}
 	)
 
-	adapter.On("InsertAll", From("users"), mock.Anything, mutates).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), mock.Anything, mutates, OnConflict{}).Return([]interface{}{1, 2}, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
 	assert.Equal(t, []User{
@@ -1204,7 +1204,7 @@ func TestRepository_InsertAll_compositePrimaryFields(t *testing.T) {
 		}
 	)
 
-	adapter.On("InsertAll", From("user_roles"), mock.Anything, mutates).Return([]interface{}{0, 0}, nil).Once()
+	adapter.On("InsertAll", From("user_roles"), mock.Anything, mutates, OnConflict{}).Return([]interface{}{0, 0}, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(context.TODO(), &userRoles))
 	assert.Equal(t, []UserRole{
@@ -1239,7 +1239,7 @@ func TestRepository_InsertAll_ptrElem(t *testing.T) {
 		}
 	)
 
-	adapter.On("InsertAll", From("users"), mock.Anything, mutates).Return([]interface{}{1, 2}, nil).Once()
+	adapter.On("InsertAll", From("users"), mock.Anything, mutates, OnConflict{}).Return([]interface{}{1, 2}, nil).Once()
 
 	assert.Nil(t, repo.InsertAll(context.TODO(), &users))
 	assert.Equal(t, []*User{
@@ -1688,7 +1688,7 @@ func TestRepository_Update_saveHasMany(t *testing.T) {
 	adapter.On("Begin").Return(nil).Once()
 	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
 	adapter.On("Delete", From("user_roles").Where(Eq("user_id", 10))).Return(1, nil).Once()
-	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything).Return([]interface{}(nil), nil).Once()
+	adapter.On("InsertAll", From("user_roles"), mock.Anything, mock.Anything, OnConflict{}).Return([]interface{}(nil), nil).Once()
 	adapter.On("Commit").Return(nil).Once()
 
 	assert.Nil(t, repo.Update(context.TODO(), &user))
@@ -1912,7 +1912,7 @@ func TestRepository_saveBelongsTo_insertNew(t *testing.T) {
 		q = Build("users")
 	)
 
-	adapter.On("Insert", q, mutates).Return(1, nil).Once()
+	adapter.On("Insert", q, mutates, OnConflict{}).Return(1, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Equal(t, Set("user_id", 1), mutation.Mutates["user_id"])
@@ -1954,7 +1954,7 @@ func TestRepository_saveBelongsTo_insertNewError(t *testing.T) {
 		q = Build("users")
 	)
 
-	adapter.On("Insert", q, mutates).Return(0, errors.New("insert error")).Once()
+	adapter.On("Insert", q, mutates, OnConflict{}).Return(0, errors.New("insert error")).Once()
 
 	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveBelongsTo(cw, doc, &mutation))
 	assert.Zero(t, mutation.Mutates["user_id"])
@@ -2081,7 +2081,7 @@ func TestRepository_saveHasOne_insertNew(t *testing.T) {
 		q = Build("user_addresses")
 	)
 
-	adapter.On("Insert", q, mutates).Return(2, nil).Once()
+	adapter.On("Insert", q, mutates, OnConflict{}).Return(2, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasOne(cw, doc, &mutation))
 	assert.Equal(t, User{
@@ -2117,7 +2117,7 @@ func TestRepository_saveHasOne_insertNewError(t *testing.T) {
 		q = Build("user_addresses")
 	)
 
-	adapter.On("Insert", q, mutates).Return(nil, errors.New("insert error")).Once()
+	adapter.On("Insert", q, mutates, OnConflict{}).Return(nil, errors.New("insert error")).Once()
 
 	assert.Equal(t, errors.New("insert error"), repo.(*repository).saveHasOne(cw, doc, &mutation))
 
@@ -2146,8 +2146,8 @@ func TestRepository_saveHasMany_insert(t *testing.T) {
 		q = Build("emails")
 	)
 
-	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates).Return([]interface{}{2, 3}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates).Return([]interface{}{2, 3}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates, OnConflict{}).Return([]interface{}{2, 3}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates, OnConflict{}).Return([]interface{}{2, 3}, nil).Maybe()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, true))
 	assert.Equal(t, User{
@@ -2184,8 +2184,8 @@ func TestRepository_saveHasMany_insertError(t *testing.T) {
 		err = errors.New("insert all error")
 	)
 
-	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates).Return([]interface{}{}, err).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates).Return([]interface{}{}, err).Maybe()
+	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates, OnConflict{}).Return([]interface{}{}, err).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates, OnConflict{}).Return([]interface{}{}, err).Maybe()
 
 	assert.Equal(t, err, repo.(*repository).saveHasMany(cw, doc, &mutation, true))
 
@@ -2334,8 +2334,8 @@ func TestRepository_saveHasMany_updateWithInsert(t *testing.T) {
 	)
 
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(1, nil).Once()
-	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:], OnConflict{}).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:], OnConflict{}).Return([]interface{}{2}, nil).Maybe()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
@@ -2378,8 +2378,8 @@ func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 	mutation.SetDeletedIDs("emails", []interface{}{})
 
 	adapter.On("Update", q.Where(Eq("id", 1).AndEq("user_id", 1)), "id", mutates[0]).Return(1, nil).Once()
-	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:]).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates[1:], OnConflict{}).Return([]interface{}{2}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates[1:], OnConflict{}).Return([]interface{}{2}, nil).Maybe()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
@@ -2424,8 +2424,8 @@ func TestRepository_saveHasMany_deleteWithInsert(t *testing.T) {
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1).AndIn("id", 1, 2))).Return(1, nil).Once()
-	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates).Return([]interface{}{3, 4, 5}, nil).Maybe()
-	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates).Return([]interface{}{3, 4, 5}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"email", "user_id"}, mutates, OnConflict{}).Return([]interface{}{3, 4, 5}, nil).Maybe()
+	adapter.On("InsertAll", q, []string{"user_id", "email"}, mutates, OnConflict{}).Return([]interface{}{3, 4, 5}, nil).Maybe()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{
@@ -2497,7 +2497,7 @@ func TestRepository_saveHasMany_replace(t *testing.T) {
 	)
 
 	adapter.On("Delete", q.Where(Eq("user_id", 1))).Return(1, nil).Once()
-	adapter.On("InsertAll", q, mock.Anything, mutates).Return([]interface{}{3, 4, 5}, nil).Once()
+	adapter.On("InsertAll", q, mock.Anything, mutates, OnConflict{}).Return([]interface{}{3, 4, 5}, nil).Once()
 
 	assert.Nil(t, repo.(*repository).saveHasMany(cw, doc, &mutation, false))
 	assert.Equal(t, User{

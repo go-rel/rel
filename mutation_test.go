@@ -8,14 +8,14 @@ import (
 )
 
 type TestRecord struct {
-	Field1 string
+	Field1 string `db:",primary"`
 	Field2 bool
 	Field3 *string
 	Field4 int
 	Field5 int
 }
 
-func TestApplyMutation(t *testing.T) {
+func TestApply(t *testing.T) {
 	var (
 		record   = TestRecord{}
 		doc      = NewDocument(&record)
@@ -49,6 +49,33 @@ func TestApplyMutation(t *testing.T) {
 	// non set op won't update the struct
 	assert.Equal(t, 0, record.Field4)
 	assert.Equal(t, 0, record.Field5)
+}
+
+func TestApply_Options(t *testing.T) {
+	var (
+		record   = TestRecord{}
+		doc      = NewDocument(&record)
+		mutators = []Mutator{
+			Unscoped(true),
+			Reload(true),
+			Cascade(true),
+			OnConflictIgnore(),
+		}
+		mutation = Mutation{
+			Unscoped: true,
+			Cascade:  true,
+			Mutates: map[string]Mutate{
+				"field2": Set("field2", false),
+				"field3": Set("field3", nil),
+				"field4": Set("field4", 0),
+				"field5": Set("field5", 0),
+			},
+			Reload:     true,
+			OnConflict: OnConflict{Keys: []string{"field1"}, Ignore: true},
+		}
+	)
+
+	assert.Equal(t, mutation, Apply(doc, mutators...))
 }
 
 func TestApplyMutation_setValueError(t *testing.T) {

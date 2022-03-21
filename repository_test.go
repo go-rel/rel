@@ -4026,3 +4026,27 @@ func TestRepository_LockVersion_Delete(t *testing.T) {
 
 	adapter.AssertExpectations(t)
 }
+
+func TestRepository_LockVersion_SoftDelete(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		address = SoftDelVersionedTransaction{
+			Transaction: Transaction{
+				ID: 1,
+			},
+			LockVersion: 5,
+			Deleted:     false,
+		}
+		queries = From(address.Table()).Where(Eq("id", address.ID)).Where(Eq("lock_version", address.LockVersion))
+		mutates = map[string]Mutate{
+			"deleted":      Set("deleted", true),
+			"lock_version": Inc("lock_version"),
+		}
+	)
+
+	adapter.On("Update", queries, "", mutates).Return(1, nil).Once()
+	assert.Nil(t, repo.Delete(context.TODO(), &address))
+
+	adapter.AssertExpectations(t)
+}

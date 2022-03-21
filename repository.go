@@ -535,7 +535,7 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 	return nil
 }
 
-func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) (dbError error) {
+func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Mutation, filter FilterQuery) (dbErr error) {
 	var (
 		baseQueries = []Querier{filter, mutation.Unscoped, mutation.Cascade}
 		queries     = baseQueries
@@ -545,7 +545,7 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 		Set("lock_version", version+1).Apply(doc, &mutation)
 		queries = append(queries, LockVersion(version))
 		defer func() {
-			if dbError != nil {
+			if dbErr != nil {
 				doc.SetValue("lock_version", version)
 			}
 		}()
@@ -992,6 +992,9 @@ func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query)
 		}
 	}
 	if hasDeletedAt || hasDeleted {
+		if flag.Is(HasVersioning) {
+			mutates["lock_version"] = Inc("lock_version")
+		}
 		return cw.adapter.Update(cw.ctx, query, "", mutates)
 	}
 

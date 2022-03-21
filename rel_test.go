@@ -69,7 +69,17 @@ type VersionedTransaction struct {
 	LockVersion int
 }
 
+type SoftDelVersionedTransaction struct {
+	Transaction
+	LockVersion int
+	Deleted     bool
+}
+
 func (t VersionedTransaction) Table() string {
+	return "transactions"
+}
+
+func (t SoftDelVersionedTransaction) Table() string {
 	return "transactions"
 }
 

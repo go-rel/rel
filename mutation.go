@@ -12,12 +12,17 @@ type Mutator interface {
 
 // Apply using given mutators.
 func Apply(doc *Document, mutators ...Mutator) Mutation {
+	return applyMutators(doc, true, true, mutators...)
+}
+
+// apply given mutators with customized default values
+func applyMutators(doc *Document, cascade, applyStructset bool, mutators ...Mutator) Mutation {
 	var (
 		optionsCount int
 		mutation     = Mutation{
 			Unscoped: false,
 			Reload:   false,
-			Cascade:  true,
+			Cascade:  Cascade(cascade),
 		}
 	)
 
@@ -32,7 +37,7 @@ func Apply(doc *Document, mutators ...Mutator) Mutation {
 	}
 
 	// fallback to structset.
-	if optionsCount == len(mutators) {
+	if applyStructset && optionsCount == len(mutators) {
 		newStructset(doc, false).Apply(doc, &mutation)
 	}
 
@@ -149,7 +154,6 @@ func (m Mutate) Apply(doc *Document, mutation *Mutation) {
 		} else {
 			invalid = true
 		}
-
 		mutation.Reload = true
 	}
 

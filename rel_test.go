@@ -60,8 +60,27 @@ type Transaction struct {
 	BuyerID   int  `db:"user_id"`
 	Buyer     User `ref:"user_id" fk:"id" autoload:"true"`
 	AddressID int
-	Address   Address
-	Histories *[]History
+	Address   Address    `ref:"address_id" fk:"id"`
+	Histories *[]History `ref:"id" fk:"transaction_id"`
+}
+
+type VersionedTransaction struct {
+	Transaction
+	LockVersion int
+}
+
+type SoftDelVersionedTransaction struct {
+	Transaction
+	LockVersion int
+	Deleted     bool
+}
+
+func (t VersionedTransaction) Table() string {
+	return "transactions"
+}
+
+func (t SoftDelVersionedTransaction) Table() string {
+	return "transactions"
 }
 
 type History struct {

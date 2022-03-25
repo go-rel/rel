@@ -393,8 +393,7 @@ func Eq(field string, value interface{}) FilterQuery {
 	}
 }
 
-// Eq expression for version lock
-func LockVersion(version int) FilterQuery {
+func lockVersion(version int) FilterQuery {
 	return Eq("lock_version", version)
 }
 

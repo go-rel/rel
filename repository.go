@@ -543,7 +543,7 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 
 	if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
 		Set("lock_version", version+1).Apply(doc, &mutation)
-		queries = append(queries, LockVersion(version))
+		queries = append(queries, lockVersion(version))
 		defer func() {
 			if dbErr != nil {
 				doc.SetValue("lock_version", version)
@@ -823,7 +823,7 @@ func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery,
 	var filters []Querier = []Querier{filter, mutation.Unscoped}
 
 	if version, ok := r.lockVersion(*doc, mutation.Unscoped); ok {
-		filters = append(filters, LockVersion(version))
+		filters = append(filters, lockVersion(version))
 	}
 
 	var (

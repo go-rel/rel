@@ -81,6 +81,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 	}
 
 	if !found && fields != nil {
+		// TODO: why a panic and not just an easily catchable error?
 		panic("rel: primary key row does not exists")
 	}
 

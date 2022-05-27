@@ -1030,8 +1030,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 		path                                             = strings.Split(field, ".")
 		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(records, path)
 		ids                                              = r.targetIDs(targets)
-
-		inClauseLength = 999 // TODO: can this value come from the adapter, as it is dbms specific?
+		inClauseLength                                   = 999
 	)
 
 	// Create separate queries if the amount of ids is more than inClauseLength.
@@ -1064,7 +1063,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 
 		scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
 		err = scanMulti(cur, keyField, keyType, targets)
-		scanFinish(nil)
+		scanFinish(err)
 		if err != nil {
 			return err
 		}

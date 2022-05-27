@@ -304,3 +304,89 @@ func TestScanMulti_fieldsError(t *testing.T) {
 	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))
 	cur.AssertExpectations(t)
 }
+
+func TestScanMulti_multipleTimes(t *testing.T) {
+	var (
+		users    = make([][]User, 6)
+		cur      = &testCursor{}
+		keyField = "id"
+		keyType  = reflect.TypeOf(0)
+		cols     = map[interface{}][]slice{
+			10: {NewCollection(&users[0]), NewCollection(&users[1])},
+			11: {NewCollection(&users[2])},
+			12: {NewCollection(&users[3]), NewCollection(&users[4])},
+			13: {NewCollection(&users[5])},
+		}
+		now = Now()
+	)
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
+
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(10, "Del Piero", nil, now, nil).Times(3)
+	cur.MockScan(11, "Nedved", 46, now, now).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))
+	assert.Len(t, users[0], 1)
+	assert.Equal(t, User{
+		ID:        10,
+		Name:      "Del Piero",
+		CreatedAt: now,
+	}, users[0][0])
+	assert.Len(t, users[1], 1)
+	assert.Equal(t, User{
+		ID:        10,
+		Name:      "Del Piero",
+		CreatedAt: now,
+	}, users[1][0])
+	assert.Len(t, users[2], 1)
+	assert.Equal(t, User{
+		ID:        11,
+		Name:      "Nedved",
+		Age:       46,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, users[2][0])
+
+	cur.AssertExpectations(t)
+
+	// Continue with a new cursor but the same cols -> works only if the ids in
+	// the subsequent calls did not occur yet.
+	cur = &testCursor{}
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
+
+	cur.On("Next").Return(true).Twice()
+	cur.MockScan(12, "Linus Torvalds", 52, now, nil).Times(3)
+	cur.MockScan(13, "Tim Cook", 61, now, now).Twice()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))
+	assert.Len(t, users[3], 1)
+	assert.Equal(t, User{
+		ID:        12,
+		Name:      "Linus Torvalds",
+		Age:       52,
+		CreatedAt: now,
+	}, users[3][0])
+	assert.Len(t, users[4], 1)
+	assert.Equal(t, User{
+		ID:        12,
+		Age:       52,
+		Name:      "Linus Torvalds",
+		CreatedAt: now,
+	}, users[4][0])
+	assert.Len(t, users[5], 1)
+	assert.Equal(t, User{
+		ID:        13,
+		Name:      "Tim Cook",
+		Age:       61,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}, users[5][0])
+
+	cur.AssertExpectations(t)
+}

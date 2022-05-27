@@ -1030,25 +1030,49 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 		path                                             = strings.Split(field, ".")
 		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(records, path)
 		ids                                              = r.targetIDs(targets)
-		query                                            = Build(table, append(queriers, In(keyField, ids...))...)
+		inClauseLength                                   = 999
 	)
 
-	if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
-		return nil
+	// Create separate queries if the amount of ids is more than inClauseLength.
+	for {
+		if len(ids) == 0 {
+			break
+		}
+
+		// necessary check to avoid slicing beyond
+		// slice capacity
+		if len(ids) < inClauseLength {
+			inClauseLength = len(ids)
+		}
+
+		idsChunk := ids[0:inClauseLength]
+		ids = ids[inClauseLength:]
+
+		query := Build(table, append(queriers, In(keyField, idsChunk...))...)
+		if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
+			return nil
+		}
+
+		var (
+			cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query, false))
+		)
+
+		if err != nil {
+			return err
+		}
+
+		scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
+		// Note: Calling scanMulti multiple times with the same targets works
+		// only if the cursor of each execution only contains a new set of keys.
+		// That is here the case as each select is with a unique set of ids.
+		err = scanMulti(cur, keyField, keyType, targets)
+		scanFinish(err)
+		if err != nil {
+			return err
+		}
 	}
 
-	var (
-		cur, err = cw.adapter.Query(cw.ctx, r.withDefaultScope(ddata, query, false))
-	)
-
-	if err != nil {
-		return err
-	}
-
-	scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
-	defer scanFinish(nil)
-
-	return scanMulti(cur, keyField, keyType, targets)
+	return nil
 }
 
 func (r repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier) {

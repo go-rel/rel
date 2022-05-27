@@ -3,6 +3,7 @@ package rel
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -3128,6 +3129,48 @@ func TestRepository_Preload_hasOne(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+func TestRepository_Preload_splitSelects(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		users   = make([]User, 1100)
+		cur     = &testCursor{}
+	)
+
+	for i := range users {
+		id := i + 1
+		users[i] = User{
+			ID:   id,
+			Name: fmt.Sprintf("name%v", id),
+		}
+	}
+
+	// Use mock.Anything instead of the actual select, as the order is random and not predictable
+	// as they are retrieved from map-keys.
+	// -> This test can only test if two selects were made, but not how they look like exactly.
+	adapter.On("Query", mock.Anything).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.On("Scan", mock.Anything, mock.Anything).Return(nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	// Same here.
+	adapter.On("Query", mock.Anything).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.On("Scan", mock.Anything, mock.Anything).Return(nil).Once()
+	cur.On("Next").Return(false).Once()
+
+	assert.Nil(t, repo.Preload(context.TODO(), &users, "emails"))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
 func TestRepository_Preload_ptrHasOne(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
@@ -3888,6 +3931,30 @@ func TestRepository_Preload_queryError(t *testing.T) {
 	adapter.On("Query", From("users").Where(In("id", 10))).Return(cur, err).Once()
 
 	assert.Equal(t, err, repo.Preload(context.TODO(), &transaction, "buyer"))
+
+	adapter.AssertExpectations(t)
+	cur.AssertExpectations(t)
+}
+
+func TestRepository_Preload_scanErrors(t *testing.T) {
+	var (
+		adapter           = &testAdapter{}
+		repo              = New(adapter)
+		user              = User{ID: 10}
+		address           = Address{ID: 100, UserID: &user.ID}
+		cur               = &testCursor{}
+		err               = errors.New("an error")
+		expected *Address = nil
+	)
+
+	adapter.On("Query", From("user_addresses").Where(In("user_id", 10).AndNil("deleted_at"))).Return(cur, nil).Once()
+
+	cur.On("Close").Return(nil).Once()
+	cur.On("Fields").Return([]string{"id", "user_id"}, nil).Once()
+	cur.On("Next").Return(true).Once()
+	cur.MockScan(address.ID, *address.UserID).Return(err).Once()
+	assert.ErrorIs(t, repo.Preload(context.TODO(), &user, "work_address"), err)
+	assert.Equal(t, expected, user.WorkAddress)
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)

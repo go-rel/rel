@@ -73,10 +73,11 @@ type documentData struct {
 
 // Document provides an abstraction over reflect to easily works with struct for database purpose.
 type Document struct {
-	v    interface{}
-	rv   reflect.Value
-	rt   reflect.Type
-	data documentData
+	v            interface{}
+	rv           reflect.Value
+	rt           reflect.Type
+	data         documentData
+	cachedAssocs map[string]Association
 }
 
 // ReflectValue of referenced document.
@@ -142,6 +143,11 @@ func (d Document) PrimaryValue() interface{} {
 
 // Persisted returns true if document primary key is not zero.
 func (d Document) Persisted() bool {
+	// doc hasn't been initialized yet
+	if d.rv.Kind() == reflect.Ptr && d.rv.IsNil() {
+		return false
+	}
+
 	var (
 		pValues = d.PrimaryValues()
 	)
@@ -253,23 +259,34 @@ func (d Document) Scanners(fields []string) []interface{} {
 	)
 
 	for index, field := range fields {
-		if structIndex, ok := d.data.index[field]; ok {
-			var (
-				fv = reflectValueFieldByIndex(d.rv, structIndex, true)
-				ft = fv.Type()
-			)
-
-			if ft.Kind() == reflect.Ptr {
-				result[index] = fv.Addr().Interface()
-			} else {
-				result[index] = Nullable(fv.Addr().Interface())
-			}
-		} else {
-			result[index] = &sql.RawBytes{}
-		}
+		result[index] = d.scanner(field)
 	}
 
 	return result
+}
+
+func (d Document) scanner(field string) interface{} {
+	if structIndex, ok := d.data.index[field]; ok {
+		var (
+			fv = reflectValueFieldByIndex(d.rv, structIndex, true)
+			ft = fv.Type()
+		)
+
+		if ft.Kind() == reflect.Ptr {
+			return fv.Addr().Interface()
+		} else {
+			return Nullable(fv.Addr().Interface())
+		}
+	} else if split := strings.SplitN(field, ".", 2); len(split) == 2 {
+		if assoc, ok := d.association(split[0]); ok && assoc.Type() == BelongsTo || assoc.Type() == HasOne {
+			var (
+				doc, _ = assoc.Document()
+			)
+			return doc.scanner(split[1])
+		}
+	}
+
+	return &sql.RawBytes{}
 }
 
 // BelongsTo fields of this document.
@@ -294,12 +311,24 @@ func (d Document) Preload() []string {
 
 // Association of this document with given name.
 func (d Document) Association(name string) Association {
-	index, ok := d.data.index[name]
-	if !ok {
-		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
+	if assoc, ok := d.association(name); ok {
+		return assoc
 	}
 
-	return newAssociation(d.rv, index)
+	panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
+}
+
+func (d Document) association(name string) (Association, bool) {
+	if assoc, ok := d.cachedAssocs[name]; ok {
+		return assoc, ok
+	}
+
+	index, ok := d.data.index[name]
+	if !ok {
+		return Association{}, false
+	}
+
+	return newAssociation(d.rv, index), true
 }
 
 // Reset this document, this is a noop for compatibility with collection.

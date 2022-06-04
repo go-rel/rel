@@ -43,6 +43,7 @@ var associationCache sync.Map
 type Association struct {
 	data associationData
 	rv   reflect.Value
+	doc  *Document
 }
 
 // Type of association.
@@ -64,6 +65,10 @@ func (a Association) LazyDocument() (*Document, bool) {
 }
 
 func (a Association) document(lazy bool) (*Document, bool) {
+	if a.doc != nil {
+		return a.doc, a.doc.Persisted()
+	}
+
 	var (
 		rv = reflectValueFieldByIndex(a.rv, a.data.targetIndex, !lazy)
 	)
@@ -78,17 +83,11 @@ func (a Association) document(lazy bool) (*Document, bool) {
 			return NewDocument(rv), false
 		}
 
-		var (
-			doc = NewDocument(rv)
-		)
-
-		return doc, doc.Persisted()
+		a.doc = NewDocument(rv)
+		return a.doc, a.doc.Persisted()
 	default:
-		var (
-			doc = NewDocument(rv.Addr())
-		)
-
-		return doc, doc.Persisted()
+		a.doc = NewDocument(rv.Addr())
+		return a.doc, a.doc.Persisted()
 	}
 }
 

@@ -474,6 +474,55 @@ func TestDocument_Scanners(t *testing.T) {
 	assert.Equal(t, scanners, doc.Scanners(fields))
 }
 
+func TestDocument_Scanners_withAssoc(t *testing.T) {
+	var (
+		record = Transaction{
+			ID:      1,
+			BuyerID: 2,
+			Status:  "SENT",
+			Buyer: User{
+				ID:   2,
+				Name: "user",
+				WorkAddress: &Address{
+					Street: "Takeshita-dori",
+				},
+			},
+		}
+		doc      = NewDocument(&record)
+		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "buyer.work_address.street", "status", "invalid_assoc.id"}
+		scanners = []interface{}{
+			Nullable(&record.ID),
+			Nullable(&record.BuyerID),
+			Nullable(&record.Buyer.ID),
+			Nullable(&record.Buyer.Name),
+			Nullable(&record.Buyer.WorkAddress.Street),
+			Nullable(&record.Status),
+			&sql.RawBytes{},
+		}
+	)
+
+	assert.Equal(t, scanners, doc.Scanners(fields))
+}
+
+func TestDocument_Scanners_withUnitializedAssoc(t *testing.T) {
+	var (
+		record   = Transaction{}
+		doc      = NewDocument(&record)
+		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "status", "buyer.work_address.street"}
+		result   = doc.Scanners(fields)
+		expected = []interface{}{
+			Nullable(&record.ID),
+			Nullable(&record.BuyerID),
+			Nullable(&record.Buyer.ID),
+			Nullable(&record.Buyer.Name),
+			Nullable(&record.Status),
+			Nullable(&record.Buyer.WorkAddress.Street),
+		}
+	)
+
+	assert.Equal(t, expected, result)
+}
+
 func TestDocument_ScannersInitPointers(t *testing.T) {
 	type Embedded1 struct {
 		ID int

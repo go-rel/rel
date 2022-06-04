@@ -249,7 +249,11 @@ func (d Document) SetValue(field string, value interface{}) bool {
 // Scanners returns slice of sql.Scanner for given fields.
 func (d Document) Scanners(fields []string) []interface{} {
 	var (
-		result = make([]interface{}, len(fields))
+		result    = make([]interface{}, len(fields))
+		assocRefs map[string]struct {
+			fields  []string
+			indexes []int
+		}
 	)
 
 	for index, field := range fields {
@@ -264,8 +268,38 @@ func (d Document) Scanners(fields []string) []interface{} {
 			} else {
 				result[index] = Nullable(fv.Addr().Interface())
 			}
+		} else if split := strings.SplitN(field, ".", 2); len(split) == 2 {
+			if assocRefs == nil {
+				assocRefs = make(map[string]struct {
+					fields  []string
+					indexes []int
+				})
+			}
+
+			refs := assocRefs[split[0]]
+			refs.fields = append(refs.fields, split[1])
+			refs.indexes = append(refs.indexes, index)
+			assocRefs[split[0]] = refs
 		} else {
 			result[index] = &sql.RawBytes{}
+		}
+	}
+
+	// get scanners from associations
+	for assocName, refs := range assocRefs {
+		if assoc, ok := d.association(assocName); ok && assoc.Type() == BelongsTo || assoc.Type() == HasOne {
+			var (
+				assocDoc, _   = assoc.Document()
+				assocScanners = assocDoc.Scanners(refs.fields)
+			)
+
+			for i, index := range refs.indexes {
+				result[index] = assocScanners[i]
+			}
+		} else {
+			for _, index := range refs.indexes {
+				result[index] = &sql.RawBytes{}
+			}
 		}
 	}
 
@@ -294,12 +328,20 @@ func (d Document) Preload() []string {
 
 // Association of this document with given name.
 func (d Document) Association(name string) Association {
-	index, ok := d.data.index[name]
-	if !ok {
-		panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
+	if assoc, ok := d.association(name); ok {
+		return assoc
 	}
 
-	return newAssociation(d.rv, index)
+	panic("rel: no field named (" + name + ") in type " + d.rt.String() + " found ")
+}
+
+func (d Document) association(name string) (Association, bool) {
+	index, ok := d.data.index[name]
+	if !ok {
+		return Association{}, false
+	}
+
+	return newAssociation(d.rv, index), true
 }
 
 // Reset this document, this is a noop for compatibility with collection.

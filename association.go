@@ -64,7 +64,7 @@ func (a Association) LazyDocument() (*Document, bool) {
 	return a.document(true)
 }
 
-func (a Association) document(lazy bool) (*Document, bool) {
+func (a *Association) document(lazy bool) (*Document, bool) {
 	if a.doc != nil {
 		return a.doc, a.doc.Persisted()
 	}

@@ -71,6 +71,66 @@ func TestJoin(t *testing.T) {
 	}, rel.NewJoin("transactions"))
 }
 
+func TestJoinPopulate_hasOne(t *testing.T) {
+	var (
+		populated = rel.Build("", rel.NewJoin("address")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
+			JoinQuery[0]
+	)
+
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "user_addresses",
+		To:    "user_addresses.user_id",
+		From:  "users.id",
+	}, populated)
+}
+
+func TestJoinPopulate_hasOnePtr(t *testing.T) {
+	var (
+		populated = rel.Build("", rel.NewJoin("work_address")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
+			JoinQuery[0]
+	)
+
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "user_addresses",
+		To:    "user_addresses.user_id",
+		From:  "users.id",
+	}, populated)
+}
+
+func TestJoinPopulate_hasMany(t *testing.T) {
+	var (
+		populated = rel.Build("", rel.NewJoin("transactions")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
+			JoinQuery[0]
+	)
+
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "transactions",
+		To:    "transactions.user_id",
+		From:  "users.id",
+	}, populated)
+}
+
+func TestJoinPopulate_belongsTo(t *testing.T) {
+	var (
+		populated = rel.Build("", rel.NewJoin("user")).
+			Populate(rel.NewDocument(&rel.Address{}, false).Meta()).
+			JoinQuery[0]
+	)
+
+	assert.Equal(t, rel.JoinQuery{
+		Mode:  "JOIN",
+		Table: "users",
+		To:    "users.id",
+		From:  "user_addresses.user_id",
+	}, populated)
+}
+
 func TestJoinOn(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
 		Mode:  "JOIN",

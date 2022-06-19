@@ -11,6 +11,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func shallowAssertQuery(t *testing.T, a rel.Query, b rel.Query) {
+	assert.Equal(t, a.Table, b.Table)
+	assert.Equal(t, a.SelectQuery, b.SelectQuery)
+	assert.Equal(t, a.JoinQuery, b.JoinQuery)
+	assert.Equal(t, a.WhereQuery, b.WhereQuery)
+	assert.Equal(t, a.GroupQuery, b.GroupQuery)
+	assert.Equal(t, a.SortQuery, b.SortQuery)
+	assert.Equal(t, a.OffsetQuery, b.OffsetQuery)
+	assert.Equal(t, a.LimitQuery, b.LimitQuery)
+	assert.Equal(t, a.LockQuery, b.LockQuery)
+	assert.Equal(t, a.SQLQuery, b.SQLQuery)
+	assert.Equal(t, a.UnscopedQuery, b.UnscopedQuery)
+	assert.Equal(t, a.ReloadQuery, b.ReloadQuery)
+	assert.Equal(t, a.CascadeQuery, b.CascadeQuery)
+	assert.Equal(t, a.PreloadQuery, b.PreloadQuery)
+	assert.Equal(t, a.UsePrimaryDb, b.UsePrimaryDb)
+}
+
 func TestQuerier(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -267,8 +285,8 @@ func TestQuerier(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			for _, b := range test.queriers {
 				query := rel.Build("", b...)
-				assert.Equal(t, test.query, query)
 				assert.Equal(t, test.name, query.String())
+				shallowAssertQuery(t, test.query, query)
 			}
 		})
 	}
@@ -320,9 +338,9 @@ func TestQuery_Join(t *testing.T) {
 		CascadeQuery: true,
 	}
 
-	assert.Equal(t, result, rel.Build("", rel.From("users").Join("transactions")))
-	assert.Equal(t, result, rel.Build("", rel.Join("transactions").From("users")))
-	assert.Equal(t, result, rel.Build("users", rel.Join("transactions")))
+	shallowAssertQuery(t, result, rel.Build("", rel.From("users").Join("transactions")))
+	shallowAssertQuery(t, result, rel.Build("", rel.Join("transactions").From("users")))
+	shallowAssertQuery(t, result, rel.Build("users", rel.Join("transactions")))
 }
 
 func TestQuery_JoinOn(t *testing.T) {
@@ -339,8 +357,8 @@ func TestQuery_JoinOn(t *testing.T) {
 		CascadeQuery: true,
 	}
 
-	assert.Equal(t, result, rel.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
-	assert.Equal(t, result, rel.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
+	shallowAssertQuery(t, result, rel.From("users").JoinOn("transactions", "users.transaction_id", "transactions.id"))
+	shallowAssertQuery(t, result, rel.JoinOn("transactions", "users.transaction_id", "transactions.id").From("users"))
 }
 
 func TestQuery_Joinf(t *testing.T) {
@@ -355,8 +373,8 @@ func TestQuery_Joinf(t *testing.T) {
 		CascadeQuery: true,
 	}
 
-	assert.Equal(t, result, rel.From("users").Joinf("JOIN transactions ON transacations.id=?", 1))
-	assert.Equal(t, result, rel.Joinf("JOIN transactions ON transacations.id=?", 1).From("users"))
+	shallowAssertQuery(t, result, rel.From("users").Joinf("JOIN transactions ON transacations.id=?", 1))
+	shallowAssertQuery(t, result, rel.Joinf("JOIN transactions ON transacations.id=?", 1).From("users"))
 }
 
 func TestQuery_Where(t *testing.T) {

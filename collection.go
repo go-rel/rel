@@ -10,6 +10,7 @@ type slice interface {
 	Add() *Document
 	Get(index int) *Document
 	Len() int
+	Meta() DocumentMeta
 }
 
 // Collection provides an abstraction over reflect to easily works with slice for database purpose.
@@ -127,6 +128,11 @@ func (c Collection) Get(index int) *Document {
 // Len of the underlying slice.
 func (c Collection) Len() int {
 	return c.rv.Len()
+}
+
+// Meta returns document meta.
+func (c Collection) Meta() DocumentMeta {
+	return c.meta
 }
 
 // Reset underlying slice to be zero length.

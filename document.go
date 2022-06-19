@@ -282,6 +282,11 @@ func (d *Document) Len() int {
 	return 1
 }
 
+// Meta returns document meta.
+func (d Document) Meta() DocumentMeta {
+	return d.meta
+}
+
 // Flag returns true if struct contains specified flag.
 func (d Document) Flag(flag DocumentFlag) bool {
 	return d.meta.Flag(flag)

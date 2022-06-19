@@ -13,6 +13,18 @@ type JoinQuery struct {
 // Build query.
 func (jq JoinQuery) Build(query *Query) {
 	query.JoinQuery = append(query.JoinQuery, jq)
+	query.AddPopulator(&query.JoinQuery[len(query.JoinQuery)-1])
+}
+
+func (jq *JoinQuery) Populate(docMeta DocumentMeta) {
+	var (
+		assocMeta    = docMeta.Association(jq.Table)
+		assocDocMeta = assocMeta.DocumentMeta()
+	)
+
+	jq.Table = assocDocMeta.Table()
+	jq.To = jq.Table + "." + assocMeta.ForeignField()
+	jq.From = docMeta.Table() + "." + assocMeta.ReferenceField()
 }
 
 // NewJoinWith query with custom join mode, table, field and additional filters with AND condition.

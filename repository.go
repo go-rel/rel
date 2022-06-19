@@ -239,7 +239,7 @@ func (r repository) MustFind(ctx context.Context, record interface{}, queriers .
 }
 
 func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
-	query = r.withDefaultScope(doc.data, query, true)
+	query = r.withDefaultScope(doc.meta, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query.Limit(1))
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func (r repository) MustFindAll(ctx context.Context, records interface{}, querie
 }
 
 func (r repository) findAll(cw contextWrapper, col *Collection, query Query) error {
-	query = r.withDefaultScope(col.data, query, true)
+	query = r.withDefaultScope(col.meta, query, true)
 	cur, err := cw.adapter.Query(cw.ctx, query)
 	if err != nil {
 		return err
@@ -319,7 +319,7 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 		return 0, err
 	}
 
-	return r.aggregate(cw, r.withDefaultScope(col.data, query, false), "count", "*")
+	return r.aggregate(cw, r.withDefaultScope(col.meta, query, false), "count", "*")
 }
 
 func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {
@@ -553,10 +553,10 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 
 	var (
 		pField string
-		query  = r.withDefaultScope(doc.data, Build(doc.Table(), queries...), false)
+		query  = r.withDefaultScope(doc.meta, Build(doc.Table(), queries...), false)
 	)
 
-	if len(doc.data.primaryField) == 1 {
+	if len(doc.meta.primaryField) == 1 {
 		pField = doc.PrimaryField()
 	}
 
@@ -567,7 +567,7 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 	}
 
 	if mutation.Reload {
-		baseQuery := r.withDefaultScope(doc.data, Build(doc.Table(), baseQueries...), false)
+		baseQuery := r.withDefaultScope(doc.meta, Build(doc.Table(), baseQueries...), false)
 		if err := r.find(cw, doc, baseQuery.UsePrimary()); err != nil {
 			return err
 		}
@@ -701,12 +701,12 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 
 			if deletedIDs == nil {
 				// if it's nil, then clear old association (used by structset).
-				if _, err := r.deleteAny(cw, col.data.flag, Build(table, filter)); err != nil {
+				if _, err := r.deleteAny(cw, col.meta.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			} else if len(deletedIDs) > 0 {
 				filter = filter.AndIn(col.PrimaryField(), deletedIDs...)
-				if _, err := r.deleteAny(cw, col.data.flag, Build(table, filter)); err != nil {
+				if _, err := r.deleteAny(cw, col.meta.flag, Build(table, filter)); err != nil {
 					return err
 				}
 			}
@@ -841,7 +841,7 @@ func (r repository) delete(cw contextWrapper, doc *Document, filter FilterQuery,
 		}
 	}
 
-	deletedCount, err := r.deleteAny(cw, doc.data.flag, query)
+	deletedCount, err := r.deleteAny(cw, doc.meta.flag, query)
 	if err == nil && deletedCount == 0 {
 		err = NotFoundError{}
 	}
@@ -923,7 +923,7 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 				filter = Eq(fField, rValue).And(filterCollection(col))
 			)
 
-			if _, err := r.deleteAny(cw, col.data.flag, Build(table, filter)); err != nil {
+			if _, err := r.deleteAny(cw, col.meta.flag, Build(table, filter)); err != nil {
 				return err
 			}
 		}
@@ -951,7 +951,7 @@ func (r repository) DeleteAll(ctx context.Context, records interface{}) error {
 
 	var (
 		query  = Build(col.Table(), filterCollection(col))
-		_, err = r.deleteAny(cw, col.data.flag, query)
+		_, err = r.deleteAny(cw, col.meta.flag, query)
 	)
 
 	return err
@@ -1079,7 +1079,7 @@ func (r repository) MustPreload(ctx context.Context, records interface{}, field 
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, documentData, bool) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, DocumentMeta, bool) {
 	type frame struct {
 		index int
 		doc   *Document
@@ -1089,7 +1089,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		table     string
 		keyField  string
 		keyType   reflect.Type
-		ddata     documentData
+		meta      DocumentMeta
 		loaded    = true
 		mapTarget = make(map[interface{}][]slice)
 		stack     = make([]frame, sl.Len())
@@ -1136,11 +1136,11 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 				keyType = reflect.TypeOf(ref)
 
 				if doc, ok := target.(*Document); ok {
-					ddata = doc.data
+					meta = doc.meta
 				}
 
 				if col, ok := target.(*Collection); ok {
-					ddata = col.data
+					meta = col.meta
 				}
 			}
 		} else {
@@ -1172,7 +1172,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 
 	}
 
-	return mapTarget, table, keyField, keyType, ddata, loaded
+	return mapTarget, table, keyField, keyType, meta, loaded
 }
 
 func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
@@ -1189,19 +1189,19 @@ func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
 	return ids
 }
 
-func (r repository) withDefaultScope(ddata documentData, query Query, preload bool) Query {
+func (r repository) withDefaultScope(meta DocumentMeta, query Query, preload bool) Query {
 	if query.UnscopedQuery {
 		return query
 	}
 
-	if ddata.flag.Is(HasDeleted) {
+	if meta.flag.Is(HasDeleted) {
 		query = query.Where(Eq("deleted", false))
-	} else if ddata.flag.Is(HasDeletedAt) {
+	} else if meta.flag.Is(HasDeletedAt) {
 		query = query.Where(Nil("deleted_at"))
 	}
 
 	if preload && bool(query.CascadeQuery) {
-		query.PreloadQuery = append(ddata.preload, query.PreloadQuery...)
+		query.PreloadQuery = append(meta.preload, query.PreloadQuery...)
 	}
 
 	return query

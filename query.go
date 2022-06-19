@@ -346,15 +346,15 @@ func (q Query) String() string {
 		builder.WriteString(".Distinct()")
 	}
 
-	for _, jq := range q.JoinQuery {
+	for i := range q.JoinQuery {
 		builder.WriteString(".JoinWith(\"")
-		builder.WriteString(jq.Mode)
+		builder.WriteString(q.JoinQuery[i].Mode)
 		builder.WriteString("\", \"")
-		builder.WriteString(jq.Table)
+		builder.WriteString(q.JoinQuery[i].Table)
 		builder.WriteString("\", \"")
-		builder.WriteString(jq.From)
+		builder.WriteString(q.JoinQuery[i].From)
 		builder.WriteString("\", \"")
-		builder.WriteString(jq.To)
+		builder.WriteString(q.JoinQuery[i].To)
 		builder.WriteString("\")")
 	}
 

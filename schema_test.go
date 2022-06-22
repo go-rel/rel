@@ -1,6 +1,7 @@
 package rel
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -221,7 +222,7 @@ func TestDo(t *testing.T) {
 		schema Schema
 	)
 
-	schema.Do(func(repo Repository) error { return nil })
+	schema.Do(func(ctx context.Context, repo Repository) error { return nil })
 	assert.NotNil(t, schema.Migrations[0])
 }
 

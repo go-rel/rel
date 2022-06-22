@@ -1,7 +1,6 @@
 module github.com/go-rel/rel
 
 require (
-	github.com/go-rel/migration v0.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0
 	github.com/onsi/ginkgo v1.15.0 // indirect
 	github.com/onsi/gomega v1.10.5 // indirect

@@ -1,6 +1,9 @@
 package rel
 
-import "strings"
+import (
+	"context"
+	"strings"
+)
 
 // SchemaOp type.
 type SchemaOp uint8
@@ -138,7 +141,7 @@ func (r Raw) internalMigration()       {}
 func (r Raw) internalTableDefinition() {}
 
 // Do used internally for schema migration.
-type Do func(Repository) error
+type Do func(context.Context, Repository) error
 
 func (d Do) description() string {
 	return "run go code"

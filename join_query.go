@@ -13,7 +13,10 @@ type JoinQuery struct {
 // Build query.
 func (jq JoinQuery) Build(query *Query) {
 	query.JoinQuery = append(query.JoinQuery, jq)
-	query.AddPopulator(&query.JoinQuery[len(query.JoinQuery)-1])
+
+	if jq.From == "" && jq.To == "" {
+		query.AddPopulator(&query.JoinQuery[len(query.JoinQuery)-1])
+	}
 }
 
 func (jq *JoinQuery) Populate(docMeta DocumentMeta) {

@@ -182,6 +182,18 @@ func (q Query) Joinf(expr string, args ...interface{}) Query {
 	return q
 }
 
+// JoinAssoc current table with other table based on association field.
+func (q Query) JoinAssoc(assoc string, filter ...FilterQuery) Query {
+	return q.JoinAssocWith("JOIN", assoc, filter...)
+}
+
+// JoinAssocWith current table with other table based on association field.
+func (q Query) JoinAssocWith(mode string, assoc string, filter ...FilterQuery) Query {
+	NewJoinAssocWith(mode, assoc, filter...).Build(&q)
+
+	return q
+}
+
 // Where query.
 func (q Query) Where(filters ...FilterQuery) Query {
 	q.WhereQuery = q.WhereQuery.And(filters...)
@@ -464,6 +476,21 @@ func JoinWith(mode string, table string, from string, to string, filter ...Filte
 	query.JoinQuery = []JoinQuery{
 		NewJoinWith(mode, table, from, to, filter...),
 	}
+	return query
+}
+
+// JoinAssoc create a query with chainable syntax, using join as the starting point.
+func JoinAssoc(assoc string, filter ...FilterQuery) Query {
+	return JoinAssocWith("JOIN", assoc, filter...)
+}
+
+// JoinAssocWith create a query with chainable syntax, using join as the starting point.
+func JoinAssocWith(mode string, assoc string, filter ...FilterQuery) Query {
+	query := newQuery()
+	query.JoinQuery = []JoinQuery{
+		NewJoinAssocWith(mode, assoc, filter...),
+	}
+	query.AddPopulator(&query.JoinQuery[0])
 	return query
 }
 

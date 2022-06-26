@@ -26,4 +26,8 @@ var (
 	Full = rel.NewFullJoin
 	// FullOn is alias for rel.NewFullJoinOn
 	FullOn = rel.NewFullJoinOn
+	// AssocWith is alias for rel.NewJoinAssocWith
+	AssocWith = rel.NewJoinAssocWith
+	// Assoc is alias for rel.NewJoinAssoc
+	Assoc = rel.NewJoinAssoc
 )

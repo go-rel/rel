@@ -71,9 +71,9 @@ func TestJoin(t *testing.T) {
 	}, rel.NewJoin("transactions"))
 }
 
-func TestJoinPopulate_hasOne(t *testing.T) {
+func TestJoinAssoc_hasOne(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoin("address")).
+		populated = rel.Build("", rel.NewJoinAssoc("address")).
 			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
 			JoinQuery[0]
 	)
@@ -83,12 +83,13 @@ func TestJoinPopulate_hasOne(t *testing.T) {
 		Table: "user_addresses",
 		To:    "user_addresses.user_id",
 		From:  "users.id",
+		Assoc: "address",
 	}, populated)
 }
 
 func TestJoinPopulate_hasOnePtr(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoin("work_address")).
+		populated = rel.Build("", rel.NewJoinAssoc("work_address")).
 			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
 			JoinQuery[0]
 	)
@@ -98,12 +99,13 @@ func TestJoinPopulate_hasOnePtr(t *testing.T) {
 		Table: "user_addresses",
 		To:    "user_addresses.user_id",
 		From:  "users.id",
+		Assoc: "work_address",
 	}, populated)
 }
 
 func TestJoinPopulate_hasMany(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoin("transactions")).
+		populated = rel.Build("", rel.NewJoinAssoc("transactions")).
 			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
 			JoinQuery[0]
 	)
@@ -113,12 +115,13 @@ func TestJoinPopulate_hasMany(t *testing.T) {
 		Table: "transactions",
 		To:    "transactions.user_id",
 		From:  "users.id",
+		Assoc: "transactions",
 	}, populated)
 }
 
-func TestJoinPopulate_belongsTo(t *testing.T) {
+func TestJoinAssoc_belongsTo(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoin("user")).
+		populated = rel.Build("", rel.NewJoinAssoc("user")).
 			Populate(rel.NewDocument(&rel.Address{}, false).Meta()).
 			JoinQuery[0]
 	)
@@ -128,6 +131,7 @@ func TestJoinPopulate_belongsTo(t *testing.T) {
 		Table: "users",
 		To:    "users.id",
 		From:  "user_addresses.user_id",
+		Assoc: "user",
 	}, populated)
 }
 

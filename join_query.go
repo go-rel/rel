@@ -6,6 +6,7 @@ type JoinQuery struct {
 	Table     string
 	From      string
 	To        string
+	Assoc     string
 	Filter    FilterQuery
 	Arguments []interface{}
 }
@@ -14,14 +15,14 @@ type JoinQuery struct {
 func (jq JoinQuery) Build(query *Query) {
 	query.JoinQuery = append(query.JoinQuery, jq)
 
-	if jq.From == "" && jq.To == "" {
+	if jq.Assoc != "" {
 		query.AddPopulator(&query.JoinQuery[len(query.JoinQuery)-1])
 	}
 }
 
 func (jq *JoinQuery) Populate(docMeta DocumentMeta) {
 	var (
-		assocMeta    = docMeta.Association(jq.Table)
+		assocMeta    = docMeta.Association(jq.Assoc)
 		assocDocMeta = assocMeta.DocumentMeta()
 	)
 
@@ -102,4 +103,18 @@ func NewFullJoin(table string, filter ...FilterQuery) JoinQuery {
 // NewFullJoinOn table with given field and optional additional filter.
 func NewFullJoinOn(table string, from string, to string, filter ...FilterQuery) JoinQuery {
 	return NewJoinWith("FULL JOIN", table, from, to, filter...)
+}
+
+// NewJoinAssocWith with given association field and optional additional filters.
+func NewJoinAssocWith(mode string, assoc string, filter ...FilterQuery) JoinQuery {
+	return JoinQuery{
+		Mode:   mode,
+		Assoc:  assoc,
+		Filter: And(filter...),
+	}
+}
+
+// NewJoinAssoc with given association field and optional additional filters.
+func NewJoinAssoc(assoc string, filter ...FilterQuery) JoinQuery {
+	return NewJoinAssocWith("JOIN", assoc, filter...)
 }

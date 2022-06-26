@@ -377,6 +377,29 @@ func TestQuery_Joinf(t *testing.T) {
 	shallowAssertQuery(t, result, rel.Joinf("JOIN transactions ON transacations.id=?", 1).From("users"))
 }
 
+func TestQuery_JoinAssoc(t *testing.T) {
+	result := rel.Query{
+		Table: "users",
+		JoinQuery: []rel.JoinQuery{
+			{
+				Mode:  "JOIN",
+				Table: "transactions",
+				To:    "transactions.user_id",
+				From:  "users.id",
+				Assoc: "transactions",
+			},
+		},
+		CascadeQuery: true,
+	}
+
+	shallowAssertQuery(t, result,
+		rel.Build("", rel.From("users").JoinAssoc("transactions")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta()))
+	shallowAssertQuery(t, result,
+		rel.Build("users", rel.JoinAssoc("transactions")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta()))
+}
+
 func TestQuery_Where(t *testing.T) {
 	tests := []struct {
 		Case     string

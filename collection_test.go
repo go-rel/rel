@@ -42,50 +42,31 @@ func TestCollection_ReflectValue(t *testing.T) {
 func TestCollection_Table(t *testing.T) {
 	var (
 		records = []User{}
-		rt      = reflect.TypeOf(records).Elem()
 		col     = NewCollection(&records)
 	)
 
 	// infer table name
 	assert.Equal(t, "users", col.Table())
-
-	// cached
-	_, cached := tablesCache.Load(rt)
-	assert.True(t, cached)
-
-	tablesCache.Delete(rt)
 }
 
 func TestCollection_Table_usingInterface(t *testing.T) {
 	var (
 		records = Items{}
-		rt      = reflect.TypeOf(records).Elem()
 		col     = NewCollection(&records)
 	)
 
 	// infer table name
 	assert.Equal(t, "_items", col.Table())
-
-	// never cache
-	_, cached := tablesCache.Load(rt)
-	assert.False(t, cached)
 }
 
 func TestCollection_Table_usingElemInterface(t *testing.T) {
 	var (
 		records = []Item{}
-		rt      = reflect.TypeOf(records).Elem()
 		col     = NewCollection(&records)
 	)
 
 	// infer table name
 	assert.Equal(t, "_items", col.Table())
-
-	// cache
-	_, cached := tablesCache.Load(rt)
-	assert.True(t, cached)
-
-	tablesCache.Delete(rt)
 }
 
 func TestCollection_Primary(t *testing.T) {

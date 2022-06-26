@@ -127,7 +127,7 @@ func TestAssociation_Document(t *testing.T) {
 
 			assert.Equal(t, test.typ, assoc.Type())
 			assert.Equal(t, test.doc.rt, doc.rt)
-			assert.Equal(t, test.doc.data, doc.data)
+			assert.Equal(t, test.doc.meta, doc.meta)
 			assert.Equal(t, test.doc.v, doc.v)
 			assert.Equal(t, test.loaded, loaded)
 			assert.Equal(t, test.isZero, assoc.IsZero())

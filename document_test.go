@@ -39,31 +39,21 @@ func TestDocument_ReflectValue(t *testing.T) {
 func TestDocument_Table(t *testing.T) {
 	var (
 		record = User{}
-		rt     = reflect.TypeOf(record)
 		doc    = NewDocument(&record)
 	)
 
 	// infer table name
 	assert.Equal(t, "users", doc.Table())
-
-	// cached
-	_, cached := tablesCache.Load(rt)
-	assert.True(t, cached)
 }
 
 func TestDocument_Table_usingInterface(t *testing.T) {
 	var (
 		record = Item{}
-		rt     = reflect.TypeOf(record)
 		doc    = NewDocument(&record)
 	)
 
 	// infer table name
 	assert.Equal(t, "_items", doc.Table())
-
-	// cache
-	_, cached := tablesCache.Load(rt)
-	assert.True(t, cached)
 }
 
 func TestDocument_Primary(t *testing.T) {

@@ -49,7 +49,7 @@ func (jq *JoinQuery) Populate(query *Query, docMeta DocumentMeta) {
 		if load {
 			fields := make([]string, len(assocDocMeta.Fields()))
 			for i, f := range assocDocMeta.Fields() {
-				fields[i] = jq.Assoc + "." + f
+				fields[i] = jq.Assoc + "." + f + " as " + jq.Assoc + "." + f
 			}
 			query.SelectQuery.Fields = append(query.SelectQuery.Fields[:(len(query.SelectQuery.Fields)-1)], fields...)
 		}

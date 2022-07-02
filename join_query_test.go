@@ -85,7 +85,12 @@ func TestJoinAssoc_hasOne(t *testing.T) {
 		Assoc: "address",
 	}, populated.JoinQuery[0])
 	assert.Equal(t, []string{
-		"*", "address.id", "address.user_id", "address.street", "address.notes", "address.deleted_at",
+		"*",
+		"address.id as address.id",
+		"address.user_id as address.user_id",
+		"address.street as address.street",
+		"address.notes as address.notes",
+		"address.deleted_at as address.deleted_at",
 	}, populated.SelectQuery.Fields)
 }
 
@@ -103,7 +108,13 @@ func TestJoinPopulate_hasOnePtr(t *testing.T) {
 		Assoc: "work_address",
 	}, populated.JoinQuery[0])
 	assert.Equal(t, []string{
-		"id", "name", "work_address.id", "work_address.user_id", "work_address.street", "work_address.notes", "work_address.deleted_at",
+		"id",
+		"name",
+		"work_address.id as work_address.id",
+		"work_address.user_id as work_address.user_id",
+		"work_address.street as work_address.street",
+		"work_address.notes as work_address.notes",
+		"work_address.deleted_at as work_address.deleted_at",
 	}, populated.SelectQuery.Fields)
 }
 

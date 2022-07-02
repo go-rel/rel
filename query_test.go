@@ -383,7 +383,7 @@ func TestQuery_JoinAssoc(t *testing.T) {
 		JoinQuery: []rel.JoinQuery{
 			{
 				Mode:  "JOIN",
-				Table: "transactions",
+				Table: "transactions as transactions",
 				To:    "transactions.user_id",
 				From:  "users.id",
 				Assoc: "transactions",

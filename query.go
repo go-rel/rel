@@ -11,7 +11,7 @@ type Querier interface {
 }
 
 type QueryPopulator interface {
-	Populate(DocumentMeta)
+	Populate(*Query, DocumentMeta)
 }
 
 // Build for given table using given queriers.
@@ -130,7 +130,7 @@ func (q Query) Build(query *Query) {
 
 func (q Query) Populate(documentMeta DocumentMeta) Query {
 	for i := range q.queryPopulators {
-		q.queryPopulators[i].Populate(documentMeta)
+		q.queryPopulators[i].Populate(&q, documentMeta)
 	}
 
 	return q

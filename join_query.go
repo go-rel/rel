@@ -20,15 +20,40 @@ func (jq JoinQuery) Build(query *Query) {
 	}
 }
 
-func (jq *JoinQuery) Populate(docMeta DocumentMeta) {
+func (jq *JoinQuery) Populate(query *Query, docMeta DocumentMeta) {
 	var (
 		assocMeta    = docMeta.Association(jq.Assoc)
 		assocDocMeta = assocMeta.DocumentMeta()
 	)
 
-	jq.Table = assocDocMeta.Table()
-	jq.To = jq.Table + "." + assocMeta.ForeignField()
+	jq.Table = assocDocMeta.Table() + " as " + jq.Assoc
+	jq.To = jq.Assoc + "." + assocMeta.ForeignField()
 	jq.From = docMeta.Table() + "." + assocMeta.ReferenceField()
+
+	// load association if defined and supported
+	if assocMeta.Type() == HasOne || assocMeta.Type() == BelongsTo {
+		var (
+			load        = false
+			selectField = jq.Assoc + ".*"
+		)
+
+		for i := range query.SelectQuery.Fields {
+			if load && i > 0 {
+				query.SelectQuery.Fields[i-1] = query.SelectQuery.Fields[i]
+			}
+			if query.SelectQuery.Fields[i] == selectField {
+				load = true
+			}
+		}
+
+		if load {
+			fields := make([]string, len(assocDocMeta.Fields()))
+			for i, f := range assocDocMeta.Fields() {
+				fields[i] = jq.Assoc + "." + f
+			}
+			query.SelectQuery.Fields = append(query.SelectQuery.Fields[:(len(query.SelectQuery.Fields)-1)], fields...)
+		}
+	}
 }
 
 // NewJoinWith query with custom join mode, table, field and additional filters with AND condition.

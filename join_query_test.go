@@ -73,34 +73,38 @@ func TestJoin(t *testing.T) {
 
 func TestJoinAssoc_hasOne(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoinAssoc("address")).
-			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
-			JoinQuery[0]
+		populated = rel.Build("", rel.Select("*", "address.*"), rel.NewJoinAssoc("address")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta())
 	)
 
 	assert.Equal(t, rel.JoinQuery{
 		Mode:  "JOIN",
-		Table: "user_addresses",
-		To:    "user_addresses.user_id",
+		Table: "user_addresses as address",
+		To:    "address.user_id",
 		From:  "users.id",
 		Assoc: "address",
-	}, populated)
+	}, populated.JoinQuery[0])
+	assert.Equal(t, []string{
+		"*", "address.id", "address.user_id", "address.street", "address.notes", "address.deleted_at",
+	}, populated.SelectQuery.Fields)
 }
 
 func TestJoinPopulate_hasOnePtr(t *testing.T) {
 	var (
-		populated = rel.Build("", rel.NewJoinAssoc("work_address")).
-			Populate(rel.NewDocument(&rel.User{}, false).Meta()).
-			JoinQuery[0]
+		populated = rel.Build("", rel.Select("id", "work_address.*", "name"), rel.NewJoinAssoc("work_address")).
+			Populate(rel.NewDocument(&rel.User{}, false).Meta())
 	)
 
 	assert.Equal(t, rel.JoinQuery{
 		Mode:  "JOIN",
-		Table: "user_addresses",
-		To:    "user_addresses.user_id",
+		Table: "user_addresses as work_address",
+		To:    "work_address.user_id",
 		From:  "users.id",
 		Assoc: "work_address",
-	}, populated)
+	}, populated.JoinQuery[0])
+	assert.Equal(t, []string{
+		"id", "name", "work_address.id", "work_address.user_id", "work_address.street", "work_address.notes", "work_address.deleted_at",
+	}, populated.SelectQuery.Fields)
 }
 
 func TestJoinPopulate_hasMany(t *testing.T) {
@@ -112,7 +116,7 @@ func TestJoinPopulate_hasMany(t *testing.T) {
 
 	assert.Equal(t, rel.JoinQuery{
 		Mode:  "JOIN",
-		Table: "transactions",
+		Table: "transactions as transactions",
 		To:    "transactions.user_id",
 		From:  "users.id",
 		Assoc: "transactions",
@@ -128,8 +132,8 @@ func TestJoinAssoc_belongsTo(t *testing.T) {
 
 	assert.Equal(t, rel.JoinQuery{
 		Mode:  "JOIN",
-		Table: "users",
-		To:    "users.id",
+		Table: "users as user",
+		To:    "user.id",
 		From:  "user_addresses.user_id",
 		Assoc: "user",
 	}, populated)

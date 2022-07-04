@@ -247,13 +247,15 @@ func TestDocument_IndexFieldEmbedded(t *testing.T) {
 			First  FirstEmbedded `db:"first_,embedded"`
 			C      string
 			Second SecondEmbedded `db:",embedded"`
+			E      int            `db:"embedded"` // this field is not embedded, but only called so
 		}{}
 		doc   = NewDocument(&record)
 		index = map[string][]int{
-			"first_a": {0, 0},
-			"first_b": {0, 1},
-			"c":       {1},
-			"d":       {2, 0},
+			"first_a":  {0, 0},
+			"first_b":  {0, 1},
+			"c":        {1},
+			"d":        {2, 0},
+			"embedded": {3},
 		}
 	)
 

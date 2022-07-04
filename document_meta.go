@@ -364,8 +364,8 @@ func isEmbedded(sf reflect.StructField) bool {
 	}
 	// search for embedded tag
 	tags := strings.Split(sf.Tag.Get("db"), ",")
-	for _, tag := range tags {
-		if tag == "embedded" {
+	for i, tag := range tags {
+		if tag == "embedded" && i > 0 {
 			return true
 		}
 	}

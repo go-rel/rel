@@ -238,7 +238,7 @@ func getDocumentMeta(rt reflect.Type, skipAssoc bool) DocumentMeta {
 			typ = typ.Elem()
 		}
 
-		if typ.Kind() == reflect.Struct && sf.Anonymous {
+		if typ.Kind() == reflect.Struct && isEmbedded(sf) {
 			embedded := getDocumentMeta(typ, skipAssoc)
 			embeddedName := ""
 			if tagged {
@@ -355,6 +355,17 @@ func fieldName(sf reflect.StructField) (string, bool) {
 	}
 
 	return snaker.CamelToSnake(sf.Name), false
+}
+
+func isEmbedded(sf reflect.StructField) bool {
+	// anonymous structs are always embedded
+	if sf.Anonymous {
+		return true
+	}
+	if tag := sf.Tag.Get("db"); strings.HasSuffix(tag, ",embedded") {
+		return true
+	}
+	return false
 }
 
 func searchPrimary(rt reflect.Type) ([]string, [][]int) {

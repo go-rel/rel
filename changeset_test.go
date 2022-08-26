@@ -503,6 +503,7 @@ func TestChangeset_hasMany(t *testing.T) {
 			Transactions: []Transaction{
 				{ID: 11, Item: "Book", Status: "pending"},
 				{ID: 12, Item: "Eraser", Status: "pending"},
+				{ID: 13, Item: "Pencil", Status: "pending"},
 			},
 		}
 		snapshots = [][]interface{}{
@@ -575,6 +576,10 @@ func TestChangeset_hasMany(t *testing.T) {
 								"user_id":    Set("user_id", 0),
 								"address_id": Set("address_id", 0),
 							},
+						},
+						{
+							Cascade: true,
+							Mutates: nil, // nil mutates to satisfy repository saveHasMany check
 						},
 					},
 					DeletedIDs: []interface{}{12},

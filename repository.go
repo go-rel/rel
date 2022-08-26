@@ -375,7 +375,7 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	}
 
 	// update primary value
-	if pField != "" {
+	if pField != "" && !isZero(pValue) {
 		doc.SetValue(pField, pValue)
 	}
 
@@ -740,8 +740,10 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 					muts[i], muts[updateCount] = muts[updateCount], muts[i]
 				}
 
-				if err := r.update(cw, assocDoc, muts[updateCount], filter); err != nil {
-					return err
+				if !muts[updateCount].IsEmpty() {
+					if err := r.update(cw, assocDoc, muts[updateCount], filter); err != nil {
+						return err
+					}
 				}
 
 				updateCount++

@@ -118,6 +118,7 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 			assoc      = c.doc.Association(field)
 			col, _     = assoc.Collection()
 			muts       = make([]Mutation, 0, col.Len())
+			mutsCount  = 0
 			updatedIDs = make(map[interface{}]struct{})
 			deletedIDs []interface{}
 		)
@@ -130,12 +131,15 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 
 			if ch, ok := chs[pValue]; ok {
 				updatedIDs[pValue] = struct{}{}
+				mut := Apply(doc, ch)
+				muts = append(muts, mut)
 
-				if amod := Apply(doc, ch); !amod.IsEmpty() {
-					muts = append(muts, amod)
+				if !mut.IsEmpty() {
+					mutsCount++
 				}
 			} else {
 				muts = append(muts, Apply(doc, newStructset(doc, false)))
+				mutsCount++
 			}
 		}
 
@@ -148,7 +152,7 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 			}
 		}
 
-		if len(muts) > 0 || len(deletedIDs) > 0 {
+		if mutsCount > 0 || len(deletedIDs) > 0 {
 			mut.SetAssoc(field, muts...)
 			mut.SetDeletedIDs(field, deletedIDs)
 		}

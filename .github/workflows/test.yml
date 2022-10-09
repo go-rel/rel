@@ -17,9 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^${{ matrix.go }}
+          go-version: ${{ matrix.go }}
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
       - run: go test -race ./...
@@ -35,9 +35,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^${{ matrix.go }}
+          go-version: ${{ matrix.go }}
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
       - run: go install ./cmd/rel
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:

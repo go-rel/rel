@@ -6,20 +6,20 @@ import (
 	"time"
 )
 
-type pair = [2]interface{}
+type pair = [2]any
 
 // Changeset mutator for structs.
 // This allows REL to efficiently to perform update operation only on updated fields and association.
 // The catch is, enabling changeset will duplicates the original struct values which consumes more memory.
 type Changeset struct {
 	doc       *Document
-	snapshot  []interface{}
+	snapshot  []any
 	assoc     map[string]Changeset
-	assocMany map[string]map[interface{}]Changeset
+	assocMany map[string]map[any]Changeset
 }
 
-func (c Changeset) valueChanged(typ reflect.Type, old interface{}, new interface{}) bool {
-	if oeq, ok := old.(interface{ Equal(interface{}) bool }); ok {
+func (c Changeset) valueChanged(typ reflect.Type, old any, new any) bool {
+	if oeq, ok := old.(interface{ Equal(any) bool }); ok {
 		return !oeq.Equal(new)
 	}
 
@@ -53,7 +53,7 @@ func (c Changeset) FieldChanged(field string) bool {
 }
 
 // Changes returns map of changes.
-func (c Changeset) Changes() map[string]interface{} {
+func (c Changeset) Changes() map[string]any {
 	return buildChanges(c.doc, c)
 }
 
@@ -118,8 +118,8 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 			assoc      = c.doc.Association(field)
 			col, _     = assoc.Collection()
 			muts       = make([]Mutation, 0, col.Len())
-			updatedIDs = make(map[interface{}]struct{})
-			deletedIDs []interface{}
+			updatedIDs = make(map[any]struct{})
+			deletedIDs []any
 		)
 
 		for i := 0; i < col.Len(); i++ {
@@ -158,16 +158,16 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 }
 
 // NewChangeset returns new changeset mutator for given record.
-func NewChangeset(record interface{}) Changeset {
+func NewChangeset(record any) Changeset {
 	return newChangeset(NewDocument(record))
 }
 
 func newChangeset(doc *Document) Changeset {
 	c := Changeset{
 		doc:       doc,
-		snapshot:  make([]interface{}, len(doc.Fields())),
+		snapshot:  make([]any, len(doc.Fields())),
 		assoc:     make(map[string]Changeset),
-		assocMany: make(map[string]map[interface{}]Changeset),
+		assocMany: make(map[string]map[any]Changeset),
 	}
 
 	for i, field := range doc.Fields() {
@@ -198,13 +198,13 @@ func initChangesetAssoc(doc *Document, assoc map[string]Changeset, field string)
 	assoc[field] = newChangeset(doc)
 }
 
-func initChangesetAssocMany(doc *Document, assoc map[string]map[interface{}]Changeset, field string) {
+func initChangesetAssocMany(doc *Document, assoc map[string]map[any]Changeset, field string) {
 	col, loaded := doc.Association(field).Collection()
 	if !loaded {
 		return
 	}
 
-	assoc[field] = make(map[interface{}]Changeset)
+	assoc[field] = make(map[any]Changeset)
 
 	for i := 0; i < col.Len(); i++ {
 		var (
@@ -218,9 +218,9 @@ func initChangesetAssocMany(doc *Document, assoc map[string]map[interface{}]Chan
 	}
 }
 
-func buildChanges(doc *Document, c Changeset) map[string]interface{} {
+func buildChanges(doc *Document, c Changeset) map[string]any {
 	var (
-		changes = make(map[string]interface{})
+		changes = make(map[string]any)
 		fields  []string
 	)
 
@@ -268,7 +268,7 @@ func buildChanges(doc *Document, c Changeset) map[string]interface{} {
 	return changes
 }
 
-func buildChangesAssoc(out map[string]interface{}, c Changeset, field string) {
+func buildChangesAssoc(out map[string]any, c Changeset, field string) {
 	assoc := c.doc.Association(field)
 	if assoc.IsZero() {
 		return
@@ -280,13 +280,13 @@ func buildChangesAssoc(out map[string]interface{}, c Changeset, field string) {
 	}
 }
 
-func buildChangesAssocMany(out map[string]interface{}, c Changeset, field string) {
+func buildChangesAssocMany(out map[string]any, c Changeset, field string) {
 	var (
-		changes    []map[string]interface{}
+		changes    []map[string]any
 		chs        = c.assocMany[field]
 		assoc      = c.doc.Association(field)
 		col, _     = assoc.Collection()
-		updatedIDs = make(map[interface{}]struct{})
+		updatedIDs = make(map[any]struct{})
 	)
 
 	for i := 0; i < col.Len(); i++ {

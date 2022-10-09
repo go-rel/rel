@@ -6,7 +6,7 @@ type OnConflict struct {
 	Ignore       bool
 	Replace      bool
 	Fragment     string
-	FragmentArgs []interface{}
+	FragmentArgs []any
 }
 
 // Apply mutation.
@@ -59,6 +59,6 @@ func OnConflictKeysReplace(keys []string) OnConflict {
 // OnConflictFragment allows to write custom sql for on conflict.
 //
 // This will add custom sql after ON CONFLICT, example: ON CONFLICT [FRAGMENT]
-func OnConflictFragment(sql string, args ...interface{}) OnConflict {
+func OnConflictFragment(sql string, args ...any) OnConflict {
 	return OnConflict{Fragment: sql, FragmentArgs: args}
 }

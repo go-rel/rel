@@ -47,7 +47,7 @@ type Column struct {
 	Limit     int
 	Precision int
 	Scale     int
-	Default   interface{}
+	Default   any
 	Options   string
 }
 

@@ -5,7 +5,7 @@ import "strings"
 // SQLQuery allows querying using native query supported by database.
 type SQLQuery struct {
 	Statement string
-	Values    []interface{}
+	Values    []any
 }
 
 // Build Raw Query.
@@ -29,7 +29,7 @@ func (sq SQLQuery) String() string {
 }
 
 // SQL Query.
-func SQL(statement string, values ...interface{}) SQLQuery {
+func SQL(statement string, values ...any) SQLQuery {
 	return SQLQuery{
 		Statement: statement,
 		Values:    values,

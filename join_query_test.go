@@ -55,12 +55,12 @@ func TestJoinWithMultipleFilters(t *testing.T) {
 func TestJoinFragment(t *testing.T) {
 	assert.Equal(t, rel.JoinQuery{
 		Mode:      "JOIN transactions ON id=?",
-		Arguments: []interface{}{1},
+		Arguments: []any{1},
 	}, rel.NewJoinFragment("JOIN transactions ON id=?", 1))
 
 	assert.Equal(t, rel.JoinQuery{
 		Mode:      "JOIN transactions ON transactions.user_id=users.id",
-		Arguments: []interface{}{},
+		Arguments: []any{},
 	}, rel.NewJoinFragment("JOIN transactions ON transactions.user_id=users.id"))
 }
 

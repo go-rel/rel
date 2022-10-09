@@ -96,7 +96,7 @@ func (a Association) ReferenceField() string {
 }
 
 // ReferenceValue of the association.
-func (a Association) ReferenceValue() interface{} {
+func (a Association) ReferenceValue() any {
 	return indirectInterface(reflectValueFieldByIndex(a.rv, a.meta.referenceIndex, false))
 }
 
@@ -107,7 +107,7 @@ func (a Association) ForeignField() string {
 
 // ForeignValue of the association.
 // It'll panic if association type is has many.
-func (a Association) ForeignValue() interface{} {
+func (a Association) ForeignValue() any {
 	if a.Type() == HasMany {
 		panic("rel: cannot infer foreign value for has many or many to many association")
 	}

@@ -20,15 +20,15 @@ func TestAssociation_Document(t *testing.T) {
 	tests := []struct {
 		record         string
 		field          string
-		data           interface{}
+		data           any
 		typ            AssociationType
 		doc            *Document
 		loaded         bool
 		isZero         bool
 		referenceField string
-		referenceValue interface{}
+		referenceValue any
 		foreignField   string
-		foreignValue   interface{}
+		foreignValue   any
 		autosave       bool
 		autoload       bool
 	}{
@@ -199,16 +199,16 @@ func TestAssociation_Collection(t *testing.T) {
 	tests := []struct {
 		record           string
 		field            string
-		data             interface{}
+		data             any
 		typ              AssociationType
 		col              *Collection
 		loaded           bool
 		isZero           bool
 		referenceField   string
-		referenceValue   interface{}
+		referenceValue   any
 		referenceThrough string
 		foreignField     string
-		foreignValue     interface{}
+		foreignValue     any
 		foreignThrough   string
 		through          string
 		autoload         bool

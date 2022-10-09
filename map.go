@@ -10,7 +10,7 @@ import (
 // Insert/Update of has one or belongs to can be done using other Map as a value.
 // Insert/Update of has many can be done using slice of Map as a value.
 // Map is intended to be used internally within application, and not to be exposed directly as an APIs.
-type Map map[string]interface{}
+type Map map[string]any
 
 // Apply mutation.
 func (m Map) Apply(doc *Document, mutation *Mutation) {
@@ -102,17 +102,17 @@ func (m Map) String() string {
 	return builder.String()
 }
 
-func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
+func applyMaps(maps []Map, assoc Association) ([]Mutation, []any) {
 	var (
-		deletedIDs []interface{}
+		deletedIDs []any
 		muts       = make([]Mutation, len(maps))
 		col, _     = assoc.Collection()
 	)
 
 	var (
 		pField  = col.PrimaryField()
-		pIndex  = make(map[interface{}]int)
-		pValues = col.PrimaryValue().([]interface{})
+		pIndex  = make(map[any]int)
+		pValues = col.PrimaryValue().([]any)
 	)
 
 	for i, v := range pValues {
@@ -150,7 +150,7 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []interface{}) {
 		deletedIDs = pValues[curr:]
 		col.Truncate(0, curr)
 	} else {
-		deletedIDs = []interface{}{}
+		deletedIDs = []any{}
 	}
 
 	// inserts remaining

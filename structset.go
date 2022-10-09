@@ -58,7 +58,7 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 	}
 }
 
-func (s Structset) set(doc *Document, mut *Mutation, field string, value interface{}, force bool) {
+func (s Structset) set(doc *Document, mut *Mutation, field string, value any, force bool) {
 	if (force || doc.v != s.doc.v) && !doc.SetValue(field, value) {
 		panic(fmt.Sprint("rel: cannot assign ", value, " as ", field, " into ", doc.Table()))
 	}
@@ -133,6 +133,6 @@ func newStructset(doc *Document, skipZero bool) Structset {
 }
 
 // NewStructset from a struct.
-func NewStructset(record interface{}, skipZero bool) Structset {
+func NewStructset(record any, skipZero bool) Structset {
 	return newStructset(NewDocument(record), skipZero)
 }

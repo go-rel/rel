@@ -12,7 +12,7 @@ func BenchmarkSmallSliceLookup(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var (
 			index  = 0
-			values = []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+			values = []any{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 			fields = []string{"field1", "field2", "field3", "field4", "field6", "field7", "field8", "field9", "field10"}
 		)
 
@@ -31,7 +31,7 @@ func BenchmarkSmallSliceLookup(b *testing.B) {
 func BenchmarkSmallMapLookup(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var (
-			values = map[string]interface{}{
+			values = map[string]any{
 				"field1":  1,
 				"field2":  2,
 				"field3":  3,
@@ -115,7 +115,7 @@ func TestChangeset(t *testing.T) {
 			UpdatedAt: ts,
 			CreatedAt: ts,
 		}
-		snapshot  = []interface{}{1, "User 1", 20, ts, ts}
+		snapshot  = []any{1, "User 1", 20, ts, ts}
 		doc       = NewDocument(&user)
 		changeset = NewChangeset(&user)
 	)
@@ -136,7 +136,7 @@ func TestChangeset(t *testing.T) {
 		user.Age = 21
 
 		assert.Equal(t, snapshot, changeset.snapshot)
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"name": pair{"User 1", "User 2"},
 			"age":  pair{20, 21},
 		}, changeset.Changes())
@@ -171,7 +171,7 @@ func TestChangeset_byte_slice(t *testing.T) {
 			CreatedAt: ts,
 			UpdatedAt: ts,
 		}
-		snapshot  = []interface{}{1, []byte("foo"), json.RawMessage(`{"baz":"foo"}`), ts, ts}
+		snapshot  = []any{1, []byte("foo"), json.RawMessage(`{"baz":"foo"}`), ts, ts}
 		doc       = NewDocument(&user)
 		changeset = NewChangeset(&user)
 	)
@@ -192,7 +192,7 @@ func TestChangeset_byte_slice(t *testing.T) {
 		user.Metadata = []byte("{}")
 
 		assert.Equal(t, snapshot, changeset.snapshot)
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"password": pair{[]byte("foo"), []byte("bar")},
 			"metadata": pair{json.RawMessage(`{"baz":"foo"}`), json.RawMessage("{}")},
 		}, changeset.Changes())
@@ -223,7 +223,7 @@ func TestChangeset_ptr(t *testing.T) {
 			ID:     1,
 			UserID: &userID,
 		}
-		snapshot  = []interface{}{1, 2, "", Notes(""), nil}
+		snapshot  = []any{1, 2, "", Notes(""), nil}
 		doc       = NewDocument(&address)
 		changeset = NewChangeset(&address)
 	)
@@ -244,7 +244,7 @@ func TestChangeset_ptr(t *testing.T) {
 		address.UserID = &userID
 
 		assert.Equal(t, snapshot, changeset.snapshot)
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"user_id": pair{2, 3},
 		}, changeset.Changes())
 	})
@@ -267,7 +267,7 @@ func TestChangeset_belongsTo(t *testing.T) {
 				Name: "User 1",
 			},
 		}
-		snapshot  = []interface{}{1, "User 1", 0, time.Time{}, time.Time{}}
+		snapshot  = []any{1, "User 1", 0, time.Time{}, time.Time{}}
 		doc       = NewDocument(&address)
 		changeset = NewChangeset(&address)
 	)
@@ -287,8 +287,8 @@ func TestChangeset_belongsTo(t *testing.T) {
 		address.User.Name = "User Satu"
 
 		assert.Equal(t, snapshot, changeset.assoc["user"].snapshot)
-		assert.Equal(t, map[string]interface{}{
-			"user": map[string]interface{}{
+		assert.Equal(t, map[string]any{
+			"user": map[string]any{
 				"name": pair{"User 1", "User Satu"},
 			},
 		}, changeset.Changes())
@@ -341,8 +341,8 @@ func TestChangeset_belongsTo_new(t *testing.T) {
 		}
 
 		assert.Nil(t, changeset.assoc["user"].snapshot)
-		assert.Equal(t, map[string]interface{}{
-			"user": map[string]interface{}{
+		assert.Equal(t, map[string]any{
+			"user": map[string]any{
 				"id":         pair{nil, 0},
 				"name":       pair{nil, "User Satu"},
 				"age":        pair{nil, 20},
@@ -384,7 +384,7 @@ func TestChangeset_hasOne(t *testing.T) {
 				Notes:  "HQ",
 			},
 		}
-		snapshot  = []interface{}{1, nil, "Grove Street", Notes("HQ"), nil}
+		snapshot  = []any{1, nil, "Grove Street", Notes("HQ"), nil}
 		doc       = NewDocument(&user)
 		changeset = NewChangeset(&user)
 	)
@@ -406,8 +406,8 @@ func TestChangeset_hasOne(t *testing.T) {
 		user.Address.Notes = Notes("Home")
 
 		assert.Equal(t, snapshot, changeset.assoc["address"].snapshot)
-		assert.Equal(t, map[string]interface{}{
-			"address": map[string]interface{}{
+		assert.Equal(t, map[string]any{
+			"address": map[string]any{
 				"user_id": pair{nil, user.ID},
 				"street":  pair{"Grove Street", "Grove Street Blvd"},
 				"notes":   pair{Notes("HQ"), Notes("Home")},
@@ -464,8 +464,8 @@ func TestChangeset_hasOne_new(t *testing.T) {
 		}
 
 		assert.Nil(t, changeset.assoc["address"].snapshot)
-		assert.Equal(t, map[string]interface{}{
-			"address": map[string]interface{}{
+		assert.Equal(t, map[string]any{
+			"address": map[string]any{
 				"id":      pair{nil, 0},
 				"user_id": pair{nil, user.ID},
 				"street":  pair{nil, "Grove Street Blvd"},
@@ -505,7 +505,7 @@ func TestChangeset_hasMany(t *testing.T) {
 				{ID: 12, Item: "Eraser", Status: "pending"},
 			},
 		}
-		snapshots = [][]interface{}{
+		snapshots = [][]any{
 			{11, "Book", Status("pending"), 0, 0},
 			{12, "Eraser", Status("pending"), 0, 0},
 		}
@@ -532,8 +532,8 @@ func TestChangeset_hasMany(t *testing.T) {
 		user.Transactions[0].Status = "paid"
 		user.Transactions[1] = Transaction{Item: "Paper", Status: "pending"}
 
-		assert.Equal(t, map[string]interface{}{
-			"transactions": []map[string]interface{}{
+		assert.Equal(t, map[string]any{
+			"transactions": []map[string]any{
 				{
 					"status": pair{Status("pending"), Status("paid")},
 				},
@@ -577,7 +577,7 @@ func TestChangeset_hasMany(t *testing.T) {
 							},
 						},
 					},
-					DeletedIDs: []interface{}{12},
+					DeletedIDs: []any{12},
 				},
 			},
 		}, Apply(doc, changeset))

@@ -8,7 +8,7 @@ import (
 
 type testAdapter struct {
 	mock.Mock
-	result interface{}
+	result any
 }
 
 var _ Adapter = (*testAdapter)(nil)
@@ -41,14 +41,14 @@ func (ta *testAdapter) Query(ctx context.Context, query Query) (Cursor, error) {
 	return args.Get(0).(Cursor), args.Error(1)
 }
 
-func (ta *testAdapter) Insert(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate, onConflict OnConflict) (interface{}, error) {
+func (ta *testAdapter) Insert(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate, onConflict OnConflict) (any, error) {
 	args := ta.Called(query, mutates, onConflict)
 	return args.Get(0), args.Error(1)
 }
 
-func (ta *testAdapter) InsertAll(ctx context.Context, query Query, primaryField string, fields []string, mutates []map[string]Mutate, onConflict OnConflict) ([]interface{}, error) {
+func (ta *testAdapter) InsertAll(ctx context.Context, query Query, primaryField string, fields []string, mutates []map[string]Mutate, onConflict OnConflict) ([]any, error) {
 	args := ta.Called(query, fields, mutates, onConflict)
-	return args.Get(0).([]interface{}), args.Error(1)
+	return args.Get(0).([]any), args.Error(1)
 }
 
 func (ta *testAdapter) Update(ctx context.Context, query Query, primaryField string, mutates map[string]Mutate) (int, error) {
@@ -81,12 +81,12 @@ func (ta *testAdapter) Apply(ctx context.Context, migration Migration) error {
 	return args.Error(0)
 }
 
-func (ta *testAdapter) Result(result interface{}) *testAdapter {
+func (ta *testAdapter) Result(result any) *testAdapter {
 	ta.result = result
 	return ta
 }
 
-func (ta *testAdapter) Exec(ctx context.Context, stmt string, args []interface{}) (int64, int64, error) {
+func (ta *testAdapter) Exec(ctx context.Context, stmt string, args []any) (int64, int64, error) {
 	mockArgs := ta.Called(ctx, stmt, args)
 	return int64(mockArgs.Int(0)), int64(mockArgs.Int(1)), mockArgs.Error(2)
 }

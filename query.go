@@ -176,7 +176,7 @@ func (q Query) JoinWith(mode string, table string, from string, to string, filte
 }
 
 // Joinf create join query using a raw query.
-func (q Query) Joinf(expr string, args ...interface{}) Query {
+func (q Query) Joinf(expr string, args ...any) Query {
 	NewJoinFragment(expr, args...).Build(&q) // TODO: ensure this always called last
 
 	return q
@@ -201,7 +201,7 @@ func (q Query) Where(filters ...FilterQuery) Query {
 }
 
 // Wheref create where query using a raw query.
-func (q Query) Wheref(expr string, args ...interface{}) Query {
+func (q Query) Wheref(expr string, args ...any) Query {
 	q.WhereQuery = q.WhereQuery.And(FilterFragment(expr, args...))
 	return q
 }
@@ -213,7 +213,7 @@ func (q Query) OrWhere(filters ...FilterQuery) Query {
 }
 
 // OrWheref create where query using a raw query.
-func (q Query) OrWheref(expr string, args ...interface{}) Query {
+func (q Query) OrWheref(expr string, args ...any) Query {
 	q.WhereQuery = q.WhereQuery.Or(FilterFragment(expr, args...))
 	return q
 }
@@ -231,7 +231,7 @@ func (q Query) Having(filters ...FilterQuery) Query {
 }
 
 // Havingf create having query using a raw query.
-func (q Query) Havingf(expr string, args ...interface{}) Query {
+func (q Query) Havingf(expr string, args ...any) Query {
 	q.GroupQuery.Filter = q.GroupQuery.Filter.And(FilterFragment(expr, args...))
 	return q
 }
@@ -243,7 +243,7 @@ func (q Query) OrHaving(filters ...FilterQuery) Query {
 }
 
 // OrHavingf create having query using a raw query.
-func (q Query) OrHavingf(expr string, args ...interface{}) Query {
+func (q Query) OrHavingf(expr string, args ...any) Query {
 	q.GroupQuery.Filter = q.GroupQuery.Filter.Or(FilterFragment(expr, args...))
 	return q
 }
@@ -495,7 +495,7 @@ func JoinAssocWith(mode string, assoc string, filter ...FilterQuery) Query {
 }
 
 // Joinf create a query with chainable syntax, using join as the starting point.
-func Joinf(expr string, args ...interface{}) Query {
+func Joinf(expr string, args ...any) Query {
 	query := newQuery()
 	query.JoinQuery = []JoinQuery{
 		NewJoinFragment(expr, args...),

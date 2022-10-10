@@ -162,7 +162,7 @@ func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv refl
 	return true
 }
 
-func fmtiface(v any) string {
+func fmtAny(v any) string {
 	if str, ok := v.(string); ok {
 		return "\"" + str + "\""
 	}
@@ -170,13 +170,13 @@ func fmtiface(v any) string {
 	return fmt.Sprint(v)
 }
 
-func fmtifaces(v []any) string {
+func fmtAnys(v []any) string {
 	var str strings.Builder
 	for i := range v {
 		if i > 0 {
 			str.WriteString(", ")
 		}
-		str.WriteString(fmtiface(v[i]))
+		str.WriteString(fmtAny(v[i]))
 	}
 
 	return str.String()

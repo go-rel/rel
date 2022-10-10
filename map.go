@@ -94,7 +94,7 @@ func (m Map) String() string {
 			}
 			builder.WriteString("}")
 		default:
-			builder.WriteString(fmtiface(v)) // TODO: use compact struct print (reltest.csprint)
+			builder.WriteString(fmtAny(v)) // TODO: use compact struct print (reltest.csprint)
 		}
 	}
 	builder.WriteString("}")

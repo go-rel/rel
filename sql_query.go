@@ -21,7 +21,7 @@ func (sq SQLQuery) String() string {
 
 	if len(sq.Values) != 0 {
 		builder.WriteString(", ")
-		builder.WriteString(fmtifaces(sq.Values))
+		builder.WriteString(fmtAnys(sq.Values))
 	}
 
 	builder.WriteString(")")

@@ -114,7 +114,7 @@ func (fq FilterQuery) String() string {
 		builder.WriteByte('"')
 		builder.WriteString(fq.Field)
 		builder.WriteString("\", ")
-		builder.WriteString(fmtiface(fq.Value))
+		builder.WriteString(fmtAny(fq.Value))
 	case FilterNilOp, FilterNotNilOp, FilterLikeOp, FilterNotLikeOp:
 		builder.WriteByte('"')
 		builder.WriteString(fq.Field)
@@ -123,7 +123,7 @@ func (fq FilterQuery) String() string {
 		builder.WriteByte('"')
 		builder.WriteString(fq.Field)
 		builder.WriteString("\", ")
-		builder.WriteString(fmtifaces(fq.Value.([]any)))
+		builder.WriteString(fmtAnys(fq.Value.([]any)))
 	case FilterFragmentOp:
 		v := fq.Value.([]any)
 		builder.WriteByte('"')
@@ -132,7 +132,7 @@ func (fq FilterQuery) String() string {
 
 		if len(v) > 0 {
 			builder.WriteString(", ")
-			builder.WriteString(fmtifaces(v))
+			builder.WriteString(fmtAnys(v))
 		}
 	}
 

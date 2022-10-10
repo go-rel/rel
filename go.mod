@@ -12,4 +12,4 @@ require (
 	github.com/onsi/gomega v1.10.5 // indirect
 )
 
-go 1.12
+go 1.15

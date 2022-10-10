@@ -23,8 +23,8 @@ func (i Item) PrimaryFields() []string {
 	return []string{"_uuid"}
 }
 
-func (i Item) PrimaryValues() []interface{} {
-	return []interface{}{i.UUID}
+func (i Item) PrimaryValues() []any {
+	return []any{i.UUID}
 }
 
 func TestDocument_ReflectValue(t *testing.T) {
@@ -168,7 +168,7 @@ func TestDocument_Primary_composite(t *testing.T) {
 	})
 
 	assert.Equal(t, []string{"user_id", "role_id"}, doc.PrimaryFields())
-	assert.Equal(t, []interface{}{1, 2}, doc.PrimaryValues())
+	assert.Equal(t, []any{1, 2}, doc.PrimaryValues())
 }
 
 func TestDocument_Fields(t *testing.T) {
@@ -324,7 +324,7 @@ func TestDocument_Value(t *testing.T) {
 			Data:    []byte("data"),
 		}
 		doc    = NewDocument(&record)
-		values = map[string]interface{}{
+		values = map[string]any{
 			"id":      1,
 			"name":    "name",
 			"number":  10.5,
@@ -478,7 +478,7 @@ func TestDocument_Scanners(t *testing.T) {
 		}
 		doc      = NewDocument(&record)
 		fields   = []string{"name", "id", "skip", "data", "number", "address", "not_exist"}
-		scanners = []interface{}{
+		scanners = []any{
 			Nullable(&record.Name),
 			Nullable(&record.ID),
 			&sql.RawBytes{},
@@ -508,7 +508,7 @@ func TestDocument_Scanners_withAssoc(t *testing.T) {
 		}
 		doc      = NewDocument(&record)
 		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "buyer.work_address.street", "status", "invalid_assoc.id"}
-		scanners = []interface{}{
+		scanners = []any{
 			Nullable(&record.ID),
 			Nullable(&record.BuyerID),
 			Nullable(&record.Buyer.ID),
@@ -528,7 +528,7 @@ func TestDocument_Scanners_withUnitializedAssoc(t *testing.T) {
 		doc      = NewDocument(&record)
 		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "status", "buyer.work_address.street"}
 		result   = doc.Scanners(fields)
-		expected = []interface{}{
+		expected = []any{
 			Nullable(&record.ID),
 			Nullable(&record.BuyerID),
 			Nullable(&record.Buyer.ID),
@@ -578,7 +578,7 @@ func TestDocument_Slice(t *testing.T) {
 func TestDocument_Association(t *testing.T) {
 	tests := []struct {
 		name      string
-		record    interface{}
+		record    any
 		belongsTo []string
 		hasOne    []string
 		hasMany   []string
@@ -655,7 +655,7 @@ func TestDocument_Association_notFOund(t *testing.T) {
 
 func TestDocument(t *testing.T) {
 	tests := []struct {
-		record interface{}
+		record any
 		panics bool
 	}{
 		{

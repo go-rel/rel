@@ -49,7 +49,7 @@ type table interface {
 
 type primary interface {
 	PrimaryFields() []string
-	PrimaryValues() []interface{}
+	PrimaryValues() []any
 }
 
 type primaryData struct {

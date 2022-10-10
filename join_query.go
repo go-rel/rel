@@ -8,7 +8,7 @@ type JoinQuery struct {
 	To        string
 	Assoc     string
 	Filter    FilterQuery
-	Arguments []interface{}
+	Arguments []any
 }
 
 // Build query.
@@ -68,10 +68,10 @@ func NewJoinWith(mode string, table string, from string, to string, filter ...Fi
 }
 
 // NewJoinFragment defines a join clause using raw query.
-func NewJoinFragment(expr string, args ...interface{}) JoinQuery {
+func NewJoinFragment(expr string, args ...any) JoinQuery {
 	if args == nil {
 		// prevent buildJoin to populate From and To variable.
-		args = []interface{}{}
+		args = []any{}
 	}
 
 	return JoinQuery{

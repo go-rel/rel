@@ -90,7 +90,7 @@ type History struct {
 
 type Notes string
 
-func (n Notes) Equal(other interface{}) bool {
+func (n Notes) Equal(other any) bool {
 	if o, ok := other.(Notes); ok {
 		return n == o
 	}

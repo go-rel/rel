@@ -10,8 +10,8 @@ type Cursor interface {
 	Close() error
 	Fields() ([]string, error)
 	Next() bool
-	Scan(...interface{}) error
-	NopScanner() interface{} // TODO: conflict with manual scanners interface
+	Scan(...any) error
+	NopScanner() any // TODO: conflict with manual scanners interface
 }
 
 func scanOne(cur Cursor, doc *Document) error {
@@ -55,7 +55,7 @@ func scanAll(cur Cursor, col *Collection) error {
 	return nil
 }
 
-func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[interface{}][]slice) error {
+func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][]slice) error {
 	defer cur.Close()
 
 	fields, err := cur.Fields()
@@ -66,7 +66,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[inter
 	var (
 		found       = false
 		keyValue    = reflect.New(keyType)
-		keyScanners = make([]interface{}, len(fields))
+		keyScanners = make([]any, len(fields))
 	)
 
 	for i, field := range fields {

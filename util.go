@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func indirectInterface(rv reflect.Value) interface{} {
+func indirectInterface(rv reflect.Value) any {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {
 			return nil
@@ -39,7 +39,7 @@ type isZeroer interface {
 }
 
 // isZero shallowly check wether a field in struct is zero or not
-func isZero(value interface{}) bool {
+func isZero(value any) bool {
 	var (
 		zero bool
 	)
@@ -162,7 +162,7 @@ func setConvertValue(ft reflect.Type, fv reflect.Value, rt reflect.Type, rv refl
 	return true
 }
 
-func fmtiface(v interface{}) string {
+func fmtAny(v any) string {
 	if str, ok := v.(string); ok {
 		return "\"" + str + "\""
 	}
@@ -170,13 +170,13 @@ func fmtiface(v interface{}) string {
 	return fmt.Sprint(v)
 }
 
-func fmtifaces(v []interface{}) string {
+func fmtAnys(v []any) string {
 	var str strings.Builder
 	for i := range v {
 		if i > 0 {
 			str.WriteString(", ")
 		}
-		str.WriteString(fmtiface(v[i]))
+		str.WriteString(fmtAny(v[i]))
 	}
 
 	return str.String()
@@ -193,7 +193,8 @@ func encodeIndices(indices []int) string {
 }
 
 // Get field by index and init pointers on path if flag is true
-//  modified from: https://cs.opensource.google/go/go/+/refs/tags/go1.17.7:src/reflect/value.go;l=1228-1245;bpv
+//
+//	modified from: https://cs.opensource.google/go/go/+/refs/tags/go1.17.7:src/reflect/value.go;l=1228-1245;bpv
 func reflectValueFieldByIndex(rv reflect.Value, index []int, init bool) reflect.Value {
 	if len(index) == 1 {
 		return rv.Field(index[0])

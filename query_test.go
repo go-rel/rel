@@ -246,7 +246,7 @@ func TestQuerier(t *testing.T) {
 			query: rel.Query{
 				SQLQuery: rel.SQLQuery{
 					Statement: "SELECT ?;",
-					Values:    []interface{}{1},
+					Values:    []any{1},
 				},
 				CascadeQuery: true,
 			},
@@ -367,7 +367,7 @@ func TestQuery_Joinf(t *testing.T) {
 		JoinQuery: []rel.JoinQuery{
 			{
 				Mode:      "JOIN transactions ON transacations.id=?",
-				Arguments: []interface{}{1},
+				Arguments: []any{1},
 			},
 		},
 		CascadeQuery: true,

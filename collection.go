@@ -15,7 +15,7 @@ type slice interface {
 
 // Collection provides an abstraction over reflect to easily works with slice for database purpose.
 type Collection struct {
-	v       interface{}
+	v       any
 	rv      reflect.Value
 	rt      reflect.Type
 	meta    DocumentMeta
@@ -57,21 +57,21 @@ func (c Collection) PrimaryField() string {
 
 // PrimaryValues of collection.
 // Returned value will be interface of slice interface.
-func (c Collection) PrimaryValues() []interface{} {
+func (c Collection) PrimaryValues() []any {
 	if p, ok := c.v.(primary); ok {
 		return p.PrimaryValues()
 	}
 
 	var (
 		index   = c.meta.primaryIndex
-		pValues = make([]interface{}, len(c.PrimaryFields()))
+		pValues = make([]any, len(c.PrimaryFields()))
 	)
 
 	if index != nil {
 		for i := range index {
 			var (
 				idxLen = c.rv.Len()
-				values = make([]interface{}, 0, idxLen)
+				values = make([]any, 0, idxLen)
 			)
 
 			for j := 0; j < idxLen; j++ {
@@ -85,7 +85,7 @@ func (c Collection) PrimaryValues() []interface{} {
 	} else {
 		// using interface.
 		var (
-			tmp = make([][]interface{}, len(pValues))
+			tmp = make([][]any, len(pValues))
 		)
 
 		for i := 0; i < c.rv.Len(); i++ {
@@ -108,7 +108,7 @@ func (c Collection) PrimaryValues() []interface{} {
 
 // PrimaryValue of this document.
 // panic if document uses composite key.
-func (c Collection) PrimaryValue() interface{} {
+func (c Collection) PrimaryValue() any {
 	if values := c.PrimaryValues(); len(values) == 1 {
 		return values[0]
 	}
@@ -178,7 +178,7 @@ func (c Collection) Swap(i, j int) {
 
 // NewCollection used to create abstraction to work with slice.
 // COllection can be created using interface or reflect.Value.
-func NewCollection(records interface{}, readonly ...bool) *Collection {
+func NewCollection(records any, readonly ...bool) *Collection {
 	switch v := records.(type) {
 	case *Collection:
 		return v
@@ -193,7 +193,7 @@ func NewCollection(records interface{}, readonly ...bool) *Collection {
 	}
 }
 
-func newCollection(v interface{}, rv reflect.Value, readonly bool) *Collection {
+func newCollection(v any, rv reflect.Value, readonly bool) *Collection {
 	var (
 		rt = rv.Type()
 	)

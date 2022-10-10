@@ -547,7 +547,7 @@ func TestFilterQuery_AndIn(t *testing.T) {
 			{
 				Type:  FilterInOp,
 				Field: "field",
-				Value: []interface{}{"value1", "value2"},
+				Value: []any{"value1", "value2"},
 			},
 		},
 	}, FilterQuery{}.AndIn("field", "value1", "value2"))
@@ -559,7 +559,7 @@ func TestFilterQuery_AndNin(t *testing.T) {
 			{
 				Type:  FilterNinOp,
 				Field: "field",
-				Value: []interface{}{"value1", "value2"},
+				Value: []any{"value1", "value2"},
 			},
 		},
 	}, FilterQuery{}.AndNin("field", "value1", "value2"))
@@ -595,7 +595,7 @@ func TestFilterQuery_AndFragment(t *testing.T) {
 			{
 				Type:  FilterFragmentOp,
 				Field: "expr",
-				Value: []interface{}{"value"},
+				Value: []any{"value"},
 			},
 		},
 	}, FilterQuery{}.AndFragment("expr", "value"))
@@ -710,7 +710,7 @@ func TestFilterQuery_OrIn(t *testing.T) {
 			{
 				Type:  FilterInOp,
 				Field: "field",
-				Value: []interface{}{"value1", "value2"},
+				Value: []any{"value1", "value2"},
 			},
 		},
 	}, FilterQuery{}.OrIn("field", "value1", "value2"))
@@ -723,7 +723,7 @@ func TestFilterQuery_OrNin(t *testing.T) {
 			{
 				Type:  FilterNinOp,
 				Field: "field",
-				Value: []interface{}{"value1", "value2"},
+				Value: []any{"value1", "value2"},
 			},
 		},
 	}, FilterQuery{}.OrNin("field", "value1", "value2"))
@@ -762,7 +762,7 @@ func TestFilterQuery_OrFragment(t *testing.T) {
 			{
 				Type:  FilterFragmentOp,
 				Field: "expr",
-				Value: []interface{}{"value"},
+				Value: []any{"value"},
 			},
 		},
 	}, FilterQuery{}.OrFragment("expr", "value"))
@@ -834,7 +834,7 @@ func TestIn(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterInOp,
 		Field: "field",
-		Value: []interface{}{"value1", "value2"},
+		Value: []any{"value1", "value2"},
 	}, In("field", "value1", "value2"))
 }
 
@@ -842,7 +842,7 @@ func TestInInt(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterInOp,
 		Field: "field",
-		Value: []interface{}{1, 2},
+		Value: []any{1, 2},
 	}, InInt("field", []int{1, 2}))
 }
 
@@ -850,7 +850,7 @@ func TestInUint(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterInOp,
 		Field: "field",
-		Value: []interface{}{uint(1), uint(2)},
+		Value: []any{uint(1), uint(2)},
 	}, InUint("field", []uint{1, 2}))
 }
 
@@ -858,7 +858,7 @@ func TestInString(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterInOp,
 		Field: "field",
-		Value: []interface{}{"1", "2"},
+		Value: []any{"1", "2"},
 	}, InString("field", []string{"1", "2"}))
 }
 
@@ -866,7 +866,7 @@ func TestNin(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterNinOp,
 		Field: "field",
-		Value: []interface{}{"value1", "value2"},
+		Value: []any{"value1", "value2"},
 	}, Nin("field", "value1", "value2"))
 }
 
@@ -874,7 +874,7 @@ func TestNinInt(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterNinOp,
 		Field: "field",
-		Value: []interface{}{1, 2},
+		Value: []any{1, 2},
 	}, NinInt("field", []int{1, 2}))
 }
 
@@ -882,7 +882,7 @@ func TestNinUint(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterNinOp,
 		Field: "field",
-		Value: []interface{}{uint(1), uint(2)},
+		Value: []any{uint(1), uint(2)},
 	}, NinUint("field", []uint{1, 2}))
 }
 
@@ -890,7 +890,7 @@ func TestNinString(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterNinOp,
 		Field: "field",
-		Value: []interface{}{"1", "2"},
+		Value: []any{"1", "2"},
 	}, NinString("field", []string{"1", "2"}))
 }
 
@@ -914,7 +914,7 @@ func TestFilterFragment(t *testing.T) {
 	assert.Equal(t, FilterQuery{
 		Type:  FilterFragmentOp,
 		Field: "expr",
-		Value: []interface{}{"value"},
+		Value: []any{"value"},
 	}, FilterFragment("expr", "value"))
 }
 

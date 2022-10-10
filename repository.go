@@ -46,53 +46,53 @@ type Repository interface {
 
 	// Find a record that match the query.
 	// If no result found, it'll return not found error.
-	Find(ctx context.Context, record interface{}, queriers ...Querier) error
+	Find(ctx context.Context, record any, queriers ...Querier) error
 
 	// MustFind a record that match the query.
 	// If no result found, it'll panic.
-	MustFind(ctx context.Context, record interface{}, queriers ...Querier)
+	MustFind(ctx context.Context, record any, queriers ...Querier)
 
 	// FindAll records that match the query.
-	FindAll(ctx context.Context, records interface{}, queriers ...Querier) error
+	FindAll(ctx context.Context, records any, queriers ...Querier) error
 
 	// MustFindAll records that match the query.
 	// It'll panic if any error eccured.
-	MustFindAll(ctx context.Context, records interface{}, queriers ...Querier)
+	MustFindAll(ctx context.Context, records any, queriers ...Querier)
 
 	// FindAndCountAll records that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
-	FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error)
+	FindAndCountAll(ctx context.Context, records any, queriers ...Querier) (int, error)
 
 	// MustFindAndCountAll records that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	// It'll panic if any error eccured.
-	MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int
+	MustFindAndCountAll(ctx context.Context, records any, queriers ...Querier) int
 
 	// Insert a record to database.
-	Insert(ctx context.Context, record interface{}, mutators ...Mutator) error
+	Insert(ctx context.Context, record any, mutators ...Mutator) error
 
 	// MustInsert an record to database.
 	// It'll panic if any error occurred.
-	MustInsert(ctx context.Context, record interface{}, mutators ...Mutator)
+	MustInsert(ctx context.Context, record any, mutators ...Mutator)
 
 	// InsertAll records.
 	// Does not supports application cascade insert.
-	InsertAll(ctx context.Context, records interface{}, mutators ...Mutator) error
+	InsertAll(ctx context.Context, records any, mutators ...Mutator) error
 
 	// MustInsertAll records.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade insert.
-	MustInsertAll(ctx context.Context, records interface{}, mutators ...Mutator)
+	MustInsertAll(ctx context.Context, records any, mutators ...Mutator)
 
 	// Update a record in database.
 	// It'll panic if any error occurred.
-	Update(ctx context.Context, record interface{}, mutators ...Mutator) error
+	Update(ctx context.Context, record any, mutators ...Mutator) error
 
 	// MustUpdate a record in database.
 	// It'll panic if any error occurred.
-	MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator)
+	MustUpdate(ctx context.Context, record any, mutators ...Mutator)
 
 	// UpdateAny records tha match the query.
 	// Returns number of updated records and error.
@@ -104,20 +104,20 @@ type Repository interface {
 	MustUpdateAny(ctx context.Context, query Query, mutates ...Mutate) int
 
 	// Delete a record.
-	Delete(ctx context.Context, record interface{}, mutators ...Mutator) error
+	Delete(ctx context.Context, record any, mutators ...Mutator) error
 
 	// MustDelete a record.
 	// It'll panic if any error eccured.
-	MustDelete(ctx context.Context, record interface{}, mutators ...Mutator)
+	MustDelete(ctx context.Context, record any, mutators ...Mutator)
 
 	// DeleteAll records.
 	// Does not supports application cascade delete.
-	DeleteAll(ctx context.Context, records interface{}) error
+	DeleteAll(ctx context.Context, records any) error
 
 	// MustDeleteAll records.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade delete.
-	MustDeleteAll(ctx context.Context, records interface{})
+	MustDeleteAll(ctx context.Context, records any)
 
 	// DeleteAny records that match the query.
 	// Returns number of deleted records and error.
@@ -132,20 +132,20 @@ type Repository interface {
 	// This function can accepts either a struct or a slice of structs.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error
+	Preload(ctx context.Context, records any, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
 	// This function can accepts either a struct or a slice of structs.
 	// It'll panic if any error occurred.
-	MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier)
+	MustPreload(ctx context.Context, records any, field string, queriers ...Querier)
 
 	// Exec raw statement.
 	// Returns last inserted id, rows affected and error.
-	Exec(ctx context.Context, statement string, args ...interface{}) (int, int, error)
+	Exec(ctx context.Context, statement string, args ...any) (int, int, error)
 
 	// MustExec raw statement.
 	// Returns last inserted id, rows affected and error.
-	MustExec(ctx context.Context, statement string, args ...interface{}) (int, int)
+	MustExec(ctx context.Context, statement string, args ...any) (int, int)
 
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
@@ -221,7 +221,7 @@ func (r repository) MustCount(ctx context.Context, collection string, queriers .
 	return count
 }
 
-func (r repository) Find(ctx context.Context, record interface{}, queriers ...Querier) error {
+func (r repository) Find(ctx context.Context, record any, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-find", "finding a record")
 	defer finish(nil)
 
@@ -234,7 +234,7 @@ func (r repository) Find(ctx context.Context, record interface{}, queriers ...Qu
 	return r.find(cw, doc, query)
 }
 
-func (r repository) MustFind(ctx context.Context, record interface{}, queriers ...Querier) {
+func (r repository) MustFind(ctx context.Context, record any, queriers ...Querier) {
 	must(r.Find(ctx, record, queriers...))
 }
 
@@ -261,7 +261,7 @@ func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 	return nil
 }
 
-func (r repository) FindAll(ctx context.Context, records interface{}, queriers ...Querier) error {
+func (r repository) FindAll(ctx context.Context, records any, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-find-all", "finding all records")
 	defer finish(nil)
 
@@ -276,7 +276,7 @@ func (r repository) FindAll(ctx context.Context, records interface{}, queriers .
 	return r.findAll(cw, col, query)
 }
 
-func (r repository) MustFindAll(ctx context.Context, records interface{}, queriers ...Querier) {
+func (r repository) MustFindAll(ctx context.Context, records any, queriers ...Querier) {
 	must(r.FindAll(ctx, records, queriers...))
 }
 
@@ -303,7 +303,7 @@ func (r repository) findAll(cw contextWrapper, col *Collection, query Query) err
 	return nil
 }
 
-func (r repository) FindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) (int, error) {
+func (r repository) FindAndCountAll(ctx context.Context, records any, queriers ...Querier) (int, error) {
 	finish := r.instrumenter.Observe(ctx, "rel-find-and-count-all", "finding all records")
 	defer finish(nil)
 
@@ -322,14 +322,14 @@ func (r repository) FindAndCountAll(ctx context.Context, records interface{}, qu
 	return r.aggregate(cw, r.withDefaultScope(col.meta, query, false), "count", "*")
 }
 
-func (r repository) MustFindAndCountAll(ctx context.Context, records interface{}, queriers ...Querier) int {
+func (r repository) MustFindAndCountAll(ctx context.Context, records any, queriers ...Querier) int {
 	count, err := r.FindAndCountAll(ctx, records, queriers...)
 	must(err)
 
 	return count
 }
 
-func (r repository) Insert(ctx context.Context, record interface{}, mutators ...Mutator) error {
+func (r repository) Insert(ctx context.Context, record any, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-insert", "inserting a record")
 	defer finish(nil)
 
@@ -392,11 +392,11 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	return nil
 }
 
-func (r repository) MustInsert(ctx context.Context, record interface{}, mutators ...Mutator) {
+func (r repository) MustInsert(ctx context.Context, record any, mutators ...Mutator) {
 	must(r.Insert(ctx, record, mutators...))
 }
 
-func (r repository) InsertAll(ctx context.Context, records interface{}, mutators ...Mutator) error {
+func (r repository) InsertAll(ctx context.Context, records any, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-insert-all", "inserting multiple records")
 	defer finish(nil)
 
@@ -423,7 +423,7 @@ func (r repository) InsertAll(ctx context.Context, records interface{}, mutators
 	return r.insertAll(cw, col, muts)
 }
 
-func (r repository) MustInsertAll(ctx context.Context, records interface{}, mutators ...Mutator) {
+func (r repository) MustInsertAll(ctx context.Context, records any, mutators ...Mutator) {
 	must(r.InsertAll(ctx, records, mutators...))
 }
 
@@ -473,7 +473,7 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	return nil
 }
 
-func (r repository) Update(ctx context.Context, record interface{}, mutators ...Mutator) error {
+func (r repository) Update(ctx context.Context, record any, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-update", "updating a record")
 	defer finish(nil)
 
@@ -576,7 +576,7 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 	return nil
 }
 
-func (r repository) MustUpdate(ctx context.Context, record interface{}, mutators ...Mutator) {
+func (r repository) MustUpdate(ctx context.Context, record any, mutators ...Mutator) {
 	must(r.Update(ctx, record, mutators...))
 }
 
@@ -800,7 +800,7 @@ func (r repository) MustUpdateAny(ctx context.Context, query Query, mutates ...M
 	return updatedCount
 }
 
-func (r repository) Delete(ctx context.Context, record interface{}, mutators ...Mutator) error {
+func (r repository) Delete(ctx context.Context, record any, mutators ...Mutator) error {
 	finish := r.instrumenter.Observe(ctx, "rel-delete", "deleting a record")
 	defer finish(nil)
 
@@ -932,11 +932,11 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	return nil
 }
 
-func (r repository) MustDelete(ctx context.Context, record interface{}, mutators ...Mutator) {
+func (r repository) MustDelete(ctx context.Context, record any, mutators ...Mutator) {
 	must(r.Delete(ctx, record, mutators...))
 }
 
-func (r repository) DeleteAll(ctx context.Context, records interface{}) error {
+func (r repository) DeleteAll(ctx context.Context, records any) error {
 	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting records")
 	defer finish(nil)
 
@@ -957,7 +957,7 @@ func (r repository) DeleteAll(ctx context.Context, records interface{}) error {
 	return err
 }
 
-func (r repository) MustDeleteAll(ctx context.Context, records interface{}) {
+func (r repository) MustDeleteAll(ctx context.Context, records any) {
 	must(r.DeleteAll(ctx, records))
 }
 
@@ -1001,7 +1001,7 @@ func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query)
 	return cw.adapter.Delete(cw.ctx, query)
 }
 
-func (r repository) Preload(ctx context.Context, records interface{}, field string, queriers ...Querier) error {
+func (r repository) Preload(ctx context.Context, records any, field string, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
 
@@ -1075,11 +1075,11 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 	return nil
 }
 
-func (r repository) MustPreload(ctx context.Context, records interface{}, field string, queriers ...Querier) {
+func (r repository) MustPreload(ctx context.Context, records any, field string, queriers ...Querier) {
 	must(r.Preload(ctx, records, field, queriers...))
 }
 
-func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}][]slice, string, string, reflect.Type, DocumentMeta, bool) {
+func (r repository) mapPreloadTargets(sl slice, path []string) (map[any][]slice, string, string, reflect.Type, DocumentMeta, bool) {
 	type frame struct {
 		index int
 		doc   *Document
@@ -1091,7 +1091,7 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 		keyType   reflect.Type
 		meta      DocumentMeta
 		loaded    = true
-		mapTarget = make(map[interface{}][]slice)
+		mapTarget = make(map[any][]slice)
 		stack     = make([]frame, sl.Len())
 	)
 
@@ -1175,9 +1175,9 @@ func (r repository) mapPreloadTargets(sl slice, path []string) (map[interface{}]
 	return mapTarget, table, keyField, keyType, meta, loaded
 }
 
-func (r repository) targetIDs(targets map[interface{}][]slice) []interface{} {
+func (r repository) targetIDs(targets map[any][]slice) []any {
 	var (
-		ids = make([]interface{}, len(targets))
+		ids = make([]any, len(targets))
 		i   = 0
 	)
 
@@ -1209,14 +1209,14 @@ func (r repository) withDefaultScope(meta DocumentMeta, query Query, preload boo
 
 // Exec raw statement.
 // Returns last inserted id, rows affected and error.
-func (r repository) Exec(ctx context.Context, stmt string, args ...interface{}) (int, int, error) {
+func (r repository) Exec(ctx context.Context, stmt string, args ...any) (int, int, error) {
 	lastInsertedId, rowsAffected, err := r.Adapter(ctx).Exec(ctx, stmt, args)
 	return int(lastInsertedId), int(rowsAffected), err
 }
 
 // MustExec raw statement.
 // Returns last inserted id, rows affected and error.
-func (r repository) MustExec(ctx context.Context, stmt string, args ...interface{}) (int, int) {
+func (r repository) MustExec(ctx context.Context, stmt string, args ...any) (int, int) {
 	lastInsertedId, rowsAffected, err := r.Exec(ctx, stmt, args...)
 	must(err)
 	return lastInsertedId, rowsAffected

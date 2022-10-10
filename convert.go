@@ -20,7 +20,7 @@ var _, localTimeOffset = time.Now().Local().Zone()
 // dest should be a pointer type.
 // dest will be set to zero value if src is nil.
 // this function assumes dest will never be nil.
-func convertAssign(dest, src interface{}) error {
+func convertAssign(dest, src any) error {
 	// Common cases, without reflect.
 	switch s := src.(type) {
 	case string:
@@ -40,7 +40,7 @@ func convertAssign(dest, src interface{}) error {
 		case *string:
 			*d = string(s)
 			return nil
-		case *interface{}:
+		case *any:
 			*d = cloneBytes(s)
 			return nil
 		case *[]byte:
@@ -108,7 +108,7 @@ func convertAssign(dest, src interface{}) error {
 			*d = bv.(bool)
 		}
 		return err
-	case *interface{}:
+	case *any:
 		*d = src
 		return nil
 	}
@@ -190,7 +190,7 @@ func cloneBytes(b []byte) []byte {
 	return c
 }
 
-func asString(src interface{}) (string, bool) {
+func asString(src any) (string, bool) {
 	switch v := src.(type) {
 	case string:
 		return v, true
@@ -232,7 +232,7 @@ func asBytes(buf []byte, rv reflect.Value) (b []byte, ok bool) {
 	return
 }
 
-func assignZero(dest interface{}) {
+func assignZero(dest any) {
 	switch d := dest.(type) {
 	case *bool:
 		*d = false
@@ -264,7 +264,7 @@ func assignZero(dest interface{}) {
 		*d = 0
 	case *float64:
 		*d = 0
-	case *interface{}:
+	case *any:
 		*d = nil
 	case *[]byte:
 		*d = nil

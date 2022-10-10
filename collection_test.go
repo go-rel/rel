@@ -18,16 +18,16 @@ func (it *Items) PrimaryFields() []string {
 	return []string{"_uuid"}
 }
 
-func (it *Items) PrimaryValues() []interface{} {
+func (it *Items) PrimaryValues() []any {
 	var (
-		ids = make([]interface{}, len(*it))
+		ids = make([]any, len(*it))
 	)
 
 	for i := range *it {
 		ids[i] = (*it)[i].UUID
 	}
 
-	return []interface{}{ids}
+	return []any{ids}
 }
 
 func TestCollection_ReflectValue(t *testing.T) {
@@ -81,7 +81,7 @@ func TestCollection_Primary(t *testing.T) {
 
 	// infer primary key
 	assert.Equal(t, "id", col.PrimaryField())
-	assert.Equal(t, []interface{}{1, 2}, col.PrimaryValue())
+	assert.Equal(t, []any{1, 2}, col.PrimaryValue())
 
 	// cached
 	_, cached := primariesCache.Load(rt)
@@ -91,7 +91,7 @@ func TestCollection_Primary(t *testing.T) {
 
 	// infer primary key using cache
 	assert.Equal(t, "id", col.PrimaryField())
-	assert.Equal(t, []interface{}{1, 4}, col.PrimaryValue())
+	assert.Equal(t, []any{1, 4}, col.PrimaryValue())
 
 	primariesCache.Delete(rt)
 }
@@ -107,7 +107,7 @@ func TestCollection_Primary_usingInterface(t *testing.T) {
 
 	// infer primary key
 	assert.Equal(t, "_uuid", col.PrimaryField())
-	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+	assert.Equal(t, []any{"abc123", "def456"}, col.PrimaryValue())
 }
 
 func TestCollection_Primary_usingElemInterface(t *testing.T) {
@@ -122,7 +122,7 @@ func TestCollection_Primary_usingElemInterface(t *testing.T) {
 
 	// infer primary key
 	assert.Equal(t, "_uuid", col.PrimaryField())
-	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+	assert.Equal(t, []any{"abc123", "def456"}, col.PrimaryValue())
 
 	primariesCache.Delete(rt)
 }
@@ -140,7 +140,7 @@ func TestCollection_Primary_usingElemInterface_ptrElem(t *testing.T) {
 
 	// infer primary key
 	assert.Equal(t, "_uuid", col.PrimaryField())
-	assert.Equal(t, []interface{}{"abc123", "def456"}, col.PrimaryValue())
+	assert.Equal(t, []any{"abc123", "def456"}, col.PrimaryValue())
 
 	primariesCache.Delete(rt)
 }
@@ -160,7 +160,7 @@ func TestCollection_Primary_usingTag(t *testing.T) {
 
 	// infer primary key
 	assert.Equal(t, "external_id", col.PrimaryField())
-	assert.Equal(t, []interface{}{1, 2}, col.PrimaryValue())
+	assert.Equal(t, []any{1, 2}, col.PrimaryValue())
 }
 
 func TestCollection_Primary_composite(t *testing.T) {
@@ -182,9 +182,9 @@ func TestCollection_Primary_composite(t *testing.T) {
 	})
 
 	assert.Equal(t, []string{"user_id", "role_id"}, col.PrimaryFields())
-	assert.Equal(t, []interface{}{
-		[]interface{}{1, 3, 5},
-		[]interface{}{2, 4, 6},
+	assert.Equal(t, []any{
+		[]any{1, 3, 5},
+		[]any{2, 4, 6},
 	}, col.PrimaryValues())
 }
 
@@ -258,7 +258,7 @@ func TestCollection_Slice(t *testing.T) {
 
 func TestCollection(t *testing.T) {
 	tests := []struct {
-		record interface{}
+		record any
 		panics bool
 	}{
 		{

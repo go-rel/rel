@@ -83,7 +83,7 @@ func (s Scale) applyColumn(column *Column) {
 }
 
 type defaultValue struct {
-	value interface{}
+	value any
 }
 
 func (d defaultValue) applyColumn(column *Column) {
@@ -91,7 +91,7 @@ func (d defaultValue) applyColumn(column *Column) {
 }
 
 // Default allows to set a default value on the column.).
-func Default(def interface{}) ColumnOption {
+func Default(def any) ColumnOption {
 	return defaultValue{value: def}
 }
 

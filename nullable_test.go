@@ -22,7 +22,7 @@ func TestNullable(t *testing.T) {
 
 type customScanner int
 
-func (*customScanner) Scan(interface{}) error {
+func (*customScanner) Scan(any) error {
 	return nil
 }
 

@@ -16,7 +16,7 @@ func TestMust(t *testing.T) {
 }
 
 func TestIsZero(t *testing.T) {
-	tests := []interface{}{
+	tests := []any{
 		nil,
 		false,
 		"",

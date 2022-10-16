@@ -72,12 +72,12 @@ type EntityRepository[T any] interface {
 
 	// InsertAll records.
 	// Does not supports application cascade insert.
-	InsertAll(ctx context.Context, records *T, mutators ...Mutator) error
+	InsertAll(ctx context.Context, records *[]T, mutators ...Mutator) error
 
 	// MustInsertAll records.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade insert.
-	MustInsertAll(ctx context.Context, records *T, mutators ...Mutator)
+	MustInsertAll(ctx context.Context, records *[]T, mutators ...Mutator)
 
 	// Update a record in database.
 	// It'll panic if any error occurred.
@@ -104,26 +104,22 @@ type EntityRepository[T any] interface {
 	MustDeleteAll(ctx context.Context, records *[]T)
 
 	// Preload association with given query.
-	// This function can accepts either a struct or a slice of structs.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	Preload(ctx context.Context, records T, field string, queriers ...Querier) error
+	Preload(ctx context.Context, record *T, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
-	// This function can accepts either a struct or a slice of structs.
 	// It'll panic if any error occurred.
-	MustPreload(ctx context.Context, records T, field string, queriers ...Querier)
+	MustPreload(ctx context.Context, record *T, field string, queriers ...Querier)
 
 	// Preload association with given query.
-	// This function can accepts either a struct or a slice of structs.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	PreloadAll(ctx context.Context, records []T, field string, queriers ...Querier) error
+	PreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
-	// This function can accepts either a struct or a slice of structs.
 	// It'll panic if any error occurred.
-	MustPreloadAll(ctx context.Context, records []T, field string, queriers ...Querier)
+	MustPreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier)
 
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
@@ -211,11 +207,11 @@ func (er entityRepository[T]) MustInsert(ctx context.Context, record *T, mutator
 	er.repository.MustInsert(ctx, record, mutators...)
 }
 
-func (er entityRepository[T]) InsertAll(ctx context.Context, records *T, mutators ...Mutator) error {
+func (er entityRepository[T]) InsertAll(ctx context.Context, records *[]T, mutators ...Mutator) error {
 	return er.repository.InsertAll(ctx, records, mutators...)
 }
 
-func (er entityRepository[T]) MustInsertAll(ctx context.Context, records *T, mutators ...Mutator) {
+func (er entityRepository[T]) MustInsertAll(ctx context.Context, records *[]T, mutators ...Mutator) {
 	er.repository.MustInsertAll(ctx, records, mutators...)
 }
 
@@ -243,19 +239,19 @@ func (er entityRepository[T]) MustDeleteAll(ctx context.Context, records *[]T) {
 	er.repository.MustDeleteAll(ctx, records)
 }
 
-func (er entityRepository[T]) Preload(ctx context.Context, records T, field string, queriers ...Querier) error {
+func (er entityRepository[T]) Preload(ctx context.Context, record *T, field string, queriers ...Querier) error {
+	return er.repository.Preload(ctx, record, field, queriers...)
+}
+
+func (er entityRepository[T]) MustPreload(ctx context.Context, record *T, field string, queriers ...Querier) {
+	er.repository.MustPreload(ctx, record, field, queriers...)
+}
+
+func (er entityRepository[T]) PreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) error {
 	return er.repository.Preload(ctx, records, field, queriers...)
 }
 
-func (er entityRepository[T]) MustPreload(ctx context.Context, records T, field string, queriers ...Querier) {
-	er.repository.MustPreload(ctx, records, field, queriers...)
-}
-
-func (er entityRepository[T]) PreloadAll(ctx context.Context, records []T, field string, queriers ...Querier) error {
-	return er.repository.Preload(ctx, records, field, queriers...)
-}
-
-func (er entityRepository[T]) MustPreloadAll(ctx context.Context, records []T, field string, queriers ...Querier) {
+func (er entityRepository[T]) MustPreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) {
 	er.repository.MustPreload(ctx, records, field, queriers...)
 }
 

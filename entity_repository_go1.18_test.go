@@ -267,3 +267,223 @@ func TestEntityRepository_MustFindAndCountAll(t *testing.T) {
 
 	repo.AssertExpectations(t)
 }
+
+func TestEntityRepository_Insert(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Insert", &user, []Mutator(nil)).Return(nil)
+
+	err := entityRepo.Insert(context.TODO(), &user)
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustInsert(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustInsert", &user, []Mutator(nil))
+
+	entityRepo.MustInsert(context.TODO(), &user)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_InsertAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("InsertAll", &users, []Mutator(nil)).Return(nil)
+
+	err := entityRepo.InsertAll(context.TODO(), &users)
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustInsertAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustInsertAll", &users, []Mutator(nil))
+
+	entityRepo.MustInsertAll(context.TODO(), &users)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Update(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Update", &user, []Mutator(nil)).Return(nil)
+
+	err := entityRepo.Update(context.TODO(), &user)
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustUpdate(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustUpdate", &user, []Mutator(nil))
+
+	entityRepo.MustUpdate(context.TODO(), &user)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Delete(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Delete", &user, []Mutator(nil)).Return(nil)
+
+	err := entityRepo.Delete(context.TODO(), &user)
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustDelete(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustDelete", &user, []Mutator(nil))
+
+	entityRepo.MustDelete(context.TODO(), &user)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_DeleteAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("DeleteAll", &users).Return(nil)
+
+	err := entityRepo.DeleteAll(context.TODO(), &users)
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustDeleteAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustDeleteAll", &users)
+
+	entityRepo.MustDeleteAll(context.TODO(), &users)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Preload(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Preload", &user, "address", []Querier(nil)).Return(nil)
+
+	err := entityRepo.Preload(context.TODO(), &user, "address")
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustPreload(t *testing.T) {
+	var (
+		user       User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustPreload", &user, "address", []Querier(nil))
+
+	entityRepo.MustPreload(context.TODO(), &user, "address")
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_PreloadAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Preload", &users, "address", []Querier(nil)).Return(nil)
+
+	err := entityRepo.PreloadAll(context.TODO(), &users, "address")
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustPreloadAll(t *testing.T) {
+	var (
+		users      []User
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("MustPreload", &users, "address", []Querier(nil))
+
+	entityRepo.MustPreloadAll(context.TODO(), &users, "address")
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Transaction(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Transaction")
+
+	err := entityRepo.Transaction(context.TODO(), func(ctx context.Context) error {
+		return nil
+	})
+
+	assert.Nil(t, err)
+
+	repo.AssertExpectations(t)
+}

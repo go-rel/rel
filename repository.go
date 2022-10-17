@@ -19,8 +19,8 @@ type Repository interface {
 	// Ping database.
 	Ping(ctx context.Context) error
 
-	// Iterate through a collection of records from database in batches.
-	// This function returns iterator that can be used to loop all records.
+	// Iterate through a collection of entities from database in batches.
+	// This function returns iterator that can be used to loop all entities.
 	// Limit, Offset and Sort query is automatically ignored.
 	Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
 
@@ -37,107 +37,107 @@ type Repository interface {
 	// It'll panic if any error eccured.
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
 
-	// Count records that match the query.
+	// Count entities that match the query.
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
 
-	// MustCount records that match the query.
+	// MustCount entities that match the query.
 	// It'll panic if any error eccured.
 	MustCount(ctx context.Context, collection string, queriers ...Querier) int
 
-	// Find a record that match the query.
+	// Find a entity that match the query.
 	// If no result found, it'll return not found error.
-	Find(ctx context.Context, record any, queriers ...Querier) error
+	Find(ctx context.Context, entity any, queriers ...Querier) error
 
-	// MustFind a record that match the query.
+	// MustFind a entity that match the query.
 	// If no result found, it'll panic.
-	MustFind(ctx context.Context, record any, queriers ...Querier)
+	MustFind(ctx context.Context, entity any, queriers ...Querier)
 
-	// FindAll records that match the query.
-	FindAll(ctx context.Context, records any, queriers ...Querier) error
+	// FindAll entities that match the query.
+	FindAll(ctx context.Context, entities any, queriers ...Querier) error
 
-	// MustFindAll records that match the query.
+	// MustFindAll entities that match the query.
 	// It'll panic if any error eccured.
-	MustFindAll(ctx context.Context, records any, queriers ...Querier)
+	MustFindAll(ctx context.Context, entities any, queriers ...Querier)
 
-	// FindAndCountAll records that match the query.
+	// FindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
-	FindAndCountAll(ctx context.Context, records any, queriers ...Querier) (int, error)
+	FindAndCountAll(ctx context.Context, entities any, queriers ...Querier) (int, error)
 
-	// MustFindAndCountAll records that match the query.
+	// MustFindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	// It'll panic if any error eccured.
-	MustFindAndCountAll(ctx context.Context, records any, queriers ...Querier) int
+	MustFindAndCountAll(ctx context.Context, entities any, queriers ...Querier) int
 
-	// Insert a record to database.
-	Insert(ctx context.Context, record any, mutators ...Mutator) error
+	// Insert a entity to database.
+	Insert(ctx context.Context, entity any, mutators ...Mutator) error
 
-	// MustInsert an record to database.
+	// MustInsert an entity to database.
 	// It'll panic if any error occurred.
-	MustInsert(ctx context.Context, record any, mutators ...Mutator)
+	MustInsert(ctx context.Context, entity any, mutators ...Mutator)
 
-	// InsertAll records.
+	// InsertAll entities.
 	// Does not supports application cascade insert.
-	InsertAll(ctx context.Context, records any, mutators ...Mutator) error
+	InsertAll(ctx context.Context, entities any, mutators ...Mutator) error
 
-	// MustInsertAll records.
+	// MustInsertAll entities.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade insert.
-	MustInsertAll(ctx context.Context, records any, mutators ...Mutator)
+	MustInsertAll(ctx context.Context, entities any, mutators ...Mutator)
 
-	// Update a record in database.
+	// Update a entity in database.
 	// It'll panic if any error occurred.
-	Update(ctx context.Context, record any, mutators ...Mutator) error
+	Update(ctx context.Context, entity any, mutators ...Mutator) error
 
-	// MustUpdate a record in database.
+	// MustUpdate a entity in database.
 	// It'll panic if any error occurred.
-	MustUpdate(ctx context.Context, record any, mutators ...Mutator)
+	MustUpdate(ctx context.Context, entity any, mutators ...Mutator)
 
-	// UpdateAny records tha match the query.
-	// Returns number of updated records and error.
+	// UpdateAny entities tha match the query.
+	// Returns number of updated entities and error.
 	UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error)
 
-	// MustUpdateAny records that match the query.
+	// MustUpdateAny entities that match the query.
 	// It'll panic if any error occurred.
-	// Returns number of updated records.
+	// Returns number of updated entities.
 	MustUpdateAny(ctx context.Context, query Query, mutates ...Mutate) int
 
-	// Delete a record.
-	Delete(ctx context.Context, record any, mutators ...Mutator) error
+	// Delete a entity.
+	Delete(ctx context.Context, entity any, mutators ...Mutator) error
 
-	// MustDelete a record.
+	// MustDelete a entity.
 	// It'll panic if any error eccured.
-	MustDelete(ctx context.Context, record any, mutators ...Mutator)
+	MustDelete(ctx context.Context, entity any, mutators ...Mutator)
 
-	// DeleteAll records.
+	// DeleteAll entities.
 	// Does not supports application cascade delete.
-	DeleteAll(ctx context.Context, records any) error
+	DeleteAll(ctx context.Context, entities any) error
 
-	// MustDeleteAll records.
+	// MustDeleteAll entities.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade delete.
-	MustDeleteAll(ctx context.Context, records any)
+	MustDeleteAll(ctx context.Context, entities any)
 
-	// DeleteAny records that match the query.
-	// Returns number of deleted records and error.
+	// DeleteAny entities that match the query.
+	// Returns number of deleted entities and error.
 	DeleteAny(ctx context.Context, query Query) (int, error)
 
-	// MustDeleteAny records that match the query.
+	// MustDeleteAny entities that match the query.
 	// It'll panic if any error eccured.
-	// Returns number of updated records.
+	// Returns number of updated entities.
 	MustDeleteAny(ctx context.Context, query Query) int
 
 	// Preload association with given query.
 	// This function can accepts either a struct or a slice of structs.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	Preload(ctx context.Context, records any, field string, queriers ...Querier) error
+	Preload(ctx context.Context, entities any, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
 	// This function can accepts either a struct or a slice of structs.
 	// It'll panic if any error occurred.
-	MustPreload(ctx context.Context, records any, field string, queriers ...Querier)
+	MustPreload(ctx context.Context, entities any, field string, queriers ...Querier)
 
 	// Exec raw statement.
 	// Returns last inserted id, rows affected and error.
@@ -179,7 +179,7 @@ func (r repository) Iterate(ctx context.Context, query Query, options ...Iterato
 }
 
 func (r repository) Aggregate(ctx context.Context, query Query, aggregate string, field string) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-aggregate", "aggregating records")
+	finish := r.instrumenter.Observe(ctx, "rel-aggregate", "aggregating entities")
 	defer finish(nil)
 
 	var (
@@ -205,7 +205,7 @@ func (r repository) MustAggregate(ctx context.Context, query Query, aggregate st
 }
 
 func (r repository) Count(ctx context.Context, collection string, queriers ...Querier) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-count", "aggregating records")
+	finish := r.instrumenter.Observe(ctx, "rel-count", "aggregating entities")
 	defer finish(nil)
 
 	var (
@@ -221,21 +221,21 @@ func (r repository) MustCount(ctx context.Context, collection string, queriers .
 	return count
 }
 
-func (r repository) Find(ctx context.Context, record any, queriers ...Querier) error {
-	finish := r.instrumenter.Observe(ctx, "rel-find", "finding a record")
+func (r repository) Find(ctx context.Context, entity any, queriers ...Querier) error {
+	finish := r.instrumenter.Observe(ctx, "rel-find", "finding a entity")
 	defer finish(nil)
 
 	var (
 		cw    = fetchContext(ctx, r.rootAdapter)
-		doc   = NewDocument(record)
+		doc   = NewDocument(entity)
 		query = Build(doc.Table(), queriers...).Populate(doc.Meta())
 	)
 
 	return r.find(cw, doc, query)
 }
 
-func (r repository) MustFind(ctx context.Context, record any, queriers ...Querier) {
-	must(r.Find(ctx, record, queriers...))
+func (r repository) MustFind(ctx context.Context, entity any, queriers ...Querier) {
+	must(r.Find(ctx, entity, queriers...))
 }
 
 func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
@@ -245,7 +245,7 @@ func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 		return err
 	}
 
-	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-one", "scanning a record")
+	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-one", "scanning a entity")
 	if err := scanOne(cur, doc); err != nil {
 		finish(err)
 		return err
@@ -261,13 +261,13 @@ func (r repository) find(cw contextWrapper, doc *Document, query Query) error {
 	return nil
 }
 
-func (r repository) FindAll(ctx context.Context, records any, queriers ...Querier) error {
-	finish := r.instrumenter.Observe(ctx, "rel-find-all", "finding all records")
+func (r repository) FindAll(ctx context.Context, entities any, queriers ...Querier) error {
+	finish := r.instrumenter.Observe(ctx, "rel-find-all", "finding all entities")
 	defer finish(nil)
 
 	var (
 		cw    = fetchContext(ctx, r.rootAdapter)
-		col   = NewCollection(records)
+		col   = NewCollection(entities)
 		query = Build(col.Table(), queriers...).Populate(col.Meta())
 	)
 
@@ -276,8 +276,8 @@ func (r repository) FindAll(ctx context.Context, records any, queriers ...Querie
 	return r.findAll(cw, col, query)
 }
 
-func (r repository) MustFindAll(ctx context.Context, records any, queriers ...Querier) {
-	must(r.FindAll(ctx, records, queriers...))
+func (r repository) MustFindAll(ctx context.Context, entities any, queriers ...Querier) {
+	must(r.FindAll(ctx, entities, queriers...))
 }
 
 func (r repository) findAll(cw contextWrapper, col *Collection, query Query) error {
@@ -287,7 +287,7 @@ func (r repository) findAll(cw contextWrapper, col *Collection, query Query) err
 		return err
 	}
 
-	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-all", "scanning all records")
+	finish := r.instrumenter.Observe(cw.ctx, "rel-scan-all", "scanning all entities")
 	if err := scanAll(cur, col); err != nil {
 		finish(err)
 		return err
@@ -303,13 +303,13 @@ func (r repository) findAll(cw contextWrapper, col *Collection, query Query) err
 	return nil
 }
 
-func (r repository) FindAndCountAll(ctx context.Context, records any, queriers ...Querier) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-find-and-count-all", "finding all records")
+func (r repository) FindAndCountAll(ctx context.Context, entities any, queriers ...Querier) (int, error) {
+	finish := r.instrumenter.Observe(ctx, "rel-find-and-count-all", "finding all entities")
 	defer finish(nil)
 
 	var (
 		cw    = fetchContext(ctx, r.rootAdapter)
-		col   = NewCollection(records)
+		col   = NewCollection(entities)
 		query = Build(col.Table(), queriers...).Populate(col.Meta())
 	)
 
@@ -322,24 +322,24 @@ func (r repository) FindAndCountAll(ctx context.Context, records any, queriers .
 	return r.aggregate(cw, r.withDefaultScope(col.meta, query, false), "count", "*")
 }
 
-func (r repository) MustFindAndCountAll(ctx context.Context, records any, queriers ...Querier) int {
-	count, err := r.FindAndCountAll(ctx, records, queriers...)
+func (r repository) MustFindAndCountAll(ctx context.Context, entities any, queriers ...Querier) int {
+	count, err := r.FindAndCountAll(ctx, entities, queriers...)
 	must(err)
 
 	return count
 }
 
-func (r repository) Insert(ctx context.Context, record any, mutators ...Mutator) error {
-	finish := r.instrumenter.Observe(ctx, "rel-insert", "inserting a record")
+func (r repository) Insert(ctx context.Context, entity any, mutators ...Mutator) error {
+	finish := r.instrumenter.Observe(ctx, "rel-insert", "inserting a entity")
 	defer finish(nil)
 
-	if record == nil {
+	if entity == nil {
 		return nil
 	}
 
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
-		doc      = NewDocument(record)
+		doc      = NewDocument(entity)
 		mutation = Apply(doc, mutators...)
 	)
 
@@ -392,21 +392,21 @@ func (r repository) insert(cw contextWrapper, doc *Document, mutation Mutation) 
 	return nil
 }
 
-func (r repository) MustInsert(ctx context.Context, record any, mutators ...Mutator) {
-	must(r.Insert(ctx, record, mutators...))
+func (r repository) MustInsert(ctx context.Context, entity any, mutators ...Mutator) {
+	must(r.Insert(ctx, entity, mutators...))
 }
 
-func (r repository) InsertAll(ctx context.Context, records any, mutators ...Mutator) error {
-	finish := r.instrumenter.Observe(ctx, "rel-insert-all", "inserting multiple records")
+func (r repository) InsertAll(ctx context.Context, entities any, mutators ...Mutator) error {
+	finish := r.instrumenter.Observe(ctx, "rel-insert-all", "inserting multiple entities")
 	defer finish(nil)
 
-	if records == nil {
+	if entities == nil {
 		return nil
 	}
 
 	var (
 		cw   = fetchContext(ctx, r.rootAdapter)
-		col  = NewCollection(records)
+		col  = NewCollection(entities)
 		muts = make([]Mutation, col.Len())
 	)
 
@@ -423,8 +423,8 @@ func (r repository) InsertAll(ctx context.Context, records any, mutators ...Muta
 	return r.insertAll(cw, col, muts)
 }
 
-func (r repository) MustInsertAll(ctx context.Context, records any, mutators ...Mutator) {
-	must(r.InsertAll(ctx, records, mutators...))
+func (r repository) MustInsertAll(ctx context.Context, entities any, mutators ...Mutator) {
+	must(r.InsertAll(ctx, entities, mutators...))
 }
 
 // TODO: support assocs
@@ -473,17 +473,17 @@ func (r repository) insertAll(cw contextWrapper, col *Collection, mutation []Mut
 	return nil
 }
 
-func (r repository) Update(ctx context.Context, record any, mutators ...Mutator) error {
-	finish := r.instrumenter.Observe(ctx, "rel-update", "updating a record")
+func (r repository) Update(ctx context.Context, entity any, mutators ...Mutator) error {
+	finish := r.instrumenter.Observe(ctx, "rel-update", "updating a entity")
 	defer finish(nil)
 
-	if record == nil {
+	if entity == nil {
 		return nil
 	}
 
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
-		doc      = NewDocument(record)
+		doc      = NewDocument(entity)
 		filter   = filterDocument(doc)
 		mutation = Apply(doc, mutators...)
 	)
@@ -576,8 +576,8 @@ func (r repository) applyMutates(cw contextWrapper, doc *Document, mutation Muta
 	return nil
 }
 
-func (r repository) MustUpdate(ctx context.Context, record any, mutators ...Mutator) {
-	must(r.Update(ctx, record, mutators...))
+func (r repository) MustUpdate(ctx context.Context, entity any, mutators ...Mutator) {
+	must(r.Update(ctx, entity, mutators...))
 }
 
 // TODO: support deletion
@@ -773,7 +773,7 @@ func (r repository) saveHasMany(cw contextWrapper, doc *Document, mutation *Muta
 }
 
 func (r repository) UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-update-any", "updating multiple records")
+	finish := r.instrumenter.Observe(ctx, "rel-update-any", "updating multiple entities")
 	defer finish(nil)
 
 	var (
@@ -800,13 +800,13 @@ func (r repository) MustUpdateAny(ctx context.Context, query Query, mutates ...M
 	return updatedCount
 }
 
-func (r repository) Delete(ctx context.Context, record any, mutators ...Mutator) error {
-	finish := r.instrumenter.Observe(ctx, "rel-delete", "deleting a record")
+func (r repository) Delete(ctx context.Context, entity any, mutators ...Mutator) error {
+	finish := r.instrumenter.Observe(ctx, "rel-delete", "deleting a entity")
 	defer finish(nil)
 
 	var (
 		cw       = fetchContext(ctx, r.rootAdapter)
-		doc      = NewDocument(record)
+		doc      = NewDocument(entity)
 		mutation = applyMutators(nil, false, false, mutators...)
 	)
 
@@ -932,17 +932,17 @@ func (r repository) deleteHasMany(cw contextWrapper, doc *Document) error {
 	return nil
 }
 
-func (r repository) MustDelete(ctx context.Context, record any, mutators ...Mutator) {
-	must(r.Delete(ctx, record, mutators...))
+func (r repository) MustDelete(ctx context.Context, entity any, mutators ...Mutator) {
+	must(r.Delete(ctx, entity, mutators...))
 }
 
-func (r repository) DeleteAll(ctx context.Context, records any) error {
-	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting records")
+func (r repository) DeleteAll(ctx context.Context, entities any) error {
+	finish := r.instrumenter.Observe(ctx, "rel-delete-all", "deleting entities")
 	defer finish(nil)
 
 	var (
 		cw  = fetchContext(ctx, r.rootAdapter)
-		col = NewCollection(records)
+		col = NewCollection(entities)
 	)
 
 	if col.Len() == 0 {
@@ -957,12 +957,12 @@ func (r repository) DeleteAll(ctx context.Context, records any) error {
 	return err
 }
 
-func (r repository) MustDeleteAll(ctx context.Context, records any) {
-	must(r.DeleteAll(ctx, records))
+func (r repository) MustDeleteAll(ctx context.Context, entities any) {
+	must(r.DeleteAll(ctx, entities))
 }
 
 func (r repository) DeleteAny(ctx context.Context, query Query) (int, error) {
-	finish := r.instrumenter.Observe(ctx, "rel-delete-any", "deleting multiple records")
+	finish := r.instrumenter.Observe(ctx, "rel-delete-any", "deleting multiple entities")
 	defer finish(nil)
 
 	var (
@@ -1001,34 +1001,34 @@ func (r repository) deleteAny(cw contextWrapper, flag DocumentFlag, query Query)
 	return cw.adapter.Delete(cw.ctx, query)
 }
 
-func (r repository) Preload(ctx context.Context, records any, field string, queriers ...Querier) error {
+func (r repository) Preload(ctx context.Context, entities any, field string, queriers ...Querier) error {
 	finish := r.instrumenter.Observe(ctx, "rel-preload", "preloading associations")
 	defer finish(nil)
 
 	var (
 		sl slice
 		cw = fetchContext(ctx, r.rootAdapter)
-		rt = reflect.TypeOf(records)
+		rt = reflect.TypeOf(entities)
 	)
 
 	if rt.Kind() != reflect.Ptr {
-		panic("rel: record parameter must be a pointer.")
+		panic("rel: entity parameter must be a pointer.")
 	}
 
 	rt = rt.Elem()
 	if rt.Kind() == reflect.Slice {
-		sl = NewCollection(records)
+		sl = NewCollection(entities)
 	} else {
-		sl = NewDocument(records)
+		sl = NewDocument(entities)
 	}
 
 	return r.preload(cw, sl, field, queriers)
 }
 
-func (r repository) preload(cw contextWrapper, records slice, field string, queriers []Querier) error {
+func (r repository) preload(cw contextWrapper, entities slice, field string, queriers []Querier) error {
 	var (
 		path                                             = strings.Split(field, ".")
-		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(records, path)
+		targets, table, keyField, keyType, ddata, loaded = r.mapPreloadTargets(entities, path)
 		ids                                              = r.targetIDs(targets)
 		inClauseLength                                   = 999
 	)
@@ -1048,7 +1048,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 		idsChunk := ids[0:inClauseLength]
 		ids = ids[inClauseLength:]
 
-		query := Build(table, append(queriers, In(keyField, idsChunk...))...).Populate(records.Meta())
+		query := Build(table, append(queriers, In(keyField, idsChunk...))...).Populate(entities.Meta())
 		if len(targets) == 0 || loaded && !bool(query.ReloadQuery) {
 			return nil
 		}
@@ -1061,7 +1061,7 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 			return err
 		}
 
-		scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all records to multiple targets")
+		scanFinish := r.instrumenter.Observe(cw.ctx, "rel-scan-multi", "scanning all entities to multiple targets")
 		// Note: Calling scanMulti multiple times with the same targets works
 		// only if the cursor of each execution only contains a new set of keys.
 		// That is here the case as each select is with a unique set of ids.
@@ -1075,8 +1075,8 @@ func (r repository) preload(cw contextWrapper, records slice, field string, quer
 	return nil
 }
 
-func (r repository) MustPreload(ctx context.Context, records any, field string, queriers ...Querier) {
-	must(r.Preload(ctx, records, field, queriers...))
+func (r repository) MustPreload(ctx context.Context, entities any, field string, queriers ...Querier) {
+	must(r.Preload(ctx, entities, field, queriers...))
 }
 
 func (r repository) mapPreloadTargets(sl slice, path []string) (map[any][]slice, string, string, reflect.Type, DocumentMeta, bool) {

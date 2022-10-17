@@ -157,9 +157,9 @@ func (c Changeset) applyAssocMany(field string, mut *Mutation) {
 	}
 }
 
-// NewChangeset returns new changeset mutator for given record.
-func NewChangeset(record any) Changeset {
-	return newChangeset(NewDocument(record))
+// NewChangeset returns new changeset mutator for given entity.
+func NewChangeset(entity any) Changeset {
+	return newChangeset(NewDocument(entity))
 }
 
 func newChangeset(doc *Document) Changeset {

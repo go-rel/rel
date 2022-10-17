@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TestRecord struct {
+type Testentity struct {
 	Field1 string `db:",primary"`
 	Field2 bool
 	Field3 *string
@@ -17,8 +17,8 @@ type TestRecord struct {
 
 func TestApply(t *testing.T) {
 	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
+		entity   = Testentity{}
+		doc      = NewDocument(&entity)
 		mutators = []Mutator{
 			Set("field1", "string"),
 			Set("field2", true),
@@ -42,19 +42,19 @@ func TestApply(t *testing.T) {
 	)
 
 	assert.Equal(t, mutation, Apply(doc, mutators...))
-	assert.Equal(t, "string", record.Field1)
-	assert.Equal(t, true, record.Field2)
-	assert.Equal(t, "string pointer", *record.Field3)
+	assert.Equal(t, "string", entity.Field1)
+	assert.Equal(t, true, entity.Field2)
+	assert.Equal(t, "string pointer", *entity.Field3)
 
 	// non set op won't update the struct
-	assert.Equal(t, 0, record.Field4)
-	assert.Equal(t, 0, record.Field5)
+	assert.Equal(t, 0, entity.Field4)
+	assert.Equal(t, 0, entity.Field5)
 }
 
 func TestApply_Options(t *testing.T) {
 	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
+		entity   = Testentity{}
+		doc      = NewDocument(&entity)
 		mutators = []Mutator{
 			Unscoped(true),
 			Reload(true),
@@ -80,44 +80,44 @@ func TestApply_Options(t *testing.T) {
 
 func TestApplyMutation_setValueError(t *testing.T) {
 	var (
-		record = TestRecord{}
-		doc    = NewDocument(&record)
+		entity = Testentity{}
+		doc    = NewDocument(&entity)
 	)
 
 	assert.Panics(t, func() {
 		Apply(doc, Set("field1", 1))
 	})
-	assert.Equal(t, "", record.Field1)
+	assert.Equal(t, "", entity.Field1)
 }
 
 func TestApplyMutation_incValueError(t *testing.T) {
 	var (
-		record = TestRecord{}
-		doc    = NewDocument(&record)
+		entity = Testentity{}
+		doc    = NewDocument(&entity)
 	)
 
 	assert.Panics(t, func() {
 		Apply(doc, Inc("field1"))
 	})
-	assert.Equal(t, "", record.Field1)
+	assert.Equal(t, "", entity.Field1)
 }
 
 func TestApplyMutation_unknownFieldValueError(t *testing.T) {
 	var (
-		record = TestRecord{}
-		doc    = NewDocument(&record)
+		entity = Testentity{}
+		doc    = NewDocument(&entity)
 	)
 
 	assert.Panics(t, func() {
 		Apply(doc, Dec("field0"))
 	})
-	assert.Equal(t, "", record.Field1)
+	assert.Equal(t, "", entity.Field1)
 }
 
 func TestApplyMutation_Reload(t *testing.T) {
 	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
+		entity   = Testentity{}
+		doc      = NewDocument(&entity)
 		mutators = []Mutator{
 			Set("field1", "string"),
 			Reload(true),
@@ -132,13 +132,13 @@ func TestApplyMutation_Reload(t *testing.T) {
 	)
 
 	assert.Equal(t, mutation, Apply(doc, mutators...))
-	assert.Equal(t, "string", record.Field1)
+	assert.Equal(t, "string", entity.Field1)
 }
 
 func TestApplyMutation_Cascade(t *testing.T) {
 	var (
-		record   = TestRecord{}
-		doc      = NewDocument(&record)
+		entity   = Testentity{}
+		doc      = NewDocument(&entity)
 		mutators = []Mutator{
 			Set("field1", "string"),
 			Cascade(false),
@@ -152,7 +152,7 @@ func TestApplyMutation_Cascade(t *testing.T) {
 	)
 
 	assert.Equal(t, mutation, Apply(doc, mutators...))
-	assert.Equal(t, "string", record.Field1)
+	assert.Equal(t, "string", entity.Field1)
 }
 
 func TestMutator_String(t *testing.T) {

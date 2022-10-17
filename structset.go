@@ -133,6 +133,6 @@ func newStructset(doc *Document, skipZero bool) Structset {
 }
 
 // NewStructset from a struct.
-func NewStructset(record any, skipZero bool) Structset {
-	return newStructset(NewDocument(record), skipZero)
+func NewStructset(entity any, skipZero bool) Structset {
+	return newStructset(NewDocument(entity), skipZero)
 }

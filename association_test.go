@@ -18,7 +18,7 @@ func TestAssociation_Document(t *testing.T) {
 	)
 
 	tests := []struct {
-		record         string
+		entity         string
 		field          string
 		data           any
 		typ            AssociationType
@@ -33,7 +33,7 @@ func TestAssociation_Document(t *testing.T) {
 		autoload       bool
 	}{
 		{
-			record:         "Transaction",
+			entity:         "Transaction",
 			field:          "Buyer",
 			data:           transaction,
 			typ:            BelongsTo,
@@ -47,7 +47,7 @@ func TestAssociation_Document(t *testing.T) {
 			autoload:       true,
 		},
 		{
-			record:         "Transaction",
+			entity:         "Transaction",
 			field:          "Buyer",
 			data:           transactionLoaded,
 			typ:            BelongsTo,
@@ -61,7 +61,7 @@ func TestAssociation_Document(t *testing.T) {
 			autoload:       true,
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Address",
 			data:           user,
 			typ:            HasOne,
@@ -75,7 +75,7 @@ func TestAssociation_Document(t *testing.T) {
 			autosave:       true,
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Address",
 			data:           userLoaded,
 			typ:            HasOne,
@@ -89,7 +89,7 @@ func TestAssociation_Document(t *testing.T) {
 			autosave:       true,
 		},
 		{
-			record:         "Address",
+			entity:         "Address",
 			field:          "User",
 			data:           address,
 			typ:            BelongsTo,
@@ -102,7 +102,7 @@ func TestAssociation_Document(t *testing.T) {
 			foreignValue:   0,
 		},
 		{
-			record:         "Address",
+			entity:         "Address",
 			field:          "User",
 			data:           addressLoaded,
 			typ:            BelongsTo,
@@ -117,7 +117,7 @@ func TestAssociation_Document(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.record+"."+test.field, func(t *testing.T) {
+		t.Run(test.entity+"."+test.field, func(t *testing.T) {
 			var (
 				rv          = reflect.ValueOf(test.data)
 				sf, _       = rv.Type().Elem().FieldByName(test.field)
@@ -197,7 +197,7 @@ func TestAssociation_Collection(t *testing.T) {
 	)
 
 	tests := []struct {
-		record           string
+		entity           string
 		field            string
 		data             any
 		typ              AssociationType
@@ -215,7 +215,7 @@ func TestAssociation_Collection(t *testing.T) {
 		autosave         bool
 	}{
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Transactions",
 			data:           user,
 			typ:            HasMany,
@@ -228,7 +228,7 @@ func TestAssociation_Collection(t *testing.T) {
 			foreignValue:   nil,
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Transactions",
 			data:           userLoaded,
 			typ:            HasMany,
@@ -241,7 +241,7 @@ func TestAssociation_Collection(t *testing.T) {
 			foreignValue:   nil,
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Roles",
 			data:           user,
 			typ:            HasMany,
@@ -255,7 +255,7 @@ func TestAssociation_Collection(t *testing.T) {
 			through:        "user_roles",
 		},
 		{
-			record:         "Role",
+			entity:         "Role",
 			field:          "Users",
 			data:           role,
 			typ:            HasMany,
@@ -269,7 +269,7 @@ func TestAssociation_Collection(t *testing.T) {
 			through:        "user_roles",
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Followers",
 			data:           user,
 			typ:            HasMany,
@@ -283,7 +283,7 @@ func TestAssociation_Collection(t *testing.T) {
 			through:        "followeds",
 		},
 		{
-			record:         "User",
+			entity:         "User",
 			field:          "Followings",
 			data:           user,
 			typ:            HasMany,
@@ -299,7 +299,7 @@ func TestAssociation_Collection(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.record+"."+test.field, func(t *testing.T) {
+		t.Run(test.entity+"."+test.field, func(t *testing.T) {
 			var (
 				rv          = reflect.ValueOf(test.data)
 				sf, _       = rv.Type().Elem().FieldByName(test.field)

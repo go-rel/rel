@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	// ErrNotFound returned when records not found.
+	// ErrNotFound returned when entities not found.
 	ErrNotFound = NotFoundError{}
 
 	// ErrCheckConstraint is an auxiliary variable for error handling.
@@ -35,7 +35,7 @@ type NotFoundError struct{}
 
 // Error message.
 func (nfe NotFoundError) Error() string {
-	return "Record not found"
+	return "entity not found"
 }
 
 // Is returns true when target error is sql.ErrNoRows.

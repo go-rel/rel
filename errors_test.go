@@ -9,7 +9,7 @@ import (
 )
 
 func TestNoResultError(t *testing.T) {
-	assert.Equal(t, "Record not found", NotFoundError{}.Error())
+	assert.Equal(t, "entity not found", NotFoundError{}.Error())
 }
 
 func TestNotFoundError_Is(t *testing.T) {

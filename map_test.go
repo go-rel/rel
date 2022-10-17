@@ -193,7 +193,7 @@ func TestMap_hasManyUpdateNotLoaded(t *testing.T) {
 		}
 	)
 
-	assert.PanicsWithValue(t, "rel: cannot update has many assoc that is not loaded or doesn't belong to this record", func() {
+	assert.PanicsWithValue(t, "rel: cannot update has many assoc that is not loaded or doesn't belong to this entity", func() {
 		Apply(doc, data)
 	})
 }

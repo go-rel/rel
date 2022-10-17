@@ -50,59 +50,59 @@ func (tr *testRepository) MustCount(ctx context.Context, collection string, quer
 	return args.Int(0)
 }
 
-func (tr *testRepository) Find(ctx context.Context, record any, queriers ...Querier) error {
-	args := tr.Called(record, queriers)
+func (tr *testRepository) Find(ctx context.Context, entity any, queriers ...Querier) error {
+	args := tr.Called(entity, queriers)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustFind(ctx context.Context, record any, queriers ...Querier) {
-	tr.Called(record, queriers)
+func (tr *testRepository) MustFind(ctx context.Context, entity any, queriers ...Querier) {
+	tr.Called(entity, queriers)
 }
 
-func (tr *testRepository) FindAll(ctx context.Context, records any, queriers ...Querier) error {
-	args := tr.Called(records, queriers)
+func (tr *testRepository) FindAll(ctx context.Context, entities any, queriers ...Querier) error {
+	args := tr.Called(entities, queriers)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustFindAll(ctx context.Context, records any, queriers ...Querier) {
-	tr.Called(records, queriers)
+func (tr *testRepository) MustFindAll(ctx context.Context, entities any, queriers ...Querier) {
+	tr.Called(entities, queriers)
 }
 
-func (tr *testRepository) FindAndCountAll(ctx context.Context, records any, queriers ...Querier) (int, error) {
-	args := tr.Called(records, queriers)
+func (tr *testRepository) FindAndCountAll(ctx context.Context, entities any, queriers ...Querier) (int, error) {
+	args := tr.Called(entities, queriers)
 	return args.Int(0), args.Error(1)
 }
 
-func (tr *testRepository) MustFindAndCountAll(ctx context.Context, records any, queriers ...Querier) int {
-	args := tr.Called(records, queriers)
+func (tr *testRepository) MustFindAndCountAll(ctx context.Context, entities any, queriers ...Querier) int {
+	args := tr.Called(entities, queriers)
 	return args.Int(0)
 }
 
-func (tr *testRepository) Insert(ctx context.Context, record any, mutators ...Mutator) error {
-	args := tr.Called(record, mutators)
+func (tr *testRepository) Insert(ctx context.Context, entity any, mutators ...Mutator) error {
+	args := tr.Called(entity, mutators)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustInsert(ctx context.Context, record any, mutators ...Mutator) {
-	tr.Called(record, mutators)
+func (tr *testRepository) MustInsert(ctx context.Context, entity any, mutators ...Mutator) {
+	tr.Called(entity, mutators)
 }
 
-func (tr *testRepository) InsertAll(ctx context.Context, records any, mutators ...Mutator) error {
-	args := tr.Called(records, mutators)
+func (tr *testRepository) InsertAll(ctx context.Context, entities any, mutators ...Mutator) error {
+	args := tr.Called(entities, mutators)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustInsertAll(ctx context.Context, records any, mutators ...Mutator) {
-	tr.Called(records, mutators)
+func (tr *testRepository) MustInsertAll(ctx context.Context, entities any, mutators ...Mutator) {
+	tr.Called(entities, mutators)
 }
 
-func (tr *testRepository) Update(ctx context.Context, record any, mutators ...Mutator) error {
-	args := tr.Called(record, mutators)
+func (tr *testRepository) Update(ctx context.Context, entity any, mutators ...Mutator) error {
+	args := tr.Called(entity, mutators)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustUpdate(ctx context.Context, record any, mutators ...Mutator) {
-	tr.Called(record, mutators)
+func (tr *testRepository) MustUpdate(ctx context.Context, entity any, mutators ...Mutator) {
+	tr.Called(entity, mutators)
 }
 
 func (tr *testRepository) UpdateAny(ctx context.Context, query Query, mutates ...Mutate) (int, error) {
@@ -115,22 +115,22 @@ func (tr *testRepository) MustUpdateAny(ctx context.Context, query Query, mutate
 	return args.Int(0)
 }
 
-func (tr *testRepository) Delete(ctx context.Context, record any, mutators ...Mutator) error {
-	args := tr.Called(record, mutators)
+func (tr *testRepository) Delete(ctx context.Context, entity any, mutators ...Mutator) error {
+	args := tr.Called(entity, mutators)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustDelete(ctx context.Context, record any, mutators ...Mutator) {
-	tr.Called(record, mutators)
+func (tr *testRepository) MustDelete(ctx context.Context, entity any, mutators ...Mutator) {
+	tr.Called(entity, mutators)
 }
 
-func (tr *testRepository) DeleteAll(ctx context.Context, records any) error {
-	args := tr.Called(records)
+func (tr *testRepository) DeleteAll(ctx context.Context, entities any) error {
+	args := tr.Called(entities)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustDeleteAll(ctx context.Context, records any) {
-	tr.Called(records)
+func (tr *testRepository) MustDeleteAll(ctx context.Context, entities any) {
+	tr.Called(entities)
 }
 
 func (tr *testRepository) DeleteAny(ctx context.Context, query Query) (int, error) {
@@ -143,13 +143,13 @@ func (tr *testRepository) MustDeleteAny(ctx context.Context, query Query) int {
 	return args.Int(0)
 }
 
-func (tr *testRepository) Preload(ctx context.Context, records any, field string, queriers ...Querier) error {
-	args := tr.Called(records, field, queriers)
+func (tr *testRepository) Preload(ctx context.Context, entities any, field string, queriers ...Querier) error {
+	args := tr.Called(entities, field, queriers)
 	return args.Error(0)
 }
 
-func (tr *testRepository) MustPreload(ctx context.Context, records any, field string, queriers ...Querier) {
-	tr.Called(records, field, queriers)
+func (tr *testRepository) MustPreload(ctx context.Context, entities any, field string, queriers ...Querier) {
+	tr.Called(entities, field, queriers)
 }
 
 func (tr *testRepository) Exec(ctx context.Context, statement string, arg ...any) (int, int, error) {

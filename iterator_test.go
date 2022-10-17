@@ -27,7 +27,7 @@ func TestIterator(t *testing.T) {
 	adapter.On("Query", query.Offset(5)).Return(cur2, nil).Once()
 	adapter.On("Query", query.Offset(10)).Return(cur3, nil).Once()
 
-	recordsCount := 0
+	entitiesCount := 0
 	for {
 		if err := it.Next(&user); err == io.EOF {
 			break
@@ -36,11 +36,11 @@ func TestIterator(t *testing.T) {
 		}
 
 		assert.NotEqual(t, 0, user.ID)
-		recordsCount++
+		entitiesCount++
 	}
 	it.Close()
 
-	assert.Equal(t, 13, recordsCount)
+	assert.Equal(t, 13, entitiesCount)
 
 	// the last next is not called because it's already refetched.
 	// call here to make expectation pass.

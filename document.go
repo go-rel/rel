@@ -294,8 +294,8 @@ func (d Document) Flag(flag DocumentFlag) bool {
 
 // NewDocument used to create abstraction to work with struct.
 // Document can be created using interface or reflect.Value.
-func NewDocument(record any, readonly ...bool) *Document {
-	switch v := record.(type) {
+func NewDocument(entity any, readonly ...bool) *Document {
+	switch v := entity.(type) {
 	case *Document:
 		return v
 	case reflect.Value:

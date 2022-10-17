@@ -12,8 +12,8 @@ type EntityRepository[T any] interface {
 	// Repository returns base Repository wrapped by this EntityRepository.
 	Repository() Repository
 
-	// // Iterate through a collection of records from database in batches.
-	// // This function returns iterator that can be used to loop all records.
+	// // Iterate through a collection of entities from database in batches.
+	// // This function returns iterator that can be used to loop all entities.
 	// // Limit, Offset and Sort query is automatically ignored.
 	// Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
 
@@ -30,96 +30,96 @@ type EntityRepository[T any] interface {
 	// It'll panic if any error eccured.
 	MustAggregate(ctx context.Context, aggregate string, field string, queriers ...Querier) int
 
-	// Count records that match the query.
+	// Count entities that match the query.
 	Count(ctx context.Context, queriers ...Querier) (int, error)
 
-	// MustCount records that match the query.
+	// MustCount entities that match the query.
 	// It'll panic if any error eccured.
 	MustCount(ctx context.Context, queriers ...Querier) int
 
-	// Find a record that match the query.
+	// Find a entity that match the query.
 	// If no result found, it'll return not found error.
 	Find(ctx context.Context, queriers ...Querier) (T, error)
 
-	// MustFind a record that match the query.
+	// MustFind a entity that match the query.
 	// If no result found, it'll panic.
 	MustFind(ctx context.Context, queriers ...Querier) T
 
-	// FindAll records that match the query.
+	// FindAll entities that match the query.
 	FindAll(ctx context.Context, queriers ...Querier) ([]T, error)
 
-	// MustFindAll records that match the query.
+	// MustFindAll entities that match the query.
 	// It'll panic if any error eccured.
 	MustFindAll(ctx context.Context, queriers ...Querier) []T
 
-	// FindAndCountAll records that match the query.
+	// FindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	FindAndCountAll(ctx context.Context, queriers ...Querier) ([]T, int, error)
 
-	// MustFindAndCountAll records that match the query.
+	// MustFindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
 	// It'll panic if any error eccured.
 	MustFindAndCountAll(ctx context.Context, queriers ...Querier) ([]T, int)
 
-	// Insert a record to database.
-	Insert(ctx context.Context, record *T, mutators ...Mutator) error
+	// Insert a entity to database.
+	Insert(ctx context.Context, entity *T, mutators ...Mutator) error
 
-	// MustInsert an record to database.
+	// MustInsert an entity to database.
 	// It'll panic if any error occurred.
-	MustInsert(ctx context.Context, record *T, mutators ...Mutator)
+	MustInsert(ctx context.Context, entity *T, mutators ...Mutator)
 
-	// InsertAll records.
+	// InsertAll entities.
 	// Does not supports application cascade insert.
-	InsertAll(ctx context.Context, records *[]T, mutators ...Mutator) error
+	InsertAll(ctx context.Context, entities *[]T, mutators ...Mutator) error
 
-	// MustInsertAll records.
+	// MustInsertAll entities.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade insert.
-	MustInsertAll(ctx context.Context, records *[]T, mutators ...Mutator)
+	MustInsertAll(ctx context.Context, entities *[]T, mutators ...Mutator)
 
-	// Update a record in database.
+	// Update a entity in database.
 	// It'll panic if any error occurred.
-	Update(ctx context.Context, record *T, mutators ...Mutator) error
+	Update(ctx context.Context, entity *T, mutators ...Mutator) error
 
-	// MustUpdate a record in database.
+	// MustUpdate a entity in database.
 	// It'll panic if any error occurred.
-	MustUpdate(ctx context.Context, record *T, mutators ...Mutator)
+	MustUpdate(ctx context.Context, entity *T, mutators ...Mutator)
 
-	// Delete a record.
-	Delete(ctx context.Context, record *T, mutators ...Mutator) error
+	// Delete a entity.
+	Delete(ctx context.Context, entity *T, mutators ...Mutator) error
 
-	// MustDelete a record.
+	// MustDelete a entity.
 	// It'll panic if any error eccured.
-	MustDelete(ctx context.Context, record *T, mutators ...Mutator)
+	MustDelete(ctx context.Context, entity *T, mutators ...Mutator)
 
-	// DeleteAll records.
+	// DeleteAll entities.
 	// Does not supports application cascade delete.
-	DeleteAll(ctx context.Context, records *[]T) error
+	DeleteAll(ctx context.Context, entities *[]T) error
 
-	// MustDeleteAll records.
+	// MustDeleteAll entities.
 	// It'll panic if any error occurred.
 	// Does not supports application cascade delete.
-	MustDeleteAll(ctx context.Context, records *[]T)
+	MustDeleteAll(ctx context.Context, entities *[]T)
 
 	// Preload association with given query.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	Preload(ctx context.Context, record *T, field string, queriers ...Querier) error
+	Preload(ctx context.Context, entity *T, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
 	// It'll panic if any error occurred.
-	MustPreload(ctx context.Context, record *T, field string, queriers ...Querier)
+	MustPreload(ctx context.Context, entity *T, field string, queriers ...Querier)
 
 	// Preload association with given query.
 	// If association is already loaded, this will do nothing.
 	// To force preloading even though association is already loaeded, add `Reload(true)` as query.
-	PreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) error
+	PreloadAll(ctx context.Context, entities *[]T, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
 	// It'll panic if any error occurred.
-	MustPreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier)
+	MustPreloadAll(ctx context.Context, entities *[]T, field string, queriers ...Querier)
 
 	// Transaction performs transaction with given function argument.
 	// Transaction scope/connection is automatically passed using context.
@@ -199,60 +199,60 @@ func (er entityRepository[T]) MustFindAndCountAll(ctx context.Context, queriers 
 	return entities, count
 }
 
-func (er entityRepository[T]) Insert(ctx context.Context, record *T, mutators ...Mutator) error {
-	return er.repository.Insert(ctx, record, mutators...)
+func (er entityRepository[T]) Insert(ctx context.Context, entity *T, mutators ...Mutator) error {
+	return er.repository.Insert(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) MustInsert(ctx context.Context, record *T, mutators ...Mutator) {
-	er.repository.MustInsert(ctx, record, mutators...)
+func (er entityRepository[T]) MustInsert(ctx context.Context, entity *T, mutators ...Mutator) {
+	er.repository.MustInsert(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) InsertAll(ctx context.Context, records *[]T, mutators ...Mutator) error {
-	return er.repository.InsertAll(ctx, records, mutators...)
+func (er entityRepository[T]) InsertAll(ctx context.Context, entities *[]T, mutators ...Mutator) error {
+	return er.repository.InsertAll(ctx, entities, mutators...)
 }
 
-func (er entityRepository[T]) MustInsertAll(ctx context.Context, records *[]T, mutators ...Mutator) {
-	er.repository.MustInsertAll(ctx, records, mutators...)
+func (er entityRepository[T]) MustInsertAll(ctx context.Context, entities *[]T, mutators ...Mutator) {
+	er.repository.MustInsertAll(ctx, entities, mutators...)
 }
 
-func (er entityRepository[T]) Update(ctx context.Context, record *T, mutators ...Mutator) error {
-	return er.repository.Update(ctx, record, mutators...)
+func (er entityRepository[T]) Update(ctx context.Context, entity *T, mutators ...Mutator) error {
+	return er.repository.Update(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) MustUpdate(ctx context.Context, record *T, mutators ...Mutator) {
-	er.repository.MustUpdate(ctx, record, mutators...)
+func (er entityRepository[T]) MustUpdate(ctx context.Context, entity *T, mutators ...Mutator) {
+	er.repository.MustUpdate(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) Delete(ctx context.Context, record *T, mutators ...Mutator) error {
-	return er.repository.Delete(ctx, record, mutators...)
+func (er entityRepository[T]) Delete(ctx context.Context, entity *T, mutators ...Mutator) error {
+	return er.repository.Delete(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) MustDelete(ctx context.Context, record *T, mutators ...Mutator) {
-	er.repository.MustDelete(ctx, record, mutators...)
+func (er entityRepository[T]) MustDelete(ctx context.Context, entity *T, mutators ...Mutator) {
+	er.repository.MustDelete(ctx, entity, mutators...)
 }
 
-func (er entityRepository[T]) DeleteAll(ctx context.Context, records *[]T) error {
-	return er.repository.DeleteAll(ctx, records)
+func (er entityRepository[T]) DeleteAll(ctx context.Context, entities *[]T) error {
+	return er.repository.DeleteAll(ctx, entities)
 }
 
-func (er entityRepository[T]) MustDeleteAll(ctx context.Context, records *[]T) {
-	er.repository.MustDeleteAll(ctx, records)
+func (er entityRepository[T]) MustDeleteAll(ctx context.Context, entities *[]T) {
+	er.repository.MustDeleteAll(ctx, entities)
 }
 
-func (er entityRepository[T]) Preload(ctx context.Context, record *T, field string, queriers ...Querier) error {
-	return er.repository.Preload(ctx, record, field, queriers...)
+func (er entityRepository[T]) Preload(ctx context.Context, entity *T, field string, queriers ...Querier) error {
+	return er.repository.Preload(ctx, entity, field, queriers...)
 }
 
-func (er entityRepository[T]) MustPreload(ctx context.Context, record *T, field string, queriers ...Querier) {
-	er.repository.MustPreload(ctx, record, field, queriers...)
+func (er entityRepository[T]) MustPreload(ctx context.Context, entity *T, field string, queriers ...Querier) {
+	er.repository.MustPreload(ctx, entity, field, queriers...)
 }
 
-func (er entityRepository[T]) PreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) error {
-	return er.repository.Preload(ctx, records, field, queriers...)
+func (er entityRepository[T]) PreloadAll(ctx context.Context, entities *[]T, field string, queriers ...Querier) error {
+	return er.repository.Preload(ctx, entities, field, queriers...)
 }
 
-func (er entityRepository[T]) MustPreloadAll(ctx context.Context, records *[]T, field string, queriers ...Querier) {
-	er.repository.MustPreload(ctx, records, field, queriers...)
+func (er entityRepository[T]) MustPreloadAll(ctx context.Context, entities *[]T, field string, queriers ...Querier) {
+	er.repository.MustPreload(ctx, entities, field, queriers...)
 }
 
 func (er entityRepository[T]) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {

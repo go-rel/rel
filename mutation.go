@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-// Mutator is interface for a record mutator.
+// Mutator is interface for a entity mutator.
 type Mutator interface {
 	Apply(doc *Document, mutation *Mutation)
 }

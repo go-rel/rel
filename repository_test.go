@@ -2400,7 +2400,7 @@ func TestRepository_saveHasMany_updateWithReorderInsert(t *testing.T) {
 		user    = User{
 			ID: 1,
 			Emails: []Email{
-				{Email: "email1@gmail.com"}, // new record not appended, but prepended/inserted
+				{Email: "email1@gmail.com"}, // new entity not appended, but prepended/inserted
 				{ID: 1, UserID: 1, Email: "email2@gmail.com"},
 			},
 		}
@@ -2783,13 +2783,13 @@ func TestRepository_Delete_invalidFieldType(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
 		repo    = New(adapter)
-		record  = InvalidField{ID: 1}
-		query   = From("invalid_fields").Where(Eq("id", record.ID))
+		entity  = InvalidField{ID: 1}
+		query   = From("invalid_fields").Where(Eq("id", entity.ID))
 	)
 
 	adapter.On("Delete", query).Return(1, nil).Once()
 
-	assert.Nil(t, repo.Delete(context.TODO(), &record))
+	assert.Nil(t, repo.Delete(context.TODO(), &entity))
 
 	adapter.AssertExpectations(t)
 }

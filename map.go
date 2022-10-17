@@ -129,7 +129,7 @@ func applyMaps(maps []Map, assoc Association) ([]Mutation, []any) {
 			// update
 			pID, ok := pIndex[pChange]
 			if !ok {
-				panic("rel: cannot update has many assoc that is not loaded or doesn't belong to this record")
+				panic("rel: cannot update has many assoc that is not loaded or doesn't belong to this entity")
 			}
 
 			if pID != curr {

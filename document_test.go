@@ -29,8 +29,8 @@ func (i Item) PrimaryValues() []any {
 
 func TestDocument_ReflectValue(t *testing.T) {
 	var (
-		record = User{}
-		doc    = NewDocument(&record)
+		entity = User{}
+		doc    = NewDocument(&entity)
 	)
 
 	assert.Equal(t, doc.rv, doc.ReflectValue())
@@ -38,8 +38,8 @@ func TestDocument_ReflectValue(t *testing.T) {
 
 func TestDocument_Table(t *testing.T) {
 	var (
-		record = User{}
-		doc    = NewDocument(&record)
+		entity = User{}
+		doc    = NewDocument(&entity)
 	)
 
 	// infer table name
@@ -48,8 +48,8 @@ func TestDocument_Table(t *testing.T) {
 
 func TestDocument_Table_usingInterface(t *testing.T) {
 	var (
-		record = Item{}
-		doc    = NewDocument(&record)
+		entity = Item{}
+		doc    = NewDocument(&entity)
 	)
 
 	// infer table name
@@ -58,15 +58,15 @@ func TestDocument_Table_usingInterface(t *testing.T) {
 
 func TestDocument_Primary(t *testing.T) {
 	var (
-		record = User{ID: 1}
-		doc    = NewDocument(&record)
+		entity = User{ID: 1}
+		doc    = NewDocument(&entity)
 	)
 
 	// infer primary key
 	assert.Equal(t, "id", doc.PrimaryField())
 	assert.Equal(t, 1, doc.PrimaryValue())
 
-	record.ID = 2
+	entity.ID = 2
 
 	// infer primary key using cache
 	assert.Equal(t, "id", doc.PrimaryField())
@@ -80,8 +80,8 @@ func TestDocument_PrimaryEmbedded(t *testing.T) {
 	}
 
 	var (
-		record = UserWrapper{User: User{ID: 1}}
-		doc    = NewDocument(&record)
+		entity = UserWrapper{User: User{ID: 1}}
+		doc    = NewDocument(&entity)
 	)
 
 	assert.Equal(t, "id", doc.PrimaryField())
@@ -90,10 +90,10 @@ func TestDocument_PrimaryEmbedded(t *testing.T) {
 
 func TestDocument_Primary_usingInterface(t *testing.T) {
 	var (
-		record = Item{
+		entity = Item{
 			UUID: "abc123",
 		}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	// infer primary key
@@ -103,14 +103,14 @@ func TestDocument_Primary_usingInterface(t *testing.T) {
 
 func TestDocument_Primary_usingTag(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			ID         uint
 			ExternalID int `db:",primary"`
 			Name       string
 		}{
 			ExternalID: 12345,
 		}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	// infer primary key
@@ -120,14 +120,14 @@ func TestDocument_Primary_usingTag(t *testing.T) {
 
 func TestDocument_Primary_usingTagAmdCustomName(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			ID         uint
 			ExternalID int `db:"partner_id,primary"`
 			Name       string
 		}{
 			ExternalID: 1111,
 		}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	// infer primary key
@@ -137,11 +137,11 @@ func TestDocument_Primary_usingTagAmdCustomName(t *testing.T) {
 
 func TestDocument_Primary_notFound(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			ExternalID int
 			Name       string
 		}{}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	assert.Panics(t, func() {
@@ -173,14 +173,14 @@ func TestDocument_Primary_composite(t *testing.T) {
 
 func TestDocument_Fields(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			A string
 			B *int
 			C []byte     `db:",primary"`
 			D bool       `db:"D"`
 			E []*float64 `db:"-"`
 		}{}
-		doc    = NewDocument(&record)
+		doc    = NewDocument(&entity)
 		fields = []string{"a", "b", "c", "D"}
 	)
 
@@ -189,14 +189,14 @@ func TestDocument_Fields(t *testing.T) {
 
 func TestDocument_Index(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			A string
 			B *int
 			C []byte     `db:",primary"`
 			D bool       `db:"D"`
 			E []*float64 `db:"-"`
 		}{}
-		doc   = NewDocument(&record)
+		doc   = NewDocument(&entity)
 		index = map[string][]int{
 			"a": {0},
 			"b": {1},
@@ -217,12 +217,12 @@ func TestDocument_IndexEmbedded(t *testing.T) {
 		D float32
 	}
 	var (
-		record = struct {
+		entity = struct {
 			FirstEmbedded `db:"first_"`
 			C             string
 			*SecondEmbedded
 		}{}
-		doc   = NewDocument(&record)
+		doc   = NewDocument(&entity)
 		index = map[string][]int{
 			"first_a": {0, 0},
 			"first_b": {0, 1},
@@ -243,13 +243,13 @@ func TestDocument_IndexFieldEmbedded(t *testing.T) {
 		D float32
 	}
 	var (
-		record = struct {
+		entity = struct {
 			First  FirstEmbedded `db:"first_,embedded"`
 			C      string
 			Second SecondEmbedded `db:",embedded"`
 			E      int            `db:"embedded"` // this field is not embedded, but only called so
 		}{}
-		doc   = NewDocument(&record)
+		doc   = NewDocument(&entity)
 		index = map[string][]int{
 			"first_a":  {0, 0},
 			"first_b":  {0, 1},
@@ -266,19 +266,19 @@ func TestDocument_EmbeddedNameConfict(t *testing.T) {
 	type Embedded struct {
 		Name string
 	}
-	record := struct {
+	entity := struct {
 		Embedded
 		Name string
 	}{}
 
 	assert.Panics(t, func() {
-		NewDocument(&record)
+		NewDocument(&entity)
 	})
 }
 
 func TestDocument_Types(t *testing.T) {
 	var (
-		record = struct {
+		entity = struct {
 			A string
 			B *int
 			C []byte
@@ -287,7 +287,7 @@ func TestDocument_Types(t *testing.T) {
 			F userDefined
 			G time.Time
 		}{}
-		doc   = NewDocument(&record)
+		doc   = NewDocument(&entity)
 		types = map[string]reflect.Type{
 			"a": reflect.TypeOf(""),
 			"b": reflect.TypeOf(0),
@@ -309,7 +309,7 @@ func TestDocument_Types(t *testing.T) {
 func TestDocument_Value(t *testing.T) {
 	var (
 		address = "address"
-		record  = struct {
+		entity  = struct {
 			ID      int
 			Name    string
 			Skip    bool `db:"-"`
@@ -323,7 +323,7 @@ func TestDocument_Value(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc    = NewDocument(&record)
+		doc    = NewDocument(&entity)
 		values = map[string]any{
 			"id":      1,
 			"name":    "name",
@@ -352,11 +352,11 @@ func TestDocument_ValueEmbedded(t *testing.T) {
 		ID int
 	}
 	var (
-		record = struct {
+		entity = struct {
 			*Embedded
 			Name string
 		}{}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	value, ok := doc.Value("id")
@@ -382,7 +382,7 @@ func TestDocument_ValueEmbedded(t *testing.T) {
 
 func TestDocument_SetValue(t *testing.T) {
 	var (
-		record struct {
+		entity struct {
 			ID      int
 			Name    string
 			Skip    bool `db:"-"`
@@ -390,7 +390,7 @@ func TestDocument_SetValue(t *testing.T) {
 			Address *string
 			Data    []byte
 		}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	t.Run("ok", func(t *testing.T) {
@@ -400,12 +400,12 @@ func TestDocument_SetValue(t *testing.T) {
 		assert.True(t, doc.SetValue("data", []byte("data")))
 		assert.True(t, doc.SetValue("address", "address"))
 
-		assert.Equal(t, 1, record.ID)
-		assert.Equal(t, "name", record.Name)
-		assert.Equal(t, false, record.Skip)
-		assert.Equal(t, 10.5, record.Number)
-		assert.Equal(t, "address", *record.Address)
-		assert.Equal(t, []byte("data"), record.Data)
+		assert.Equal(t, 1, entity.ID)
+		assert.Equal(t, "name", entity.Name)
+		assert.Equal(t, false, entity.Skip)
+		assert.Equal(t, 10.5, entity.Number)
+		assert.Equal(t, "address", *entity.Address)
+		assert.Equal(t, []byte("data"), entity.Data)
 	})
 
 	t.Run("zero", func(t *testing.T) {
@@ -415,25 +415,25 @@ func TestDocument_SetValue(t *testing.T) {
 		assert.True(t, doc.SetValue("data", nil))
 		assert.True(t, doc.SetValue("address", nil))
 
-		assert.Equal(t, 0, record.ID)
-		assert.Equal(t, "", record.Name)
-		assert.Equal(t, float64(0), record.Number)
-		assert.Equal(t, (*string)(nil), record.Address)
-		assert.Equal(t, []byte(nil), record.Data)
+		assert.Equal(t, 0, entity.ID)
+		assert.Equal(t, "", entity.Name)
+		assert.Equal(t, float64(0), entity.Number)
+		assert.Equal(t, (*string)(nil), entity.Address)
+		assert.Equal(t, []byte(nil), entity.Data)
 	})
 
 	t.Run("convert", func(t *testing.T) {
 		assert.True(t, doc.SetValue("id", uint(2)))
 		assert.True(t, doc.SetValue("number", 10))
-		assert.Equal(t, 2, record.ID)
-		assert.Equal(t, float64(10), record.Number)
+		assert.Equal(t, 2, entity.ID)
+		assert.Equal(t, float64(10), entity.Number)
 	})
 
 	t.Run("reflect", func(t *testing.T) {
 		assert.True(t, doc.SetValue("id", reflect.ValueOf(21)))
 		assert.True(t, doc.SetValue("address", reflect.ValueOf("continassa")))
-		assert.Equal(t, 21, record.ID)
-		assert.Equal(t, "continassa", *record.Address)
+		assert.Equal(t, 21, entity.ID)
+		assert.Equal(t, "continassa", *entity.Address)
 	})
 
 	t.Run("field not exists", func(t *testing.T) {
@@ -449,11 +449,11 @@ func TestDocument_SetValueEmbedded(t *testing.T) {
 		Name string
 	}
 	var (
-		record struct {
+		entity struct {
 			Embedded
 			Number float64
 		}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	assert.True(t, doc.SetValue("id", 1))
@@ -462,7 +462,7 @@ func TestDocument_SetValueEmbedded(t *testing.T) {
 func TestDocument_Scanners(t *testing.T) {
 	var (
 		address = "address"
-		record  = struct {
+		entity  = struct {
 			ID      int
 			Name    string
 			Skip    bool `db:"-"`
@@ -476,15 +476,15 @@ func TestDocument_Scanners(t *testing.T) {
 			Address: &address,
 			Data:    []byte("data"),
 		}
-		doc      = NewDocument(&record)
+		doc      = NewDocument(&entity)
 		fields   = []string{"name", "id", "skip", "data", "number", "address", "not_exist"}
 		scanners = []any{
-			Nullable(&record.Name),
-			Nullable(&record.ID),
+			Nullable(&entity.Name),
+			Nullable(&entity.ID),
 			&sql.RawBytes{},
-			Nullable(&record.Data),
-			Nullable(&record.Number),
-			&record.Address,
+			Nullable(&entity.Data),
+			Nullable(&entity.Number),
+			&entity.Address,
 			&sql.RawBytes{},
 		}
 	)
@@ -494,7 +494,7 @@ func TestDocument_Scanners(t *testing.T) {
 
 func TestDocument_Scanners_withAssoc(t *testing.T) {
 	var (
-		record = Transaction{
+		entity = Transaction{
 			ID:      1,
 			BuyerID: 2,
 			Status:  "SENT",
@@ -506,15 +506,15 @@ func TestDocument_Scanners_withAssoc(t *testing.T) {
 				},
 			},
 		}
-		doc      = NewDocument(&record)
+		doc      = NewDocument(&entity)
 		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "buyer.work_address.street", "status", "invalid_assoc.id"}
 		scanners = []any{
-			Nullable(&record.ID),
-			Nullable(&record.BuyerID),
-			Nullable(&record.Buyer.ID),
-			Nullable(&record.Buyer.Name),
-			Nullable(&record.Buyer.WorkAddress.Street),
-			Nullable(&record.Status),
+			Nullable(&entity.ID),
+			Nullable(&entity.BuyerID),
+			Nullable(&entity.Buyer.ID),
+			Nullable(&entity.Buyer.Name),
+			Nullable(&entity.Buyer.WorkAddress.Street),
+			Nullable(&entity.Status),
 			&sql.RawBytes{},
 		}
 	)
@@ -524,17 +524,17 @@ func TestDocument_Scanners_withAssoc(t *testing.T) {
 
 func TestDocument_Scanners_withUnitializedAssoc(t *testing.T) {
 	var (
-		record   = Transaction{}
-		doc      = NewDocument(&record)
+		entity   = Transaction{}
+		doc      = NewDocument(&entity)
 		fields   = []string{"id", "user_id", "buyer.id", "buyer.name", "status", "buyer.work_address.street"}
 		result   = doc.Scanners(fields)
 		expected = []any{
-			Nullable(&record.ID),
-			Nullable(&record.BuyerID),
-			Nullable(&record.Buyer.ID),
-			Nullable(&record.Buyer.Name),
-			Nullable(&record.Status),
-			Nullable(&record.Buyer.WorkAddress.Street),
+			Nullable(&entity.ID),
+			Nullable(&entity.BuyerID),
+			Nullable(&entity.Buyer.ID),
+			Nullable(&entity.Buyer.Name),
+			Nullable(&entity.Status),
+			Nullable(&entity.Buyer.WorkAddress.Street),
 		}
 	)
 
@@ -552,14 +552,14 @@ func TestDocument_ScannersInitPointers(t *testing.T) {
 		*Embedded2
 	}
 	var (
-		record = struct {
+		entity = struct {
 			*Embedded3
 		}{}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 		_   = doc.Scanners([]string{"id"})
 	)
-	assert.NotNil(t, record.Embedded2)
-	assert.NotNil(t, record.Embedded2.Embedded1)
+	assert.NotNil(t, entity.Embedded2)
+	assert.NotNil(t, entity.Embedded2.Embedded1)
 }
 
 func TestDocument_Slice(t *testing.T) {
@@ -578,7 +578,7 @@ func TestDocument_Slice(t *testing.T) {
 func TestDocument_Association(t *testing.T) {
 	tests := []struct {
 		name      string
-		record    any
+		entity    any
 		belongsTo []string
 		hasOne    []string
 		hasMany   []string
@@ -586,38 +586,38 @@ func TestDocument_Association(t *testing.T) {
 	}{
 		{
 			name:    "User",
-			record:  &User{},
+			entity:  &User{},
 			hasOne:  []string{"address", "work_address"},
 			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
 		},
 		{
 			name:    "User Cached",
-			record:  &User{},
+			entity:  &User{},
 			hasOne:  []string{"address", "work_address"},
 			hasMany: []string{"transactions", "user_roles", "emails", "roles", "follows", "followeds", "followings", "followers"},
 		},
 		{
 			name:      "Transaction",
-			record:    &Transaction{},
+			entity:    &Transaction{},
 			belongsTo: []string{"buyer", "address"},
 			hasMany:   []string{"histories"},
 			preload:   []string{"buyer"},
 		},
 		{
 			name:      "Address",
-			record:    &Address{},
+			entity:    &Address{},
 			belongsTo: []string{"user"},
 		},
 		{
 			name:   "Item",
-			record: &Item{},
+			entity: &Item{},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var (
-				doc = NewDocument(test.record)
+				doc = NewDocument(test.entity)
 			)
 
 			assert.Equal(t, test.belongsTo, doc.BelongsTo())
@@ -632,11 +632,11 @@ func TestDocument_AssociationEmbedded(t *testing.T) {
 	var (
 		testHasOne  = []string{"user_address", "user_work_address"}
 		testHasMany = []string{"user_transactions", "user_user_roles", "user_emails", "user_roles", "user_follows", "user_followeds", "user_followings", "user_followers"}
-		record      = struct {
+		entity      = struct {
 			User  `db:"user_"`
 			Score float32
 		}{}
-		doc = NewDocument(&record)
+		doc = NewDocument(&entity)
 	)
 
 	assert.Equal(t, testHasOne, doc.HasOne())
@@ -655,45 +655,45 @@ func TestDocument_Association_notFOund(t *testing.T) {
 
 func TestDocument(t *testing.T) {
 	tests := []struct {
-		record any
+		entity any
 		panics bool
 	}{
 		{
-			record: &User{},
+			entity: &User{},
 		},
 		{
-			record: NewDocument(&User{}),
+			entity: NewDocument(&User{}),
 		},
 		{
-			record: reflect.ValueOf(&User{}),
+			entity: reflect.ValueOf(&User{}),
 		},
 		{
-			record: reflect.ValueOf(User{}),
+			entity: reflect.ValueOf(User{}),
 			panics: true,
 		},
 		{
-			record: reflect.ValueOf(&[]User{}),
+			entity: reflect.ValueOf(&[]User{}),
 			panics: true,
 		},
 		{
-			record: reflect.TypeOf(&User{}),
+			entity: reflect.TypeOf(&User{}),
 			panics: true,
 		},
 		{
-			record: nil,
+			entity: nil,
 			panics: true,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(fmt.Sprintf("%T", test.record), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%T", test.entity), func(t *testing.T) {
 			if test.panics {
 				assert.Panics(t, func() {
-					NewDocument(test.record)
+					NewDocument(test.entity)
 				})
 			} else {
 				assert.NotPanics(t, func() {
-					NewDocument(test.record)
+					NewDocument(test.entity)
 				})
 			}
 		})

@@ -222,10 +222,10 @@ func TestStructset_uuid(t *testing.T) {
 	// package like https://github.com/google/uuid use [16]byte to represent uuid
 	var (
 		uuid   = [16]byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-		record = struct {
+		entity = struct {
 			UUID [16]byte `db:",primary"`
 		}{UUID: uuid}
-		doc      = NewDocument(&record)
+		doc      = NewDocument(&entity)
 		mutation = Mutation{
 			Cascade: true,
 			Mutates: map[string]Mutate{
@@ -234,5 +234,5 @@ func TestStructset_uuid(t *testing.T) {
 		}
 	)
 
-	assert.Equal(t, mutation, Apply(doc, NewStructset(&record, false)))
+	assert.Equal(t, mutation, Apply(doc, NewStructset(&entity, false)))
 }

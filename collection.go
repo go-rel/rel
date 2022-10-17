@@ -178,8 +178,8 @@ func (c Collection) Swap(i, j int) {
 
 // NewCollection used to create abstraction to work with slice.
 // COllection can be created using interface or reflect.Value.
-func NewCollection(records any, readonly ...bool) *Collection {
-	switch v := records.(type) {
+func NewCollection(entities any, readonly ...bool) *Collection {
+	switch v := entities.(type) {
 	case *Collection:
 		return v
 	case reflect.Value:

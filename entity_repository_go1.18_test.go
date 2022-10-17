@@ -177,6 +177,21 @@ func TestEntityRepository_Repository(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestEntityRepository_Iterate(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Iterate", From("users").Where(Eq("status", "pending")), []IteratorOption{BatchSize(10)}).
+		Return(&testIterator{})
+
+	iterator := entityRepo.Iterate(context.TODO(), Where(Eq("status", "pending")), BatchSize(10))
+	assert.NotNil(t, iterator)
+
+	repo.AssertExpectations(t)
+}
+
 func TestEntityRepository_Aggregate(t *testing.T) {
 	var (
 		repo       = &testRepository{}

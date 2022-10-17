@@ -12,10 +12,10 @@ type EntityRepository[T any] interface {
 	// Repository returns base Repository wrapped by this EntityRepository.
 	Repository() Repository
 
-	// // Iterate through a collection of entities from database in batches.
-	// // This function returns iterator that can be used to loop all entities.
-	// // Limit, Offset and Sort query is automatically ignored.
-	// Iterate(ctx context.Context, query Query, option ...IteratorOption) Iterator
+	// Iterate through a collection of entities from database in batches.
+	// This function returns iterator that can be used to loop all entities.
+	// Limit, Offset and Sort query is automatically ignored.
+	Iterate(ctx context.Context, query Query, option ...IteratorOption) EntityIterator[T]
 
 	// Aggregate over the given field.
 	// Supported aggregate: count, sum, avg, max, min.
@@ -132,6 +132,15 @@ type entityRepository[T any] struct {
 
 func (er entityRepository[T]) Repository() Repository {
 	return er.repository
+}
+
+func (er entityRepository[T]) Iterate(ctx context.Context, query Query, option ...IteratorOption) EntityIterator[T] {
+	if query.Table == "" {
+		var entity T
+		query.Table = getDocumentMeta(reflect.TypeOf(entity), true).Table()
+	}
+
+	return newEntityIterator[T](er.repository.Iterate(ctx, query, option...))
 }
 
 func (er entityRepository[T]) Aggregate(ctx context.Context, aggregate string, field string, queriers ...Querier) (int, error) {

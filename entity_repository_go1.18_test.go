@@ -167,6 +167,74 @@ func (tr *testRepository) Transaction(ctx context.Context, fn func(ctx context.C
 	return fn(ctx)
 }
 
+func TestEntityRepository_Repository(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	assert.Equal(t, repo, entityRepo.Repository())
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Aggregate(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Aggregate", From("users"), "max", "score").Return(1, nil)
+
+	result, err := entityRepo.Aggregate(context.TODO(), "max", "score")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, result)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustAggregate(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Aggregate", From("users"), "max", "score").Return(1, nil)
+
+	result := entityRepo.MustAggregate(context.TODO(), "max", "score")
+	assert.Equal(t, 1, result)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_Count(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Count", "users", []Querier(nil)).Return(1, nil)
+
+	result, err := entityRepo.Count(context.TODO())
+	assert.Nil(t, err)
+	assert.Equal(t, 1, result)
+
+	repo.AssertExpectations(t)
+}
+
+func TestEntityRepository_MustCount(t *testing.T) {
+	var (
+		repo       = &testRepository{}
+		entityRepo = NewEntityRepository[User](repo)
+	)
+
+	repo.On("Count", "users", []Querier(nil)).Return(1, nil)
+
+	result := entityRepo.MustCount(context.TODO())
+	assert.Equal(t, 1, result)
+
+	repo.AssertExpectations(t)
+}
+
 func TestEntityRepository_Find(t *testing.T) {
 	var (
 		user       User

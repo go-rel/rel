@@ -118,6 +118,20 @@ func TestSchema_AddColumn(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
+func TestSchema_AlterColumn(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumn("products", "description", "", Default("test"))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Type: "", Op: SchemaAlter, Default: "test"},
+		},
+	}, schema.Migrations[0])
+}
+
 func TestSchema_RenameColumn(t *testing.T) {
 	var schema Schema
 
@@ -218,9 +232,7 @@ func TestRaw_InternalTableDefinition(t *testing.T) {
 }
 
 func TestDo(t *testing.T) {
-	var (
-		schema Schema
-	)
+	var schema Schema
 
 	schema.Do(func(ctx context.Context, repo Repository) error { return nil })
 	assert.NotNil(t, schema.Migrations[0])

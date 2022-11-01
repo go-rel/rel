@@ -75,6 +75,17 @@ func renameColumn(name string, newName string, options []ColumnOption) Column {
 	return column
 }
 
+func alterColumn(name string, typ ColumnType, options []ColumnOption) Column {
+	column := Column{
+		Op:   SchemaAlter,
+		Name: name,
+		Type: typ,
+	}
+
+	applyColumnOptions(&column, options)
+	return column
+}
+
 func dropColumn(name string, options []ColumnOption) Column {
 	column := Column{
 		Op:   SchemaDrop,

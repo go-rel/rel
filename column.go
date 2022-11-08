@@ -108,14 +108,15 @@ func alterColumnType(name string, typ ColumnType, options []ColumnOption) []Colu
 func alterColumnConstraints(name string, options []ColumnOption) []Column {
 	constrs := make([]Column, 0, len(options))
 	for _, option := range options {
-		if option.isConstraint() {
-			column := Column{
-				Op:   SchemaAlter,
-				Name: name,
-			}
-			option.applyColumn(&column)
-			constrs = append(constrs, column)
+		if !option.isConstraint() {
+			continue
 		}
+		column := Column{
+			Op:   SchemaAlter,
+			Name: name,
+		}
+		option.applyColumn(&column)
+		constrs = append(constrs, column)
 	}
 	return constrs
 }

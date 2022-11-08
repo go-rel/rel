@@ -33,9 +33,9 @@ func TestSchema_CreateTable(t *testing.T) {
 		Op:   SchemaCreate,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID, Primary: true, Constr: ColumnConstraintType},
-			Column{Name: "name", Type: String, Constr: ColumnConstraintType},
-			Column{Name: "description", Type: Text, Constr: ColumnConstraintType},
+			Column{Name: "id", Type: ID, Primary: true},
+			Column{Name: "name", Type: String},
+			Column{Name: "description", Type: Text},
 		},
 	}, schema.Migrations[0])
 
@@ -48,7 +48,7 @@ func TestSchema_CreateTable(t *testing.T) {
 		Name:     "wishlists",
 		Optional: true,
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID, Primary: true, Constr: ColumnConstraintType},
+			Column{Name: "id", Type: ID, Primary: true},
 		},
 	}, schema.Migrations[1])
 
@@ -67,7 +67,7 @@ func TestSchema_AlterTable(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "users",
 		Definitions: []TableDefinition{
-			Column{Name: "verified", Type: Bool, Op: SchemaCreate, Constr: ColumnConstraintType},
+			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
 			Column{Name: "name", Rename: "fullname", Op: SchemaRename},
 		},
 	}, schema.Migrations[0])
@@ -113,7 +113,7 @@ func TestSchema_AddColumn(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: String, Op: SchemaCreate, Constr: ColumnConstraintType},
+			Column{Name: "description", Type: String, Op: SchemaCreate},
 		},
 	}, schema.Migrations[0])
 }
@@ -127,7 +127,7 @@ func TestSchema_AlterColumnType(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, Constr: ColumnConstraintType},
+			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, Constr: AlterColumnType},
 		},
 	}, schema.Migrations[0])
 }
@@ -141,7 +141,8 @@ func TestSchema_AlterColumnConstraints(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Op: SchemaAlter, Required: true, Default: "<no description>", Constr: ColumnConstraintRequired | ColumnConstraintDefault},
+			Column{Name: "description", Op: SchemaAlter, Required: true, Constr: AlterColumnRequired},
+			Column{Name: "description", Op: SchemaAlter, Default: "<no description>", Constr: AlterColumnDefault},
 		},
 	}, schema.Migrations[0])
 }

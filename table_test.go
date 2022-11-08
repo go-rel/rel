@@ -12,9 +12,8 @@ func TestTable(t *testing.T) {
 	t.Run("Column", func(t *testing.T) {
 		table.Column("column", String)
 		assert.Equal(t, Column{
-			Name:   "column",
-			Type:   String,
-			Constr: ColumnConstraintType,
+			Name: "column",
+			Type: String,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
@@ -24,7 +23,6 @@ func TestTable(t *testing.T) {
 			Name:    "id",
 			Type:    ID,
 			Primary: true,
-			Constr:  ColumnConstraintType,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
@@ -34,124 +32,110 @@ func TestTable(t *testing.T) {
 			Name:    "big_id",
 			Type:    BigID,
 			Primary: true,
-			Constr:  ColumnConstraintType,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("IDNotPrimaryKey", func(t *testing.T) {
 		table.ID("id", Primary(false))
 		assert.Equal(t, Column{
-			Name:   "id",
-			Type:   ID,
-			Constr: ColumnConstraintType,
+			Name: "id",
+			Type: ID,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Bool", func(t *testing.T) {
 		table.Bool("boolean")
 		assert.Equal(t, Column{
-			Name:   "boolean",
-			Type:   Bool,
-			Constr: ColumnConstraintType,
+			Name: "boolean",
+			Type: Bool,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("SmallInt", func(t *testing.T) {
 		table.SmallInt("smallint")
 		assert.Equal(t, Column{
-			Name:   "smallint",
-			Type:   SmallInt,
-			Constr: ColumnConstraintType,
+			Name: "smallint",
+			Type: SmallInt,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Int", func(t *testing.T) {
 		table.Int("integer")
 		assert.Equal(t, Column{
-			Name:   "integer",
-			Type:   Int,
-			Constr: ColumnConstraintType,
+			Name: "integer",
+			Type: Int,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("BigInt", func(t *testing.T) {
 		table.BigInt("bigint")
 		assert.Equal(t, Column{
-			Name:   "bigint",
-			Type:   BigInt,
-			Constr: ColumnConstraintType,
+			Name: "bigint",
+			Type: BigInt,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Float", func(t *testing.T) {
 		table.Float("float")
 		assert.Equal(t, Column{
-			Name:   "float",
-			Type:   Float,
-			Constr: ColumnConstraintType,
+			Name: "float",
+			Type: Float,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Decimal", func(t *testing.T) {
 		table.Decimal("decimal")
 		assert.Equal(t, Column{
-			Name:   "decimal",
-			Type:   Decimal,
-			Constr: ColumnConstraintType,
+			Name: "decimal",
+			Type: Decimal,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("String", func(t *testing.T) {
 		table.String("string")
 		assert.Equal(t, Column{
-			Name:   "string",
-			Type:   String,
-			Constr: ColumnConstraintType,
+			Name: "string",
+			Type: String,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Text", func(t *testing.T) {
 		table.Text("text")
 		assert.Equal(t, Column{
-			Name:   "text",
-			Type:   Text,
-			Constr: ColumnConstraintType,
+			Name: "text",
+			Type: Text,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("JSON", func(t *testing.T) {
 		table.JSON("json")
 		assert.Equal(t, Column{
-			Name:   "json",
-			Type:   JSON,
-			Constr: ColumnConstraintType,
+			Name: "json",
+			Type: JSON,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Date", func(t *testing.T) {
 		table.Date("date")
 		assert.Equal(t, Column{
-			Name:   "date",
-			Type:   Date,
-			Constr: ColumnConstraintType,
+			Name: "date",
+			Type: Date,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("DateTime", func(t *testing.T) {
 		table.DateTime("datetime")
 		assert.Equal(t, Column{
-			Name:   "datetime",
-			Type:   DateTime,
-			Constr: ColumnConstraintType,
+			Name: "datetime",
+			Type: DateTime,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 
 	t.Run("Time", func(t *testing.T) {
 		table.Time("time")
 		assert.Equal(t, Column{
-			Name:   "time",
-			Type:   Time,
-			Constr: ColumnConstraintType,
+			Name: "time",
+			Type: Time,
 		}, table.Definitions[len(table.Definitions)-1])
 	})
 

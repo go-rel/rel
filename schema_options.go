@@ -16,6 +16,7 @@ func applyTableOptions(table *Table, options []TableOption) {
 // Available options are: Nil, Unsigned, Limit, Precision, Scale, Default, Comment, Options.
 type ColumnOption interface {
 	applyColumn(column *Column)
+	isConstraint() bool
 }
 
 func applyColumnOptions(column *Column, options []ColumnOption) {
@@ -43,11 +44,19 @@ func (r Primary) applyColumn(column *Column) {
 	column.Primary = bool(r)
 }
 
+func (r Primary) isConstraint() bool {
+	return false
+}
+
 // Unique set column as unique.
 type Unique bool
 
 func (r Unique) applyColumn(column *Column) {
 	column.Unique = bool(r)
+}
+
+func (r Unique) isConstraint() bool {
+	return false
 }
 
 func (r Unique) applyIndex(index *Index) {
@@ -58,8 +67,14 @@ func (r Unique) applyIndex(index *Index) {
 type Required bool
 
 func (r Required) applyColumn(column *Column) {
-	column.Constr |= ColumnConstraintRequired
 	column.Required = bool(r)
+	if column.Op == SchemaAlter {
+		column.Constr = AlterColumnRequired
+	}
+}
+
+func (r Required) isConstraint() bool {
+	return true
 }
 
 // Unsigned sets integer column to be unsigned.
@@ -69,11 +84,19 @@ func (u Unsigned) applyColumn(column *Column) {
 	column.Unsigned = bool(u)
 }
 
+func (r Unsigned) isConstraint() bool {
+	return false
+}
+
 // Precision defines the precision for the decimal fields, representing the total number of digits in the number.
 type Precision int
 
 func (p Precision) applyColumn(column *Column) {
 	column.Precision = int(p)
+}
+
+func (p Precision) isConstraint() bool {
+	return false
 }
 
 // Scale Defines the scale for the decimal fields, representing the number of digits after the decimal point.
@@ -83,13 +106,23 @@ func (s Scale) applyColumn(column *Column) {
 	column.Scale = int(s)
 }
 
+func (s Scale) isConstraint() bool {
+	return false
+}
+
 type defaultValue struct {
 	value any
 }
 
 func (d defaultValue) applyColumn(column *Column) {
-	column.Constr |= ColumnConstraintDefault
 	column.Default = d.value
+	if column.Op == SchemaAlter {
+		column.Constr = AlterColumnDefault
+	}
+}
+
+func (d defaultValue) isConstraint() bool {
+	return true
 }
 
 // Default allows to set a default value on the column.).
@@ -120,6 +153,10 @@ func (o Options) applyTable(table *Table) {
 
 func (o Options) applyColumn(column *Column) {
 	column.Options = string(o)
+}
+
+func (o Options) isConstraint() bool {
+	return false
 }
 
 func (o Options) applyIndex(index *Index) {

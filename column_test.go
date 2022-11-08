@@ -33,7 +33,6 @@ func TestCreateColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Constr:    ColumnConstraintType | ColumnConstraintRequired | ColumnConstraintDefault,
 		Options:   "options",
 	}, column)
 }
@@ -54,7 +53,6 @@ func TestRenameColumn(t *testing.T) {
 
 	assert.Equal(t, Column{
 		Op:        SchemaRename,
-		Constr:    ColumnConstraintRequired | ColumnConstraintDefault,
 		Name:      "add",
 		Rename:    "rename",
 		Required:  true,
@@ -83,7 +81,6 @@ func TestDropColumn(t *testing.T) {
 
 	assert.Equal(t, Column{
 		Op:        SchemaDrop,
-		Constr:    ColumnConstraintRequired | ColumnConstraintDefault,
 		Name:      "drop",
 		Required:  true,
 		Unsigned:  true,

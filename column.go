@@ -40,8 +40,6 @@ type ColumnConstraint uint16
 const (
 	// ColumnConstraintType that column type has changed.
 	ColumnConstraintType ColumnConstraint = 1 << iota
-	// ColumnConstraintUnique that column uniqueness has changed.
-	ColumnConstraintUnique
 	// ColumnConstraintUnique that column required has changed.
 	ColumnConstraintRequired
 	// ColumnConstraintDefault that column default value has changed.

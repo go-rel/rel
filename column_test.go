@@ -33,7 +33,7 @@ func TestCreateColumn(t *testing.T) {
 		Precision: 5,
 		Scale:     2,
 		Default:   0,
-		Constr:    ColumnConstraintType | ColumnConstraintUnique | ColumnConstraintRequired | ColumnConstraintDefault,
+		Constr:    ColumnConstraintType | ColumnConstraintRequired | ColumnConstraintDefault,
 		Options:   "options",
 	}, column)
 }

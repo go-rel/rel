@@ -47,7 +47,6 @@ func (r Primary) applyColumn(column *Column) {
 type Unique bool
 
 func (r Unique) applyColumn(column *Column) {
-	column.Constr |= ColumnConstraintUnique
 	column.Unique = bool(r)
 }
 

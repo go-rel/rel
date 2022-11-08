@@ -34,21 +34,36 @@ const (
 	Time ColumnType = "TIME"
 )
 
+// ColumnConstraint bit flags.
+type ColumnConstraint uint16
+
+const (
+	// ColumnConstraintType that column type has changed.
+	ColumnConstraintType ColumnConstraint = 1 << iota
+	// ColumnConstraintUnique that column uniqueness has changed.
+	ColumnConstraintUnique
+	// ColumnConstraintUnique that column required has changed.
+	ColumnConstraintRequired
+	// ColumnConstraintDefault that column default value has changed.
+	ColumnConstraintDefault
+)
+
 // Column definition.
 type Column struct {
-	Op        SchemaOp
-	Name      string
-	Type      ColumnType
-	Rename    string
-	Primary   bool
-	Unique    bool
-	Required  bool
-	Unsigned  bool
-	Limit     int
-	Precision int
-	Scale     int
-	Default   any
-	Options   string
+	Op          SchemaOp
+	Name        string
+	Type        ColumnType
+	Rename      string
+	AlterConstr ColumnConstraint
+	Primary     bool
+	Unique      bool
+	Required    bool
+	Unsigned    bool
+	Limit       int
+	Precision   int
+	Scale       int
+	Default     any
+	Options     string
 }
 
 func (Column) internalTableDefinition() {}
@@ -75,11 +90,22 @@ func renameColumn(name string, newName string, options []ColumnOption) Column {
 	return column
 }
 
-func alterColumn(name string, typ ColumnType, options []ColumnOption) Column {
+func alterColumnType(name string, typ ColumnType, options []ColumnOption) Column {
+	column := Column{
+		Op:          SchemaAlter,
+		Name:        name,
+		Type:        typ,
+		AlterConstr: ColumnConstraintType,
+	}
+
+	applyColumnOptions(&column, options)
+	return column
+}
+
+func alterColumnConstraints(name string, options []ColumnOption) Column {
 	column := Column{
 		Op:   SchemaAlter,
 		Name: name,
-		Type: typ,
 	}
 
 	applyColumnOptions(&column, options)

@@ -47,6 +47,7 @@ func (r Primary) applyColumn(column *Column) {
 type Unique bool
 
 func (r Unique) applyColumn(column *Column) {
+	column.AlterConstr |= ColumnConstraintUnique
 	column.Unique = bool(r)
 }
 
@@ -58,6 +59,7 @@ func (r Unique) applyIndex(index *Index) {
 type Required bool
 
 func (r Required) applyColumn(column *Column) {
+	column.AlterConstr |= ColumnConstraintRequired
 	column.Required = bool(r)
 }
 
@@ -87,6 +89,7 @@ type defaultValue struct {
 }
 
 func (d defaultValue) applyColumn(column *Column) {
+	column.AlterConstr |= ColumnConstraintDefault
 	column.Default = d.value
 }
 

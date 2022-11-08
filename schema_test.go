@@ -118,16 +118,30 @@ func TestSchema_AddColumn(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
-func TestSchema_AlterColumn(t *testing.T) {
+func TestSchema_AlterColumnType(t *testing.T) {
 	var schema Schema
 
-	schema.AlterColumn("products", "description", "", Default("test"))
+	schema.AlterColumnType("products", "description", String, Limit(100))
 
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: "", Op: SchemaAlter, Default: "test"},
+			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, AlterConstr: ColumnConstraintType},
+		},
+	}, schema.Migrations[0])
+}
+
+func TestSchema_AlterColumnConstraints(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumnConstraints("products", "description", Required(true), Default("<no description>"))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Op: SchemaAlter, Required: true, Default: "<no description>", AlterConstr: ColumnConstraintRequired | ColumnConstraintDefault},
 		},
 	}, schema.Migrations[0])
 }

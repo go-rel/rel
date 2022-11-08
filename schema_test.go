@@ -118,16 +118,30 @@ func TestSchema_AddColumn(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
-func TestSchema_AlterColumnType(t *testing.T) {
+func TestSchema_AlterColumnTypeString(t *testing.T) {
 	var schema Schema
 
-	schema.AlterColumnType("products", "description", String, Limit(100))
+	schema.AlterColumnType("products", "description", String, Limit(100), Unique(false), Primary(false))
 
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
 			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, Constr: AlterColumnType},
+		},
+	}, schema.Migrations[0])
+}
+
+func TestSchema_AlterColumnTypeNumber(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumnType("products", "description", Decimal, Scale(10), Precision(2), Unsigned(true), Options(""))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Type: Decimal, Op: SchemaAlter, Scale: 10, Precision: 2, Unsigned: true, Constr: AlterColumnType},
 		},
 	}, schema.Migrations[0])
 }

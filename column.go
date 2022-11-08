@@ -50,20 +50,20 @@ const (
 
 // Column definition.
 type Column struct {
-	Op          SchemaOp
-	Name        string
-	Type        ColumnType
-	Rename      string
-	AlterConstr ColumnConstraint
-	Primary     bool
-	Unique      bool
-	Required    bool
-	Unsigned    bool
-	Limit       int
-	Precision   int
-	Scale       int
-	Default     any
-	Options     string
+	Op        SchemaOp
+	Constr    ColumnConstraint
+	Name      string
+	Type      ColumnType
+	Rename    string
+	Primary   bool
+	Unique    bool
+	Required  bool
+	Unsigned  bool
+	Limit     int
+	Precision int
+	Scale     int
+	Default   any
+	Options   string
 }
 
 func (Column) internalTableDefinition() {}
@@ -92,10 +92,10 @@ func renameColumn(name string, newName string, options []ColumnOption) Column {
 
 func alterColumnType(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
-		Op:          SchemaAlter,
-		Name:        name,
-		Type:        typ,
-		AlterConstr: ColumnConstraintType,
+		Op:     SchemaAlter,
+		Name:   name,
+		Type:   typ,
+		Constr: ColumnConstraintType,
 	}
 
 	applyColumnOptions(&column, options)

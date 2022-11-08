@@ -127,7 +127,7 @@ func TestSchema_AlterColumnType(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, AlterConstr: ColumnConstraintType},
+			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, Constr: ColumnConstraintType},
 		},
 	}, schema.Migrations[0])
 }
@@ -141,7 +141,7 @@ func TestSchema_AlterColumnConstraints(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Op: SchemaAlter, Required: true, Default: "<no description>", AlterConstr: ColumnConstraintRequired | ColumnConstraintDefault},
+			Column{Name: "description", Op: SchemaAlter, Required: true, Default: "<no description>", Constr: ColumnConstraintRequired | ColumnConstraintDefault},
 		},
 	}, schema.Migrations[0])
 }

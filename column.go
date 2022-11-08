@@ -70,9 +70,10 @@ func (Column) internalTableDefinition() {}
 
 func createColumn(name string, typ ColumnType, options []ColumnOption) Column {
 	column := Column{
-		Op:   SchemaCreate,
-		Name: name,
-		Type: typ,
+		Op:     SchemaCreate,
+		Name:   name,
+		Type:   typ,
+		Constr: ColumnConstraintType,
 	}
 
 	applyColumnOptions(&column, options)

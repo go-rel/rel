@@ -33,9 +33,9 @@ func TestSchema_CreateTable(t *testing.T) {
 		Op:   SchemaCreate,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID, Primary: true},
-			Column{Name: "name", Type: String},
-			Column{Name: "description", Type: Text},
+			Column{Name: "id", Type: ID, Primary: true, Constr: ColumnConstraintType},
+			Column{Name: "name", Type: String, Constr: ColumnConstraintType},
+			Column{Name: "description", Type: Text, Constr: ColumnConstraintType},
 		},
 	}, schema.Migrations[0])
 
@@ -48,7 +48,7 @@ func TestSchema_CreateTable(t *testing.T) {
 		Name:     "wishlists",
 		Optional: true,
 		Definitions: []TableDefinition{
-			Column{Name: "id", Type: ID, Primary: true},
+			Column{Name: "id", Type: ID, Primary: true, Constr: ColumnConstraintType},
 		},
 	}, schema.Migrations[1])
 
@@ -67,7 +67,7 @@ func TestSchema_AlterTable(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "users",
 		Definitions: []TableDefinition{
-			Column{Name: "verified", Type: Bool, Op: SchemaCreate},
+			Column{Name: "verified", Type: Bool, Op: SchemaCreate, Constr: ColumnConstraintType},
 			Column{Name: "name", Rename: "fullname", Op: SchemaRename},
 		},
 	}, schema.Migrations[0])
@@ -113,7 +113,7 @@ func TestSchema_AddColumn(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: String, Op: SchemaCreate},
+			Column{Name: "description", Type: String, Op: SchemaCreate, Constr: ColumnConstraintType},
 		},
 	}, schema.Migrations[0])
 }

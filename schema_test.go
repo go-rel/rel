@@ -127,7 +127,7 @@ func TestSchema_AlterColumnTypeString(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, Constr: AlterColumnType},
+			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, AlterMode: AlterColumnType},
 		},
 	}, schema.Migrations[0])
 }
@@ -141,22 +141,22 @@ func TestSchema_AlterColumnTypeNumber(t *testing.T) {
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Type: Decimal, Op: SchemaAlter, Scale: 10, Precision: 2, Unsigned: true, Constr: AlterColumnType},
+			Column{Name: "description", Type: Decimal, Op: SchemaAlter, Scale: 10, Precision: 2, Unsigned: true, AlterMode: AlterColumnType},
 		},
 	}, schema.Migrations[0])
 }
 
-func TestSchema_AlterColumnConstraints(t *testing.T) {
+func TestSchema_AlterColumn(t *testing.T) {
 	var schema Schema
 
-	schema.AlterColumnConstraints("products", "description", Required(true), Default("<no description>"))
+	schema.AlterColumn("products", "description", Required(true), Default("<no description>"))
 
 	assert.Equal(t, Table{
 		Op:   SchemaAlter,
 		Name: "products",
 		Definitions: []TableDefinition{
-			Column{Name: "description", Op: SchemaAlter, Required: true, Constr: AlterColumnRequired},
-			Column{Name: "description", Op: SchemaAlter, Default: "<no description>", Constr: AlterColumnDefault},
+			Column{Name: "description", Op: SchemaAlter, Required: true, AlterMode: AlterColumnRequired},
+			Column{Name: "description", Op: SchemaAlter, Default: "<no description>", AlterMode: AlterColumnDefault},
 		},
 	}, schema.Migrations[0])
 }

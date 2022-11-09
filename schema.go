@@ -88,10 +88,10 @@ func (s *Schema) AlterColumnType(table string, name string, typ ColumnType, opti
 	s.add(at.Table)
 }
 
-// AlterColumnConstraints with name.
-func (s *Schema) AlterColumnConstraints(table string, name string, options ...ColumnOption) {
+// AlterColumn with name.
+func (s *Schema) AlterColumn(table string, name string, options ...ColumnOption) {
 	at := alterTable(table, nil)
-	at.AlterColumnConstraints(name, options...)
+	at.AlterColumn(name, options...)
 	s.add(at.Table)
 }
 

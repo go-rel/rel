@@ -144,9 +144,9 @@ func (at *AlterTable) AlterColumnType(name string, typ ColumnType, options ...Co
 	}
 }
 
-// AlterColumnConstraints with name.
-func (at *AlterTable) AlterColumnConstraints(name string, options ...ColumnOption) {
-	defs := alterColumnConstraints(name, options)
+// AlterColumn with name.
+func (at *AlterTable) AlterColumn(name string, options ...ColumnOption) {
+	defs := alterColumn(name, options)
 	for _, def := range defs {
 		at.Definitions = append(at.Definitions, def)
 	}

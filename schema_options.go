@@ -69,7 +69,7 @@ type Required bool
 func (r Required) applyColumn(column *Column) {
 	column.Required = bool(r)
 	if column.Op == SchemaAlter {
-		column.Constr = AlterColumnRequired
+		column.AlterMode = AlterColumnRequired
 	}
 }
 
@@ -117,7 +117,7 @@ type defaultValue struct {
 func (d defaultValue) applyColumn(column *Column) {
 	column.Default = d.value
 	if column.Op == SchemaAlter {
-		column.Constr = AlterColumnDefault
+		column.AlterMode = AlterColumnDefault
 	}
 }
 

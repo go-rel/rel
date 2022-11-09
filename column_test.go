@@ -76,17 +76,17 @@ func TestAlterColumn(t *testing.T) {
 
 	assert.Equal(t, []Column{
 		{
-			Op:     SchemaAlter,
-			Constr: AlterColumnType,
-			Type:   String,
-			Name:   "alter",
-			Limit:  1000,
+			Op:        SchemaAlter,
+			AlterMode: AlterColumnType,
+			Type:      String,
+			Name:      "alter",
+			Limit:     1000,
 		},
 		{
-			Op:       SchemaAlter,
-			Constr:   AlterColumnRequired,
-			Name:     "alter",
-			Required: true,
+			Op:        SchemaAlter,
+			AlterMode: AlterColumnRequired,
+			Name:      "alter",
+			Required:  true,
 		},
 	}, columns)
 }

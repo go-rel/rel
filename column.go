@@ -106,7 +106,7 @@ func alterColumnType(name string, typ ColumnType, options []ColumnOption) []Colu
 }
 
 func alterColumn(name string, options []ColumnOption) []Column {
-	constrs := make([]Column, 0, len(options))
+	columns := make([]Column, 0, len(options))
 	for _, option := range options {
 		if !option.isConstraint() {
 			continue
@@ -116,9 +116,9 @@ func alterColumn(name string, options []ColumnOption) []Column {
 			Name: name,
 		}
 		option.applyColumn(&column)
-		constrs = append(constrs, column)
+		columns = append(columns, column)
 	}
-	return constrs
+	return columns
 }
 
 func dropColumn(name string, options []ColumnOption) Column {

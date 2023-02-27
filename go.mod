@@ -3,7 +3,7 @@ module github.com/go-rel/rel
 require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
 
 require (

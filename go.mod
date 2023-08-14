@@ -1,9 +1,11 @@
 module github.com/go-rel/rel
 
+go 1.20
+
 require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
@@ -14,5 +16,3 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-go 1.19

@@ -272,6 +272,33 @@ func (d *Document) Add() *Document {
 	return d
 }
 
+// CreateDocument returns new document with zero values.
+func (d Document) CreateDocument() *Document {
+	return newZeroDocument(d.rt)
+}
+
+// Append is alias for Assign for compatibility with internal slice interface
+func (d *Document) Append(o *Document) {
+	d.Assign(o)
+}
+
+// Assign document value to this document.
+func (d *Document) Assign(o *Document) {
+	if d.rt != o.rt {
+		panic("rel: can't assign document of different type")
+	}
+
+	if d.rv.Kind() == reflect.Ptr && d.rv.IsNil() {
+		d.rv.Set(o.rv.Addr())
+		d.rv = d.rv.Elem()
+	} else {
+		d.rv.Set(o.rv)
+	}
+
+	d.meta = o.meta
+	d.v = o.v
+}
+
 // Get always returns this document, this is a noop for compatibility with collection.
 func (d *Document) Get(index int) *Document {
 	return d
@@ -335,4 +362,15 @@ func newDocument(v any, rv reflect.Value, readonly bool) *Document {
 		rt:   rt,
 		meta: getDocumentMeta(rt, false),
 	}
+}
+
+func newZeroDocument(rt reflect.Type) *Document {
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
+
+	rv := reflect.New(rt)
+	rv.Elem().Set(reflect.Zero(rt))
+
+	return NewDocument(rv)
 }

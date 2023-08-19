@@ -154,7 +154,7 @@ func (c Collection) CreateDocument() *Document {
 
 // Append new document into collection.
 func (c Collection) Append(doc *Document) {
-	if c.rt.Elem().Kind() == reflect.Pointer {
+	if c.rt.Elem().Kind() == reflect.Ptr {
 		c.rv.Set(reflect.Append(c.rv, doc.rv.Addr()))
 	} else {
 		c.rv.Set(reflect.Append(c.rv, doc.rv))

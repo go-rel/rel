@@ -90,9 +90,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][
 		}
 
 		key, found := doc.Value(keyField)
-		if !found {
-			panic("rel: key field not found")
-		}
+		mustTrue(found, "rel: key field not found")
 
 		for _, col := range cols[key] {
 			col.Append(doc)

@@ -1,7 +1,6 @@
 package rel
 
 import (
-	"database/sql"
 	"reflect"
 )
 
@@ -63,48 +62,42 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][
 		return err
 	}
 
-	var (
-		found       = false
-		keyValue    = reflect.New(keyType)
-		keyScanners = make([]any, len(fields))
-	)
-
-	for i, field := range fields {
+	keyFound := false
+	for _, field := range fields {
 		if keyField == field {
-			found = true
-			keyScanners[i] = keyValue.Interface()
-		} else {
-			// need to create distinct copies
-			// otherwise next scan result will be corrupted
-			keyScanners[i] = &sql.RawBytes{}
+			keyFound = true
 		}
 	}
 
-	if !found && fields != nil {
+	if !keyFound && fields != nil {
 		panic("rel: primary key row does not exists")
+	}
+
+	var doc *Document
+	for k := range cols {
+		for _, col := range cols[k] {
+			doc = col.CreateDocument()
+			break
+		}
+		break
 	}
 
 	// scan the result
 	for cur.Next() {
 		// scan key
-		if err := cur.Scan(keyScanners...); err != nil {
+		if err := cur.Scan(doc.Scanners(fields)...); err != nil {
 			return err
 		}
 
-		var (
-			key = reflect.Indirect(keyValue).Interface()
-		)
+		key, found := doc.Value(keyField)
+		mustTrue(found, "rel: key field not found")
 
 		for _, col := range cols[key] {
-			var (
-				doc      = col.Add()
-				scanners = doc.Scanners(fields)
-			)
-
-			if err := cur.Scan(scanners...); err != nil {
-				return err
-			}
+			col.Append(doc)
 		}
+
+		// create new doc for next scan
+		doc = doc.CreateDocument()
 	}
 
 	return nil

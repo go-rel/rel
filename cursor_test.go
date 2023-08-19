@@ -58,9 +58,13 @@ func (tc *testCursor) MockScan(ret ...any) *mock.Call {
 		Return(func(scanners ...any) error {
 			for i := 0; i < len(scanners); i++ {
 				if v, ok := scanners[i].(sql.Scanner); ok {
-					v.Scan(ret[i])
+					if err := v.Scan(ret[i]); err != nil {
+						return err
+					}
 				} else {
-					convertAssign(scanners[i], ret[i])
+					if err := convertAssign(scanners[i], ret[i]); err != nil {
+						return err
+					}
 				}
 			}
 
@@ -192,8 +196,8 @@ func TestScanMulti(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.MockScan(10, "Del Piero", nil, now, nil).Times(3)
-	cur.MockScan(11, "Nedved", 46, now, now).Twice()
+	cur.MockScan(10, "Del Piero", nil, now, nil).Once()
+	cur.MockScan(11, "Nedved", 46, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))
@@ -237,7 +241,6 @@ func TestScanMulti_scanError(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Once()
-	cur.MockScan(11, "Nedved", 46, Now, Now).Once()
 	cur.On("Scan", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(err).Once()
 
 	assert.Equal(t, err, scanMulti(cur, keyField, keyType, cols))
@@ -324,8 +327,8 @@ func TestScanMulti_multipleTimes(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.MockScan(10, "Del Piero", nil, now, nil).Times(3)
-	cur.MockScan(11, "Nedved", 46, now, now).Twice()
+	cur.MockScan(10, "Del Piero", nil, now, nil).Once()
+	cur.MockScan(11, "Nedved", 46, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))
@@ -360,8 +363,8 @@ func TestScanMulti_multipleTimes(t *testing.T) {
 	cur.On("Fields").Return([]string{"id", "name", "age", "created_at", "updated_at"}, nil).Once()
 
 	cur.On("Next").Return(true).Twice()
-	cur.MockScan(12, "Linus Torvalds", 52, now, nil).Times(3)
-	cur.MockScan(13, "Tim Cook", 61, now, now).Twice()
+	cur.MockScan(12, "Linus Torvalds", 52, now, nil).Once()
+	cur.MockScan(13, "Tim Cook", 61, now, now).Once()
 	cur.On("Next").Return(false).Once()
 
 	assert.Nil(t, scanMulti(cur, keyField, keyType, cols))

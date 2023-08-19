@@ -17,7 +17,7 @@ func TestMust(t *testing.T) {
 
 func TestMustTrue(t *testing.T) {
 	assert.Panics(t, func() {
-		mustTrue(true, "error")
+		mustTrue(false, "error")
 	})
 }
 

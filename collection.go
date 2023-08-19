@@ -7,7 +7,6 @@ import (
 type slice interface {
 	table
 	Reset()
-	Add() *Document
 	CreateDocument() *Document
 	Append(doc *Document)
 	Get(index int) *Document
@@ -144,19 +143,8 @@ func (c Collection) Reset() {
 
 // Add new document into collection.
 func (c Collection) Add() *Document {
-	var (
-		index = c.Len()
-		typ   = c.rt.Elem()
-		drv   = reflect.Zero(typ)
-	)
-
-	if typ.Kind() == reflect.Ptr && drv.IsNil() {
-		drv = reflect.New(drv.Type().Elem())
-	}
-
-	c.rv.Set(reflect.Append(c.rv, drv))
-
-	return NewDocument(c.rvIndex(index).Addr())
+	c.Append(c.CreateDocument())
+	return c.Get(c.Len() - 1)
 }
 
 // CreateDocument returns new document with zero values.
@@ -166,7 +154,11 @@ func (c Collection) CreateDocument() *Document {
 
 // Append new document into collection.
 func (c Collection) Append(doc *Document) {
-	c.rv.Set(reflect.Append(c.rv, doc.rv))
+	if c.rt.Elem().Kind() == reflect.Pointer {
+		c.rv.Set(reflect.Append(c.rv, doc.rv.Addr()))
+	} else {
+		c.rv.Set(reflect.Append(c.rv, doc.rv))
+	}
 }
 
 // Truncate collection.

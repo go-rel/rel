@@ -261,17 +261,6 @@ func (d Document) association(name string) (Association, bool) {
 func (d Document) Reset() {
 }
 
-// Add returns this document.
-func (d *Document) Add() *Document {
-	// if d.rv is a null pointer, set it to a new struct.
-	if d.rv.Kind() == reflect.Ptr && d.rv.IsNil() {
-		d.rv.Set(reflect.New(d.rv.Type().Elem()))
-		d.rv = d.rv.Elem()
-	}
-
-	return d
-}
-
 // CreateDocument returns new document with zero values.
 func (d Document) CreateDocument() *Document {
 	return newZeroDocument(d.rt)
@@ -284,10 +273,6 @@ func (d *Document) Append(o *Document) {
 
 // Assign document value to this document.
 func (d *Document) Assign(o *Document) {
-	if d.rt != o.rt {
-		panic("rel: can't assign document of different type")
-	}
-
 	if d.rv.Kind() == reflect.Ptr && d.rv.IsNil() {
 		d.rv.Set(o.rv.Addr())
 		d.rv = d.rv.Elem()

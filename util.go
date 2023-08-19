@@ -35,7 +35,7 @@ func must(err error) {
 }
 
 func mustTrue(flag bool, msg string) {
-	if !flag {
+	if flag {
 		panic(msg)
 	}
 }

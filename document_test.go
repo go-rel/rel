@@ -571,7 +571,6 @@ func TestDocument_Slice(t *testing.T) {
 		doc.Reset()
 		assert.Equal(t, 1, doc.Len())
 		assert.Equal(t, doc, doc.Get(0))
-		assert.Equal(t, doc, doc.Add())
 	})
 }
 

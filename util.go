@@ -34,6 +34,12 @@ func must(err error) {
 	}
 }
 
+func mustTrue(flag bool, msg string) {
+	if !flag {
+		panic(msg)
+	}
+}
+
 type isZeroer interface {
 	IsZero() bool
 }

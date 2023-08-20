@@ -76,7 +76,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][
 	var doc *Document
 	for k := range cols {
 		for _, col := range cols[k] {
-			doc = col.CreateDocument()
+			doc = col.NewDocument()
 			break
 		}
 		break
@@ -97,7 +97,7 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][
 		}
 
 		// create new doc for next scan
-		doc = doc.CreateDocument()
+		doc = doc.NewDocument()
 	}
 
 	return nil

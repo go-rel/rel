@@ -261,8 +261,8 @@ func (d Document) association(name string) (Association, bool) {
 func (d Document) Reset() {
 }
 
-// CreateDocument returns new document with zero values.
-func (d Document) CreateDocument() *Document {
+// NewDocument returns new document with zero values.
+func (d Document) NewDocument() *Document {
 	return newZeroDocument(d.rt)
 }
 

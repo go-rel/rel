@@ -34,14 +34,14 @@ type Repository interface {
 	// Supported aggregate: count, sum, avg, max, min.
 	// Any select, group, offset, limit and sort query will be ignored automatically.
 	// If complex aggregation is needed, consider using All instead.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustAggregate(ctx context.Context, query Query, aggregate string, field string) int
 
 	// Count entities that match the query.
 	Count(ctx context.Context, collection string, queriers ...Querier) (int, error)
 
 	// MustCount entities that match the query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustCount(ctx context.Context, collection string, queriers ...Querier) int
 
 	// Find a entity that match the query.
@@ -56,7 +56,7 @@ type Repository interface {
 	FindAll(ctx context.Context, entities any, queriers ...Querier) error
 
 	// MustFindAll entities that match the query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustFindAll(ctx context.Context, entities any, queriers ...Querier)
 
 	// FindAndCountAll entities that match the query.
@@ -67,7 +67,7 @@ type Repository interface {
 	// MustFindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustFindAndCountAll(ctx context.Context, entities any, queriers ...Querier) int
 
 	// Insert a entity to database.
@@ -107,7 +107,7 @@ type Repository interface {
 	Delete(ctx context.Context, entity any, mutators ...Mutator) error
 
 	// MustDelete a entity.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustDelete(ctx context.Context, entity any, mutators ...Mutator)
 
 	// DeleteAll entities.
@@ -124,7 +124,7 @@ type Repository interface {
 	DeleteAny(ctx context.Context, query Query) (int, error)
 
 	// MustDeleteAny entities that match the query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	// Returns number of updated entities.
 	MustDeleteAny(ctx context.Context, query Query) int
 
@@ -135,7 +135,7 @@ type Repository interface {
 	Preload(ctx context.Context, entities any, field string, queriers ...Querier) error
 
 	// MustPreload association with given query.
-	// This function can accepts either a struct or a slice of structs.
+	// This function can accept either a struct or a slice of structs.
 	// It'll panic if any error occurred.
 	MustPreload(ctx context.Context, entities any, field string, queriers ...Querier)
 

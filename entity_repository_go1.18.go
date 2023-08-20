@@ -27,14 +27,14 @@ type EntityRepository[T any] interface {
 	// Supported aggregate: count, sum, avg, max, min.
 	// Any select, group, offset, limit and sort query will be ignored automatically.
 	// If complex aggregation is needed, consider using All instead.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustAggregate(ctx context.Context, aggregate string, field string, queriers ...Querier) int
 
 	// Count entities that match the query.
 	Count(ctx context.Context, queriers ...Querier) (int, error)
 
 	// MustCount entities that match the query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustCount(ctx context.Context, queriers ...Querier) int
 
 	// Find a entity that match the query.
@@ -49,7 +49,7 @@ type EntityRepository[T any] interface {
 	FindAll(ctx context.Context, queriers ...Querier) ([]T, error)
 
 	// MustFindAll entities that match the query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustFindAll(ctx context.Context, queriers ...Querier) []T
 
 	// FindAndCountAll entities that match the query.
@@ -60,7 +60,7 @@ type EntityRepository[T any] interface {
 	// MustFindAndCountAll entities that match the query.
 	// This is a convenient method that combines FindAll and Count. It's useful when dealing with queries related to pagination.
 	// Limit and Offset property will be ignored when performing count query.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustFindAndCountAll(ctx context.Context, queriers ...Querier) ([]T, int)
 
 	// Insert a entity to database.
@@ -91,7 +91,7 @@ type EntityRepository[T any] interface {
 	Delete(ctx context.Context, entity *T, mutators ...Mutator) error
 
 	// MustDelete a entity.
-	// It'll panic if any error eccured.
+	// It'll panic if any error occurred.
 	MustDelete(ctx context.Context, entity *T, mutators ...Mutator)
 
 	// DeleteAll entities.

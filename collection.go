@@ -7,7 +7,7 @@ import (
 type slice interface {
 	table
 	Reset()
-	CreateDocument() *Document
+	NewDocument() *Document
 	Append(doc *Document)
 	Get(index int) *Document
 	Len() int
@@ -143,12 +143,12 @@ func (c Collection) Reset() {
 
 // Add new document into collection.
 func (c Collection) Add() *Document {
-	c.Append(c.CreateDocument())
+	c.Append(c.NewDocument())
 	return c.Get(c.Len() - 1)
 }
 
-// CreateDocument returns new document with zero values.
-func (c Collection) CreateDocument() *Document {
+// NewDocument returns new document with zero values.
+func (c Collection) NewDocument() *Document {
 	return newZeroDocument(c.rt.Elem())
 }
 

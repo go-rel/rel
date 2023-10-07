@@ -90,3 +90,8 @@ func (ta *testAdapter) Exec(ctx context.Context, stmt string, args []any) (int64
 	mockArgs := ta.Called(ctx, stmt, args)
 	return int64(mockArgs.Int(0)), int64(mockArgs.Int(1)), mockArgs.Error(2)
 }
+
+func (ta *testAdapter) Name() string {
+	args := ta.Called()
+	return args.String(0)
+}

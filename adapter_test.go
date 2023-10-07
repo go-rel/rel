@@ -91,7 +91,7 @@ func (ta *testAdapter) Exec(ctx context.Context, stmt string, args []any) (int64
 	return int64(mockArgs.Int(0)), int64(mockArgs.Int(1)), mockArgs.Error(2)
 }
 
-func (ta *testAdapter) DBType() string {
+func (ta *testAdapter) Name() string {
 	args := ta.Called()
 	return args.String(0)
 }

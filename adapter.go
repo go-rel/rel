@@ -6,7 +6,7 @@ import (
 
 // Adapter interface
 type Adapter interface {
-	DBType() string
+	Name() string
 	Close() error
 
 	Instrumentation(instrumenter Instrumenter)

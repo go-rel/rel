@@ -262,7 +262,7 @@ func TestDocument_IndexFieldEmbedded(t *testing.T) {
 	assert.Equal(t, index, doc.Index())
 }
 
-func TestDocument_EmbeddedNameConfict(t *testing.T) {
+func TestDocument_embeddedNameConfict(t *testing.T) {
 	type Embedded struct {
 		Name string
 	}
@@ -274,6 +274,37 @@ func TestDocument_EmbeddedNameConfict(t *testing.T) {
 	assert.Panics(t, func() {
 		NewDocument(&entity)
 	})
+}
+
+func TestDocument_embeddedNested(t *testing.T) {
+	type Base struct {
+		ID string
+	}
+
+	type Audited struct {
+		Base
+		CreatedAt time.Time
+		UpdatedAt time.Time
+	}
+	type Contact struct {
+		Audited
+		Name string
+	}
+
+	var (
+		contact Contact
+		doc     = NewDocument(&contact)
+		index   = map[string][]int{
+			"id":         {0, 0, 0},
+			"created_at": {0, 1},
+			"updated_at": {0, 2},
+			"name":       {1},
+		}
+	)
+
+	assert.Equal(t, index, doc.Index())
+	assert.Equal(t, []string{"id"}, doc.meta.primaryField)
+	assert.Equal(t, [][]int{{0, 0, 0}}, doc.meta.primaryIndex)
 }
 
 func TestDocument_Types(t *testing.T) {

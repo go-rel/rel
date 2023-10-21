@@ -99,8 +99,8 @@ func (cdm *cachedDocumentMeta) mergeEmbedded(other cachedDocumentMeta, indexPref
 	cdm.hasOne = appendWithPrefix(cdm.hasOne, other.hasOne, namePrefix)
 	cdm.hasMany = appendWithPrefix(cdm.hasMany, other.hasMany, namePrefix)
 	cdm.primaryField = appendWithPrefix(cdm.primaryField, other.primaryField, namePrefix)
-	for index := range other.primaryIndex {
-		cdm.primaryIndex = append(cdm.primaryIndex, append([]int{indexPrefix}, index))
+	for _, index := range other.primaryIndex {
+		cdm.primaryIndex = append(cdm.primaryIndex, append([]int{indexPrefix}, index...))
 	}
 	cdm.preload = appendWithPrefix(cdm.preload, other.preload, namePrefix)
 	cdm.flag |= other.flag

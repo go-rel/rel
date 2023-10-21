@@ -6,6 +6,7 @@ import (
 
 // Adapter interface
 type Adapter interface {
+	Name() string
 	Close() error
 
 	Instrumentation(instrumenter Instrumenter)

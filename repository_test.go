@@ -47,9 +47,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestRepository_Instrumentation(t *testing.T) {
-	var (
-		repo = repository{rootAdapter: &testAdapter{}}
-	)
+	repo := repository{rootAdapter: &testAdapter{}}
 
 	assert.Nil(t, repo.instrumenter)
 	assert.NotPanics(t, func() {
@@ -72,6 +70,18 @@ func TestRepository_Ping(t *testing.T) {
 	adapter.On("Ping").Return(nil).Once()
 
 	assert.Nil(t, repo.Ping(context.TODO()))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_AdapterName(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	adapter.On("Name").Return("test").Once()
+
+	assert.Equal(t, "test", repo.Adapter(context.TODO()).Name())
 	adapter.AssertExpectations(t)
 }
 

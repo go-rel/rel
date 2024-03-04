@@ -4025,6 +4025,94 @@ func TestRepository_Preload_scanErrors(t *testing.T) {
 	cur.AssertExpectations(t)
 }
 
+type ScheduledQuestion struct {
+	ID         int
+	QuestionID int
+	Question   *Question
+}
+
+type Question struct {
+	ID      int
+	Answers []Answers
+}
+
+type Answers struct {
+	ID         int
+	QuestionID int
+}
+
+func TestRepository_Preload_nestedWithDuplicatePtrBelongsTo(t *testing.T) {
+	var (
+		adapter            = &testAdapter{}
+		repo               = New(adapter)
+		scheduledQuestions = []ScheduledQuestion{}
+		cur                = &testCursor{}
+	)
+
+	{
+		adapter.On("Query", From("scheduled_questions")).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id", "question_id"}, nil).Once()
+		cur.On("Next").Return(true).Times(2)
+		cur.MockScan(1, 1).Once()
+		cur.MockScan(2, 1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.FindAll(context.TODO(), &scheduledQuestions))
+	}
+
+	{
+		adapter.On("Query", From("questions").Where(In("id", 1))).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id"}, nil).Once()
+		cur.On("Next").Return(true).Times(1)
+		cur.MockScan(1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.Preload(context.TODO(), &scheduledQuestions, "question"))
+	}
+
+	{
+		adapter.On("Query", From("answers").Where(In("question_id", 1))).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id", "question_id"}, nil).Once()
+		cur.On("Next").Return(true).Times(1)
+		cur.MockScan(1, 1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.Preload(context.TODO(), &scheduledQuestions, "question.answers"))
+	}
+
+	assert.Equal(t, []ScheduledQuestion{
+		{
+			ID:         1,
+			QuestionID: 1,
+			Question: &Question{
+				ID: 1,
+				Answers: []Answers{
+					{
+						ID:         1,
+						QuestionID: 1,
+					},
+				},
+			},
+		},
+		{
+			ID:         2,
+			QuestionID: 1,
+			Question: &Question{
+				ID: 1,
+				Answers: []Answers{
+					{
+						ID:         1,
+						QuestionID: 1,
+					},
+				},
+			},
+		},
+	}, scheduledQuestions)
+}
+
 func TestRepository_MustPreload(t *testing.T) {
 	var (
 		adapter     = &testAdapter{}

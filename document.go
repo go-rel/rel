@@ -266,6 +266,13 @@ func (d Document) NewDocument() *Document {
 	return newZeroDocument(d.rt)
 }
 
+// Copy returns copy of this document
+func (d Document) Copy() *Document {
+	rv := reflect.New(d.rt)
+	rv.Elem().Set(d.rv)
+	return NewDocument(rv)
+}
+
 // Append is alias for Assign for compatibility with internal slice interface
 func (d *Document) Append(o *Document) {
 	d.Assign(o)

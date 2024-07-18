@@ -41,3 +41,5 @@ jobs:
       - run: go test -race -tags=all -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Codecov
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

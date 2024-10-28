@@ -613,8 +613,13 @@ func (r repository) saveBelongsTo(cw contextWrapper, doc *Document, mutation *Mu
 
 			var (
 				rField = assoc.ReferenceField()
+				rValue = assoc.ReferenceValue()
 				fValue = assoc.ForeignValue()
 			)
+
+			if rValue == 0 {
+				rValue = fValue
+			}
 
 			mutation.Add(Set(rField, fValue))
 			doc.SetValue(rField, fValue)

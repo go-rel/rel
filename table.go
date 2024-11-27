@@ -136,6 +136,22 @@ func (at *AlterTable) RenameColumn(name string, newName string, options ...Colum
 	at.Definitions = append(at.Definitions, renameColumn(name, newName, options))
 }
 
+// AlterColumnType with name.
+func (at *AlterTable) AlterColumnType(name string, typ ColumnType, options ...ColumnOption) {
+	defs := alterColumnType(name, typ, options)
+	for _, def := range defs {
+		at.Definitions = append(at.Definitions, def)
+	}
+}
+
+// AlterColumn with name.
+func (at *AlterTable) AlterColumn(name string, options ...ColumnOption) {
+	defs := alterColumn(name, options)
+	for _, def := range defs {
+		at.Definitions = append(at.Definitions, def)
+	}
+}
+
 // DropColumn from this table.
 func (at *AlterTable) DropColumn(name string, options ...ColumnOption) {
 	at.Definitions = append(at.Definitions, dropColumn(name, options))

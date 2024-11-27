@@ -118,6 +118,49 @@ func TestSchema_AddColumn(t *testing.T) {
 	}, schema.Migrations[0])
 }
 
+func TestSchema_AlterColumnTypeString(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumnType("products", "description", String, Limit(100), Unique(false), Primary(false))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Type: String, Op: SchemaAlter, Limit: 100, AlterMode: AlterColumnType},
+		},
+	}, schema.Migrations[0])
+}
+
+func TestSchema_AlterColumnTypeNumber(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumnType("products", "description", Decimal, Scale(10), Precision(2), Unsigned(true), Options(""))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Type: Decimal, Op: SchemaAlter, Scale: 10, Precision: 2, Unsigned: true, AlterMode: AlterColumnType},
+		},
+	}, schema.Migrations[0])
+}
+
+func TestSchema_AlterColumn(t *testing.T) {
+	var schema Schema
+
+	schema.AlterColumn("products", "description", Required(true), Default("<no description>"))
+
+	assert.Equal(t, Table{
+		Op:   SchemaAlter,
+		Name: "products",
+		Definitions: []TableDefinition{
+			Column{Name: "description", Op: SchemaAlter, Required: true, AlterMode: AlterColumnRequired},
+			Column{Name: "description", Op: SchemaAlter, Default: "<no description>", AlterMode: AlterColumnDefault},
+		},
+	}, schema.Migrations[0])
+}
+
 func TestSchema_RenameColumn(t *testing.T) {
 	var schema Schema
 
@@ -218,9 +261,7 @@ func TestRaw_InternalTableDefinition(t *testing.T) {
 }
 
 func TestDo(t *testing.T) {
-	var (
-		schema Schema
-	)
+	var schema Schema
 
 	schema.Do(func(ctx context.Context, repo Repository) error { return nil })
 	assert.NotNil(t, schema.Migrations[0])

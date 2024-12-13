@@ -142,7 +142,7 @@ func (q *Query) AddPopulator(populator QueryPopulator) {
 
 // Select filter fields to be selected from database.
 func (q Query) Select(fields ...string) Query {
-	q.SelectQuery = NewSelect(fields...)
+	q.SelectQuery.Fields = append(q.SelectQuery.Fields, fields...)
 	return q
 }
 

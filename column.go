@@ -34,9 +34,22 @@ const (
 	Time ColumnType = "TIME"
 )
 
+// AlterColumnMode enum.
+type AlterColumnMode uint16
+
+const (
+	// AlterColumnType operation.
+	AlterColumnType AlterColumnMode = iota + 1
+	// AlterColumnRequired operation.
+	AlterColumnRequired
+	// AlterColumnDefault operation.
+	AlterColumnDefault
+)
+
 // Column definition.
 type Column struct {
 	Op        SchemaOp
+	AlterMode AlterColumnMode
 	Name      string
 	Type      ColumnType
 	Rename    string
@@ -73,6 +86,39 @@ func renameColumn(name string, newName string, options []ColumnOption) Column {
 
 	applyColumnOptions(&column, options)
 	return column
+}
+
+func alterColumnType(name string, typ ColumnType, options []ColumnOption) []Column {
+	column := Column{
+		Op:        SchemaAlter,
+		Name:      name,
+		Type:      typ,
+		AlterMode: AlterColumnType,
+	}
+	for _, option := range options {
+		if option.isConstraint() {
+			continue
+		}
+		option.applyColumn(&column)
+	}
+
+	return append([]Column{column}, alterColumn(name, options)...)
+}
+
+func alterColumn(name string, options []ColumnOption) []Column {
+	columns := make([]Column, 0, len(options))
+	for _, option := range options {
+		if !option.isConstraint() {
+			continue
+		}
+		column := Column{
+			Op:   SchemaAlter,
+			Name: name,
+		}
+		option.applyColumn(&column)
+		columns = append(columns, column)
+	}
+	return columns
 }
 
 func dropColumn(name string, options []ColumnOption) Column {

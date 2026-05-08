@@ -65,6 +65,32 @@ func TestRenameColumn(t *testing.T) {
 	}, column)
 }
 
+func TestAlterColumn(t *testing.T) {
+	var (
+		options = []ColumnOption{
+			Required(true),
+			Limit(1000),
+		}
+		columns = alterColumnType("alter", String, options)
+	)
+
+	assert.Equal(t, []Column{
+		{
+			Op:        SchemaAlter,
+			AlterMode: AlterColumnType,
+			Type:      String,
+			Name:      "alter",
+			Limit:     1000,
+		},
+		{
+			Op:        SchemaAlter,
+			AlterMode: AlterColumnRequired,
+			Name:      "alter",
+			Required:  true,
+		},
+	}, columns)
+}
+
 func TestDropColumn(t *testing.T) {
 	var (
 		options = []ColumnOption{

@@ -16,9 +16,7 @@ type QueryPopulator interface {
 
 // Build for given table using given queriers.
 func Build(table string, queriers ...Querier) Query {
-	var (
-		query = newQuery()
-	)
+	query := newQuery()
 
 	if len(queriers) > 0 {
 		_, query.empty = queriers[0].(Query)
@@ -255,9 +253,7 @@ func (q Query) Sort(fields ...string) Query {
 
 // SortAsc query.
 func (q Query) SortAsc(fields ...string) Query {
-	var (
-		offset = len(q.SortQuery)
-	)
+	offset := len(q.SortQuery)
 
 	q.SortQuery = append(q.SortQuery, make([]SortQuery, len(fields))...)
 	for i := range fields {
@@ -269,9 +265,7 @@ func (q Query) SortAsc(fields ...string) Query {
 
 // SortDesc query.
 func (q Query) SortDesc(fields ...string) Query {
-	var (
-		offset = len(q.SortQuery)
-	)
+	offset := len(q.SortQuery)
 
 	q.SortQuery = append(q.SortQuery, make([]SortQuery, len(fields))...)
 	for i := range fields {
@@ -536,6 +530,10 @@ func (l Limit) Build(query *Query) {
 
 func (l Limit) applyColumn(column *Column) {
 	column.Limit = int(l)
+}
+
+func (l Limit) isConstraint() bool {
+	return false
 }
 
 // Lock query.

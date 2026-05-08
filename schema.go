@@ -81,6 +81,31 @@ func (s *Schema) AddColumn(table string, name string, typ ColumnType, options ..
 	s.add(at.Table)
 }
 
+// AlterColumnType with name.
+//
+// Allows also changing other constraints like [rel.Default] and [rel.Required].
+//
+// WARNING: Not supported by SQLite driver.
+func (s *Schema) AlterColumnType(table string, name string, typ ColumnType, options ...ColumnOption) {
+	at := alterTable(table, nil)
+	at.AlterColumnType(name, typ, options...)
+	s.add(at.Table)
+}
+
+// AlterColumn with name.
+//
+// Only [rel.Default] and [rel.Required] are supported.
+// Support for underlying drivers might wary. For example PostgreSQL supports both,
+// while Microsoft SQL Server and MySQL/MariaDB only supports [rel.Default].
+// See [Schema.AlterColumnType] if other constraints need to be changed also.
+//
+// WARNING: Not supported by SQLite driver.
+func (s *Schema) AlterColumn(table string, name string, options ...ColumnOption) {
+	at := alterTable(table, nil)
+	at.AlterColumn(name, options...)
+	s.add(at.Table)
+}
+
 // RenameColumn by name.
 func (s *Schema) RenameColumn(table string, name string, newName string, options ...ColumnOption) {
 	at := alterTable(table, nil)

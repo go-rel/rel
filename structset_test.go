@@ -31,6 +31,20 @@ func BenchmarkStructset(b *testing.B) {
 	}
 }
 
+func BenchmarkStructset_forceCascade(b *testing.B) {
+	var (
+		user = User{
+			ID:        1,
+			UserRoles: []UserRole{},
+		}
+		doc = NewDocument(&user)
+	)
+
+	for n := 0; n < b.N; n++ {
+		Apply(doc, ForceCascade{"user_roles"}, NewStructset(&user, false))
+	}
+}
+
 func TestStructset(t *testing.T) {
 	var (
 		user = User{
@@ -235,4 +249,66 @@ func TestStructset_uuid(t *testing.T) {
 	)
 
 	assert.Equal(t, mutation, Apply(doc, NewStructset(&entity, false)))
+}
+
+func TestStructset_hasManyNotLoaded(t *testing.T) {
+	var (
+		user = User{
+			ID: 1,
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc, NewStructset(&user, false))
+	)
+
+	// nil collection is not loaded, hence it's not cascaded.
+	assert.Empty(t, mutation.Assoc)
+}
+
+func TestStructset_hasManyEmpty(t *testing.T) {
+	var (
+		user = User{
+			ID:        1,
+			UserRoles: []UserRole{},
+		}
+		doc      = NewDocument(&user)
+		mutation = Apply(doc, NewStructset(&user, false))
+	)
+
+	// empty collection is considered not loaded, hence it's not cascaded.
+	assert.Empty(t, mutation.Assoc)
+}
+
+func TestStructset_forceCascadeHasMany(t *testing.T) {
+	tests := []struct {
+		name string
+		user User
+	}{
+		{
+			name: "nil collection",
+			user: User{ID: 1},
+		},
+		{
+			name: "empty collection",
+			user: User{
+				ID:        1,
+				UserRoles: []UserRole{},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				doc      = NewDocument(&test.user)
+				mutation = Apply(doc, ForceCascade{"user_roles"}, NewStructset(&test.user, false))
+			)
+
+			// forced association is replaced with an empty one,
+			// so all existing records will be deleted on save.
+			assert.Contains(t, mutation.Assoc, "user_roles")
+			assert.Equal(t, []Mutation{}, mutation.Assoc["user_roles"].Mutations)
+			assert.Empty(t, mutation.Assoc["user_roles"].DeletedIDs)
+			assert.Equal(t, []UserRole{}, test.user.UserRoles)
+		})
+	}
 }

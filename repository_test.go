@@ -1861,6 +1861,74 @@ func TestRepository_Update_saveHasManyError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Update_hasManyNotLoaded(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	// nil collection is considered not loaded, so associated records
+	// are left untouched.
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        10,
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveHasManyForceCascade(t *testing.T) {
+	tests := []struct {
+		name string
+		user User
+	}{
+		{
+			name: "nil collection",
+			user: User{ID: 10},
+		},
+		{
+			name: "empty collection",
+			user: User{
+				ID:        10,
+				UserRoles: []UserRole{},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				adapter = &testAdapter{}
+				repo    = New(adapter)
+			)
+
+			// forced association is replaced with an empty one,
+			// so all existing records are deleted.
+			adapter.On("Begin").Return(nil).Once()
+			adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+			adapter.On("Delete", From("user_roles").Where(Eq("user_id", 10))).Return(1, nil).Once()
+			adapter.On("Commit").Return(nil).Once()
+
+			assert.Nil(t, repo.Update(context.TODO(), &test.user, ForceCascade{"user_roles"}))
+			assert.Equal(t, User{
+				ID:        10,
+				CreatedAt: Now(),
+				UpdatedAt: Now(),
+				UserRoles: []UserRole{},
+			}, test.user)
+
+			adapter.AssertExpectations(t)
+		})
+	}
+}
+
 func TestRepository_Update_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}

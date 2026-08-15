@@ -1201,7 +1201,13 @@ func (r repository) withDefaultScope(meta DocumentMeta, query Query, preload boo
 	}
 
 	if preload && bool(query.CascadeQuery) {
-		query.PreloadQuery = append(meta.preload, query.PreloadQuery...)
+		// Clone meta.preload to avoid data race
+		//
+		// The implementation for cloning a slice is the same as `slices.Clone` in go 1.23
+		// https://cs.opensource.google/go/go/+/refs/tags/go1.23.3:src/slices/slices.go;l=350
+		metaPreload := append(meta.preload[:0:0], meta.preload...)
+
+		query.PreloadQuery = append(metaPreload, query.PreloadQuery...)
 	}
 
 	return query

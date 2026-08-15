@@ -30,20 +30,18 @@ func BenchmarkSmallSliceLookup(b *testing.B) {
 
 func BenchmarkSmallMapLookup(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		var (
-			values = map[string]any{
-				"field1":  1,
-				"field2":  2,
-				"field3":  3,
-				"field4":  4,
-				"field5":  5,
-				"field6":  6,
-				"field7":  7,
-				"field8":  8,
-				"field9":  9,
-				"field10": 10,
-			}
-		)
+		values := map[string]any{
+			"field1":  1,
+			"field2":  2,
+			"field3":  3,
+			"field4":  4,
+			"field5":  5,
+			"field6":  6,
+			"field7":  7,
+			"field8":  8,
+			"field9":  9,
+			"field10": 10,
+		}
 		_ = values["fields10"]
 		_ = values
 	}
@@ -216,6 +214,7 @@ func TestChangeset_byte_slice(t *testing.T) {
 		}, Apply(doc, changeset))
 	})
 }
+
 func TestChangeset_ptr(t *testing.T) {
 	var (
 		userID  = 2
@@ -582,4 +581,24 @@ func TestChangeset_hasMany(t *testing.T) {
 			},
 		}, Apply(doc, changeset))
 	})
+}
+
+func TestChangeset_valueChanged_TimePanic(t *testing.T) {
+	type Entity struct {
+		Time *time.Time
+	}
+
+	now := time.Now()
+	entity := &Entity{
+		Time: &now,
+	}
+
+	changeset := NewChangeset(entity)
+
+	entity.Time = nil
+
+	changes := changeset.Changes() // no panic must be here
+	assert.Equal(t, map[string]any{
+		"time": pair{now, nil},
+	}, changes)
 }

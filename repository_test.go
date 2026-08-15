@@ -1861,6 +1861,74 @@ func TestRepository_Update_saveHasManyError(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Update_hasManyNotLoaded(t *testing.T) {
+	var (
+		user = User{
+			ID: 10,
+		}
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+	)
+
+	// nil collection is considered not loaded, so associated records
+	// are left untouched.
+	adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user))
+	assert.Equal(t, User{
+		ID:        10,
+		CreatedAt: Now(),
+		UpdatedAt: Now(),
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_saveHasManyForceCascade(t *testing.T) {
+	tests := []struct {
+		name string
+		user User
+	}{
+		{
+			name: "nil collection",
+			user: User{ID: 10},
+		},
+		{
+			name: "empty collection",
+			user: User{
+				ID:        10,
+				UserRoles: []UserRole{},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				adapter = &testAdapter{}
+				repo    = New(adapter)
+			)
+
+			// forced association is replaced with an empty one,
+			// so all existing records are deleted.
+			adapter.On("Begin").Return(nil).Once()
+			adapter.On("Update", From("users").Where(Eq("id", 10)), "id", mock.Anything).Return(1, nil).Once()
+			adapter.On("Delete", From("user_roles").Where(Eq("user_id", 10))).Return(1, nil).Once()
+			adapter.On("Commit").Return(nil).Once()
+
+			assert.Nil(t, repo.Update(context.TODO(), &test.user, ForceCascade{"user_roles"}))
+			assert.Equal(t, User{
+				ID:        10,
+				CreatedAt: Now(),
+				UpdatedAt: Now(),
+				UserRoles: []UserRole{},
+			}, test.user)
+
+			adapter.AssertExpectations(t)
+		})
+	}
+}
+
 func TestRepository_Update_nothing(t *testing.T) {
 	var (
 		adapter = &testAdapter{}
@@ -4023,6 +4091,94 @@ func TestRepository_Preload_scanErrors(t *testing.T) {
 
 	adapter.AssertExpectations(t)
 	cur.AssertExpectations(t)
+}
+
+type ScheduledQuestion struct {
+	ID         int
+	QuestionID int
+	Question   *Question
+}
+
+type Question struct {
+	ID      int
+	Answers []Answers
+}
+
+type Answers struct {
+	ID         int
+	QuestionID int
+}
+
+func TestRepository_Preload_nestedWithDuplicatePtrBelongsTo(t *testing.T) {
+	var (
+		adapter            = &testAdapter{}
+		repo               = New(adapter)
+		scheduledQuestions = []ScheduledQuestion{}
+		cur                = &testCursor{}
+	)
+
+	{
+		adapter.On("Query", From("scheduled_questions")).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id", "question_id"}, nil).Once()
+		cur.On("Next").Return(true).Times(2)
+		cur.MockScan(1, 1).Once()
+		cur.MockScan(2, 1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.FindAll(context.TODO(), &scheduledQuestions))
+	}
+
+	{
+		adapter.On("Query", From("questions").Where(In("id", 1))).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id"}, nil).Once()
+		cur.On("Next").Return(true).Times(1)
+		cur.MockScan(1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.Preload(context.TODO(), &scheduledQuestions, "question"))
+	}
+
+	{
+		adapter.On("Query", From("answers").Where(In("question_id", 1))).Return(cur, nil).Once()
+		cur.On("Close").Return(nil).Once()
+		cur.On("Fields").Return([]string{"id", "question_id"}, nil).Once()
+		cur.On("Next").Return(true).Times(1)
+		cur.MockScan(1, 1).Once()
+		cur.On("Next").Return(false).Once()
+
+		assert.Nil(t, repo.Preload(context.TODO(), &scheduledQuestions, "question.answers"))
+	}
+
+	assert.Equal(t, []ScheduledQuestion{
+		{
+			ID:         1,
+			QuestionID: 1,
+			Question: &Question{
+				ID: 1,
+				Answers: []Answers{
+					{
+						ID:         1,
+						QuestionID: 1,
+					},
+				},
+			},
+		},
+		{
+			ID:         2,
+			QuestionID: 1,
+			Question: &Question{
+				ID: 1,
+				Answers: []Answers{
+					{
+						ID:         1,
+						QuestionID: 1,
+					},
+				},
+			},
+		},
+	}, scheduledQuestions)
 }
 
 func TestRepository_MustPreload(t *testing.T) {

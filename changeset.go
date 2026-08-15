@@ -18,13 +18,17 @@ type Changeset struct {
 	assocMany map[string]map[any]Changeset
 }
 
-func (c Changeset) valueChanged(typ reflect.Type, old any, new any) bool {
+func (c Changeset) valueChanged(typ reflect.Type, old, new any) bool {
 	if oeq, ok := old.(interface{ Equal(any) bool }); ok {
 		return !oeq.Equal(new)
 	}
 
 	if ot, ok := old.(time.Time); ok {
-		return !ot.Equal(new.(time.Time))
+		nt, ok := new.(time.Time)
+		if !ok {
+			return true
+		}
+		return !ot.Equal(nt)
 	}
 
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
@@ -59,9 +63,7 @@ func (c Changeset) Changes() map[string]any {
 
 // Apply mutation.
 func (c Changeset) Apply(doc *Document, mut *Mutation) {
-	var (
-		t = Now()
-	)
+	t := Now()
 
 	for i, field := range c.doc.Fields() {
 		var (

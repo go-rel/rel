@@ -1,5 +1,5 @@
-//go:build !go118
-// +build !go118
+//go:build !go1.18
+// +build !go1.18
 
 package rel_test
 

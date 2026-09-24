@@ -33,6 +33,9 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 		switch field {
 		case "created_at", "inserted_at":
 			if doc.Flag(HasCreatedAt) {
+				if mut.SetCreatedAt != nil && !*mut.SetCreatedAt {
+					continue
+				}
 				if value, ok := doc.Value(field); ok && value.(time.Time).IsZero() {
 					s.set(doc, mut, field, t, true)
 					continue
@@ -40,6 +43,9 @@ func (s Structset) Apply(doc *Document, mut *Mutation) {
 			}
 		case "updated_at":
 			if doc.Flag(HasUpdatedAt) {
+				if mut.SetUpdatedAt != nil && !*mut.SetUpdatedAt {
+					continue
+				}
 				s.set(doc, mut, field, t, true)
 				continue
 			}

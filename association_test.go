@@ -375,3 +375,33 @@ func TestAssociation_fkNotFound(t *testing.T) {
 		NewDocument(&Beta{})
 	})
 }
+
+func TestAssociation_Collection_ptrSlice(t *testing.T) {
+	t.Run("unloaded", func(t *testing.T) {
+		transaction := &Transaction{ID: 1}
+		rv := reflect.ValueOf(transaction)
+		sf, _ := rv.Type().Elem().FieldByName("Histories")
+		assoc := newAssociation(rv, sf.Index)
+
+		assert.True(t, assoc.IsZero())
+		col, loaded := assoc.Collection()
+		assert.False(t, loaded)
+		assert.NotNil(t, col)
+		assert.Equal(t, 0, col.Len())
+		assert.NotNil(t, transaction.Histories)
+	})
+
+	t.Run("loaded", func(t *testing.T) {
+		histories := []History{{ID: 10, TransactionID: 1}}
+		transaction := &Transaction{ID: 1, Histories: &histories}
+		rv := reflect.ValueOf(transaction)
+		sf, _ := rv.Type().Elem().FieldByName("Histories")
+		assoc := newAssociation(rv, sf.Index)
+
+		assert.False(t, assoc.IsZero())
+		col, loaded := assoc.Collection()
+		assert.True(t, loaded)
+		assert.NotNil(t, col)
+		assert.Equal(t, 1, col.Len())
+	})
+}

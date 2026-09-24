@@ -497,6 +497,20 @@ func (r repository) Update(ctx context.Context, entity any, mutators ...Mutator)
 	return r.update(cw, doc, mutation, filter)
 }
 
+func (r repository) isUpdateEmpty(doc *Document, mutation Mutation) bool {
+	if len(doc.meta.primaryField) == 1 {
+		pField := doc.PrimaryField()
+		for field := range mutation.Mutates {
+			if field != pField {
+				return false
+			}
+		}
+		return true
+	}
+
+	return mutation.IsMutatesEmpty()
+}
+
 func (r repository) lockVersion(doc Document, unscoped Unscoped) (int, bool) {
 	if unscoped {
 		return 0, false
@@ -516,7 +530,7 @@ func (r repository) update(cw contextWrapper, doc *Document, mutation Mutation, 
 		}
 	}
 
-	if !mutation.IsMutatesEmpty() {
+	if !r.isUpdateEmpty(doc, mutation) {
 		if err := r.applyMutates(cw, doc, mutation, filter); err != nil {
 			return err
 		}

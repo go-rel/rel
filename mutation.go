@@ -15,6 +15,24 @@ func Apply(doc *Document, mutators ...Mutator) Mutation {
 	return applyMutators(doc, true, true, mutators...)
 }
 
+// SetCreatedAt enables or disables automatic created_at timestamp assignment.
+type SetCreatedAt bool
+
+// Apply mutation.
+func (s SetCreatedAt) Apply(doc *Document, mutation *Mutation) {
+	val := bool(s)
+	mutation.SetCreatedAt = &val
+}
+
+// SetUpdatedAt enables or disables automatic updated_at timestamp assignment.
+type SetUpdatedAt bool
+
+// Apply mutation.
+func (s SetUpdatedAt) Apply(doc *Document, mutation *Mutation) {
+	val := bool(s)
+	mutation.SetUpdatedAt = &val
+}
+
 // apply given mutators with customized default values
 func applyMutators(doc *Document, cascade, applyStructset bool, mutators ...Mutator) Mutation {
 	var (
@@ -28,7 +46,7 @@ func applyMutators(doc *Document, cascade, applyStructset bool, mutators ...Muta
 
 	for i := range mutators {
 		switch mut := mutators[i].(type) {
-		case Unscoped, Reload, Cascade, OnConflict, ForceCascade:
+		case Unscoped, Reload, Cascade, OnConflict, ForceCascade, SetCreatedAt, SetUpdatedAt:
 			optionsCount++
 			mut.Apply(doc, &mutation)
 		default:
@@ -61,6 +79,8 @@ type Mutation struct {
 	Cascade      Cascade
 	ForceCascade ForceCascade
 	ErrorFunc    ErrorFunc
+	SetCreatedAt *bool
+	SetUpdatedAt *bool
 }
 
 func (m *Mutation) initMutates() {

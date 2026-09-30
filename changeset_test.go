@@ -602,3 +602,59 @@ func TestChangeset_valueChanged_TimePanic(t *testing.T) {
 		"time": pair{now, nil},
 	}, changes)
 }
+
+func TestChangeset_notMutatingNilAssociations(t *testing.T) {
+	type Address struct {
+		ID     int
+		UserID int
+	}
+
+	type UserWithPtr struct {
+		ID        int
+		Address   *Address   `ref:"address_id" fk:"id"`
+		AddressID *int
+		Addresses []*Address `ref:"id" fk:"user_id"`
+		Histories *[]Address `ref:"id" fk:"user_id"`
+	}
+
+	user := UserWithPtr{
+		ID:        1,
+		Address:   nil,
+		Addresses: nil,
+		Histories: nil,
+	}
+
+	changeset := NewChangeset(&user)
+
+	// Verify NewChangeset does not mutate nil associations.
+	assert.Nil(t, user.Address)
+	assert.Nil(t, user.Addresses)
+	assert.Nil(t, user.Histories)
+
+	// Apply the changeset to exercise buildChanges -> buildChangesAssocMany
+	// with nil associations, ensuring those code paths are covered.
+	doc := NewDocument(&user)
+	mutation := Apply(doc, changeset)
+
+	// The mutation should be valid and not panic.
+	assert.NotNil(t, mutation)
+	assert.Nil(t, user.Address)
+	assert.Nil(t, user.Addresses)
+	assert.Nil(t, user.Histories)
+}
+
+func TestChangeset_immutableNilField(t *testing.T) {
+	type Inner struct {
+		ID [1]byte `db:",primary"`
+	}
+
+	s := struct {
+		ID    [1]byte `db:",primary"`
+		Value *Inner  `ref:"id" fk:"id"`
+	}{}
+
+	assert.Nil(t, s.Value)
+	changeset := NewChangeset(&s)
+	assert.Nil(t, s.Value)
+	assert.Len(t, changeset.Changes(), 0)
+}

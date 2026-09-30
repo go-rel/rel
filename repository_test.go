@@ -1344,6 +1344,65 @@ func TestRepository_Update_compositePrimaryKeys(t *testing.T) {
 	adapter.AssertExpectations(t)
 }
 
+func TestRepository_Update_setCreatedAtFalse(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{
+			ID:   1,
+			Name: "name",
+		}
+		mutates = map[string]Mutate{
+			"id":         Set("id", 1),
+			"name":       Set("name", "name"),
+			"age":        Set("age", 0),
+			"updated_at": Set("updated_at", Now()),
+		}
+		queries = From("users").Where(Eq("id", user.ID))
+	)
+
+	adapter.On("Update", queries, "id", mutates).Return(1, nil).Once()
+
+	assert.Nil(t, repo.Update(context.TODO(), &user, SetCreatedAt(false)))
+	assert.True(t, user.CreatedAt.IsZero())
+	assert.Equal(t, User{
+		ID:        1,
+		Name:      "name",
+		UpdatedAt: Now(),
+	}, user)
+
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_emptyDataFields(t *testing.T) {
+	type EmptyEntity struct {
+		ID int
+	}
+
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		entity  = EmptyEntity{ID: 1}
+	)
+
+	// Since there are no non-primary fields to update in SET clause,
+	// adapter.Update should NOT be called, avoiding invalid UPDATE SET WHERE syntax.
+	assert.Nil(t, repo.Update(context.TODO(), &entity))
+	adapter.AssertExpectations(t)
+}
+
+func TestRepository_Update_emptyMutates(t *testing.T) {
+	var (
+		adapter = &testAdapter{}
+		repo    = New(adapter)
+		user    = User{ID: 1}
+	)
+
+	// When mutation has no mutates, adapter.Update is not called
+	assert.Nil(t, repo.Update(context.TODO(), &user, Map{}))
+	adapter.AssertExpectations(t)
+}
+
 func TestRepository_Update_sets(t *testing.T) {
 	var (
 		user     = User{ID: 1}

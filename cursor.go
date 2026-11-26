@@ -22,6 +22,9 @@ func scanOne(cur Cursor, doc *Document) error {
 	}
 
 	if !cur.Next() {
+		if err := cursorErr(cur); err != nil {
+			return err
+		}
 		return NotFoundError{}
 	}
 
@@ -51,7 +54,7 @@ func scanAll(cur Cursor, col *Collection) error {
 		}
 	}
 
-	return nil
+	return cursorErr(cur)
 }
 
 func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][]slice) error {
@@ -106,5 +109,12 @@ func scanMulti(cur Cursor, keyField string, keyType reflect.Type, cols map[any][
 		doc = doc.NewDocument()
 	}
 
+	return cursorErr(cur)
+}
+
+func cursorErr(cur Cursor) error {
+	if cur, ok := cur.(interface{ Err() error }); ok {
+		return cur.Err()
+	}
 	return nil
 }
